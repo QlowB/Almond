@@ -1,4 +1,5 @@
 #include "QueueManager.h"
+#include <cmath>
 
 void MandelViewport::adjustAspectRatio(double nwidth, double nheight)
 {

@@ -15,9 +15,9 @@ MandelViewport BenchmarkDialog::benchViewport(void) const
 double BenchmarkDialog::measureMips(const std::function<Bitmap<float>()>& bench) const
 {
     using namespace std::chrono;
-    time_point before = high_resolution_clock::now();
+    auto before = high_resolution_clock::now();
     auto bitmap = bench();
-    time_point after = high_resolution_clock::now();
+    auto after = high_resolution_clock::now();
 
     long long sum = 0;
     for (int i = 0; i < bitmap.width * bitmap.height; i++) {
@@ -49,7 +49,7 @@ void BenchmarkDialog::on_run_clicked()
     CpuGenerator<float> cpgf;
     ClGenerator clg;
 
-    ui.tableWidget->setItem(1, 0, new QTableWidgetItem(benchmarkResult(cpg, 2500, 5000)));
-    ui.tableWidget->setItem(0, 0, new QTableWidgetItem(benchmarkResult(cpgf, 2500, 5000)));
-    ui.tableWidget->setItem(0, 1, new QTableWidgetItem(benchmarkResult(clg, 4000, 8000)));
+    ui.tableWidget->setItem(1, 0, new QTableWidgetItem(benchmarkResult(cpg, 1000, 5000)));
+    ui.tableWidget->setItem(0, 0, new QTableWidgetItem(benchmarkResult(cpgf, 1000, 5000)));
+    ui.tableWidget->setItem(0, 1, new QTableWidgetItem(benchmarkResult(clg, 2000, 8000)));
 }

@@ -23,6 +23,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 CONFIG += c++17
+@CONFIG += debug_and_release@
 
 SOURCES += \
         Almond.cpp \
@@ -59,12 +60,15 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-LIBS += -lopengl32
+win32:LIBS += -lopengl32
+else:LIBS += -lOpenGL
+
 win32:QMAKE_CXXFLAGS+= -openmp
 else:unix:QMAKE_CXXFLAGS+= -fopenmp
 win32:QMAKE_LFLAGS +=  -openmp
 else:unix:QMAKE_LFLAGS+= -fopenmp
 LIBS += -fopenmp
+LIBS += -lm
 
 QMAKE_CXXFLAGS += -mavx
 
@@ -78,10 +82,10 @@ DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
-else:unix: LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
+else:unix: LIBS += -lOpenCL
 
-INCLUDEPATH += $$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/include'
-DEPENDPATH += $$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/include'
+win32:INCLUDEPATH += $$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/include'
+win32:DEPENDPATH += $$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/include'
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavformat
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavformat

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cinttypes>
+#include <cmath>
 
 struct Fixed128
 {

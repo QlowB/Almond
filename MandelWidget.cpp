@@ -106,10 +106,10 @@ void MandelWidget::paintGL(void)
     mi.bHeight = height; //ql.geometry().height();
     mi.maxIter = 5000;
     mi.view = viewport;
-    auto bitmap = mg.generate(mi);
-    /*Bitmap<RGBColor> bitmap(1000, 1000);
+    //auto bitmap = mg.generate(mi);
+    Bitmap<RGBColor> bitmap(1000, 1000);
     for (int i = 0; i < 1000 * 1000; i++)
-        bitmap.pixels[i] = RGBColor{5, uint8_t((i % 1000) ^ (i / 1000)), 50};*/
+        bitmap.pixels[i] = RGBColor{5, uint8_t((i % 1000) ^ (i / 1000)), 50};
     tex = std::make_unique<Texture>(bitmap);
 
     glViewport(0, 0, width, height);

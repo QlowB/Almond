@@ -5,6 +5,7 @@
 #include "QueueManager.h"
 #include "GenericMandelbrot.h"
 #include <omp.h>
+#include <cmath>
 #include <future>
 #include <cstdlib>
 
@@ -62,7 +63,7 @@ public:
 
 
 template<>
-Bitmap<float> CpuGenerator<double>::generateRaw(const MandelInfo& info)
+inline Bitmap<float> CpuGenerator<double>::generateRaw(const MandelInfo& info)
 {
     using T = double;
     const MandelViewport& view = info.view;
@@ -106,7 +107,7 @@ Bitmap<float> CpuGenerator<double>::generateRaw(const MandelInfo& info)
             }
             double data[8];
             void* aligned = data;
-            unsigned int length = sizeof data;
+            ::size_t length = sizeof data;
             std::align(32, 4 * sizeof(double), aligned, length);
             double* ftRes = static_cast<double*>(aligned);
             _mm256_store_pd(ftRes, counter);
@@ -120,7 +121,7 @@ Bitmap<float> CpuGenerator<double>::generateRaw(const MandelInfo& info)
 
 
 template<>
-Bitmap<float> CpuGenerator<float>::generateRaw(const MandelInfo& info)
+inline Bitmap<float> CpuGenerator<float>::generateRaw(const MandelInfo& info)
 {
     using T = float;
     const MandelViewport& view = info.view;
@@ -167,7 +168,7 @@ Bitmap<float> CpuGenerator<float>::generateRaw(const MandelInfo& info)
             }
             float data[16];
             void* aligned = data;
-            unsigned int length = sizeof data;
+            ::size_t length = sizeof data;
             std::align(32, 8 * sizeof(float), aligned, length);
             float* ftRes = static_cast<float*>(aligned);
             _mm256_store_ps(ftRes, counter);

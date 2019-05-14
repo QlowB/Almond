@@ -102,8 +102,8 @@ void MandelWidget::paintGL(void)
     ClGenerator clg;
     MandelGenerator& mg = cpg;
     MandelInfo mi;
-    mi.bWidth = width; //ql.geometry().width();
-    mi.bHeight = height; //ql.geometry().height();
+    mi.bWidth = width;
+    mi.bHeight = height;
     mi.maxIter = 5000;
     mi.view = viewport;
     //auto bitmap = mg.generate(mi);

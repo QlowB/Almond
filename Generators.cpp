@@ -72,27 +72,27 @@ ClGenerator::ClGenerator(void)
         "}";
 
     std::string kcode =
-        "void kernel iterate(global float* A, const int width, float xl, float yt, float pixelScale, int max) {"
-        "   int x = get_global_id(0) % (width);"
-        "   int y = get_global_id(0) / (width);"
-        "   float a = x * pixelScale + xl;"
-        "   float b = y * pixelScale + yt;"
-        "   float ca = a;"
-        "   float cb = b;"
+        "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScale, int max) {\n"
+        "   int x = get_global_id(0) % (width);\n"
+        "   int y = get_global_id(0) / (width);\n"
+        "   float a = x * pixelScale + xl;\n"
+        "   float b = y * pixelScale + yt;\n"
+        "   float ca = a;\n"
+        "   float cb = b;\n"
         ""
-        "   int n = 0;"
-        "   while (n < max) {"
-        "       float aa = a * a;"
-        "       float bb = b * b;"
-        "       float ab = a * b;"
-        "       a = aa - bb + ca;"
-        "       b = 2 * ab + cb;"
-        "       if (aa + bb > 16) break;"
-        "       n++;"
-        "   }\n"
+        "   int n = 0;\n"
+        "   while (n < max) {\n"
+        "       float aa = a * a;\n"
+        "       float bb = b * b;\n"
+        "       float ab = a * b;\n"
+        "       a = aa - bb + ca;\n"
+        "       b = 2 * ab + cb;\n"
+        "       if (aa + bb > 16) break;\n"
+        "       n++;\n"
+        "   }\n\n"
         "   A[get_global_id(0)] = n;//((float)n) + (a + b - 16) / (256 - 16);\n"
-//        "   A[get_global_id(0)] = 5;"
-        "}";
+//        "   A[get_global_id(0)] = 1;\n"
+        "}\n";
 
     sources.push_back({ kcode.c_str(), kcode.length() });
 
@@ -113,20 +113,27 @@ ClGenerator::ClGenerator(void)
 Bitmap<float> ClGenerator::generateRaw(const MandelInfo& info)
 {
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+    
     Bitmap<float> bitmap{ info.bWidth, info.bHeight };
-    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+    Buffer buffer_A(context, CL_MEM_READ_WRITE, bufferSize);
     float pixelScale = info.view.width / info.bWidth;
 
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);
-    iterate.setArg(1, info.bWidth);
+    iterate.setArg(1, int(info.bWidth));
     iterate.setArg(2, float(info.view.x));
     iterate.setArg(3, float(info.view.y));
-    iterate.setArg(4, pixelScale);
-    iterate.setArg(5, info.maxIter);
+    iterate.setArg(4, float(pixelScale));
+    iterate.setArg(5, int(info.maxIter));
 
-    queue.enqueueNDRangeKernel(iterate, NullRange, NDRange(info.bWidth * info.bHeight), NDRange(32));
-    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, bitmap.pixels.get());
+    queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    float* fs = new float[info.bWidth * info.bHeight];
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, fs);
+
+    for (int i = 0; i < info.bWidth * info.bHeight; i++) {
+        bitmap.pixels[i] = fs[i];
+    }
+    delete[] fs;
 
     return bitmap;
 }

@@ -10,6 +10,8 @@
 #include <qrubberband.h>
 #include "Generators.h"
 
+#include <atomic>
+
 class Texture
 {
     GLuint id;
@@ -22,19 +24,42 @@ public:
     void drawRect(float x, float y, float width, float height);
 };
 
+class MandelView : public QObject
+{
+    Q_OBJECT
+private:
+    std::future<void> calc;
+    std::atomic<MandelViewport> toCalc;
+    std::atomic_bool hasToCalc = false;
+public:
+public slots:
+    void adaptViewport(const MandelViewport& vp);
+signals:
+    void updated(const Bitmap<RGBColor>* bitmap);
+};
+
 class MandelWidget : public QGLWidget
 {
     Q_OBJECT
 private:
     //QScrollArea qsa;
     //QLabel ql;
+
+    bool initialized = false;
+
+    bool rubberbandDragging = false;
     QRectF rubberband;
 
     std::unique_ptr<Texture> tex;
     MandelViewport viewport;
+    MandelView mv;
 public:
     MandelWidget(QWidget* parent = nullptr);
     ~MandelWidget(void) override;
+
+
+    inline MandelWidget(const MandelWidget& other) {
+    }
 
     void initializeGL(void) override;
 
@@ -44,7 +69,7 @@ public:
 
     void drawRubberband(void);
 
-    void redraw();
+    //void redraw();
 
     void resizeEvent(QResizeEvent* re) override;
     void mousePressEvent(QMouseEvent* me) override;
@@ -53,5 +78,8 @@ public:
 
     inline const MandelViewport& getViewport(void) const { return viewport; }
 signals:
+    void needsUpdate(const MandelViewport& vp);
+public slots:
+    void viewUpdated(const Bitmap<RGBColor>* bitmap);
 };
 

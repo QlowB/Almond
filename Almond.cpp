@@ -10,6 +10,7 @@ Almond::Almond(QWidget *parent) :
     ui.setupUi(this);
     printf("not yet created!\n");
     mw = std::make_unique<MandelWidget>(ui.centralWidget);
+    qRegisterMetaType<MandelWidget>("MandelWidget");
     printf("created!\n");
     ui.verticalLayout_left->addWidget(mw.get());
     //ui.verticalLayout_left->addWidget(new MyGLWidget(ui.centralWidget));
@@ -27,7 +28,7 @@ void Almond::on_pushButton_clicked()
         mi.bWidth = dialog.getWidth();
         mi.bHeight = dialog.getHeight();
         mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        CpuGenerator<double> cpg;
+        ClGenerator cpg;
         auto bitmap = cpg.generate(mi);
         QImage img((unsigned char*)bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
         img.save(dialog.getPath());

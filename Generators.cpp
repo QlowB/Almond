@@ -48,10 +48,11 @@ ClGenerator::ClGenerator(void)
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode_alt =
-        "void kernel iterate(global float* A, const int width, float xl, float yt, float pixelScale, int max) {"
-        "   int x = get_global_id(0) % width;"
-        "   int y = get_global_id(0) / width;"
+    std::string kcode =
+        "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScale, int max) {"
+        "   int index = get_global_id(0);\n"
+        "   int x = index % width;"
+        "   int y = index / width;"
         "   float a = x * pixelScale + xl;"
         "   float b = y * pixelScale + yt;"
         "   float ca = a;"
@@ -62,35 +63,48 @@ ClGenerator::ClGenerator(void)
         "       float aa = a * a;"
         "       float bb = b * b;"
         "       float ab = a * b;"
+        "       if (aa + bb > 16) break;"
         "       a = aa - bb + ca;"
         "       b = 2 * ab + cb;"
-        "       if (aa + bb > 16) break;"
         "       n++;"
         "   }\n"
-        "   A[get_global_id(0)] = n;//((float)n) + (a + b - 16) / (256 - 16);\n"
+        "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
 //        "   A[get_global_id(0)] = 5;"
         "}";
 
-    std::string kcode =
+    std::string kcode_alt =
         "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScale, int max) {\n"
-        "   int x = get_global_id(0) % (width);\n"
-        "   int y = get_global_id(0) / (width);\n"
-        "   float a = x * pixelScale + xl;\n"
-        "   float b = y * pixelScale + yt;\n"
-        "   float ca = a;\n"
-        "   float cb = b;\n"
+        "   int index = get_global_id(0) * 8;\n"
+        "   int x = index % (width);\n"
+        "   int y = index / (width);\n"
+        "   float8 av = (float8)(x * pixelScale + xl, (x + 1) * pixelScale + xl, (x + 2) * pixelScale + xl, (x + 3) * pixelScale + xl,"
+                        "(x + 4) * pixelScale + xl, (x + 5) * pixelScale + xl, (x + 6) * pixelScale + xl, (x + 7) * pixelScale + xl);\n"
+        "   float8 bv = (float8)(y * pixelScale + yt);\n"
+        "   float8 ca = av;\n"
+        "   float8 cb = bv;\n"
         ""
+        "   int8 counter = (int8)0;"
+        "   float8 threshold = (float8)16;"
         "   int n = 0;\n"
         "   while (n < max) {\n"
-        "       float aa = a * a;\n"
-        "       float bb = b * b;\n"
-        "       float ab = a * b;\n"
-        "       a = aa - bb + ca;\n"
-        "       b = 2 * ab + cb;\n"
-        "       if (aa + bb > 16) break;\n"
+        "       float8 aa = av * av;\n"
+        "       float8 bb = bv * bv;\n"
+        "       float8 ab = av * bv;\n"
+        "       av = aa - bb + ca;\n"
+        "       bv = 2 * ab + cb;\n"
+        "       counter += -(threshold > (aa + bb));\n"
+        "       if(all(threshold < (aa + bb))) break;\n"
+        "       //if (aa + bb > 16) break;\n"
         "       n++;\n"
         "   }\n\n"
-        "   A[get_global_id(0)] = n;//((float)n) + (a + b - 16) / (256 - 16);\n"
+        "   A[index] = (float) counter[0];\n"
+        "   A[index + 1] = (float) counter[1];\n"
+        "   A[index + 2] = (float) counter[2];\n"
+        "   A[index + 3] = (float) counter[3];\n"
+        "   A[index + 4] = (float) counter[4];\n"
+        "   A[index + 5] = (float) counter[5];\n"
+        "   A[index + 6] = (float) counter[6];\n"
+        "   A[index + 7] = (float) counter[7];\n"
 //        "   A[get_global_id(0)] = 1;\n"
         "}\n";
 
@@ -127,13 +141,7 @@ Bitmap<float> ClGenerator::generateRaw(const MandelInfo& info)
     iterate.setArg(5, int(info.maxIter));
 
     queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
-    float* fs = new float[info.bWidth * info.bHeight];
-    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, fs);
-
-    for (int i = 0; i < info.bWidth * info.bHeight; i++) {
-        bitmap.pixels[i] = fs[i];
-    }
-    delete[] fs;
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, bitmap.pixels.get());
 
     return bitmap;
 }

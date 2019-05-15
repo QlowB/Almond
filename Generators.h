@@ -105,13 +105,18 @@ inline Bitmap<float> CpuGenerator<double>::generateRaw(const MandelInfo& info)
                     break;
                 }
             }
-            double data[8];
-            void* aligned = data;
-            ::size_t length = sizeof data;
-            std::align(32, 4 * sizeof(double), aligned, length);
-            double* ftRes = static_cast<double*>(aligned);
+
+            auto alignVec = [](double* data) -> double* {
+                void* aligned = data;
+                ::size_t length = 64;
+                std::align(32, 4 * sizeof(double), aligned, length);
+                return static_cast<double*>(aligned);
+            };
+
+            double resData[8];
+            double* ftRes = alignVec(resData);
             _mm256_store_pd(ftRes, counter);
-            for (int k = 0; k < 4; k++)
+            for (int k = 0; k < 4 && i + k < res.width; k++)
                 res.get(i + k, j) = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
         }
     }
@@ -166,13 +171,19 @@ inline Bitmap<float> CpuGenerator<float>::generateRaw(const MandelInfo& info)
                     break;
                 }
             }
-            float data[16];
-            void* aligned = data;
-            ::size_t length = sizeof data;
-            std::align(32, 8 * sizeof(float), aligned, length);
-            float* ftRes = static_cast<float*>(aligned);
+
+            auto alignVec = [](float* data) -> float* {
+                void* aligned = data;
+                ::size_t length = 64;
+                std::align(32, 8 * sizeof(float), aligned, length);
+                return static_cast<float*>(aligned);
+            };
+
+            float resData[16];
+            float* ftRes = alignVec(resData);
+
             _mm256_store_ps(ftRes, counter);
-            for (int k = 0; k < 8; k++)
+            for (int k = 0; k < 8 && i + k < res.width; k++)
                 res.get(i + k, j) = ftRes[k] > 0 ? ftRes[k] : info.maxIter;
         }
     }

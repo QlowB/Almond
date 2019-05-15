@@ -77,7 +77,8 @@ void MandelView::adaptViewport(const MandelViewport& vp)
         hasToCalc = true;
         calc = std::async([this] () {
             do {
-                CpuGenerator<float> cpg;
+                //CpuGenerator<float> cpg;
+                static ClGenerator cpg;
                 MandelInfo mi;
                 mi.bWidth = 1024;//ql.geometry().width();
                 mi.bHeight = 1024; //ql.geometry().height();

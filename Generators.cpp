@@ -27,15 +27,18 @@ Device getDevice(Platform platform, int i, bool display = false) {
     * If display is true, then all of the platforms are listed.
     */
     std::vector<Device> all_devices;
-    platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
+    platform.getDevices(CL_DEVICE_TYPE_GPU, &all_devices);
     if (all_devices.size() == 0) {
         std::cout << "No devices found. Check OpenCL installation!\n";
         exit(1);
     }
 
     if (display) {
-        for (::size_t j = 0; j < all_devices.size(); j++)
+        for (::size_t j = 0; j < all_devices.size(); j++) {
             printf("Device %d: %s\n", int(j), all_devices[j].getInfo<CL_DEVICE_NAME>().c_str());
+            printf("preferred float width: %d\n", all_devices[j].getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>());
+            printf("vendor: %s\n", all_devices[j].getInfo<CL_DEVICE_VENDOR>().c_str());
+        }
     }
     return all_devices[i];
 }
@@ -44,69 +47,78 @@ Device getDevice(Platform platform, int i, bool display = false) {
 ClGenerator::ClGenerator(void)
 {
     Platform p = getPlatform();
-    device = getDevice(p, 0, false);
+    device = getDevice(p, 0, true);
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode =
-        "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScale, int max) {"
-        "   int index = get_global_id(0);\n"
-        "   int x = index % width;"
-        "   int y = index / width;"
-        "   float a = x * pixelScale + xl;"
-        "   float b = y * pixelScale + yt;"
-        "   float ca = a;"
-        "   float cb = b;"
-        ""
-        "   int n = 0;"
-        "   while (n < max) {"
-        "       float aa = a * a;"
-        "       float bb = b * b;"
-        "       float ab = a * b;"
-        "       if (aa + bb > 16) break;"
-        "       a = aa - bb + ca;"
-        "       b = 2 * ab + cb;"
-        "       n++;"
-        "   }\n"
-        "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
-//        "   A[get_global_id(0)] = 5;"
-        "}";
+    std::string kcode;
+ 
 
-    std::string kcode_alt =
-        "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScale, int max) {\n"
-        "   int index = get_global_id(0) * 8;\n"
-        "   int x = index % (width);\n"
-        "   int y = index / (width);\n"
-        "   float8 av = (float8)(x * pixelScale + xl, (x + 1) * pixelScale + xl, (x + 2) * pixelScale + xl, (x + 3) * pixelScale + xl,"
-                        "(x + 4) * pixelScale + xl, (x + 5) * pixelScale + xl, (x + 6) * pixelScale + xl, (x + 7) * pixelScale + xl);\n"
-        "   float8 bv = (float8)(y * pixelScale + yt);\n"
-        "   float8 ca = av;\n"
-        "   float8 cb = bv;\n"
-        ""
-        "   int8 counter = (int8)0;"
-        "   float8 threshold = (float8)16;"
-        "   int n = 0;\n"
-        "   while (n < max) {\n"
-        "       float8 aa = av * av;\n"
-        "       float8 bb = bv * bv;\n"
-        "       float8 ab = av * bv;\n"
-        "       av = aa - bb + ca;\n"
-        "       bv = 2 * ab + cb;\n"
-        "       counter += -(threshold > (aa + bb));\n"
-        "       if(all(threshold < (aa + bb))) break;\n"
-        "       //if (aa + bb > 16) break;\n"
-        "       n++;\n"
-        "   }\n\n"
-        "   A[index] = (float) counter[0];\n"
-        "   A[index + 1] = (float) counter[1];\n"
-        "   A[index + 2] = (float) counter[2];\n"
-        "   A[index + 3] = (float) counter[3];\n"
-        "   A[index + 4] = (float) counter[4];\n"
-        "   A[index + 5] = (float) counter[5];\n"
-        "   A[index + 6] = (float) counter[6];\n"
-        "   A[index + 7] = (float) counter[7];\n"
-//        "   A[get_global_id(0)] = 1;\n"
-        "}\n";
+    if (device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() == 4) {
+        kcode =
+            "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max) {\n"
+            "   int index = get_global_id(0) * 4;\n"
+            "   int x = index % (width);\n"
+            "   int y = index / (width);\n"
+            "   float4 av = (float4)(x * pixelScaleX + xl, (x + 1) * pixelScaleX + xl, (x + 2) * pixelScaleX + xl, (x + 3) * pixelScaleX + xl);\n"
+    //                        "(x + 4) * pixelScale + xl, (x + 5) * pixelScale + xl, (x + 6) * pixelScale + xl, (x + 7) * pixelScale + xl);\n"
+            "   float4 bv = (float4)(y * pixelScaleY + yt);\n"
+            "   float4 ca = av;\n"
+            "   float4 cb = bv;\n"
+            ""
+            "   int4 counter = (int4) 1;"
+            "   float4 threshold = (float4) 16;"
+            "   int n = 0;\n"
+            "   while (n < max) {\n"
+            "       float4 aa = av * av;\n"
+            "       float4 bb = bv * bv;\n"
+            "       float4 ab = av * bv;\n"
+            "       av = aa - bb + ca;\n"
+            "       bv = 2 * ab + cb;\n"
+            "       counter += -(threshold > (aa + bb));\n"
+            "       if(all(threshold < (aa + bb))) break;\n"
+            "       //if (aa + bb > 16) break;\n"
+            "       n++;\n"
+            "   }\n\n"
+            "   A[index] = (float) counter[0];\n"
+            "   A[index + 1] = (float) counter[1];\n"
+            "   A[index + 2] = (float) counter[2];\n"
+            "   A[index + 3] = (float) counter[3];\n"
+    /*        "   A[index + 4] = (float) counter[4];\n"
+            "   A[index + 5] = (float) counter[5];\n"
+            "   A[index + 6] = (float) counter[6];\n"
+            "   A[index + 7] = (float) counter[7];\n"*/
+    //        "   A[get_global_id(0)] = 1;\n"
+            "}\n";
+    }
+    else {
+
+        kcode =
+    //        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable"
+            "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max) {"
+            "   int index = get_global_id(0);\n"
+            "   int x = index % width;"
+            "   int y = index / width;"
+            "   float a = x * pixelScaleX + xl;"
+            "   float b = y * pixelScaleY + yt;"
+            "   float ca = a;"
+            "   float cb = b;"
+            ""
+            "   int n = 0;"
+            "   while (n < max) {"
+            "       float aa = a * a;"
+            "       float bb = b * b;"
+            "       float ab = a * b;"
+            "       if (aa + bb > 16) break;"
+            "       a = aa - bb + ca;"
+            "       b = 2 * ab + cb;"
+            "       n++;"
+            "   }\n"
+            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
+    //        "   A[get_global_id(0)] = 5;"
+            "}";
+    }
+
 
     sources.push_back({ kcode.c_str(), kcode.length() });
 
@@ -130,17 +142,23 @@ Bitmap<float> ClGenerator::generateRaw(const MandelInfo& info)
     
     Bitmap<float> bitmap{ info.bWidth, info.bHeight };
     Buffer buffer_A(context, CL_MEM_READ_WRITE, bufferSize);
-    float pixelScale = info.view.width / info.bWidth;
+    float pixelScaleX = info.view.width / info.bWidth;
+    float pixelScaleY = info.view.height / info.bHeight;
 
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);
     iterate.setArg(1, int(info.bWidth));
     iterate.setArg(2, float(info.view.x));
     iterate.setArg(3, float(info.view.y));
-    iterate.setArg(4, float(pixelScale));
-    iterate.setArg(5, int(info.maxIter));
+    iterate.setArg(4, float(pixelScaleX));
+    iterate.setArg(5, float(pixelScaleY));
+    iterate.setArg(6, int(info.maxIter));
 
-    queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    if (device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() == 4) {
+        queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight / 4));
+    } else {
+        queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    }
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, bitmap.pixels.get());
 
     return bitmap;

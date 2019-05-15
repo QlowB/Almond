@@ -10,13 +10,36 @@ void MandelViewport::adjustAspectRatio(double nwidth, double nheight)
             height = width / otherRatio;
 }
 
+
+void MandelViewport::normalize(void)
+{
+    if (width < 0) {
+        x += width;
+        width = -width;
+    }
+    if (height < 0) {
+        y += height;
+        height = -height;
+    }
+}
+
+
 MandelGenerator::~MandelGenerator(void)
 {
 }
 
+
 Bitmap<RGBColor> MandelGenerator::generate(const MandelInfo& mandelInfo)
 {
-    auto converter = [](float i) { return i < 0 ? RGBColor{ 0,0,0 } : RGBColor{ uint8_t(cos(i * 0.15f) * 127 + 127), uint8_t(sin(i * 0.01f) * 127 + 127), uint8_t(sin(i * 0.04f) * 127 + 127) }; };
+    auto converter = [max = mandelInfo.maxIter](float i) {
+        return i >= max ?
+            RGBColor{ 0,0,0 } :
+            RGBColor{
+                uint8_t(cos(i * 0.15f) * 127 + 127),
+                uint8_t(sin(i * 0.03f) * 127 + 127),
+                uint8_t(cos(i * 0.04f) * 127 + 127)
+            };
+    };
     return generateRaw(mandelInfo).map<RGBColor>(converter);
 }
 

@@ -28,7 +28,7 @@ void Almond::on_pushButton_clicked()
         mi.bWidth = dialog.getWidth();
         mi.bHeight = dialog.getHeight();
         mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        ClGenerator cpg;
+        CpuGenerator<double> cpg;
         auto bitmap = cpg.generate(mi);
         QImage img((unsigned char*)bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
         img.save(dialog.getPath());

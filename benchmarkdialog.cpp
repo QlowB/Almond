@@ -51,5 +51,5 @@ void BenchmarkDialog::on_run_clicked()
 
     ui.tableWidget->setItem(1, 0, new QTableWidgetItem(benchmarkResult(cpg, 1000, 5000)));
     ui.tableWidget->setItem(0, 0, new QTableWidgetItem(benchmarkResult(cpgf, 1000, 5000)));
-    ui.tableWidget->setItem(0, 1, new QTableWidgetItem(benchmarkResult(clg, 2000, 8000)));
+    ui.tableWidget->setItem(0, 1, new QTableWidgetItem(benchmarkResult(clg, 4000, 10000)));
 }

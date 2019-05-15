@@ -116,3 +116,11 @@ DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
 RESOURCES += \
     Almond.qrc
+
+unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel
+
+INCLUDEPATH += $$PWD/libmandel/include
+DEPENDPATH += $$PWD/libmandel/include
+
+win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/mandel.lib
+else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a

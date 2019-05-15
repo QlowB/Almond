@@ -54,7 +54,8 @@ ClGenerator::ClGenerator(void)
     std::string kcode;
  
 
-    if (device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() == 4) {
+    // TODO check for overflow
+    if (false && device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() == 4) {
         kcode =
             "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max) {\n"
             "   int index = get_global_id(0) * 4;\n"
@@ -114,7 +115,9 @@ ClGenerator::ClGenerator(void)
             "       b = 2 * ab + cb;"
             "       n++;"
             "   }\n"
-            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
+                // N + 1 - log (log  |Z(N)|) / log 2
+            "   A[index] = ((float)n) + 1 - log(log(a * a + b * b) / 2) / log(2.0f);\n"
+//            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
     //        "   A[get_global_id(0)] = 5;"
             "}";
     }
@@ -154,7 +157,8 @@ Bitmap<float> ClGenerator::generateRaw(const MandelInfo& info)
     iterate.setArg(5, float(pixelScaleY));
     iterate.setArg(6, int(info.maxIter));
 
-    if (device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() == 4) {
+    // TODO check for overflow
+    if (false && device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() == 4) {
         queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight / 4));
     } else {
         queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));

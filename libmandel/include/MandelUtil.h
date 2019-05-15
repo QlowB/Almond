@@ -1,13 +1,14 @@
-#pragma once
-#ifndef QUEUEMANAGER_H_
-#define QUEUEMANAGER_H_
+#ifndef MANDEL_MANDELUTIL_H
+#define MANDEL_MANDELUTIL_H
 
-#include <cinttypes>
-#include <vector>
-#include <future>
-#include "Bitmap.h"
+namespace mnd 
+{
+    struct MandelViewport;
+    struct MandelInfo;
+}
 
-struct MandelViewport
+
+struct mnd::MandelViewport
 {
     /// real part of the top left corner
     double x = -2.1;
@@ -33,7 +34,7 @@ struct MandelViewport
     void normalize(void);
 };
 
-struct MandelInfo
+struct mnd::MandelInfo
 {
     /// viewport
     MandelViewport view;
@@ -48,26 +49,4 @@ struct MandelInfo
     int maxIter;
 };
 
-
-class MandelGenerator
-{
-public:
-    MandelGenerator(void) = default;
-    virtual ~MandelGenerator(void);
-
-    virtual Bitmap<RGBColor> generate(const MandelInfo& mandelInfo);
-    virtual Bitmap<float> generateRaw(const MandelInfo& info) = 0;
-};
-
-
-class QueueManager
-{
-public:
-    QueueManager(void);
-    ~QueueManager(void);
-
-    std::future<Bitmap<RGBColor>> generate(const MandelInfo& mandelInfo);
-};
-
-#endif // QUEUEMANAGER_H_
-
+#endif // MANDEL_MANDELUTIL_H

@@ -77,8 +77,8 @@ void MandelView::adaptViewport(const MandelViewport& vp)
         hasToCalc = true;
         calc = std::async([this] () {
             do {
-                //CpuGenerator<float> cpg;
-                static ClGenerator cpg;
+                CpuGenerator<double> cpg;
+                //static ClGenerator cpg;
                 MandelInfo mi;
                 mi.bWidth = 1024;//ql.geometry().width();
                 mi.bHeight = 1024; //ql.geometry().height();
@@ -257,6 +257,7 @@ void MandelWidget::mouseReleaseEvent(QMouseEvent* me)
     viewport.y += double(rect.top()) * viewport.height / full.height();
     viewport.width *= double(rect.width()) / full.width();
     viewport.height *= double(rect.height()) / full.height();
+    viewport.normalize();
     rubberbandDragging = false;
     emit needsUpdate(viewport);
 }

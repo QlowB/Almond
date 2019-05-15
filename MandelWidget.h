@@ -30,7 +30,7 @@ class MandelView : public QObject
 private:
     std::future<void> calc;
     std::atomic<MandelViewport> toCalc;
-    std::atomic_bool hasToCalc = false;
+    std::atomic_bool hasToCalc;
 public:
 public slots:
     void adaptViewport(const MandelViewport& vp);

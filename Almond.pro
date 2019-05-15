@@ -68,7 +68,7 @@ else:unix:QMAKE_CXXFLAGS+= -fopenmp
 win32:QMAKE_LFLAGS +=  -openmp
 else:unix:QMAKE_LFLAGS+= -fopenmp
 LIBS += -fopenmp
-unix:LIBS += -lm
+unix:LIBS += -lm -latomic
 
 QMAKE_CXXFLAGS += -mavx
 

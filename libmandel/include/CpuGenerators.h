@@ -13,6 +13,9 @@ namespace mnd
 
     class CpuGeneratorAvxFloat;
     class CpuGeneratorAvxDouble;
+
+    class CpuGeneratorAvx512Float;
+    class CpuGeneratorAvx512Double;
 }
 
 
@@ -52,6 +55,20 @@ public:
 
 
 class mnd::CpuGeneratorAvxDouble : public Generator
+{
+public:
+    virtual void generate(const MandelInfo& info, float* data);
+};
+
+
+class mnd::CpuGeneratorAvx512Float : public Generator
+{
+public:
+    virtual void generate(const MandelInfo& info, float* data);
+};
+
+
+class mnd::CpuGeneratorAvx512Double : public Generator
 {
 public:
     virtual void generate(const MandelInfo& info, float* data);

@@ -75,15 +75,22 @@ CpuInfo::CpuInfo(void)
         this->brand.erase(this->brand.find_last_not_of(" \n\r\t") + 1);
     }
 
-    std::bitset<32> ecx1;
-    std::bitset<32> edx1;
+    std::bitset<32> ecx1 = 0;
+    std::bitset<32> edx1 = 0;
+    std::bitset<32> ebx7 = 0;
+    std::bitset<32> ecx7 = 0;
 
     if (nData >= 1) {
         ecx1 = cpuData[1][2];
         edx1 = cpuData[1][3];
     }
+    if (nData >= 7) {
+        ebx7 = cpuData[7][1];
+        ecx7 = cpuData[7][2];
+    }
 
-    avx = ecx1[28];
     sse2 = edx1[26];
+    avx = ecx1[28];
+    avx512 = ebx7[16];
 }
 

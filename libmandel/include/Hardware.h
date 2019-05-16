@@ -14,6 +14,7 @@ class mnd::CpuInfo
     std::string brand;
 
     bool avx;
+    bool sse2;
 public:
     CpuInfo(void);
 
@@ -21,6 +22,7 @@ public:
     inline const std::string& getBrand(void) const { return brand; };
 
     inline bool hasAvx(void) const { return avx; };
+    inline bool hasSse2(void) const { return sse2; };
 };
 
 #endif // MANDEL_HARDWARE_H

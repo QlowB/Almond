@@ -1,4 +1,4 @@
-#include "CpuGeneratorsAVX.h"
+#include "CpuGenerators.h"
 
 #include <immintrin.h>
 #include <omp.h>

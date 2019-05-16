@@ -1,7 +1,6 @@
 #include "Mandel.h"
 
 #include "CpuGenerators.h"
-#include "CpuGeneratorsAVX.h"
 #include "ClGenerators.h"
 
 using mnd::MandelDevice;
@@ -47,6 +46,10 @@ MandelContext::MandelContext(void)
     if (cpuInfo.hasAvx()) {
         cpuGeneratorFloat = std::make_unique<CpuGeneratorAvxFloat>();
         cpuGeneratorDouble = std::make_unique<CpuGeneratorAvxDouble>();
+    }
+    else if (cpuInfo.hasSse2()) {
+        cpuGeneratorFloat = std::make_unique<CpuGeneratorSse2Float>();
+        cpuGeneratorDouble = std::make_unique<CpuGeneratorSse2Double>();
     }
     else {
         cpuGeneratorFloat = std::make_unique<CpuGeneratorFloat>();

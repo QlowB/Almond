@@ -21,6 +21,13 @@ else()
     set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS -mavx)
 endif(MSVC)
 
+
+if (MSVC)
+    set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS /arch:SSE2)
+else()
+    set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS -msse2)
+endif(MSVC)
+
 add_library(mandel STATIC ${MandelSources})
 
 

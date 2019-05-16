@@ -29,9 +29,9 @@ CpuInfo::CpuInfo(void)
     __cpuid(0x80000000, dat[0], dat[1], dat[2], dat[3]);
     nExtData = dat[0];
 #else
-    __cpuid(dat.data(), 0);
+    __cpuid((int*) dat.data(), 0);
     nData = dat[0];
-    __cpuid(dat.data(), 0x80000000);
+    __cpuid((int*) dat.data(), 0x80000000);
     nExtData = dat[0];
 #endif
 
@@ -39,7 +39,7 @@ CpuInfo::CpuInfo(void)
 #ifdef __GNUC__
         __get_cpuid(i, &dat[0], &dat[1], &dat[2], &dat[3]);
 #else
-        __cpuidex(dat.data(), i, 0);
+        __cpuidex((int*) dat.data(), i, 0);
 #endif
         cpuData.push_back(dat);
     }
@@ -48,7 +48,7 @@ CpuInfo::CpuInfo(void)
 #ifdef __GNUC__
         __get_cpuid(i, &dat[0], &dat[1], &dat[2], &dat[3]);
 #else
-        __cpuidex(dat.data(), i, 0);
+        __cpuidex((int*) dat.data(), i, 0);
 #endif
         extData.push_back(dat);
     }
@@ -84,5 +84,6 @@ CpuInfo::CpuInfo(void)
     }
 
     avx = ecx1[28];
+    sse2 = edx1[26];
 }
 

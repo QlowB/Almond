@@ -134,7 +134,7 @@ void VideoStream::addFrame(const Bitmap<RGBColor>& frame)
     }*/
 
     const uint8_t* pixelPointer[] = { reinterpret_cast<const uint8_t*>(frame.pixels.get()), 0 };
-    const int linesizeIn[] = { frame.width * sizeof(RGBColor) };
+    const int linesizeIn[] = { int(frame.width * sizeof(RGBColor)) };
 
     sws_scale(swsContext, pixelPointer, linesizeIn, 0,
         frame.height, picture->data, picture->linesize);

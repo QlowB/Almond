@@ -6,6 +6,40 @@
 #include "ui_benchmarks.h"
 #include <Mandel.h>
 #include "Bitmap.h"
+#include <QThread>
+
+
+struct BenchmarkResult
+{
+    std::vector<std::vector<double>> values;
+    double percentage = 0.0;
+};
+
+Q_DECLARE_METATYPE(BenchmarkResult)
+
+class Benchmarker : public QObject
+{
+    Q_OBJECT
+private:
+    mnd::MandelContext mndContext;
+public:
+    inline Benchmarker(mnd::MandelContext& mndContext) :
+        mndContext{ mnd::initializeContext() }
+    {
+    }
+
+    mnd::MandelViewport benchViewport(void) const;
+
+    double measureMips(const std::function<Bitmap<float>()>& bench) const;
+    double benchmarkResult(mnd::Generator& mg) const;
+
+public slots:
+    void start(void);
+signals:
+    void update(BenchmarkResult br);
+    void finished(void);
+};
+
 
 class BenchmarkDialog : public QDialog
 {
@@ -13,17 +47,16 @@ class BenchmarkDialog : public QDialog
 private:
     Ui::BenchmarkDialog ui;
     mnd::MandelContext& mndContext;
+    QThread benchThread;
+    Benchmarker benchmarker;
 public:
     explicit BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent = nullptr);
 
-    mnd::MandelViewport benchViewport(void) const;
-
-    double measureMips(const std::function<Bitmap<float>()>& bench) const;
-    QString benchmarkResult(mnd::Generator& mg, int size, int iters) const;
 
 signals:
 
 public slots:
+    void update(BenchmarkResult br);
 private slots:
     void on_run_clicked();
 };

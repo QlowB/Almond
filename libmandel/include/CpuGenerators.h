@@ -7,6 +7,7 @@ namespace mnd
 {
     class CpuGeneratorFloat;
     class CpuGeneratorDouble;
+    class CpuGenerator128;
 
     class CpuGeneratorSse2Float;
     class CpuGeneratorSse2Double;
@@ -27,6 +28,13 @@ public:
 
 
 class mnd::CpuGeneratorDouble : public Generator
+{
+public:
+    virtual void generate(const MandelInfo& info, float* data);
+};
+
+
+class mnd::CpuGenerator128 : public Generator
 {
 public:
     virtual void generate(const MandelInfo& info, float* data);

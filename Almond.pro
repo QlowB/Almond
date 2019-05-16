@@ -38,7 +38,6 @@ HEADERS += \
         Almond.h \
         Bitmap.h \
         Color.h \
-        Fixed.h \
         MandelWidget.h \
         SectionManager.h \
         VideoStream.h \

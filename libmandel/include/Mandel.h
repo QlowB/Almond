@@ -48,6 +48,7 @@ private:
 
     std::unique_ptr<Generator> cpuGeneratorFloat;
     std::unique_ptr<Generator> cpuGeneratorDouble;
+    std::unique_ptr<Generator> cpuGenerator128;
 
     std::vector<MandelDevice> devices;
 
@@ -60,7 +61,8 @@ public:
     const std::vector<MandelDevice>& getDevices(void);
 
     Generator& getCpuGeneratorFloat(void);
-    Generator& getCpuGeneratorDouble(void);
+    Generator& getCpuGeneratorDouble(void); 
+    Generator& getCpuGenerator128(void); 
 
     const CpuInfo& getCpuInfo(void) const { return cpuInfo; }
 };

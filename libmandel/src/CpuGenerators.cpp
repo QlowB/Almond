@@ -1,4 +1,5 @@
 #include "CpuGenerators.h"
+#include "Fixed.h"
 
 #include <omp.h>
 
@@ -6,6 +7,7 @@
 
 using mnd::CpuGeneratorFloat;
 using mnd::CpuGeneratorDouble;
+using mnd::CpuGenerator128;
 
 
 void CpuGeneratorFloat::generate(const mnd::MandelInfo& info, float* data)
@@ -64,6 +66,38 @@ void CpuGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
                     break;
                 }
             }
+            data[i + j * info.bWidth] = k;
+        }
+    }
+}
+
+
+void CpuGenerator128::generate(const mnd::MandelInfo& info, float* data)
+{
+    const MandelViewport& view = info.view;
+    omp_set_num_threads(2 * omp_get_num_procs());
+#pragma omp parallel for
+    for (long j = 0; j < info.bHeight; j++) {
+        Fixed128 y = Fixed128(view.y) + Fixed128(j) * Fixed128(view.height / info.bHeight);
+        long i = 0;
+        for (i; i < info.bWidth; i++) {
+            Fixed128 x = view.x + Fixed128(i) * Fixed128(view.width / info.bWidth);
+
+            Fixed128 a = x;
+            Fixed128 b = y;
+
+            int k = 0;
+            for (k = 0; k < info.maxIter; k++) {
+                Fixed128 aa = a * a;
+                Fixed128 bb = b * b;
+                Fixed128 ab = a * b;
+                a = aa - bb + x;
+                b = ab + ab + y;
+                if (aa + bb > Fixed128(16)) {
+                    break;
+                }
+            }
+
             data[i + j * info.bWidth] = k;
         }
     }

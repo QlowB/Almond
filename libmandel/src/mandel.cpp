@@ -56,6 +56,8 @@ MandelContext::MandelContext(void)
         cpuGeneratorDouble = std::make_unique<CpuGeneratorDouble>();
     }
 
+    cpuGenerator128 = std::make_unique<CpuGenerator128>();
+
     devices = createDevices();
 }
 
@@ -141,4 +143,10 @@ Generator& MandelContext::getCpuGeneratorFloat(void)
 Generator& MandelContext::getCpuGeneratorDouble(void)
 {
     return *cpuGeneratorDouble;
+}
+
+
+Generator& MandelContext::getCpuGenerator128(void)
+{
+    return *cpuGenerator128;
 }

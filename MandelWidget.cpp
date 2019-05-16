@@ -82,13 +82,17 @@ void MandelView::adaptViewport(const MandelViewport& vp)
             do {
                 //static ClGenerator cpg;
                 MandelInfo mi;
-                mi.bWidth = 1024;//ql.geometry().width();
-                mi.bHeight = 1024; //ql.geometry().height();
+                mi.bWidth = 200;//ql.geometry().width();
+                mi.bHeight = 200; //ql.geometry().height();
                 mi.maxIter = 4000;
                 mi.view = toCalc;
                 auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
                 generator.generate(mi, fmap.pixels.get());
-                auto bitmap = fmap.map<RGBColor>([](float i) { return i < 0 ? RGBColor{ 0,0,0 } : RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127), uint8_t(sin(i * 0.01f) * 127 + 127), uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
+                auto bitmap = fmap.map<RGBColor>([&mi](float i) { return i > mi.maxIter ?
+                                RGBColor{ 0,0,0 } :
+                                RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127),
+                                          uint8_t(sin(i * 0.01f) * 127 + 127),
+                                          uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
                 emit updated(new Bitmap<RGBColor>(std::move(bitmap)));
             } while(hasToCalc.exchange(false));
         });
@@ -103,7 +107,7 @@ void MandelView::adaptViewport(const MandelViewport& vp)
 MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
     QGLWidget{ QGLFormat(QGL::SampleBuffers), parent },
     mndContext{ ctxt },
-    mv{ ctxt.getDefaultGenerator() }
+    mv{ ctxt.getCpuGenerator128() }
 {
     this->setContentsMargins(0, 0, 0, 0);
     this->setSizePolicy(QSizePolicy::Expanding,

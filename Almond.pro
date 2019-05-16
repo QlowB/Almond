@@ -28,9 +28,7 @@ CONFIG += c++17
 SOURCES += \
         Almond.cpp \
         Bitmap.cpp \
-        Generators.cpp \
         MandelWidget.cpp \
-        QueueManager.cpp \
         SectionManager.cpp \
         VideoStream.cpp \
         benchmarkdialog.cpp \
@@ -41,10 +39,7 @@ HEADERS += \
         Bitmap.h \
         Color.h \
         Fixed.h \
-        Generators.h \
-        GenericMandelbrot.h \
         MandelWidget.h \
-        QueueManager.h \
         SectionManager.h \
         VideoStream.h \
         benchmarkdialog.h
@@ -63,14 +58,12 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 win32:LIBS += -lopengl32
 else:LIBS += -lOpenGL
 
-win32:QMAKE_CXXFLAGS+= -openmp
-else:unix:QMAKE_CXXFLAGS+= -fopenmp
-win32:QMAKE_LFLAGS +=  -openmp
-else:unix:QMAKE_LFLAGS+= -fopenmp
-LIBS += -fopenmp
+#win32:QMAKE_CXXFLAGS+= -openmp
+#else:unix:QMAKE_CXXFLAGS+= -fopenmp
+#win32:QMAKE_LFLAGS +=  -openmp
+#else:unix:QMAKE_LFLAGS+= -fopenmp
+#LIBS += -fopenmp
 unix:LIBS += -lm -latomic
-
-QMAKE_CXXFLAGS += -mavx
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
@@ -80,12 +73,12 @@ INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
-else:unix: LIBS += -lOpenCL
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
+#else:unix: LIBS += -lOpenCL
 
-win32:INCLUDEPATH += $$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/include'
-win32:DEPENDPATH += $$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/include'
+#win32:INCLUDEPATH += $$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/include'
+#win32:DEPENDPATH += $$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/include'
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavformat
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavformat
@@ -124,3 +117,16 @@ DEPENDPATH += $$PWD/libmandel/include
 
 win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/mandel.lib
 else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a
+
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/' -lopencl
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/' -lopencl
+else:unix: LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/' -lopencl
+
+INCLUDEPATH += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/include'
+DEPENDPATH += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/include'
+
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/libopencl.a'
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/libopencl.a'
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/opencl.lib'
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/opencl.lib'

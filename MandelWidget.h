@@ -8,8 +8,11 @@
 #include <qlabel.h>
 #include <qevent.h>
 #include <qrubberband.h>
-#include "Generators.h"
 
+#include "Bitmap.h"
+#include <Mandel.h>
+
+#include <future>
 #include <atomic>
 
 class Texture
@@ -29,11 +32,16 @@ class MandelView : public QObject
     Q_OBJECT
 private:
     std::future<void> calc;
-    std::atomic<MandelViewport> toCalc;
+    std::atomic<mnd::MandelViewport> toCalc;
     std::atomic_bool hasToCalc;
+    mnd::Generator& generator;
 public:
+    inline MandelView(mnd::Generator& generator) :
+        generator{ generator }
+    {
+    }
 public slots:
-    void adaptViewport(const MandelViewport& vp);
+    void adaptViewport(const mnd::MandelViewport& vp);
 signals:
     void updated(const Bitmap<RGBColor>* bitmap);
 };
@@ -44,6 +52,7 @@ class MandelWidget : public QGLWidget
 private:
     //QScrollArea qsa;
     //QLabel ql;
+    mnd::MandelContext& mndContext;
 
     bool initialized = false;
 
@@ -51,15 +60,18 @@ private:
     QRectF rubberband;
 
     std::unique_ptr<Texture> tex;
-    MandelViewport viewport;
+    mnd::MandelViewport viewport;
     MandelView mv;
 public:
-    MandelWidget(QWidget* parent = nullptr);
+    MandelWidget(mnd::MandelContext& ctxt, QWidget* parent = nullptr);
     ~MandelWidget(void) override;
 
 
-    inline MandelWidget(const MandelWidget& other) {
-    }
+    /*inline MandelWidget(const MandelWidget& other) :
+        mndContext{ other.mndContext },
+        mv{ other.mndContext }
+    {
+    }*/
 
     void initializeGL(void) override;
 
@@ -76,9 +88,9 @@ public:
     void mouseMoveEvent(QMouseEvent* me) override;
     void mouseReleaseEvent(QMouseEvent* me) override;
 
-    inline const MandelViewport& getViewport(void) const { return viewport; }
+    inline const mnd::MandelViewport& getViewport(void) const { return viewport; }
 signals:
-    void needsUpdate(const MandelViewport& vp);
+    void needsUpdate(const mnd::MandelViewport& vp);
 public slots:
     void viewUpdated(const Bitmap<RGBColor>* bitmap);
 };

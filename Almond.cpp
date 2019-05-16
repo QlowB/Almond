@@ -5,12 +5,13 @@
 #include "benchmarkdialog.h"
 
 Almond::Almond(QWidget *parent) :
-    QMainWindow(parent)
+    QMainWindow(parent),
+    mandelContext(mnd::initializeContext())
 {
     ui.setupUi(this);
     printf("not yet created!\n");
-    mw = std::make_unique<MandelWidget>(ui.centralWidget);
-    qRegisterMetaType<MandelWidget>("MandelWidget");
+    mw = std::make_unique<MandelWidget>(mandelContext, ui.centralWidget);
+    //qRegisterMetaType<MandelWidget>("MandelWidget");
     printf("created!\n");
     ui.verticalLayout_left->addWidget(mw.get());
     //ui.verticalLayout_left->addWidget(new MyGLWidget(ui.centralWidget));
@@ -22,14 +23,16 @@ void Almond::on_pushButton_clicked()
     ExportImageDialog dialog(this);
     auto response = dialog.exec();
     if (response == 1) {
-        MandelInfo mi;
+        mnd::MandelInfo mi;
         mi.maxIter = dialog.getMaxIterations();
         mi.view = mw->getViewport();
         mi.bWidth = dialog.getWidth();
         mi.bHeight = dialog.getHeight();
         mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        CpuGenerator<double> cpg;
-        auto bitmap = cpg.generate(mi);
+        mnd::Generator& g = mandelContext.getDefaultGenerator();
+        auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
+        g.generate(mi, fmap.pixels.get());
+        auto bitmap = fmap.map<RGBColor>([](float i) { return i < 0 ? RGBColor{ 0,0,0 } : RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127), uint8_t(sin(i * 0.01f) * 127 + 127), uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
         QImage img((unsigned char*)bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
         img.save(dialog.getPath());
     }
@@ -90,6 +93,6 @@ void ExportImageDialog::on_buttonBox_accepted()
 
 void Almond::on_pushButton_2_clicked()
 {
-    BenchmarkDialog bd(this);
+    BenchmarkDialog bd(mandelContext, this);
     bd.exec();
 }

@@ -9,13 +9,15 @@ namespace mnd
     class CpuGeneratorAvxDouble;
 }
 
-class mnd::CpuGeneratorAvxFloat
+
+class mnd::CpuGeneratorAvxFloat : public Generator
 {
 public:
     virtual void generate(const MandelInfo& info, float* data);
 };
 
-class mnd::CpuGeneratorAvxDouble
+
+class mnd::CpuGeneratorAvxDouble : public Generator
 {
 public:
     virtual void generate(const MandelInfo& info, float* data);

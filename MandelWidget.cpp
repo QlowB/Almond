@@ -1,5 +1,7 @@
 #include "MandelWidget.h"
 
+using namespace mnd;
+
 #include <QOpenGLVertexArrayObject>
 
 Texture::Texture(const Bitmap<RGBColor>& bitmap)
@@ -77,16 +79,16 @@ void MandelView::adaptViewport(const MandelViewport& vp)
         hasToCalc = true;
         calc = std::async([this] () {
             do {
-                CpuGenerator<double> cpg;
                 //static ClGenerator cpg;
                 MandelInfo mi;
                 mi.bWidth = 1024;//ql.geometry().width();
                 mi.bHeight = 1024; //ql.geometry().height();
                 mi.maxIter = 4000;
                 mi.view = toCalc;
-                Bitmap<RGBColor>* bmp = //new Bitmap<RGBColor>(1, 1);
-                                        new Bitmap<RGBColor>(cpg.generate(mi));
-                emit updated(bmp);
+                auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
+                generator.generate(mi, fmap.pixels.get());
+                auto bitmap = fmap.map<RGBColor>([](float i) { return i < 0 ? RGBColor{ 0,0,0 } : RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127), uint8_t(sin(i * 0.01f) * 127 + 127), uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
+                emit updated(new Bitmap(std::move(bitmap)));
             } while(hasToCalc.exchange(false));
         });
     }
@@ -97,8 +99,10 @@ void MandelView::adaptViewport(const MandelViewport& vp)
 }
 
 
-MandelWidget::MandelWidget(QWidget* parent) :
-    QGLWidget{ QGLFormat(QGL::SampleBuffers), parent }
+MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
+    QGLWidget{ QGLFormat(QGL::SampleBuffers), parent },
+    mndContext{ ctxt },
+    mv{ *ctxt.getDevices()[0].getGeneratorDouble() }
 {
     this->setContentsMargins(0, 0, 0, 0);
     this->setSizePolicy(QSizePolicy::Expanding,

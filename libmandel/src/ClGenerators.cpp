@@ -8,6 +8,7 @@ using namespace cl;
 
 using mnd::ClGenerator;
 using mnd::ClGeneratorFloat;
+using mnd::ClGeneratorDouble;
 
 Platform getPlatform() {
     /* Returns the first platform found. */
@@ -18,16 +19,21 @@ Platform getPlatform() {
         std::cout << "No platforms found. Check OpenCL installation!\n";
         exit(1);
     }
+    for (auto& p : all_platforms) {
+        std::string name = p.getInfo<CL_PLATFORM_NAME>();
+        std::string profile = p.getInfo<CL_PLATFORM_PROFILE>();
+        printf("Platform: %s, %s\n", name.c_str(), profile.c_str());
+    }
     return all_platforms[0];
 }
 
 
-Device getDevice(Platform platform, int i, bool display = false) {
+Device getDevice(Platform& platform, int i, bool display = false) {
     /* Returns the deviced specified by the index i on platform.
     * If display is true, then all of the platforms are listed.
     */
     std::vector<Device> all_devices;
-    platform.getDevices(CL_DEVICE_TYPE_GPU, &all_devices);
+    platform.getDevices(CL_DEVICE_TYPE_ALL, &all_devices);
     if (all_devices.size() == 0) {
         std::cout << "No devices found. Check OpenCL installation!\n";
         exit(1);
@@ -44,14 +50,15 @@ Device getDevice(Platform platform, int i, bool display = false) {
 }
 
 
-ClGenerator::ClGenerator(void)
+ClGenerator::ClGenerator(cl::Device device) :
+    device{ device }
 {
-    Platform p = getPlatform();
+    /*Platform p = getPlatform();
     device = getDevice(p, 0, true);
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode = getKernelCode();
+    std::string kcode = this->getKernelCode();
 
     sources.push_back({ kcode.c_str(), kcode.length() });
 
@@ -61,7 +68,7 @@ ClGenerator::ClGenerator(void)
         exit(1);
     }
 
-    queue = CommandQueue(context, device);
+    queue = CommandQueue(context, device);*/
 }
 
 
@@ -75,8 +82,8 @@ ClGenerator::~ClGenerator(void)
 void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
 {
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
-    
-    Buffer buffer_A(context, CL_MEM_READ_WRITE, bufferSize);
+
+    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
     float pixelScaleX = info.view.width / info.bWidth;
     float pixelScaleY = info.view.height / info.bHeight;
 
@@ -96,6 +103,27 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
         queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
     }
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+
+ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
+    ClGenerator{ device }
+{
+    /*Platform p = getPlatform();
+    device = getDevice(p, 0, true);*/
+    context = Context{ device };
+    Program::Sources sources;
+
+    std::string kcode = this->getKernelCode();
+
+    sources.push_back({ kcode.c_str(), kcode.length() });
+
+    program = Program{ context, sources };
+    if (program.build({ device }) != CL_SUCCESS) {
+        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
+    }
+
+    queue = CommandQueue(context, device);
 }
 
 
@@ -162,9 +190,87 @@ std::string ClGeneratorFloat::getKernelCode(void) const
             "       n++;"
             "   }\n"
                 // N + 1 - log (log  |Z(N)|) / log 2
-            "   A[index] = ((float)n) + 1 - log(log(a * a + b * b) / 2) / log(2.0f);\n"
+            "   if (n >= max)\n"
+            "       A[index] = max;\n"
+            "   else"
+            "       A[index] = ((float)n) + 1 - log(log(a * a + b * b) / 2) / log(2.0f);\n"
 //            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
     //        "   A[get_global_id(0)] = 5;"
             "}";
     }
+}
+
+
+ClGeneratorDouble::ClGeneratorDouble(cl::Device device) :
+    ClGenerator{ device }
+{
+    context = Context{ device };
+    Program::Sources sources;
+
+    std::string kcode = this->getKernelCode();
+
+    sources.push_back({ kcode.c_str(), kcode.length() });
+
+    program = Program{ context, sources };
+    if (program.build({ device }) != CL_SUCCESS) {
+        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
+    }
+
+    queue = CommandQueue(context, device);
+}
+
+
+void ClGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+    float pixelScaleX = info.view.width / info.bWidth;
+    float pixelScaleY = info.view.height / info.bHeight;
+
+    Kernel iterate = Kernel(program, "iterate");
+    iterate.setArg(0, buffer_A);
+    iterate.setArg(1, int(info.bWidth));
+    iterate.setArg(2, double(info.view.x));
+    iterate.setArg(3, double(info.view.y));
+    iterate.setArg(4, double(pixelScaleX));
+    iterate.setArg(5, double(pixelScaleY));
+    iterate.setArg(6, int(info.maxIter));
+
+    queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+
+std::string ClGeneratorDouble::getKernelCode(void) const
+{
+    return 
+        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
+        "__kernel void iterate(__global float* A, const int width, double xl, double yt, double pixelScaleX, double pixelScaleY, int max) {\n"
+        "   int index = get_global_id(0);\n"
+        "   int x = index % width;"
+        "   int y = index / width;"
+        "   double a = x * pixelScaleX + xl;"
+        "   double b = y * pixelScaleY + yt;"
+        "   double ca = a;"
+        "   double cb = b;"
+        ""
+        "   int n = 0;"
+        "   while (n < max) {"
+        "       double aa = a * a;"
+        "       double bb = b * b;"
+        "       double ab = a * b;"
+        "       if (aa + bb > 16) break;"
+        "       a = aa - bb + ca;"
+        "       b = 2 * ab + cb;"
+        "       n++;"
+        "   }\n"
+        // N + 1 - log (log  |Z(N)|) / log 2
+        "   if (n >= max)\n"
+        "       A[index] = max;\n"
+        "   else"
+        "       A[index] = ((float)n) + 1 - log(log(a * a + b * b) / 2) / log(2.0f);\n"
+        //            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
+        //        "   A[get_global_id(0)] = 5;"
+        "}";
 }

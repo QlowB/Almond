@@ -2,7 +2,6 @@
 #ifndef SECTIONMANAGER_H
 #define SECTIONMANAGER_H
 
-#include "QueueManager.h"
 
 class SectionManager
 {

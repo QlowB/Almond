@@ -4,20 +4,22 @@
 #include <QDialog>
 #include <functional>
 #include "ui_benchmarks.h"
-#include "Generators.h"
+#include <Mandel.h>
+#include "Bitmap.h"
 
 class BenchmarkDialog : public QDialog
 {
     Q_OBJECT
 private:
     Ui::BenchmarkDialog ui;
+    mnd::MandelContext& mndContext;
 public:
-    explicit BenchmarkDialog(QWidget *parent = nullptr);
+    explicit BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent = nullptr);
 
-    MandelViewport benchViewport(void) const;
+    mnd::MandelViewport benchViewport(void) const;
 
     double measureMips(const std::function<Bitmap<float>()>& bench) const;
-    QString benchmarkResult(MandelGenerator& mg, int size, int iters) const;
+    QString benchmarkResult(mnd::Generator& mg, int size, int iters) const;
 
 signals:
 

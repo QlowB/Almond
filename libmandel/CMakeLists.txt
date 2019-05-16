@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 
-
+set(CMAKE_CXX_STANDARD 17)
 project(mandel VERSION 1.0.0 DESCRIPTION "library for mandelbrot calculations")
 
 find_package(OpenCL REQUIRED)
@@ -13,7 +13,13 @@ FILE(GLOB MandelHeaders include/*.h))
 
 include_directories(
     "include"
+    ${OpenCL_INCLUDE_DIRS}
 )
+link_directories(${OpenCL_LIBRARY})
+
+if (APPLE)
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -framework OpenCL")
+endif()
 
 if (MSVC)
     set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS /arch:AVX)
@@ -23,9 +29,9 @@ endif(MSVC)
 
 
 if (MSVC)
-    set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS /arch:SSE2)
+    set_source_files_properties(src/CpuGeneratorsSSE2.cpp PROPERTIES COMPILE_FLAGS /arch:SSE2)
 else()
-    set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS -msse2)
+    set_source_files_properties(src/CpuGeneratorsSSE2.cpp PROPERTIES COMPILE_FLAGS -msse2)
 endif(MSVC)
 
 add_library(mandel STATIC ${MandelSources})

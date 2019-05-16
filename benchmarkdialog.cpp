@@ -151,8 +151,16 @@ BenchmarkDialog::BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent
     QString cpuDesc = ("CPU [" + mndContext.getCpuInfo().getBrand() + "]").c_str();
     ui.tableWidget->setVerticalHeaderItem(0, new QTableWidgetItem(cpuDesc));
     for (int i = 0; i < devices.size(); i++) {
-        QString cpuDesc = ("GPU " + std::to_string(i + 1) + " [" + devices[i].getVendor() + " " + devices[i].getName() + "]").c_str();
-        ui.tableWidget->setVerticalHeaderItem(i + 1, new QTableWidgetItem(cpuDesc));
+        std::string cpuDescS = std::string("GPU ") + std::to_string(i + 1) + " [" + devices[i].getName().c_str() + "]";
+        QString cpuDesc = QString::fromLatin1(cpuDescS.c_str());
+        /*printf("brand [%d]: --> %s <--\n", (int) cpuDescS.size(), cpuDescS.c_str());
+        for (int x = 0; x < cpuDescS.size(); x++) {
+            printf("%d\n", cpuDescS[x]);
+        }
+        printf("\n");*/
+        auto label = new QTableWidgetItem(cpuDesc);
+        label->setStatusTip(QString::fromLatin1(devices[i].getName().c_str()));
+        ui.tableWidget->setVerticalHeaderItem(i + 1, label);
     }
 
     qRegisterMetaType<BenchmarkResult>();

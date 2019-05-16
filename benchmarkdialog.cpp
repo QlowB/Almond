@@ -1,5 +1,6 @@
 #include "benchmarkdialog.h"
 #include <chrono>
+#include <cmath>
 
 BenchmarkDialog::BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent) :
     QDialog(parent),

@@ -58,11 +58,11 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 win32:LIBS += -lopengl32
 else:LIBS += -lOpenGL
 
-#win32:QMAKE_CXXFLAGS+= -openmp
-#else:unix:QMAKE_CXXFLAGS+= -fopenmp
-#win32:QMAKE_LFLAGS +=  -openmp
-#else:unix:QMAKE_LFLAGS+= -fopenmp
-#LIBS += -fopenmp
+win32:QMAKE_CXXFLAGS+= -openmp
+else:unix:QMAKE_CXXFLAGS+= -fopenmp
+win32:QMAKE_LFLAGS +=  -openmp
+else:unix:QMAKE_LFLAGS+= -fopenmp
+LIBS += -fopenmp
 unix:LIBS += -lm -latomic
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
@@ -121,10 +121,10 @@ else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/' -lopencl
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/' -lopencl
-else:unix: LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/' -lopencl
+else:unix: LIBS += -lOpenCL
 
-INCLUDEPATH += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/include'
-DEPENDPATH += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/include'
+win32:INCLUDEPATH += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/include'
+win32:DEPENDPATH += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/include'
 
 win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/libopencl.a'
 else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/libopencl.a'

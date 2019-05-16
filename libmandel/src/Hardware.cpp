@@ -3,30 +3,53 @@
 #include <array>
 #include <vector>
 #include <bitset>
+#include <cstring>
 
+#ifdef __GNUC__
+#include <cpuid.h>
+#else
 #include <intrin.h>
+#endif
 
 using mnd::CpuInfo;
 
 
 CpuInfo::CpuInfo(void)
 {
-    std::array<int, 4> dat;
-    std::vector<std::array<int, 4>> cpuData;
-    std::vector<std::array<int, 4>> extData;
+    std::array<unsigned int, 4> dat;
+    std::vector<std::array<unsigned int, 4>> cpuData;
+    std::vector<std::array<unsigned int, 4>> extData;
 
+    unsigned int nData;
+    unsigned int nExtData;
+
+#ifdef __GNUC__
+    __cpuid(0, dat[0], dat[1], dat[2], dat[3]);
+    nData = dat[0];
+    __cpuid(0x80000000, dat[0], dat[1], dat[2], dat[3]);
+    nExtData = dat[0];
+#else
     __cpuid(dat.data(), 0);
-    int nData = dat[0];
+    nData = dat[0];
     __cpuid(dat.data(), 0x80000000);
-    int nExtData = dat[0];
+    nExtData = dat[0];
+#endif
 
     for (int i = 0; i <= nData; i++) {
+#ifdef __GNUC__
+        __get_cpuid(i, &dat[0], &dat[1], &dat[2], &dat[3]);
+#else
         __cpuidex(dat.data(), i, 0);
+#endif
         cpuData.push_back(dat);
     }
 
     for (int i = 0x80000000; i <= nExtData; i++) {
+#ifdef __GNUC__
+        __get_cpuid(i, &dat[0], &dat[1], &dat[2], &dat[3]);
+#else
         __cpuidex(dat.data(), i, 0);
+#endif
         extData.push_back(dat);
     }
 

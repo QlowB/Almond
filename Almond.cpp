@@ -4,6 +4,8 @@
 #include <QMessageBox>
 #include "benchmarkdialog.h"
 
+#include <cmath>
+
 Almond::Almond(QWidget *parent) :
     QMainWindow(parent),
     mandelContext(mnd::initializeContext())

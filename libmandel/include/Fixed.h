@@ -29,7 +29,7 @@ struct Fixed128
         const double twoToThe32 = double(0x100000000ULL);
         upper = uint64_t(int64_t(x * twoToThe32));
         double remainder = x - double(upper) / twoToThe32;
-        lower = uint64_t(int64_t(x * twoToThe32 * twoToThe32 * twoToThe32));
+        lower = uint64_t(int64_t(remainder * twoToThe32 * twoToThe32 * twoToThe32));
         /*int integerPart = ::floor(x);
         double fractionalPart = x - integerPart;
         upper = int64_t(integerPart) << 32;

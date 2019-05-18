@@ -9,6 +9,7 @@ using namespace cl;
 using mnd::ClGenerator;
 using mnd::ClGeneratorFloat;
 using mnd::ClGeneratorDouble;
+using mnd::ClGenerator128;
 
 Platform getPlatform() {
     /* Returns the first platform found. */
@@ -273,4 +274,60 @@ std::string ClGeneratorDouble::getKernelCode(void) const
         //            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
         //        "   A[get_global_id(0)] = 5;"
         "}";
+}
+
+
+
+ClGenerator128::ClGenerator128(cl::Device device) :
+    ClGenerator{ device }
+{
+    context = Context{ device };
+    Program::Sources sources;
+
+    std::string kcode = this->getKernelCode();
+
+    sources.push_back({ kcode.c_str(), kcode.length() });
+
+    program = Program{ context, sources };
+    if (program.build({ device }) != CL_SUCCESS) {
+        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
+    }
+
+    queue = CommandQueue(context, device);
+}
+
+
+void ClGenerator128::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+    float pixelScaleX = info.view.width / info.bWidth;
+    float pixelScaleY = info.view.height / info.bHeight;
+
+    Kernel iterate = Kernel(program, "iterate");
+    iterate.setArg(0, buffer_A);
+    iterate.setArg(1, int(info.bWidth));
+    iterate.setArg(2, double(info.view.x));
+    iterate.setArg(3, double(info.view.y));
+    iterate.setArg(4, double(pixelScaleX));
+    iterate.setArg(5, double(pixelScaleY));
+    iterate.setArg(6, int(info.maxIter));
+
+    queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+#include <string>
+#include <fstream>
+#include <streambuf>
+
+std::string ClGenerator128::getKernelCode(void) const
+{
+    //fprintf(stderr, "starting file read\n");
+    std::ifstream t("mandel128.cl");
+    std::string str((std::istreambuf_iterator<char>(t)),
+        std::istreambuf_iterator<char>());
+    //fprintf(stderr, "%s\n", str);
+    return str;
 }

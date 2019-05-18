@@ -64,12 +64,12 @@ else:unix:QMAKE_LFLAGS+= -fopenmp
 LIBS += -fopenmp
 unix:LIBS += -lm -latomic
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
-else:unix: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
+#else:unix: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
 
-INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
-DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
@@ -83,28 +83,28 @@ win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavformat
 else:unix: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavformat
 
-INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
-DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavdevice
+#unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavdevice
 
-INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
-DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavfilter
+#unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavfilter
 
-INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
-DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavutil
+#unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavutil
 
-INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
-DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lswscale
+#unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lswscale
 
-INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
-DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+#DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
 RESOURCES += \
     Almond.qrc

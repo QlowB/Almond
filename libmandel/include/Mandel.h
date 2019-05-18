@@ -28,6 +28,7 @@ private:
 
     std::unique_ptr<Generator> floatGenerator;
     std::unique_ptr<Generator> doubleGenerator;
+    std::unique_ptr<Generator> generator128;
     MandelDevice(void);
 public:
 
@@ -36,6 +37,7 @@ public:
 
     Generator* getGeneratorFloat(void) const;
     Generator* getGeneratorDouble(void) const;
+    Generator* getGenerator128(void) const;
 };
 
 

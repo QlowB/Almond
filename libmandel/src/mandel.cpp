@@ -41,6 +41,15 @@ mnd::Generator* MandelDevice::getGeneratorDouble(void) const
 }
 
 
+mnd::Generator* MandelDevice::getGenerator128(void) const
+{
+    if (generator128)
+        return generator128.get();
+    else
+        return nullptr;
+}
+
+
 MandelContext::MandelContext(void)
 {
     if (cpuInfo.hasAvx()) {
@@ -68,7 +77,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
-    //platforms.erase(platforms.begin() + 1);
+    platforms.erase(platforms.begin() + 1);
 
     for (auto& platform : platforms) {
         std::string name = platform.getInfo<CL_PLATFORM_NAME>();
@@ -109,6 +118,14 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
                 catch (const std::string& err) {
                 }
             }
+
+            try {
+                md.generator128 = std::make_unique<ClGenerator128>(device);
+            }
+            catch (const std::string& err) {
+                fprintf(stderr, "error creating 128bit cl generator: %s\n", err.c_str());
+            }
+
             mandelDevices.push_back(std::move(md));
         }
     }

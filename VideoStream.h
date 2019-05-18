@@ -1,4 +1,7 @@
 #pragma once
+#ifdef FFMPEG_ENABLED
+
+
 #ifndef VIDEO_STREAM_H_
 #define VIDEO_STREAM_H_
 
@@ -37,3 +40,5 @@ public:
 };
 
 #endif // VIDEO_STREAM_H_
+
+#endif // FFMPEG_ENABLED

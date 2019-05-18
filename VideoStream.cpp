@@ -1,3 +1,5 @@
+#ifdef FFMPEG_ENABLED
+
 #include "VideoStream.h"
 
 #include <iostream>
@@ -144,3 +146,5 @@ void VideoStream::addFrame(const Bitmap<RGBColor>& frame)
     /* encode the image */
     encode(codecContext, picture, pkt, file);
 }
+
+#endif // FFMPEG_ENABLED

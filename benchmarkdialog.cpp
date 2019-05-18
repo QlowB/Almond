@@ -94,6 +94,9 @@ void Benchmarker::start(void)
         if (mnd::Generator* gpud; gpud = devices[i].getGeneratorDouble()) {
             nTests++;
         }
+        if (mnd::Generator* gpu128; gpu128 = devices[i].getGenerator128()) {
+            nTests++;
+        }
     }
 
     double progress = 90.0 / nTests;
@@ -125,6 +128,11 @@ void Benchmarker::start(void)
         }
         if (mnd::Generator* gpud; gpud = devices[i].getGeneratorDouble()) {
             gpu.push_back(benchmarkResult(*gpud));
+            br.percentage += progress;
+            emit update(br);
+        }
+        if (mnd::Generator* gpu128; gpu128 = devices[i].getGenerator128()) {
+            gpu.push_back(benchmarkResult(*gpu128));
             br.percentage += progress;
             emit update(br);
         }

@@ -75,6 +75,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 {
     std::vector<MandelDevice> mandelDevices;
 
+    /*
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
     platforms.erase(platforms.begin() + 1);
@@ -129,6 +130,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             mandelDevices.push_back(std::move(md));
         }
     }
+    */
     return mandelDevices;
 }
 

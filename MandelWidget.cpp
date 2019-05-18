@@ -107,7 +107,7 @@ void MandelView::adaptViewport(const MandelViewport& vp)
 MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
     QGLWidget{ QGLFormat(QGL::SampleBuffers), parent },
     mndContext{ ctxt },
-    mv{ *ctxt.getDevices()[0].getGenerator128() }
+    mv{ ctxt.getDefaultGenerator() }
 {
     this->setContentsMargins(0, 0, 0, 0);
     this->setSizePolicy(QSizePolicy::Expanding,

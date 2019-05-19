@@ -39,7 +39,7 @@ if (APPLE AND OpenCL_FOUND)
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -framework OpenCL")
 endif()
 
-if (${ARCH} EQUAL X86_64 OR ${ARCH} EQUAL X86)
+if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
     if (MSVC)
         set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS /arch:AVX)
     else()

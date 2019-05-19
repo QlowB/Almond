@@ -79,7 +79,6 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 {
     std::vector<MandelDevice> mandelDevices;
 
-    /*
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
     platforms.erase(platforms.begin() + 1);
@@ -88,9 +87,9 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
         std::string name = platform.getInfo<CL_PLATFORM_NAME>();
         std::string profile = platform.getInfo<CL_PLATFORM_PROFILE>();
 
-       std::string ext = platform.getInfo<CL_PLATFORM_EXTENSIONS>();
-        printf("Platform extensions: %s\n", ext.c_str());
-        printf("Platform: %s, %s\n", name.c_str(), profile.c_str());
+        //std::string ext = platform.getInfo<CL_PLATFORM_EXTENSIONS>();
+        //printf("Platform extensions: %s\n", ext.c_str());
+        //printf("Platform: %s, %s\n", name.c_str(), profile.c_str());
 
         std::vector<cl::Device> devices;
         platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
@@ -102,10 +101,10 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             std::string extensions = device.getInfo<CL_DEVICE_EXTENSIONS>();
             auto supportsDouble = extensions.find("cl_khr_fp64") != std::string::npos;
 
-            printf("Device extensions: %s\n", ext.c_str());
+            //printf("Device extensions: %s\n", ext.c_str());
             MandelDevice md;
 
-            printf("clock: %d", device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
+            //printf("clock: %d", device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
 
             md.name = device.getInfo<CL_DEVICE_NAME>();
             md.vendor = device.getInfo<CL_DEVICE_VENDOR>();
@@ -128,13 +127,13 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
                 md.generator128 = std::make_unique<ClGenerator128>(device);
             }
             catch (const std::string& err) {
-                fprintf(stderr, "error creating 128bit cl generator: %s\n", err.c_str());
+                //fprintf(stderr, "error creating 128bit cl generator: %s\n", err.c_str());
             }
 
             mandelDevices.push_back(std::move(md));
         }
     }
-    */
+    
     return mandelDevices;
 }
 

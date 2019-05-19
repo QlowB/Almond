@@ -3,6 +3,7 @@
 #include <chrono>
 #include <functional>
 #include <Mandel.h>
+#include <cmath>
 
 constexpr mnd::MandelViewport benchViewport(void)
 {

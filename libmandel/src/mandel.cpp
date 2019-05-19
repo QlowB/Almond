@@ -81,7 +81,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
-    platforms.erase(platforms.begin() + 1);
+    //platforms.erase(platforms.begin() + 1);
 
     for (auto& platform : platforms) {
         std::string name = platform.getInfo<CL_PLATFORM_NAME>();
@@ -124,7 +124,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             }
 
             try {
-                md.generator128 = std::make_unique<ClGenerator128>(device);
+                //md.generator128 = std::make_unique<ClGenerator128>(device);
             }
             catch (const std::string& err) {
                 //fprintf(stderr, "error creating 128bit cl generator: %s\n", err.c_str());

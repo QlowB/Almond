@@ -52,6 +52,8 @@ mnd::Generator* MandelDevice::getGenerator128(void) const
 
 MandelContext::MandelContext(void)
 {
+
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
     if (cpuInfo.hasAvx()) {
         cpuGeneratorFloat = std::make_unique<CpuGeneratorAvxFloat>();
         cpuGeneratorDouble = std::make_unique<CpuGeneratorAvxDouble>();
@@ -60,7 +62,9 @@ MandelContext::MandelContext(void)
         cpuGeneratorFloat = std::make_unique<CpuGeneratorSse2Float>();
         cpuGeneratorDouble = std::make_unique<CpuGeneratorSse2Double>();
     }
-    else {
+    else
+#endif
+    {
         cpuGeneratorFloat = std::make_unique<CpuGeneratorFloat>();
         cpuGeneratorDouble = std::make_unique<CpuGeneratorDouble>();
     }

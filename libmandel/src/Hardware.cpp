@@ -5,17 +5,28 @@
 #include <bitset>
 #include <cstring>
 
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
 #ifdef __GNUC__
 #include <cpuid.h>
 #else
 #include <intrin.h>
 #endif
+#endif
 
 using mnd::CpuInfo;
 
 
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
 CpuInfo::CpuInfo(void)
 {
+
+
+#if defined(__x86_64__) || defined(_M_X64)
+    arch = Arch::X86_64;
+#else
+    arch = Arch::X86;
+#endif
+
     std::array<unsigned int, 4> dat;
     std::vector<std::array<unsigned int, 4>> cpuData;
     std::vector<std::array<unsigned int, 4>> extData;
@@ -94,3 +105,17 @@ CpuInfo::CpuInfo(void)
     avx512 = ebx7[16];
 }
 
+#elif defined(__arm__) || defined(__aarch64__)
+
+CpuInfo::CpuInfo(void)
+{
+#if defined(__aarch64__)
+    arch = Arch::ARM64;
+#else
+    arch = Arch::ARM;
+
+    // TODO implement check
+    neon = false;
+#endif
+}
+#endif

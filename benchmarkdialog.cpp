@@ -3,13 +3,51 @@
 #include <cmath>
 
 
-mnd::MandelViewport Benchmarker::benchViewport(void) const
+mnd::MandelViewport Benchmarker::benchViewport(void)
 {
-    return mnd::MandelViewport{ -0.758267525104592591494, -0.066895616551111110830, 0.000000043217777777655, 0.000000043217777777655 };
+    //return mnd::MandelViewport{ -0.758267525104592591494, -0.066895616551111110830, 0.000000043217777777655, 0.000000043217777777655 };
+    return mnd::MandelViewport{ -1.250000598933854152929, 0.0001879894057291665530, 0.0000003839916666666565, 0.0000003839916666666565 };
 }
 
+const std::vector<mnd::MandelInfo> Benchmarker::benches {
+    mnd::MandelInfo{ benchViewport(), 100, 100, 1000 },
+    mnd::MandelInfo{ benchViewport(), 100, 200, 1000 },
+    mnd::MandelInfo{ benchViewport(), 200, 200, 1000 },
+    mnd::MandelInfo{ benchViewport(), 200, 200, 2000 },
+    mnd::MandelInfo{ benchViewport(), 200, 400, 2000 },
+    mnd::MandelInfo{ benchViewport(), 400, 400, 2000 },
+    mnd::MandelInfo{ benchViewport(), 400, 400, 4000 },
+    mnd::MandelInfo{ benchViewport(), 400, 800, 4000 },
+    mnd::MandelInfo{ benchViewport(), 800, 800, 4000 },
+    mnd::MandelInfo{ benchViewport(), 800, 800, 8000 },
+    mnd::MandelInfo{ benchViewport(), 800, 800, 16000 },
+    mnd::MandelInfo{ benchViewport(), 800, 1600, 16000 },
+    mnd::MandelInfo{ benchViewport(), 1600, 1600, 16000 },
+    mnd::MandelInfo{ benchViewport(), 1600, 1600, 32000 },
+    mnd::MandelInfo{ benchViewport(), 1600, 1600, 64000 },
+    mnd::MandelInfo{ benchViewport(), 1600, 3200, 64000 },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 64000 },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 128000 },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 256000 },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 512000 },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 1024000 },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 2048000 },
+    mnd::MandelInfo{ benchViewport(), 3200, 6400, 2048000 },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 2048000 },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 4096000 },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 8192000 },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 16384000 },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 32768000 },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 65536000 },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 131072000 },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 262144000 },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 524288000 },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 1048576000 },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 2097152000 },
+};
 
-double Benchmarker::measureMips(const std::function<Bitmap<float>()>& bench) const
+
+std::pair<long long, std::chrono::nanoseconds> Benchmarker::measureMips(const std::function<Bitmap<float>()>& bench) const
 {
     using namespace std::chrono;
     auto before = high_resolution_clock::now();
@@ -21,60 +59,41 @@ double Benchmarker::measureMips(const std::function<Bitmap<float>()>& bench) con
         sum += std::floor(bitmap.pixels[size_t(i)]);
     }
 
-    double iterPerNanos = double(sum) / duration_cast<nanoseconds>(after - before).count();
-    printf("test took %lld millis\n", duration_cast<milliseconds>(after - before).count());
-    printf("test did %lld iters\n", sum);
-    double megaItersPerSecond = iterPerNanos * 1000.0;
-    return megaItersPerSecond;
+    return std::make_pair(sum, duration_cast<nanoseconds>(after - before));
 }
 
 double Benchmarker::benchmarkResult(mnd::Generator& mg) const
 {
-    // create testbenchmark
-    mnd::MandelInfo mi;
-    mi.bWidth = 250;
-    mi.bHeight = 250;
-    mi.maxIter = 4000;
-    mi.view = benchViewport();
-    double testValue = measureMips([&mg, &mi] () {
-        Bitmap<float> bmp(mi.bWidth, mi.bHeight);
-        mg.generate(mi, bmp.pixels.get());
-        return bmp;
-    });
+    int testIndex = 0;
 
-    printf("testbench: %lf\n", testValue);
-
-    std::vector<std::pair<double, mnd::MandelInfo>> benches {
-        { 200, mnd::MandelInfo{ benchViewport(), 750, 750, 5000} },
-        { 500, mnd::MandelInfo{ benchViewport(), 2000, 1000, 7500} },
-        { 2000, mnd::MandelInfo{ benchViewport(), 2000, 2000, 15000} },
-        { 5000, mnd::MandelInfo{ benchViewport(), 3000, 3000, 30000} },
-        { 10000, mnd::MandelInfo{ benchViewport(), 4000, 4000, 75000} },
-        { 100000, mnd::MandelInfo{ benchViewport(), 6000, 6000, 750000} },
-        { std::numeric_limits<double>::max(), mnd::MandelInfo{ benchViewport(), 7000, 7000, 1000000} }
-    };
-
-    double megaItersPerSecond = 0.0;
-    if (testValue < 100) {
-        megaItersPerSecond = testValue;
-    }
-    else {
-        for (auto& [thresh, info] : benches) {
-            auto& m = info;
-            if (testValue < thresh) {
-                megaItersPerSecond = measureMips([&mg, &m] () {
-                    Bitmap<float> bmp(m.bWidth, m.bHeight);
-                    mg.generate(m, bmp.pixels.get());
-                    return bmp;
-                });
-                break;
-            }
+    for (int i = 0; i < benches.size(); i++) {
+        const mnd::MandelInfo& mi = benches[i];
+        auto data = std::make_unique<float[]>(mi.bWidth * mi.bHeight);
+        auto [iters, time] = measureMips([&mg, &mi, &data]() {
+            Bitmap<float> bmp(mi.bWidth, mi.bHeight);
+            mg.generate(mi, bmp.pixels.get());
+            return bmp;
+        });
+        //printf("benchmark lvl %d, time %d ms\n", i, time.count() / 1000 / 1000);
+        //fflush(stdout);
+        if (time > std::chrono::milliseconds(1000)) {
+            testIndex = i + 2;
+            break;
         }
     }
 
 
+    const mnd::MandelInfo& mi = benches[(testIndex >= benches.size()) ? (benches.size() - 1) : testIndex];
+    auto data = std::make_unique<float[]>(mi.bWidth * mi.bHeight);
+    auto [iters, time] = measureMips([&mg, &mi, &data]() {
+        Bitmap<float> bmp(mi.bWidth, mi.bHeight);
+        mg.generate(mi, bmp.pixels.get());
+        return bmp;
+    });
+    //printf("bench time %d ms\n", time.count() / 1000 / 1000);
+    //fflush(stdout);
 
-    return megaItersPerSecond;
+    return double(iters) / time.count() * 1000;
 }
 
 

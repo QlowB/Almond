@@ -22,15 +22,16 @@ class Benchmarker : public QObject
     Q_OBJECT
 private:
     mnd::MandelContext mndContext;
+    static const std::vector<mnd::MandelInfo> benches;
 public:
     inline Benchmarker(mnd::MandelContext& mndContext) :
         mndContext{ mnd::initializeContext() }
     {
     }
 
-    mnd::MandelViewport benchViewport(void) const;
+    static mnd::MandelViewport benchViewport(void);
 
-    double measureMips(const std::function<Bitmap<float>()>& bench) const;
+    std::pair<long long, std::chrono::nanoseconds> measureMips(const std::function<Bitmap<float>()>& bench) const;
     double benchmarkResult(mnd::Generator& mg) const;
 
 public slots:

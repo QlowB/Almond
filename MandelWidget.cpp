@@ -61,7 +61,12 @@ void Texture::drawRect(float x, float y, float width, float height)
 }
 
 
-void MandelView::adaptViewport(const MandelViewport& vp)
+void MandelView::setGenerator(mnd::Generator& value)
+{
+    generator = &value;
+}
+
+void MandelView::adaptViewport(const MandelInfo mi)
 {
     //bmp->get(0, 0) = RGBColor{ 10, uint8_t(sin(1 / vp.width) * 127 + 127), 10 };
     /*printf("adapted\n");
@@ -76,29 +81,24 @@ void MandelView::adaptViewport(const MandelViewport& vp)
         }
     }*/
     if (!calc.valid() || calc.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
-        toCalc = vp;
+        toCalc = mi;
         hasToCalc = true;
-        calc = std::async([this] () {
-            do {
-                //static ClGenerator cpg;
-                MandelInfo mi;
-                mi.bWidth = 200;//ql.geometry().width();
-                mi.bHeight = 200; //ql.geometry().height();
-                mi.maxIter = 4000;
-                mi.view = toCalc;
+        calc = std::async([this, mi] () {
+             while(hasToCalc.exchange(false)) {
                 auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
-                generator.generate(mi, fmap.pixels.get());
+                generator->generate(mi, fmap.pixels.get());
                 auto bitmap = fmap.map<RGBColor>([&mi](float i) { return i > mi.maxIter ?
                                 RGBColor{ 0,0,0 } :
                                 RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127),
                                           uint8_t(sin(i * 0.01f) * 127 + 127),
                                           uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
+
                 emit updated(new Bitmap<RGBColor>(std::move(bitmap)));
-            } while(hasToCalc.exchange(false));
+            }
         });
     }
     else {
-        toCalc = vp;
+        toCalc = mi;
         hasToCalc = true;
     }
 }
@@ -114,6 +114,12 @@ MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
         QSizePolicy::Expanding);
     QObject::connect(&mv, &MandelView::updated, this, &MandelWidget::viewUpdated, Qt::AutoConnection);
     QObject::connect(this, &MandelWidget::needsUpdate, &mv, &MandelView::adaptViewport, Qt::AutoConnection);
+
+    if (!ctxt.getDevices().empty()) {
+        if (auto* gen = ctxt.getDevices()[0].getGeneratorDouble(); gen) {
+            mv.setGenerator(*gen);
+        }
+    }
 }
 
 
@@ -140,7 +146,7 @@ void MandelWidget::initializeGL(void)
     bitmap.get(0, 0) = RGBColor{50, 50, 50};
 
     tex = std::make_unique<Texture>(bitmap);
-    emit needsUpdate(viewport);
+    emit needsUpdate(MandelInfo{ viewport, this->width(), this->height(), 2000 });
 }
 
 
@@ -231,7 +237,7 @@ void MandelWidget::resizeEvent(QResizeEvent* re)
     //else
     //    viewport.width = (viewport.height * aspect);
 
-    emit needsUpdate(viewport);
+    emit needsUpdate(MandelInfo{ viewport, this->width(), this->height(), 2000 });
     //redraw();
 }
 
@@ -268,7 +274,7 @@ void MandelWidget::mouseReleaseEvent(QMouseEvent* me)
     viewport.height *= double(rect.height()) / full.height();
     viewport.normalize();
     rubberbandDragging = false;
-    emit needsUpdate(viewport);
+    emit needsUpdate(MandelInfo{ viewport, this->width(), this->height(), 2000 });
 }
 
 

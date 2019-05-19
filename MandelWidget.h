@@ -32,16 +32,19 @@ class MandelView : public QObject
     Q_OBJECT
 private:
     std::future<void> calc;
-    std::atomic<mnd::MandelViewport> toCalc;
+    std::atomic<mnd::MandelInfo> toCalc;
     std::atomic_bool hasToCalc;
-    mnd::Generator& generator;
+    mnd::Generator* generator;
 public:
     inline MandelView(mnd::Generator& generator) :
-        generator{ generator }
+        generator{ &generator }
     {
     }
+
+    void setGenerator(mnd::Generator &value);
+
 public slots:
-    void adaptViewport(const mnd::MandelViewport& vp);
+    void adaptViewport(const mnd::MandelInfo vp);
 signals:
     void updated(const Bitmap<RGBColor>* bitmap);
 };
@@ -90,7 +93,7 @@ public:
 
     inline const mnd::MandelViewport& getViewport(void) const { return viewport; }
 signals:
-    void needsUpdate(const mnd::MandelViewport& vp);
+    void needsUpdate(const mnd::MandelInfo vp);
 public slots:
     void viewUpdated(const Bitmap<RGBColor>* bitmap);
 };

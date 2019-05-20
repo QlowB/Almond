@@ -97,6 +97,7 @@ void MandelView::adaptViewport(const MandelInfo mi)
         calc = std::async([this, mi] () {
             QOpenGLContext* context = new QOpenGLContext();
             context->setShareContext(mWidget->context()->contextHandle());
+            context->create();
              while(hasToCalc.exchange(false)) {
                 auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
                 generator->generate(mi, fmap.pixels.get());
@@ -106,8 +107,8 @@ void MandelView::adaptViewport(const MandelInfo mi)
                                           uint8_t(sin(i * 0.01f) * 127 + 127),
                                           uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
 
-                Texture* tex = new Texture(bitmap, context);
-                emit updated(tex);
+                //Texture* tex = new Texture(bitmap, context);
+                //emit updated(tex);
             }
         });
     }

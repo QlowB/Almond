@@ -5,10 +5,12 @@ using namespace mnd;
 
 #include <QOpenGLVertexArrayObject>
 
-Texture::Texture(const Bitmap<RGBColor>& bitmap)
+
+Texture::Texture(const Bitmap<RGBColor>& bitmap, QOpenGLContext* context) :
+    context{ context }
 {
-    glGenTextures(1, &id);
-    glBindTexture(GL_TEXTURE_2D, id);
+    context->functions()->glGenTextures(1, &id);
+    context->functions()->glBindTexture(GL_TEXTURE_2D, id);
 
     long lineLength = (bitmap.width * 3 + 3) & ~3;
 
@@ -22,17 +24,17 @@ Texture::Texture(const Bitmap<RGBColor>& bitmap)
             pixels[index + 2] = c.b;
         }
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, int(bitmap.width), int(bitmap.height), 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    context->functions()->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, int(bitmap.width), int(bitmap.height), 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    context->functions()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    context->functions()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    context->functions()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    context->functions()->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 
 Texture::~Texture(void)
 {
-    glDeleteTextures(1, &id);
+    context->functions()->glDeleteTextures(1, &id);
 }
 
 
@@ -61,6 +63,15 @@ void Texture::drawRect(float x, float y, float width, float height)
 }
 
 
+MandelView::MandelView(mnd::Generator& generator, MandelWidget* mWidget) :
+    generator{ &generator },
+    mWidget{ mWidget },
+    context{ new QOpenGLContext(this) }
+{
+    context->setShareContext(mWidget->context()->contextHandle());
+}
+
+
 void MandelView::setGenerator(mnd::Generator& value)
 {
     generator = &value;
@@ -84,6 +95,8 @@ void MandelView::adaptViewport(const MandelInfo mi)
         toCalc = mi;
         hasToCalc = true;
         calc = std::async([this, mi] () {
+            QOpenGLContext* context = new QOpenGLContext();
+            context->setShareContext(mWidget->context()->contextHandle());
              while(hasToCalc.exchange(false)) {
                 auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
                 generator->generate(mi, fmap.pixels.get());
@@ -93,7 +106,8 @@ void MandelView::adaptViewport(const MandelInfo mi)
                                           uint8_t(sin(i * 0.01f) * 127 + 127),
                                           uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
 
-                emit updated(new Bitmap<RGBColor>(std::move(bitmap)));
+                Texture* tex = new Texture(bitmap, context);
+                emit updated(tex);
             }
         });
     }
@@ -107,7 +121,7 @@ void MandelView::adaptViewport(const MandelInfo mi)
 MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
     QGLWidget{ QGLFormat(QGL::SampleBuffers), parent },
     mndContext{ ctxt },
-    mv{ ctxt.getDefaultGenerator() }
+    mv{ ctxt.getDefaultGenerator(), this }
 {
     this->setContentsMargins(0, 0, 0, 0);
     this->setSizePolicy(QSizePolicy::Expanding,
@@ -145,7 +159,7 @@ void MandelWidget::initializeGL(void)
     Bitmap<RGBColor> bitmap(1, 1);
     bitmap.get(0, 0) = RGBColor{50, 50, 50};
 
-    tex = std::make_unique<Texture>(bitmap);
+    tex = std::make_unique<Texture>(bitmap, context()->contextHandle());
     emit needsUpdate(MandelInfo{ viewport, this->width(), this->height(), 2000 });
 }
 
@@ -278,10 +292,10 @@ void MandelWidget::mouseReleaseEvent(QMouseEvent* me)
 }
 
 
-void MandelWidget::viewUpdated(const Bitmap<RGBColor>* bitmap)
+void MandelWidget::viewUpdated(Texture* bitmap)
 {
-    tex = std::make_unique<Texture>(*bitmap);
-    delete bitmap;
+    tex = std::unique_ptr<Texture>(bitmap);//std::make_unique<Texture>(*bitmap);
+    //delete bitmap;
     printf("viewUpdated\n");
     emit repaint();
 }

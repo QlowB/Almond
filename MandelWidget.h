@@ -15,12 +15,22 @@
 #include <future>
 #include <atomic>
 
+class MandelWidget;
+
 class Texture
 {
     GLuint id;
+    QOpenGLContext* context;
 public:
     Texture(const Bitmap<RGBColor>& pict);
+    Texture(const Bitmap<RGBColor>& pict, QOpenGLContext* context);
     ~Texture(void);
+
+    Texture(const Texture& other) = delete;
+    Texture& operator=(const Texture& other) = delete;
+
+    Texture(Texture&& other) = default;
+    Texture& operator=(Texture&& other) = default;
 
     void bind(void) const;
 
@@ -35,18 +45,17 @@ private:
     std::atomic<mnd::MandelInfo> toCalc;
     std::atomic_bool hasToCalc;
     mnd::Generator* generator;
+    MandelWidget* mWidget;
+    QOpenGLContext* context;
 public:
-    inline MandelView(mnd::Generator& generator) :
-        generator{ &generator }
-    {
-    }
+    MandelView(mnd::Generator& generator, MandelWidget* mWidget);
 
     void setGenerator(mnd::Generator &value);
 
 public slots:
     void adaptViewport(const mnd::MandelInfo vp);
 signals:
-    void updated(const Bitmap<RGBColor>* bitmap);
+    void updated(Texture* bitmap);
 };
 
 class MandelWidget : public QGLWidget
@@ -95,6 +104,6 @@ public:
 signals:
     void needsUpdate(const mnd::MandelInfo vp);
 public slots:
-    void viewUpdated(const Bitmap<RGBColor>* bitmap);
+    void viewUpdated(Texture* bitmap);
 };
 

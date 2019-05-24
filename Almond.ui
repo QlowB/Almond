@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>712</width>
-    <height>268</height>
+    <width>752</width>
+    <height>609</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,7 +21,50 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="2,0">
       <item>
-       <layout class="QVBoxLayout" name="verticalLayout_left"/>
+       <layout class="QVBoxLayout" name="verticalLayout_left">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QPushButton" name="chooseGradient">
+            <property name="text">
+             <string>Choose Gradient</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label">
+            <property name="text">
+             <string>Max. Iterations</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="maxIterations">
+            <property name="text">
+             <string>2000</string>
+            </property>
+            <property name="maxLength">
+             <number>32</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="zoom_in">
+            <property name="text">
+             <string>Zoom In</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="zoom_out">
+            <property name="text">
+             <string>Zoom Out</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </item>
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_right">
@@ -44,6 +87,13 @@
            </size>
           </property>
          </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="exportVideo">
+          <property name="text">
+           <string>Export Video</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QPushButton" name="pushButton">

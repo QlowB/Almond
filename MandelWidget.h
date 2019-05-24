@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QGLWidget>
+#include <QThread>
 #include <qopengl.h>
 #include <qopenglfunctions.h>
 #include <qopenglcontext.h>
@@ -13,6 +14,8 @@
 #include <Mandel.h>
 
 #include <future>
+#include <thread>
+#include <mutex>
 #include <atomic>
 
 class MandelWidget;
@@ -42,20 +45,29 @@ class MandelView : public QObject
     Q_OBJECT
 private:
     std::future<void> calc;
+    QThread calcThread;
+    std::mutex mut;
+    std::condition_variable condVar;
     std::atomic<mnd::MandelInfo> toCalc;
     std::atomic_bool hasToCalc;
+    std::atomic_bool finish;
     mnd::Generator* generator;
     MandelWidget* mWidget;
-    QOpenGLContext* context;
+    //QOpenGLContext* context;
 public:
     MandelView(mnd::Generator& generator, MandelWidget* mWidget);
+    ~MandelView(void);
 
     void setGenerator(mnd::Generator &value);
+
+    void start();
+private slots:
+    void loop();
 
 public slots:
     void adaptViewport(const mnd::MandelInfo vp);
 signals:
-    void updated(Texture* bitmap);
+    void updated(Bitmap<RGBColor>* bitmap);
 };
 
 class MandelWidget : public QGLWidget
@@ -67,6 +79,7 @@ private:
     mnd::MandelContext& mndContext;
 
     bool initialized = false;
+    int maxIterations = 2000;
 
     bool rubberbandDragging = false;
     QRectF rubberband;
@@ -93,7 +106,12 @@ public:
 
     void drawRubberband(void);
 
+    void zoom(float scale);
+    void setMaxIterations(int maxIter);
+
     //void redraw();
+
+    void requestRecalc(void);
 
     void resizeEvent(QResizeEvent* re) override;
     void mousePressEvent(QMouseEvent* me) override;
@@ -104,6 +122,6 @@ public:
 signals:
     void needsUpdate(const mnd::MandelInfo vp);
 public slots:
-    void viewUpdated(Texture* bitmap);
+    void viewUpdated(Bitmap<RGBColor>* bitmap);
 };
 

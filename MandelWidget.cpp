@@ -6,6 +6,31 @@ using namespace mnd;
 #include <QOpenGLVertexArrayObject>
 
 
+Texture::Texture(const Bitmap<RGBColor>& bitmap) :
+    context{ nullptr }
+{
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    long lineLength = (bitmap.width * 3 + 3) & ~3;
+
+    unsigned char* pixels = new unsigned char[lineLength * bitmap.height];
+    for (int i = 0; i < bitmap.width; i++) {
+        for (int j = 0; j < bitmap.height; j++) {
+            int index = i * 3 + j * lineLength;
+            RGBColor c = bitmap.get(i, j);
+            pixels[index] = c.r;
+            pixels[index + 1] = c.g;
+            pixels[index + 2] = c.b;
+        }
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, int(bitmap.width), int(bitmap.height), 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
 Texture::Texture(const Bitmap<RGBColor>& bitmap, QOpenGLContext* context) :
     context{ context }
 {
@@ -34,7 +59,7 @@ Texture::Texture(const Bitmap<RGBColor>& bitmap, QOpenGLContext* context) :
 
 Texture::~Texture(void)
 {
-    context->functions()->glDeleteTextures(1, &id);
+    glDeleteTextures(1, &id);
 }
 
 
@@ -65,16 +90,76 @@ void Texture::drawRect(float x, float y, float width, float height)
 
 MandelView::MandelView(mnd::Generator& generator, MandelWidget* mWidget) :
     generator{ &generator },
-    mWidget{ mWidget },
-    context{ new QOpenGLContext(this) }
+    mWidget{ mWidget }
+    //context{ new QOpenGLContext(this) }
 {
-    context->setShareContext(mWidget->context()->contextHandle());
+    //context->setShareContext(mWidget->context()->contextHandle());
+    hasToCalc.store(false);
+    finish.store(false);
+}
+
+
+MandelView::~MandelView(void)
+{
+    finish.store(true);
+    condVar.notify_one();
+    //calcThread.wait(100);
+    calcThread.wait(100);
+    calcThread.terminate();
 }
 
 
 void MandelView::setGenerator(mnd::Generator& value)
 {
     generator = &value;
+}
+
+void MandelView::start(void)
+{
+    this->moveToThread(&calcThread);
+    connect(&calcThread, SIGNAL(started()), this, SLOT(loop()));
+    calcThread.start();
+}
+
+
+void MandelView::loop(void)
+{
+    printf("thread!\n"); fflush(stdout);
+    //QGLWidget* hiddenWidget = new QGLWidget(nullptr, mWidget);
+    //hiddenWidget->setVisible(false);
+    //hiddenWidget->context()->contextHandle()->moveToThread(&calcThread);
+    //QOpenGLContext* context = hiddenWidget->context()->contextHandle();
+    //context->setShareContext(mWidget->context()->contextHandle());
+    //context->create();
+    //printf("sharing: %d\n", QOpenGLContext::areSharing(hiddenWidget->context()->contextHandle(), mWidget->context()->contextHandle()));
+    //fflush(stdout);
+    //std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+    std::unique_lock<std::mutex> lock(mut);
+    while(true) {
+        printf("calcing!\n"); fflush(stdout);
+        if (finish.load()) {
+            break;
+        }
+        if (hasToCalc.exchange(false)) {
+            const MandelInfo& mi = toCalc.load();
+            auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
+            generator->generate(mi, fmap.pixels.get());
+            auto* bitmap = new Bitmap(fmap.map<RGBColor>([&mi](float i) { return i > mi.maxIter ?
+                            RGBColor{ 0,0,0 } :
+                            RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127),
+                                      uint8_t(sin(i * 0.01f) * 127 + 127),
+                                      uint8_t(i) }; }));//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
+
+            //hiddenWidget->makeCurrent();
+            //Texture* tex = new Texture(bitmap);
+            //hiddenWidget->doneCurrent();
+            //Texture* tex = 0;
+            emit updated(bitmap);
+        }
+        printf("finished calcing!\n"); fflush(stdout);
+        condVar.wait(lock);
+        printf("waking!\n"); fflush(stdout);
+    }
 }
 
 void MandelView::adaptViewport(const MandelInfo mi)
@@ -91,14 +176,19 @@ void MandelView::adaptViewport(const MandelInfo mi)
             printf("ready!\n");
         }
     }*/
-    if (!calc.valid() || calc.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
+    /*if (!calc.valid() || calc.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) {
         toCalc = mi;
         hasToCalc = true;
         calc = std::async([this, mi] () {
-            QOpenGLContext* context = new QOpenGLContext();
-            context->setShareContext(mWidget->context()->contextHandle());
-            context->create();
-             while(hasToCalc.exchange(false)) {
+            QGLWidget* hiddenWidget = new QGLWidget(nullptr, (QGLWidget*) mWidget);
+            QOpenGLContext* context = hiddenWidget->context()->contextHandle();
+            hiddenWidget->makeCurrent();
+            //context->setShareContext(mWidget->context()->contextHandle());
+            //context->create();
+            printf("sharing: %d\n", QOpenGLContext::areSharing(context, mWidget->context()->contextHandle()));
+            fflush(stdout);
+            //std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            do {
                 auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
                 generator->generate(mi, fmap.pixels.get());
                 auto bitmap = fmap.map<RGBColor>([&mi](float i) { return i > mi.maxIter ?
@@ -107,15 +197,19 @@ void MandelView::adaptViewport(const MandelInfo mi)
                                           uint8_t(sin(i * 0.01f) * 127 + 127),
                                           uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
 
-                //Texture* tex = new Texture(bitmap, context);
-                //emit updated(tex);
-            }
+                Texture* tex = new Texture(bitmap, context);
+                //Texture* tex = 0;
+                emit updated(tex);
+            } while(hasToCalc.exchange(false));
         });
     }
-    else {
-        toCalc = mi;
-        hasToCalc = true;
-    }
+    else {*/
+
+    //std::unique_lock<std::mutex> lock(mut, std::try_to_lock);
+    toCalc = mi;
+    hasToCalc.exchange(true);
+    condVar.notify_one();
+    //}
 }
 
 
@@ -128,7 +222,7 @@ MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
     this->setSizePolicy(QSizePolicy::Expanding,
         QSizePolicy::Expanding);
     QObject::connect(&mv, &MandelView::updated, this, &MandelWidget::viewUpdated, Qt::AutoConnection);
-    QObject::connect(this, &MandelWidget::needsUpdate, &mv, &MandelView::adaptViewport, Qt::AutoConnection);
+    QObject::connect(this, &MandelWidget::needsUpdate, &mv, &MandelView::adaptViewport, Qt::DirectConnection);
 
     if (!ctxt.getDevices().empty()) {
         if (auto* gen = ctxt.getDevices()[0].getGeneratorDouble(); gen) {
@@ -161,7 +255,8 @@ void MandelWidget::initializeGL(void)
     bitmap.get(0, 0) = RGBColor{50, 50, 50};
 
     tex = std::make_unique<Texture>(bitmap, context()->contextHandle());
-    emit needsUpdate(MandelInfo{ viewport, this->width(), this->height(), 2000 });
+    mv.start();
+    requestRecalc();
 }
 
 
@@ -223,8 +318,29 @@ void MandelWidget::drawRubberband(void)
 }
 
 
+void MandelWidget::zoom(float scale)
+{
+    viewport.zoomCenter(scale);
+    requestRecalc();
+}
+
+
+void MandelWidget::setMaxIterations(int maxIter)
+{
+    this->maxIterations = maxIter;
+    requestRecalc();
+}
+
+
+void MandelWidget::requestRecalc()
+{
+    emit needsUpdate(MandelInfo{ viewport, this->width(), this->height(), maxIterations });
+}
+
+
 void MandelWidget::resizeGL(int width, int height)
 {
+    glViewport(0, 0, (GLint) width, (GLint) height);
 }
 
 
@@ -252,7 +368,7 @@ void MandelWidget::resizeEvent(QResizeEvent* re)
     //else
     //    viewport.width = (viewport.height * aspect);
 
-    emit needsUpdate(MandelInfo{ viewport, this->width(), this->height(), 2000 });
+    requestRecalc();
     //redraw();
 }
 
@@ -289,14 +405,16 @@ void MandelWidget::mouseReleaseEvent(QMouseEvent* me)
     viewport.height *= double(rect.height()) / full.height();
     viewport.normalize();
     rubberbandDragging = false;
-    emit needsUpdate(MandelInfo{ viewport, this->width(), this->height(), 2000 });
+    requestRecalc();
 }
 
 
-void MandelWidget::viewUpdated(Texture* bitmap)
+void MandelWidget::viewUpdated(Bitmap<RGBColor>* bitmap)
 {
-    tex = std::unique_ptr<Texture>(bitmap);//std::make_unique<Texture>(*bitmap);
-    //delete bitmap;
-    printf("viewUpdated\n");
-    emit repaint();
+    if (bitmap != nullptr) {
+        tex = std::make_unique<Texture>(*bitmap);
+        delete bitmap;
+        printf("viewUpdated\n");
+        emit repaint();
+    }
 }

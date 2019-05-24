@@ -24,3 +24,21 @@ void MandelViewport::normalize(void)
     }
 }
 
+
+void MandelViewport::zoomCenter(float scale)
+{
+    x += width * (1 - scale) / 2;
+    y += height * (1 - scale) / 2;
+    width *= scale;
+    height *= scale;
+}
+
+MandelViewport MandelViewport::standardView(void)
+{
+    return MandelViewport{
+        -2.25,
+        -1.5,
+        3,
+        3
+    };
+}

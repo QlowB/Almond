@@ -1,6 +1,7 @@
+#include "VideoStream.h"
+
 #ifdef FFMPEG_ENABLED
 
-#include "VideoStream.h"
 
 #include <iostream>
 
@@ -32,7 +33,7 @@ VideoStream::VideoStream(::size_t width, ::size_t height, const std::string& fil
     if (!pkt)
         exit(1);
 
-    codecContext->bit_rate = 500000 * 100;
+    codecContext->bit_rate = 100 * 1000 * 1000;
     codecContext->width = width;
     codecContext->height = height;
     codecContext->time_base = AVRational{ 1, 60 };
@@ -91,7 +92,7 @@ static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
             exit(1);
         }
 
-        printf("encoded frame %3\"PRId64\" (size=%5d)\n", pkt->pts, pkt->size);
+        printf("encoded frame %3d\"PRId64\" (size=%5d)\n", pkt->pts, pkt->size);
         fwrite(pkt->data, 1, pkt->size, outfile);
         av_packet_unref(pkt);
     }

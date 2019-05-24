@@ -168,6 +168,7 @@ BenchmarkDialog::BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent
     benchmarker{ mndContext }
 {
     ui.setupUi(this);
+    printf("bench!\n"); fflush(stdout);
 
     auto& devices = mndContext.getDevices();
     int nDevices = devices.size() + 1;
@@ -196,6 +197,8 @@ BenchmarkDialog::BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent
     connect(&benchThread, &QThread::started, &benchmarker, &Benchmarker::start);
     connect(&benchmarker, SIGNAL (finished()), &benchThread, SLOT (quit()));
     connect(&benchmarker, SIGNAL (update(BenchmarkResult)), this, SLOT (update(BenchmarkResult)));
+
+    ui.tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 }
 
 

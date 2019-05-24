@@ -32,6 +32,16 @@ struct mnd::MandelViewport
      * \brief make sure width and height are positive
      */
     void normalize(void);
+
+    /*!
+     * \brief zoom in around the center by a factor specified
+     */
+    void zoomCenter(float scale);
+
+    /*!
+     * \brief returns a viewport where the whole mandelbrot set can be observed
+     */
+    static MandelViewport standardView(void);
 };
 
 struct mnd::MandelInfo

@@ -1,4 +1,5 @@
 #pragma once
+#define FFMPEG_ENABLED
 #ifdef FFMPEG_ENABLED
 
 

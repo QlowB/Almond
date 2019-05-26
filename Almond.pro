@@ -28,6 +28,7 @@ CONFIG += c++17
 SOURCES += \
         Almond.cpp \
         Bitmap.cpp \
+        MandelVideoGenerator.cpp \
         MandelWidget.cpp \
         SectionManager.cpp \
         VideoStream.cpp \
@@ -39,6 +40,7 @@ HEADERS += \
         Almond.h \
         Bitmap.h \
         Color.h \
+        MandelVideoGenerator.h \
         MandelWidget.h \
         SectionManager.h \
         VideoStream.h \

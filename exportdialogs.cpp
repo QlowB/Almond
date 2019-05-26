@@ -96,7 +96,7 @@ void ExportVideoDialog::on_buttonBox_accepted()
         emit reject();
     }
 
-    evi.path = evd.savePath->text();
+    evi.path = evd.savePath->text().toStdString();
     evi.width = evd.vidWidth->text().toInt();
     evi.height = evd.vidHeight->text().toInt();
     evi.maxIterations = evd.maxIterations->text().toInt();
@@ -116,18 +116,20 @@ void ExportVideoDialog::on_buttonBox_accepted()
     evi.start.adjustAspectRatio(evi.width, evi.height);
     evi.end.adjustAspectRatio(evi.width, evi.height);
 
-    if (exportVideo(evi)) {
+    MandelVideoGenerator mvg(evi);
+    mvg.generate();
+    //if (exportVideo(evi)) {
         QMessageBox* msgBox = new QMessageBox;
         msgBox->setText("Video successfully exported.");
         msgBox->exec();
-    }
+    //}
 }
 
 void ExportVideoDialog::on_pushButton_clicked()
 {
     QString saveAs = QFileDialog::getSaveFileName(this,
             tr("Save exported image"), "",
-            tr("MPEG video (*.mp4);;All Files (*)"));
+            tr("H264 video (*.h264);;All Files (*)"));
     evd.savePath->setText(saveAs);
     this->repaint();
 }
@@ -140,13 +142,13 @@ bool exportVideo(const ExportVideoInfo& evi)
     };
 
     mnd::MandelContext ctxt = mnd::initializeContext();
-    mnd::Generator& gen = *ctxt.getDevices()[0].getGeneratorDouble();
+    mnd::Generator& gen = *ctxt.getDevices()[0].getGeneratorFloat();
     mnd::MandelInfo mi;
     mi.bWidth = evi.width;
     mi.bHeight = evi.height;
     mi.maxIter = evi.maxIterations;
 
-    VideoStream vs(evi.width, evi.height, evi.path.toStdString());
+    VideoStream vs(evi.width, evi.height, evi.path);
 
     double x = evi.end.x + evi.end.width / 2;
     double y = evi.end.y + evi.end.height / 2;

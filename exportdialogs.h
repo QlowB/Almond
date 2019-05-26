@@ -8,6 +8,8 @@
 #include "ui_exportimagedialog.h"
 #include "ui_exportvideodialog.h"
 
+#include "MandelVideoGenerator.h"
+
 class ExportImageDialog : public QDialog
 {
     Q_OBJECT
@@ -23,18 +25,6 @@ public:
 private slots:
     void on_pushButton_clicked();
     void on_buttonBox_accepted();
-};
-
-
-struct ExportVideoInfo {
-    mnd::MandelViewport start;
-    mnd::MandelViewport end;
-
-    int width;
-    int height;
-    int maxIterations;
-
-    QString path;
 };
 
 

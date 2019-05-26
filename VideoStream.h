@@ -29,12 +29,12 @@ class VideoStream
     SwsContext* swsContext;
     static const uint8_t endcode[];
 
-    size_t width;
-    size_t height;
+    int width;
+    int height;
 
-    uint64_t frameIndex = 0;
+    int64_t frameIndex = 0;
 public:
-    VideoStream(::size_t width, ::size_t height, const std::string& filename);
+    VideoStream(int width, int height, const std::string& filename);
     ~VideoStream(void);
 
     void addFrame(const Bitmap<RGBColor>& frame);

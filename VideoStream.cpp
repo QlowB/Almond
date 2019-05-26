@@ -15,25 +15,25 @@
 const uint8_t VideoStream::endcode[] = { 0, 0, 1, 0xb7 };
 
 
-VideoStream::VideoStream(::size_t width, ::size_t height, const std::string& filename) :
-    width{ width }, height{ height }
+VideoStream::VideoStream(int width, int height, const std::string& filename) :
+    width{ width & (~1) }, height{ height & (~1) }
 {
-    avcodec_register_all();
+    // only needed with ffmpeg version < 4
+    //avcodec_register_all();
 
-    codec = avcodec_find_encoder(AV_CODEC_ID_MPEG4);
+    codec = avcodec_find_encoder(AV_CODEC_ID_H264);
     if (!codec) {
         fprintf(stderr, "invalid codec\n");
         exit(1);
     }
 
     codecContext = avcodec_alloc_context3(codec);
-    picture = av_frame_alloc();
 
     pkt = av_packet_alloc();
     if (!pkt)
         exit(1);
 
-    codecContext->bit_rate = 100 * 1000 * 1000;
+    codecContext->bit_rate = 50 * 1000 * 1000;
     codecContext->width = width;
     codecContext->height = height;
     codecContext->time_base = AVRational{ 1, 60 };
@@ -42,6 +42,9 @@ VideoStream::VideoStream(::size_t width, ::size_t height, const std::string& fil
     codecContext->gop_size = 10; /* emit one intra frame every ten frames */
     codecContext->max_b_frames = 1;
     codecContext->pix_fmt = AV_PIX_FMT_YUV420P;
+
+    if (codec->id == AV_CODEC_ID_H264)
+        av_opt_set(codecContext->priv_data, "preset", "slow", 0);
 
     if (avcodec_open2(codecContext, codec, nullptr) < 0) {
         fprintf(stderr, "could not open codec\n");
@@ -54,6 +57,7 @@ VideoStream::VideoStream(::size_t width, ::size_t height, const std::string& fil
         exit(1);
     }
 
+    picture = av_frame_alloc();
     picture->format = codecContext->pix_fmt;
     picture->width  = codecContext->width;
     picture->height = codecContext->height;
@@ -102,7 +106,7 @@ static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
 VideoStream::~VideoStream()
 {
     /* flush the encoder */
-    encode(codecContext, NULL, pkt, file);
+    encode(codecContext, nullptr, pkt, file);
 
     /* add sequence end code to have a real MPEG file */
     fwrite(endcode, 1, sizeof(endcode), file);
@@ -111,6 +115,32 @@ VideoStream::~VideoStream()
     avcodec_free_context(&codecContext);
     av_frame_free(&picture);
     av_packet_free(&pkt);
+
+/*
+    AVPacket pkt;
+    av_init_packet(&pkt);
+    pkt.data = nullptr;
+    pkt.size = 0;
+
+    for (;;) {
+        avcodec_send_frame(codecContext, NULL);
+        if (avcodec_receive_packet(codecContext, &pkt) == 0) {
+            av_interleaved_write_frame(codecContext, &pkt);
+            av_packet_unref(&pkt);
+        }
+        else {
+            break;
+        }
+    }
+
+    av_write_trailer();
+    if (!(oformat->flags & AVFMT_NOFILE)) {
+        int err = avio_close(ofctx->pb);
+        if (err < 0) {
+            Debug("Failed to close file", err);
+        }
+    }*/
+
 }
 
 

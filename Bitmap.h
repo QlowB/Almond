@@ -32,9 +32,6 @@ public:
 
     ~Bitmap() = default;
 
-    template<typename P = Pixel>
-    auto createPng(const std::string& path) const -> typename std::enable_if<std::is_same<P, RGBColor>::value>::type;
-
     template<typename T>
     Bitmap<T> map(std::function<T(Pixel)> f) const {
         Bitmap<T> b{ width, height };

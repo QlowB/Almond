@@ -144,7 +144,7 @@ void MandelView::loop(void)
             const MandelInfo& mi = toCalc.load();
             auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
             generator->generate(mi, fmap.pixels.get());
-            auto* bitmap = new Bitmap(fmap.map<RGBColor>([&mi](float i) { return i > mi.maxIter ?
+            auto* bitmap = new Bitmap<RGBColor>(fmap.map<RGBColor>([&mi](float i) { return i > mi.maxIter ?
                             RGBColor{ 0,0,0 } :
                             RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127),
                                       uint8_t(sin(i * 0.01f) * 127 + 127),

@@ -62,8 +62,8 @@ struct Fixed128
 
 //private:
     static inline std::pair<uint64_t, uint64_t> mul64(int64_t a, int64_t b) {
-        int32_t aa[2] = { a >> 32, a & 0xFFFFFFFF };
-        int32_t bb[2] = { b >> 32, b & 0xFFFFFFFF };
+        int32_t aa[2] = { int32_t(a >> 32), int32_t(a & 0xFFFFFFFF) };
+        int32_t bb[2] = { int32_t(b >> 32), int32_t(b & 0xFFFFFFFF) };
 
         int32_t res[4];
         int64_t temp = int64_t(aa[1]) * bb[1];
@@ -80,8 +80,8 @@ struct Fixed128
     }
 
     static inline std::pair<uint64_t, uint64_t> mulu64(uint64_t a, uint64_t b) {
-        uint32_t aa[2] = { a >> 32, a & 0xFFFFFFFF };
-        uint32_t bb[2] = { b >> 32, b & 0xFFFFFFFF };
+        uint32_t aa[2] = { uint32_t(a >> 32), uint32_t(a & 0xFFFFFFFF) };
+        uint32_t bb[2] = { uint32_t(b >> 32), uint32_t(b & 0xFFFFFFFF) };
 
         uint32_t res[4];
         uint64_t temp = uint64_t(aa[1]) * bb[1];
@@ -163,10 +163,10 @@ public:
 
     inline std::pair<Fixed128, uint32_t> mul(uint32_t factor) const {
         uint32_t quarters[4] = {
-            (upper >> 32) & 0xFFFFFFFF,
-            upper & 0xFFFFFFFF,
-            (lower >> 32) & 0xFFFFFFFF,
-            lower & 0xFFFFFFFF
+            uint32_t(upper >> 32) & 0xFFFFFFFF,
+            uint32_t(upper) & 0xFFFFFFFF,
+            uint32_t(lower >> 32) & 0xFFFFFFFF,
+            uint32_t(lower) & 0xFFFFFFFF
         };
         uint32_t newQ[4];
         uint32_t carry = 0;

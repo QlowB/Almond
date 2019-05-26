@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.9)
 
 set(ARCH "X86_64" CACHE STRING "Target Architecture")
 
-message(CMAKE_SYSTEM_PROCESSOR)
+#message(CMAKE_SYSTEM_PROCESSOR)
 
 project(mandel VERSION 1.0.0 DESCRIPTION "library for mandelbrot calculations")
 
@@ -32,9 +32,12 @@ endif()
 
 #    message(${MandelSources})
 
+add_library(mandel STATIC ${MandelSources})
+
+
 if(OPENCL_FOUND)
-    target_compile_definitions(mandel WITH_OPENCL)
-    include_directories(
+    target_compile_definitions(mandel PUBLIC WITH_OPENCL)
+    target_include_directories(mandel PUBLIC
         "include"
         ${OpenCL_INCLUDE_DIRS}
     )
@@ -64,8 +67,6 @@ elseif(ARCH STREQUAL "ARM")
     #set_source_files_properties(src/CpuGeneratorsNeon.cpp PROPERTIES COMPILE_FLAGS -mfpu=neon)
 endif()
 
-add_library(mandel STATIC ${MandelSources})
-
 
 if(OpenMP_CXX_FOUND)
     target_link_libraries(mandel PUBLIC OpenMP::OpenMP_CXX)
@@ -73,3 +74,4 @@ endif()
 if(OpenCL_FOUND)
     target_link_libraries(mandel PUBLIC OpenCL::OpenCL)
 endif()
+

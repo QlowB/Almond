@@ -63,6 +63,12 @@ MandelContext::MandelContext(void)
         cpuGeneratorDouble = std::make_unique<CpuGeneratorSse2Double>();
     }
     else
+#elif defined(__aarch64__)
+    if (true) {
+        cpuGeneratorFloat = std::make_unique<CpuGeneratorNeonFloat>();
+        cpuGeneratorDouble = std::make_unique<CpuGeneratorNeonDouble>();
+    }
+    else
 #endif
     {
         cpuGeneratorFloat = std::make_unique<CpuGeneratorFloat>();
@@ -78,7 +84,7 @@ MandelContext::MandelContext(void)
 std::vector<MandelDevice> MandelContext::createDevices(void)
 {
     std::vector<MandelDevice> mandelDevices;
-
+#ifdef WITH_OPENCL
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
     platforms.erase(platforms.begin() + 1);
@@ -133,6 +139,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             mandelDevices.push_back(std::move(md));
         }
     }
+#endif // WITH_OPENCL
     
     return mandelDevices;
 }

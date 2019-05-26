@@ -1,5 +1,7 @@
 #include "ClGenerators.h"
 
+#ifdef WITH_OPENCL
+
 #include <iostream>
 #include <iterator>
 
@@ -331,3 +333,7 @@ std::string ClGenerator128::getKernelCode(void) const
     //fprintf(stderr, "%s\n", str);
     return str;
 }
+
+
+#endif // WITH_OPENCL
+

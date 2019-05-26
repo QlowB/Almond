@@ -18,6 +18,9 @@ namespace mnd
 
     class CpuGeneratorAvx512Float;
     class CpuGeneratorAvx512Double;
+#elif defined(__arm__) || defined(__aarch64__) || defined(_M_ARM)
+    class CpuGeneratorNeonFloat;
+    class CpuGeneratorNeonDouble;
 #endif
 }
 
@@ -85,6 +88,21 @@ class mnd::CpuGeneratorAvx512Double : public Generator
 public:
     virtual void generate(const MandelInfo& info, float* data);
 };
-#endif 
+
+#elif defined(__arm__) || defined(__aarch64__) || defined(_M_ARM)
+
+class mnd::CpuGeneratorNeonFloat : public Generator
+{
+public:
+    virtual void generate(const MandelInfo& info, float* data);
+};
+
+
+class mnd::CpuGeneratorNeonDouble : public Generator
+{
+public:
+    virtual void generate(const MandelInfo& info, float* data);
+};
+#endif
 
 #endif // MANDEL_CPUGENERATORS_H

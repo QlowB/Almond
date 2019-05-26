@@ -1,6 +1,8 @@
 #ifndef MANDEL_CLGENERATORS_H
 #define MANDEL_CLGENERATORS_H
 
+#ifdef WITH_OPENCL
+
 #include "Generators.h"
 
 #ifdef __APPLE__
@@ -69,5 +71,7 @@ public:
 protected:
     virtual std::string getKernelCode(void) const;
 };
+
+#endif // WITH_OPENCL
 
 #endif // MANDEL_CLGENERATORS_H

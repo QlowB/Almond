@@ -87,7 +87,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 #ifdef WITH_OPENCL
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
-    //platforms.erase(platforms.begin() + 1);
+    platforms.erase(platforms.begin() + 1);
 
     for (auto& platform : platforms) {
         std::string name = platform.getInfo<CL_PLATFORM_NAME>();

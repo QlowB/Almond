@@ -216,7 +216,7 @@ void MandelView::adaptViewport(const MandelInfo mi)
 MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
     QGLWidget{ QGLFormat(QGL::SampleBuffers), parent },
     mndContext{ ctxt },
-    mv{ ctxt.getDefaultGenerator(), this }
+    mv{ ctxt.getCpuGeneratorFloat(), this }
 {
     this->setContentsMargins(0, 0, 0, 0);
     this->setSizePolicy(QSizePolicy::Expanding,
@@ -224,11 +224,11 @@ MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
     QObject::connect(&mv, &MandelView::updated, this, &MandelWidget::viewUpdated, Qt::AutoConnection);
     QObject::connect(this, &MandelWidget::needsUpdate, &mv, &MandelView::adaptViewport, Qt::DirectConnection);
 
-    if (!ctxt.getDevices().empty()) {
+    /*if (!ctxt.getDevices().empty()) {
         if (auto* gen = ctxt.getDevices()[0].getGeneratorDouble(); gen) {
             mv.setGenerator(*gen);
         }
-    }
+    }*/
 }
 
 

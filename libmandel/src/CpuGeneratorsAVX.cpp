@@ -48,7 +48,7 @@ void CpuGeneratorAvxFloat::generate(const mnd::MandelInfo& info, float* data)
                 __m256i cmp = _mm256_castps_si256(_mm256_cmp_ps(_mm256_add_ps(aa, bb), threshold, _CMP_LE_OQ));
                 adder = _mm256_and_ps(adder, _mm256_castsi256_ps(cmp));
                 counter = _mm256_add_ps(counter, adder);
-                if (_mm256_testz_si256(cmp, cmp) != 0) {
+                if ((k & 0x7) == 0 && _mm256_testz_si256(cmp, cmp) != 0) {
                     break;
                 }
             }
@@ -108,7 +108,7 @@ void CpuGeneratorAvxDouble::generate(const mnd::MandelInfo& info, float* data)
                 __m256i cmp = _mm256_castpd_si256(_mm256_cmp_pd(_mm256_add_pd(aa, bb), threshold, _CMP_LE_OQ));
                 adder = _mm256_and_pd(adder, _mm256_castsi256_pd(cmp));
                 counter = _mm256_add_pd(counter, adder);
-                if (_mm256_testz_si256(cmp, cmp) != 0) {
+                if ((k & 0x7) == 0 && _mm256_testz_si256(cmp, cmp) != 0) {
                     break;
                 }
             }

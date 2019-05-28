@@ -48,7 +48,7 @@ void CpuGeneratorNeonFloat::generate(const mnd::MandelInfo& info, float* data)
                 adder = vandq_u32(adder, cmp);
                 counter = vaddq_u32(counter, adder);
                 // checking for break criterion is possibly expensive, only do it every 8 iterations
-                if ((k & 7) == 0) {
+                if ((k & 0xF) == 0) {
                     /* // ARM-v7 method
                     uint32x2_t allZero = vorr_u32(vget_low_u32(cmp), vget_high_u32(cmp));
                     if (vget_lane_u32(vpmax_u32(allZero, allZero), 0) == 0) {
@@ -109,7 +109,7 @@ void CpuGeneratorNeonDouble::generate(const mnd::MandelInfo& info, float* data)
                 adder = vandq_u64(adder, cmp);
                 counter = vaddq_u64(counter, adder);
                 // checking for break criterion is possibly expensive, only do it every 8 iterations
-                if ((k & 7) == 0) {
+                if ((k & 0xF) == 0) {
                     /* // ARM-v7 method
                     uint32x2_t allZero = vorr_u32(vget_low_u32(cmp), vget_high_u32(cmp));
                     if (vget_lane_u32(vpmax_u32(allZero, allZero), 0) == 0) {

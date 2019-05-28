@@ -2,12 +2,14 @@
 #define MANDELVIDEOGENERATOR_H
 
 #include "Mandel.h"
+#include "Gradient.h"
 #include "Bitmap.h"
 
 struct ExportVideoInfo
 {
     mnd::MandelViewport start;
     mnd::MandelViewport end;
+    Gradient gradient;
 
     int width;
     int height;

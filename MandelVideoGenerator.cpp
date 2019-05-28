@@ -36,8 +36,8 @@ void MandelVideoGenerator::generate(void)
         if (bigW > 2 * w) {
             Bitmap<float> raw{ evi.width * 2, evi.height * 2 };
             gen.generate(mi, raw.pixels.get());
-            big = raw.map<RGBColor>([] (float x) { return
-                RGBColor{ uint8_t(::sin(x / 100) * 127 + 127), uint8_t(::sin(x / 213) * 127 + 127), uint8_t(::cos(x / 173) * 127 + 127) };
+            big = raw.map<RGBColor>([&mi, this] (float i) {
+                return i >= mi.maxIter ? RGBColor{ 0,0,0 } : evi.gradient.get(i);
             });
             /*mi.view.zoomCenter(0.5);
             gen.generate(mi, raw.pixels.get());

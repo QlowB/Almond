@@ -32,6 +32,8 @@ void CpuGeneratorAvxFloat::generate(const mnd::MandelInfo& info, float* data)
 
             __m256 counter = {0, 0, 0, 0, 0, 0, 0, 0};
             __m256 adder = {1, 1, 1, 1, 1, 1, 1, 1};
+            __m256 resultsa;
+            __m256 resultsb;
 
             __m256 threshold = {16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f};
 
@@ -45,10 +47,12 @@ void CpuGeneratorAvxFloat::generate(const mnd::MandelInfo& info, float* data)
                 __m256 abab = _mm256_mul_ps(a, b); abab = _mm256_add_ps(abab, abab);
                 a = _mm256_add_ps(_mm256_sub_ps(aa, bb), xs);
                 b = _mm256_add_ps(abab, ys);
-                __m256i cmp = _mm256_castps_si256(_mm256_cmp_ps(_mm256_add_ps(aa, bb), threshold, _CMP_LE_OQ));
-                adder = _mm256_and_ps(adder, _mm256_castsi256_ps(cmp));
+                __m256 cmp = _mm256_cmp_ps(_mm256_add_ps(aa, bb), threshold, _CMP_LE_OQ);
+                resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
+                resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
+                adder = _mm256_and_ps(adder, cmp);
                 counter = _mm256_add_ps(counter, adder);
-                if ((k & 0x7) == 0 && _mm256_testz_si256(cmp, cmp) != 0) {
+                if ((k & 0x7) == 0 && _mm256_testz_ps(cmp, cmp) != 0) {
                     break;
                 }
             }
@@ -62,10 +66,14 @@ void CpuGeneratorAvxFloat::generate(const mnd::MandelInfo& info, float* data)
 
             float resData[16];
             float* ftRes = alignVec(resData);
+            float* resa = (float*) &resultsa;
+            float* resb = (float*) &resultsb;
 
             _mm256_store_ps(ftRes, counter);
             for (int k = 0; k < 8 && i + k < info.bWidth; k++)
-                data[i + k + j * info.bWidth] = ftRes[k] > 0 ? ftRes[k] : info.maxIter;
+                data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                                                ftRes[k] >= info.maxIter ? info.maxIter :
+                ((float)ftRes[k]) + 1 - log(log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / log(2.0f);
         }
     }
 }

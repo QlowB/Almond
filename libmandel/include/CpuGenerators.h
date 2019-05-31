@@ -5,6 +5,16 @@
 
 namespace mnd
 {
+    enum CpuExtension
+    {
+        X86_SSE2,
+        X86_AVX,
+        ARM_NEON,
+    };
+
+    template<typename T, CpuExtension ex, bool parallel>
+    class CpuGenerator;
+
     class CpuGeneratorFloat;
     class CpuGeneratorDouble;
     class CpuGenerator128;

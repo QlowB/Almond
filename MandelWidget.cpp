@@ -246,6 +246,10 @@ void MandelWidget::initializeGL(void)
     qglClearColor(Qt::black);
 
     glDisable(GL_DEPTH_TEST);
+
+    // looks not even better
+    glDisable(GL_FRAMEBUFFER_SRGB);
+
     //glShadeModel(GL_SMOOTH);
 
     /*CpuGenerator<double> cpg;

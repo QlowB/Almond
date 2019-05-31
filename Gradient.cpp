@@ -4,10 +4,10 @@ Gradient::Gradient()
 {
     //addColor(RGBColor{255, 0, 0}, -100);
     addColor(RGBColor{0, 0, 0}, 0);
-    addColor(RGBColor{ 37, 116, 153 }, 40);
-    addColor(RGBColor{ 69, 185, 225 }, 104);
-    addColor(RGBColor{ 171, 89, 117 }, 190);
-    addColor(RGBColor{ 102, 127, 46 }, 295);
+    addColor(RGBColor{ 250, 70, 24 }, 40);
+    addColor(RGBColor{ 200, 230, 30 }, 104);
+    addColor(RGBColor{ 70, 223, 30 }, 190);
+    addColor(RGBColor{ 14, 20, 150 }, 295);
     addColor(RGBColor{ 36, 155, 169 }, 418);
     addColor(RGBColor{ 233, 33, 79 }, 558);
     addColor(RGBColor{ 254, 169, 63 }, 714);
@@ -141,10 +141,17 @@ RGBColor Gradient::get(float x) const
 
 RGBColor Gradient::lerpColors(RGBColor a, RGBColor b, float val)
 {
+    auto mklin = [] (double x) {
+        return x;//::pow(x, 2.4);
+    };
+    auto unlin = [] (double x) {
+        return x;// ::pow(x, 1.0 / 2.4);
+    };
+
     return RGBColor{
-        uint8_t(b.r * val + a.r * (1 - val)),
-        uint8_t(b.g * val + a.g * (1 - val)),
-        uint8_t(b.b * val + a.b * (1 - val))
+        uint8_t(unlin(mklin(b.r) * val + mklin(a.r) * (1 - val))),
+        uint8_t(unlin(mklin(b.g) * val + mklin(a.g) * (1 - val))),
+        uint8_t(unlin(mklin(b.b) * val + mklin(a.b) * (1 - val)))
     };
 }
 

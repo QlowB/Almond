@@ -14,7 +14,7 @@ void CpuGeneratorAvxFloat::generate(const mnd::MandelInfo& info, float* data)
     using T = float;
     const MandelViewport& view = info.view;
     omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for
+#pragma omp parallel for schedule(static, 1)
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         long i = 0;

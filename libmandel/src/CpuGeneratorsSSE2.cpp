@@ -5,16 +5,27 @@
 
 #include <memory>
 
-using mnd::CpuGeneratorSse2Float;
-using mnd::CpuGeneratorSse2Double;
+using mnd::CpuGenerator;
 
+template class CpuGenerator<float, mnd::X86_SSE2, false, false>;
+template class CpuGenerator<float, mnd::X86_SSE2, false, true>;
+template class CpuGenerator<float, mnd::X86_SSE2, true, false>;
+template class CpuGenerator<float, mnd::X86_SSE2, true, true>;
 
-void CpuGeneratorSse2Float::generate(const mnd::MandelInfo& info, float* data)
+template class CpuGenerator<double, mnd::X86_SSE2, false, false>;
+template class CpuGenerator<double, mnd::X86_SSE2, false, true>;
+template class CpuGenerator<double, mnd::X86_SSE2, true, false>;
+template class CpuGenerator<double, mnd::X86_SSE2, true, true>;
+
+template<bool parallel, bool smooth>
+void CpuGenerator<float, mnd::X86_SSE2, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
 {
     using T = float;
     const MandelViewport& view = info.view;
+
+    if constexpr(parallel)
     omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for
+#pragma omp parallel for if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         long i = 0;
@@ -67,12 +78,14 @@ void CpuGeneratorSse2Float::generate(const mnd::MandelInfo& info, float* data)
 }
 
 
-void CpuGeneratorSse2Double::generate(const mnd::MandelInfo& info, float* data)
+template<bool parallel, bool smooth>
+void CpuGenerator<double, mnd::X86_SSE2, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
 {
     using T = double;
     const MandelViewport& view = info.view;
-    omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for
+    if constexpr(parallel)
+        omp_set_num_threads(2 * omp_get_num_procs());
+#pragma omp parallel for if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         long i = 0;

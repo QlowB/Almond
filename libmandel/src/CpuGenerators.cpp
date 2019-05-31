@@ -5,42 +5,66 @@
 
 #include <memory>
 
-using mnd::CpuGeneratorFloat;
-using mnd::CpuGeneratorDouble;
-using mnd::CpuGenerator128;
+using mnd::CpuGenerator;
+
+template class CpuGenerator<float, mnd::NONE, false, false>;
+template class CpuGenerator<float, mnd::NONE, false, true>;
+template class CpuGenerator<float, mnd::NONE, true, false>;
+template class CpuGenerator<float, mnd::NONE, true, true>;
+
+template class CpuGenerator<double, mnd::NONE, false, false>;
+template class CpuGenerator<double, mnd::NONE, false, true>;
+template class CpuGenerator<double, mnd::NONE, true, false>;
+template class CpuGenerator<double, mnd::NONE, true, true>;
+
+template class CpuGenerator<Fixed128, mnd::NONE, false, false>;
+template class CpuGenerator<Fixed128, mnd::NONE, false, true>;
+template class CpuGenerator<Fixed128, mnd::NONE, true, false>;
+template class CpuGenerator<Fixed128, mnd::NONE, true, true>;
 
 
-void CpuGeneratorFloat::generate(const mnd::MandelInfo& info, float* data)
+template<typename T, bool parallel, bool smooth>
+void CpuGenerator<T, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
 {
     const MandelViewport& view = info.view;
-    omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for
+
+    if constexpr (parallel)
+        omp_set_num_threads(2 * omp_get_num_procs());
+#pragma omp parallel for if constexpr (parallel)
     for (long j = 0; j < info.bHeight; j++) {
-        float y = float(view.y) + float(j) * float(view.height / info.bHeight);
+        T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         long i = 0;
         for (i; i < info.bWidth; i++) {
-            float x = float(view.x + double(i) * view.width / info.bWidth);
+            T x = T(view.x + T(i) * T(view.width / info.bWidth));
 
-            float a = x;
-            float b = y;
+            T a = x;
+            T b = y;
 
             int k = 0;
             for (k = 0; k < info.maxIter; k++) {
-                float aa = a * a;
-                float bb = b * b;
-                float ab = a * b;
+                T aa = a * a;
+                T bb = b * b;
+                T ab = a * b;
                 a = aa - bb + x;
                 b = ab + ab + y;
-                if (aa + bb > 16) {
+                if (aa + bb > T(16)) {
                     break;
                 }
             }
-            data[i + j * info.bWidth] = k;
+            if constexpr (smooth) {
+                if (k >= info.maxIter)
+                    data[i + j * info.bWidth] = info.maxIter;
+                else
+                    data[i + j * info.bWidth] = ((float) k) + 1 - ::log(::log(a * a + b * b) / 2) / ::log(2.0f);
+            }
+            else
+                data[i + j * info.bWidth] = k;
         }
     }
 }
 
 
+/*
 void CpuGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
 {
     const MandelViewport& view = info.view;
@@ -102,4 +126,4 @@ void CpuGenerator128::generate(const mnd::MandelInfo& info, float* data)
         }
     }
 }
-
+*/

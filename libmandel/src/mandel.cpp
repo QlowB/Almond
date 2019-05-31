@@ -1,4 +1,5 @@
 #include "Mandel.h"
+#include "Fixed.h"
 
 #include "CpuGenerators.h"
 #include "ClGenerators.h"
@@ -55,27 +56,27 @@ MandelContext::MandelContext(void)
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
     if (cpuInfo.hasAvx()) {
-        cpuGeneratorFloat = std::make_unique<CpuGeneratorAvxFloat>();
-        cpuGeneratorDouble = std::make_unique<CpuGeneratorAvxDouble>();
+        cpuGeneratorFloat = std::make_unique<CpuGenerator<float, mnd::X86_AVX>>();
+        cpuGeneratorDouble = std::make_unique<CpuGenerator<double, mnd::X86_AVX>>();
     }
     else if (cpuInfo.hasSse2()) {
-        cpuGeneratorFloat = std::make_unique<CpuGeneratorSse2Float>();
-        cpuGeneratorDouble = std::make_unique<CpuGeneratorSse2Double>();
+        cpuGeneratorFloat = std::make_unique<CpuGenerator<float, mnd::X86_SSE2>>();
+        cpuGeneratorDouble = std::make_unique<CpuGenerator<double, mnd::X86_SSE2>>();
     }
     else
 #elif defined(__aarch64__)
     if (true) {
-        cpuGeneratorFloat = std::make_unique<CpuGeneratorNeonFloat>();
-        cpuGeneratorDouble = std::make_unique<CpuGeneratorNeonDouble>();
+        cpuGeneratorFloat = std::make_unique<CpuGenerator<float, mnd::ARM_NEON>>();
+        cpuGeneratorDouble = std::make_unique<CpuGenerator<double, mnd::ARM_NEON>>();
     }
     else
 #endif
     {
-        cpuGeneratorFloat = std::make_unique<CpuGeneratorFloat>();
-        cpuGeneratorDouble = std::make_unique<CpuGeneratorDouble>();
+        cpuGeneratorFloat = std::make_unique<CpuGenerator<float>>();
+        cpuGeneratorDouble = std::make_unique<CpuGenerator<double>>();
     }
 
-    cpuGenerator128 = std::make_unique<CpuGenerator128>();
+    cpuGenerator128 = std::make_unique<CpuGenerator<Fixed128>>();
 
     devices = createDevices();
 }

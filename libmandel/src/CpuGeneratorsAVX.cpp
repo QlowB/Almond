@@ -5,16 +5,27 @@
 
 #include <memory>
 
-using mnd::CpuGeneratorAvxFloat;
-using mnd::CpuGeneratorAvxDouble;
+using mnd::CpuGenerator;
 
+template class CpuGenerator<float, mnd::X86_AVX, false, false>;
+template class CpuGenerator<float, mnd::X86_AVX, false, true>;
+template class CpuGenerator<float, mnd::X86_AVX, true, false>;
+template class CpuGenerator<float, mnd::X86_AVX, true, true>;
 
-void CpuGeneratorAvxFloat::generate(const mnd::MandelInfo& info, float* data)
+template class CpuGenerator<double, mnd::X86_AVX, false, false>;
+template class CpuGenerator<double, mnd::X86_AVX, false, true>;
+template class CpuGenerator<double, mnd::X86_AVX, true, false>;
+template class CpuGenerator<double, mnd::X86_AVX, true, true>;
+
+template<bool parallel, bool smooth>
+void CpuGenerator<float, mnd::X86_AVX, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
 {
     using T = float;
     const MandelViewport& view = info.view;
+
+    if constexpr(parallel)
     omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for
+#pragma omp parallel for if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         long i = 0;
@@ -48,8 +59,10 @@ void CpuGeneratorAvxFloat::generate(const mnd::MandelInfo& info, float* data)
                 a = _mm256_add_ps(_mm256_sub_ps(aa, bb), xs);
                 b = _mm256_add_ps(abab, ys);
                 __m256 cmp = _mm256_cmp_ps(_mm256_add_ps(aa, bb), threshold, _CMP_LE_OQ);
-                resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
-                resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
+                if constexpr (smooth) {
+                    resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
+                    resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
+                }
                 adder = _mm256_and_ps(adder, cmp);
                 counter = _mm256_add_ps(counter, adder);
                 if ((k & 0x7) == 0 && _mm256_testz_ps(cmp, cmp) != 0) {
@@ -70,22 +83,30 @@ void CpuGeneratorAvxFloat::generate(const mnd::MandelInfo& info, float* data)
             float* resb = (float*) &resultsb;
 
             _mm256_store_ps(ftRes, counter);
-            for (int k = 0; k < 8 && i + k < info.bWidth; k++)
-                data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
-                                                ftRes[k] >= info.maxIter ? info.maxIter :
-                ((float)ftRes[k]) + 1 - log(log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / log(2.0f);
+            for (int k = 0; k < 8 && i + k < info.bWidth; k++) {
+                if constexpr (smooth) {
+                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                        ftRes[k] >= info.maxIter ? info.maxIter :
+                        ((float)ftRes[k]) + 1 - log(log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / log(2.0f);
+                }
+                else {
+                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter : ftRes[k];
+                }
+            }
         }
     }
 }
 
 
-void CpuGeneratorAvxDouble::generate(const mnd::MandelInfo& info, float* data)
+template<bool parallel, bool smooth>
+void CpuGenerator<double, mnd::X86_AVX, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
 {
     using T = double;
     const MandelViewport& view = info.view;
 
-    omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for
+    if constexpr(parallel)
+        omp_set_num_threads(2 * omp_get_num_procs());
+#pragma omp parallel for if (smooth)
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * view.height / info.bHeight;
         long i = 0;

@@ -220,7 +220,7 @@ void MandelView::adaptViewport(const MandelInfo mi)
 MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
     QGLWidget{ QGLFormat(QGL::SampleBuffers), parent },
     mndContext{ ctxt },
-    mv{ ctxt.getCpuGeneratorFloat(), gradient, this }
+    mv{ ctxt.getCpuGeneratorDouble(), gradient, this }
 {
     this->setContentsMargins(0, 0, 0, 0);
     this->setSizePolicy(QSizePolicy::Expanding,

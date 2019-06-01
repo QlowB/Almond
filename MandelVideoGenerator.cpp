@@ -36,8 +36,9 @@ void MandelVideoGenerator::generate(void)
         if (bigW > 2 * w) {
             Bitmap<float> raw{ evi.width * 2, evi.height * 2 };
             gen.generate(mi, raw.pixels.get());
-            big = raw.map<RGBColor>([] (float x) { return
-                RGBColor{ uint8_t(::sin(x / 100) * 127 + 127), uint8_t(::sin(x / 213) * 127 + 127), uint8_t(::cos(x / 173) * 127 + 127) };
+            auto before = std::chrono::high_resolution_clock::now();
+            big = raw.map<RGBColor>([&mi, this] (float i) {
+                return i >= mi.maxIter ? RGBColor{ 0,0,0 } : evi.gradient.get(i);
             });
             /*mi.view.zoomCenter(0.5);
             gen.generate(mi, raw.pixels.get());
@@ -81,10 +82,10 @@ inline RGBColor biliniear(const Bitmap<RGBColor>& img, double x, double y)
     double r = 0, g = 0, b = 0;
 
     auto mklin = [] (double x) {
-        return ::pow(x, 2.4);
+        return x;
     };
     auto unlin = [] (double x) {
-        return ::pow(x, 1.0 / 2.4);
+        return x;
     };
 
     r += (1 - xLerp) * (1 - yLerp) * mklin(samples[0][0].r);
@@ -106,6 +107,14 @@ inline RGBColor biliniear(const Bitmap<RGBColor>& img, double x, double y)
 }
 
 
+inline RGBColor nearest(const Bitmap<RGBColor>& img, double x, double y)
+{
+    int xfloor = int(::floor(x));
+    int yfloor = int(::floor(y));
+    return img.get(xfloor, yfloor);
+}
+
+
 Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
                          const Bitmap<RGBColor>& inner, double scale)
 {
@@ -116,6 +125,8 @@ Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
     double newX = outer.width * (1 - scale) / 2;
     double newY = outer.height * (1 - scale) / 2;
 
+    auto before = std::chrono::high_resolution_clock::now();
+#pragma omp parallel for
     for (int i = 0; i < ret.height; i++) {
         for (int j = 0; j < ret.width; j++) {
             double newJ = newX + j * newW / outer.width;
@@ -124,6 +135,9 @@ Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
             ret.get(j, i) = a;
         }
     }
+    auto after = std::chrono::high_resolution_clock::now();
+    printf("gradient applied in: %lld microseconds\n", std::chrono::duration_cast<std::chrono::microseconds>(after - before).count());
+    fflush(stdout);
     /*for (int i = 0; i < ret.height * ret.width; i++) {
         ret.pixels[i] = outer.pixels[i];
     }*/

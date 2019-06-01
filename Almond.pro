@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui opengl
+QT       += core gui opengl xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -28,30 +28,35 @@ CONFIG += c++17
 SOURCES += \
         Almond.cpp \
         Bitmap.cpp \
+        Gradient.cpp \
         MandelVideoGenerator.cpp \
         MandelWidget.cpp \
         SectionManager.cpp \
         VideoStream.cpp \
         benchmarkdialog.cpp \
         exportdialogs.cpp \
+        gradientchoosedialog.cpp \
         main.cpp
 
 HEADERS += \
         Almond.h \
         Bitmap.h \
         Color.h \
+        Gradient.h \
         MandelVideoGenerator.h \
         MandelWidget.h \
         SectionManager.h \
         VideoStream.h \
         benchmarkdialog.h \
-        exportdialogs.h
+        exportdialogs.h \
+        gradientchoosedialog.h
 
 FORMS += \
         Almond.ui \
         benchmarks.ui \
         exportimagedialog.ui \
-        exportvideodialog.ui
+        exportvideodialog.ui \
+        gradientchooser.ui
 
 
 # Default rules for deployment.

@@ -88,8 +88,9 @@ void Texture::drawRect(float x, float y, float width, float height)
 }
 
 
-MandelView::MandelView(mnd::Generator& generator, MandelWidget* mWidget) :
+MandelView::MandelView(mnd::Generator& generator, Gradient &gradient, MandelWidget* mWidget) :
     generator{ &generator },
+    gradient{ gradient },
     mWidget{ mWidget }
     //context{ new QOpenGLContext(this) }
 {
@@ -144,12 +145,15 @@ void MandelView::loop(void)
             const MandelInfo& mi = toCalc.load();
             auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
             generator->generate(mi, fmap.pixels.get());
-            auto* bitmap = new Bitmap<RGBColor>(fmap.map<RGBColor>([&mi](float i) { return i > mi.maxIter ?
+            auto* bitmap = new Bitmap<RGBColor>(fmap.map<RGBColor>([&mi, this](float i) {
+                return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : gradient.get(i);
+            }));
+                /*return i >= mi.maxIter ?
                             RGBColor{ 0,0,0 } :
                             RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127),
                                       uint8_t(sin(i * 0.01f) * 127 + 127),
                                       uint8_t(i) }; }));//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
-
+*/
             //hiddenWidget->makeCurrent();
             //Texture* tex = new Texture(bitmap);
             //hiddenWidget->doneCurrent();
@@ -216,7 +220,7 @@ void MandelView::adaptViewport(const MandelInfo mi)
 MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
     QGLWidget{ QGLFormat(QGL::SampleBuffers), parent },
     mndContext{ ctxt },
-    mv{ ctxt.getCpuGeneratorFloat(), this }
+    mv{ ctxt.getCpuGeneratorFloat(), gradient, this }
 {
     this->setContentsMargins(0, 0, 0, 0);
     this->setSizePolicy(QSizePolicy::Expanding,
@@ -224,11 +228,11 @@ MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
     QObject::connect(&mv, &MandelView::updated, this, &MandelWidget::viewUpdated, Qt::AutoConnection);
     QObject::connect(this, &MandelWidget::needsUpdate, &mv, &MandelView::adaptViewport, Qt::DirectConnection);
 
-    /*if (!ctxt.getDevices().empty()) {
+    if (!ctxt.getDevices().empty()) {
         if (auto* gen = ctxt.getDevices()[0].getGeneratorDouble(); gen) {
             mv.setGenerator(*gen);
         }
-    }*/
+    }
 }
 
 
@@ -242,6 +246,10 @@ void MandelWidget::initializeGL(void)
     qglClearColor(Qt::black);
 
     glDisable(GL_DEPTH_TEST);
+
+    // looks not even better
+    glDisable(GL_FRAMEBUFFER_SRGB);
+
     //glShadeModel(GL_SMOOTH);
 
     /*CpuGenerator<double> cpg;

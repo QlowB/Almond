@@ -11,6 +11,7 @@
 #include <qrubberband.h>
 
 #include "Bitmap.h"
+#include "Gradient.h"
 #include <Mandel.h>
 
 #include <future>
@@ -52,10 +53,11 @@ private:
     std::atomic_bool hasToCalc;
     std::atomic_bool finish;
     mnd::Generator* generator;
+    Gradient& gradient;
     MandelWidget* mWidget;
     //QOpenGLContext* context;
 public:
-    MandelView(mnd::Generator& generator, MandelWidget* mWidget);
+    MandelView(mnd::Generator& generator, Gradient& gradient, MandelWidget* mWidget);
     ~MandelView(void);
 
     void setGenerator(mnd::Generator &value);
@@ -78,6 +80,8 @@ private:
     //QLabel ql;
     mnd::MandelContext& mndContext;
 
+    Gradient gradient;
+
     bool initialized = false;
     int maxIterations = 2000;
 
@@ -97,6 +101,8 @@ public:
         mv{ other.mndContext }
     {
     }*/
+
+    inline const Gradient& getGradient(void) const { return gradient; }
 
     void initializeGL(void) override;
 

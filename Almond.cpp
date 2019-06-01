@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QGradient>
 #include "benchmarkdialog.h"
+#include "gradientchoosedialog.h"
 
 #include <cmath>
 
@@ -34,11 +35,13 @@ void Almond::on_pushButton_clicked()
         mi.bWidth = dialog.getWidth();
         mi.bHeight = dialog.getHeight();
         mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        mnd::Generator& g = mandelContext.getDefaultGenerator();
+        mnd::Generator& g = mandelContext.getCpuGeneratorFloat();
         auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
         g.generate(mi, fmap.pixels.get());
-        auto bitmap = fmap.map<RGBColor>([](float i) { return i < 0 ? RGBColor{ 0,0,0 } : RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127), uint8_t(sin(i * 0.01f) * 127 + 127), uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
-        QImage img((unsigned char*)bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
+        auto bitmap = fmap.map<RGBColor>([&mi, this] (float i) {
+            return i >= mi.maxIter ? RGBColor{ 0,0,0 } : mw->getGradient().get(i);
+        });
+        QImage img((unsigned char*) bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
         img.save(dialog.getPath());
     }
 }
@@ -71,6 +74,8 @@ void Almond::on_maxIterations_editingFinished()
 void Almond::on_chooseGradient_clicked()
 {
     QGradient qg;
+    GradientChooseDialog gcd;
+    auto response = gcd.exec();
 }
 
 void Almond::on_exportVideo_clicked()
@@ -78,6 +83,7 @@ void Almond::on_exportVideo_clicked()
     ExportVideoInfo evi;
     evi.start = mnd::MandelViewport::standardView();
     evi.end = mw->getViewport();
+    evi.gradient = mw->getGradient();
     ExportVideoDialog dialog(this, evi);
     //dialog.show();
     auto response = dialog.exec();

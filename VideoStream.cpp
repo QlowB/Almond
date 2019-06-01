@@ -39,7 +39,7 @@ VideoStream::VideoStream(int width, int height, const std::string& filename) :
     codecContext->time_base = AVRational{ 1, 60 };
     codecContext->framerate = AVRational{ 60, 1 };
 
-    codecContext->gop_size = 10; /* emit one intra frame every ten frames */
+    codecContext->gop_size = 5; /* emit one intra frame every five frames */
     codecContext->max_b_frames = 1;
     codecContext->pix_fmt = AV_PIX_FMT_YUV420P;
 
@@ -165,6 +165,17 @@ void VideoStream::addFrame(const Bitmap<RGBColor>& frame)
             picture->data[2][y * picture->linesize[2] + x] = frame.get(x * 2, y * 2).b / 2;
         }
     }*/
+
+    /*auto gammaCorrect = [] (const RGBColor& rgb) {
+        const float gamma = 2.2f;
+        return RGBColor {
+            uint8_t(::powf(rgb.r / 255.0f, 1.0f / gamma) * 255),
+            uint8_t(::powf(rgb.g / 255.0f, 1.0f / gamma) * 255),
+            uint8_t(::powf(rgb.b / 255.0f, 1.0f / gamma) * 255),
+        };
+    };
+
+    Bitmap<RGBColor> gammaCorrected = frame.map<RGBColor>(gammaCorrect);*/
 
     const uint8_t* pixelPointer[] = { reinterpret_cast<const uint8_t*>(frame.pixels.get()), 0 };
     const int linesizeIn[] = { int(frame.width * sizeof(RGBColor)) };

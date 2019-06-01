@@ -331,6 +331,10 @@ private:
     }
 public:
 
+    Fixed128 operator / (const Fixed128& other) {
+
+    }
+
     bool isNegative(void) const {
         return (upper & (uint64_t(1) << 63)) != 0;
     }

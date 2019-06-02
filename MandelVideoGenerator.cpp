@@ -12,7 +12,7 @@ MandelVideoGenerator::MandelVideoGenerator(const ExportVideoInfo& evi) :
 void MandelVideoGenerator::generate(void)
 {
     mnd::MandelContext ctxt = mnd::initializeContext();
-    mnd::Generator& gen = *ctxt.getDevices()[0].getGeneratorDouble();
+    mnd::Generator& gen = ctxt.getDefaultGenerator();//*ctxt.getDevices()[0].getGeneratorDouble();
     mnd::MandelInfo mi;
     mi.bWidth = evi.width * 2;
     mi.bHeight = evi.height * 2;

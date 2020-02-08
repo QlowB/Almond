@@ -9,6 +9,8 @@
 #include "Generators.h"
 #include "Hardware.h"
 
+//#include "Fixedp.h"
+
 namespace mnd
 {
     class MandelContext;
@@ -51,6 +53,7 @@ private:
     std::unique_ptr<Generator> cpuGeneratorFloat;
     std::unique_ptr<Generator> cpuGeneratorDouble;
     std::unique_ptr<Generator> cpuGenerator128;
+    std::unique_ptr<Generator> cpuGeneratorFixedp;
 
     std::vector<MandelDevice> devices;
 

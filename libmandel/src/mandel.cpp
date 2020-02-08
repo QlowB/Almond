@@ -77,6 +77,7 @@ MandelContext::MandelContext(void)
     }
 
     cpuGenerator128 = std::make_unique<CpuGenerator<Fixed128>>();
+    //cpuGeneratorFixedp = std::make_unique<CpuGenerator<fixed<1, 3>>>();
 
     devices = createDevices();
 }

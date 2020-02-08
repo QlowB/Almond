@@ -4,6 +4,8 @@
 #include <cinttypes>
 #include <cmath>
 #include <utility>
+#include <array>
+#include <vector>
 
 struct Fixed128
 {
@@ -99,11 +101,11 @@ struct Fixed128
 
 public:
     inline Fixed128 operator * (const Fixed128& other) const {
-        if (isNegative()) {
+        if (this->operator!=(Fixed128{ 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF }) && isNegative()) {
             return -(other * this->operator-());
         }
         if (other.isNegative()) {
-            return -(*this * (-other));
+            return -((-other) * (*this));
         }
         auto [uuc, uu] = mulu64(upper, other.upper);
         auto [ulc, ul] = mulu64(upper, other.lower);
@@ -331,12 +333,86 @@ private:
     }
 public:
 
-    Fixed128 operator / (const Fixed128& other) {
+    inline Fixed128 operator / (const Fixed128& other) {
+        if (this->operator!=(Fixed128{ 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF }) && isNegative()) {
+            return -((-(*this)) / other);
+        }
+        if (other != Fixed128{ 0xFFFFFFFFFFFFFFFF, 0xFFFFFFFFFFFFFFFF } && other.isNegative()) {
+            return -((*this) / (-other));
+        }
 
+        using u256 = std::array<uint64_t, 4>;
+
+        u256 bigDividend = { upper, lower, 0, 0 };
+        u256 bigDivisor = { 0, 0, other.upper, other.lower };
+
+        auto twice = [] (u256& x) {
+            bool carry = false;
+            for (int i = 3; i >= 0; i--) {
+                bool oldCarry = carry;
+                carry = x[i] & 0x1000000000000000ULL;
+                x[i] <<= 1;
+                if (oldCarry) x[i] ++;
+            }
+        };
+        
+        auto geq = [] (const u256& a, const u256& b) -> bool {
+            for (int i = 0; i < 4; i++) {
+                if (a[i] > b[i])
+                    return true;
+                if (a[i] < b[i])
+                    return false;
+            }
+            return true;
+        };
+
+        auto sub = [] (u256& a, const u256& b) -> bool {
+            bool carry = false;
+            for (int i = 3; i >= 0; i--) {
+                uint64_t oldA = a[i];
+                a[i] -= b[i];
+                carry = oldA < a[i];
+            }
+            return carry;
+        };
+        
+        auto add = [] (u256& a, const u256& b) -> bool {
+            bool carry = false;
+            for (int i = 3; i >= 0; i--) {
+                uint64_t oldA = a[i];
+                a[i] += b[i];
+                carry = oldA > a[i];
+            }
+            return carry;
+        };
+
+        u256 growingCount = { 0, 0, 0, 1 };
+        u256 quotient = { 0, 0, 0, 0 };
+
+        std::vector<u256> growingStack = { bigDivisor };
+
+        while (true) {
+            u256 beforeSub = bigDividend;
+            const u256& gr = growingStack[growingStack.size() - 1];
+            if (!sub(bigDividend, gr)) {
+                add(quotient, growingCount);
+                u256 tw = gr; twice(tw);
+                growingStack.push_back(tw);
+            }
+            else if (geq(bigDivisor, bigDividend)) {
+                break;
+            }
+            else {
+                bigDividend = beforeSub;
+                growingStack.pop_back();
+            }
+        }
+
+        return Fixed128{ quotient[2], quotient[3] };
     }
 
     bool isNegative(void) const {
-        return (upper & (uint64_t(1) << 63)) != 0;
+        return upper >> 63;
     }
 
     operator double(void) const {

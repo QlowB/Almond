@@ -5,6 +5,8 @@
 #include <Mandel.h>
 #include <cmath>
 
+#include "Fixed.h"
+
 constexpr mnd::MandelViewport benchViewport(void)
 {
     return mnd::MandelViewport{ -1.250000598933854152929, 0.0001879894057291665530, 0.0000003839916666666565, 0.0000003839916666666565 };
@@ -107,6 +109,13 @@ do { std::cout << std::setw(30) << name << std::setw(10) << std::right << std::s
 
 int main()
 {
+    Fixed128 a = 5.2;
+    Fixed128 b = 2.0;
+
+    Fixed128 c = a / b;
+
+    std::cout << "val: " << double(c) << std::endl;
+
     mnd::MandelContext mc = mnd::initializeContext();
 
     std::cout << "Benchmarking CPU [" << mc.getCpuInfo().getBrand() << "]" << std::endl;

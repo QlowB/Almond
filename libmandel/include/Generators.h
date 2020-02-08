@@ -3,10 +3,16 @@
 
 #include "MandelUtil.h"
 
+#include <vector>
+#include <utility>
+
+
 
 namespace mnd
 {
     class Generator;
+
+    class AdaptiveGenerator;
 }
 
 
@@ -16,14 +22,25 @@ public:
     Generator(void) = default;
     virtual ~Generator(void);
 
-    
+
     Generator(const Generator&) = delete;
     Generator& operator=(const Generator&) = delete;
-    
+
     Generator(Generator&&) = default;
     Generator& operator=(Generator&&) = default;
 
     virtual void generate(const MandelInfo& info, float* data) = 0;
+};
+
+
+class mnd::AdaptiveGenerator : public Generator
+{
+    std::vector<std::pair<double, Generator*>> generators;
+public:
+    AdaptiveGenerator(Generator* floatGen, Generator* doubleGen);
+    virtual ~AdaptiveGenerator(void) = default;
+
+    virtual void generate(const MandelInfo& info, float* data);
 };
 
 

@@ -41,6 +41,14 @@ public:
     void drawRect(float x, float y, float width, float height);
 };
 
+
+struct MandelClip
+{
+    mnd::MandelViewport view;
+
+};
+
+
 class MandelView : public QObject
 {
     Q_OBJECT

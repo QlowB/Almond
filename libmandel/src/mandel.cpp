@@ -7,6 +7,7 @@
 using mnd::MandelDevice;
 using mnd::MandelContext;
 using mnd::Generator;
+using mnd::AdaptiveGenerator;
 
 
 
@@ -78,6 +79,8 @@ MandelContext::MandelContext(void)
 
     cpuGenerator128 = std::make_unique<CpuGenerator<Fixed128>>();
     //cpuGeneratorFixedp = std::make_unique<CpuGenerator<fixed<1, 3>>>();
+
+    adaptiveGenerator = std::make_unique<AdaptiveGenerator>(cpuGeneratorFloat.get(), cpuGeneratorDouble.get());
 
     devices = createDevices();
 }
@@ -155,7 +158,7 @@ const std::string& MandelDevice::getName(void) const
 
 Generator& MandelContext::getDefaultGenerator(void)
 {
-    return getCpuGeneratorDouble();
+    return *adaptiveGenerator;
 }
 
 

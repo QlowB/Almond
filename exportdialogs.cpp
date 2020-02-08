@@ -13,6 +13,7 @@ ExportImageDialog::ExportImageDialog(QWidget* parent) :
     QDialog{ parent }
 {
     eid.setupUi(this);
+    this->adjustSize();
     eid.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
     eid.imgWidth->setValidator(new QIntValidator(1, 10000000, this));
     eid.imgHeight->setValidator(new QIntValidator(1, 10000000, this));
@@ -47,7 +48,8 @@ void ExportImageDialog::on_pushButton_clicked()
     QString saveAs = QFileDialog::getSaveFileName(this,
             tr("Save exported image"), "",
             tr("PNG image (*.png);;JPEG image (*.jpg);;All Files (*)"));
-    eid.savePath->setText(saveAs);
+    if(!saveAs.isEmpty() && !saveAs.isNull())
+        eid.savePath->setText(saveAs);
     this->repaint();
 }
 
@@ -67,6 +69,7 @@ ExportVideoDialog::ExportVideoDialog(QWidget* parent, const ExportVideoInfo& evi
     evi{ evi }
 {
     evd.setupUi(this);
+    this->adjustSize();
     evd.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
     evd.vidWidth->setValidator(new QIntValidator(1, 10000000, this));
     evd.vidHeight->setValidator(new QIntValidator(1, 10000000, this));

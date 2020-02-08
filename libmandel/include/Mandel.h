@@ -52,6 +52,8 @@ private:
     std::unique_ptr<Generator> cpuGeneratorDouble;
     std::unique_ptr<Generator> cpuGenerator128;
 
+    std::unique_ptr<Generator> adaptiveGenerator;
+
     std::vector<MandelDevice> devices;
 
     MandelContext(void);

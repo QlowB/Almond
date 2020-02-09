@@ -39,6 +39,13 @@ struct mnd::MandelViewport
     void zoomCenter(float scale);
 
     /*!
+     * \brief zoom in around a specific point
+     * \param x value between 0.0f and 1.0f
+     * \param y value between 0.0f and 1.0f
+     */
+    void zoom(float scale, float x, float y);
+
+    /*!
      * \brief returns a viewport where the whole mandelbrot set can be observed
      */
     static MandelViewport standardView(void);

@@ -178,12 +178,18 @@ void Calcer::clearAll(void)
 void Calcer::calc(TexGrid& grid, int level, int i, int j)
 {
     if (jobs.find({ level, i, j }) == jobs.end()) {
-        auto job = std::make_unique<Job>(mndContext, gradient, maxIter, &grid, level, i, j);
-        connect(job.get(), &Job::done, this, &Calcer::redirect);
-        jobs.insert({ std::tuple{ level, i, j }, std::move(job) });
-        //jobs.push_back(std::move(job));
-        threadPool->start(job.get());
+        Job* job = new Job(mndContext, gradient, maxIter, &grid, level, i, j);
+        connect(job, &Job::done, this, &Calcer::redirect);
+        connect(job, &QObject::destroyed, this, [this, level, i, j] () { this->notFinished(level, i, j); });
+        jobs.emplace(level, i, j);
+        threadPool->start(job);
     }
+}
+
+
+void Calcer::notFinished(int level, int i, int j)
+{
+    jobs.erase({ level, i, j });
 }
 
 
@@ -234,7 +240,7 @@ TexGrid& MandelV::getGrid(int level)
         return it->second;
     }
     else {
-        levels.insert({ level, TexGrid(getDpp(level)) });
+        levels.insert(std::pair<int, TexGrid>{ level, TexGrid{ getDpp(level) } });
         return levels[level];
     }
 }
@@ -244,13 +250,15 @@ void MandelV::setMaxIter(int maxIter)
 {
     this->maxIter = maxIter;
     calcer.setMaxIter(maxIter);
+    clear();
+    emit redrawRequested();
 }
 
 
 
 void MandelV::clear(void)
 {
-    for(auto[level, grid] : this->levels) {
+    for(auto& [level, grid] : this->levels) {
         grid.clearCells();
     }
 }
@@ -567,8 +575,8 @@ void MandelWidget::paintGL(void)
     v->paint(this->viewport);
     //*tex = std::move(v->empty);
 
-    if (rubberbandDragging)
-        drawRubberband();
+    //if (dragging)
+    //    drawRubberband();
 }
 
 
@@ -584,9 +592,10 @@ void MandelWidget::drawRubberband(void)
 }
 
 
-void MandelWidget::zoom(float scale)
+void MandelWidget::zoom(float scale, float x, float y)
 {
-    viewport.zoomCenter(scale);
+    viewport.zoom(scale, x, y);
+    //viewport.zoomCenter(scale);
     requestRecalc();
 }
 
@@ -651,37 +660,61 @@ void MandelWidget::resizeEvent(QResizeEvent* re)
 
 void MandelWidget::mousePressEvent(QMouseEvent* me)
 {
+    QOpenGLWidget::mousePressEvent(me);
     rubberband.setCoords(me->x(), me->y(), 0, 0);
-    rubberbandDragging = true;
+    dragging = true;
+    dragX = me->x();
+    dragY = me->y();
 }
 
 
 void MandelWidget::mouseMoveEvent(QMouseEvent* me)
 {
-    QRectF& rect = rubberband;
+    QOpenGLWidget::mouseMoveEvent(me);
+    /*QRectF& rect = rubberband;
     float aspect = float(geometry().width()) / geometry().height();
     rect.setBottomRight(QPoint(me->x(), me->y()));
     if (rect.width() > rect.height() * aspect)
         rect.setHeight(rect.width() / aspect);
     else
-        rect.setWidth(rect.height() * aspect);
-    if (rubberbandDragging)
+        rect.setWidth(rect.height() * aspect);*/
+    if (dragging) {
+        float deltaX = me->x() - dragX;
+        float deltaY = me->y() - dragY;
+
+        this->viewport.x -= deltaX * viewport.width / this->width();
+        this->viewport.y -= deltaY * viewport.height / this->height();
+        dragX = me->x(); dragY = me->y();
+
         emit repaint();
+    }
 }
 
 
 void MandelWidget::mouseReleaseEvent(QMouseEvent* me)
 {
-    QRect rect = rubberband.toRect();
+    QOpenGLWidget::mouseReleaseEvent(me);
+    /*QRect rect = rubberband.toRect();
     QRect full = this->geometry();
 
     viewport.x += double(rect.left()) * viewport.width / full.width();
     viewport.y += double(rect.top()) * viewport.height / full.height();
     viewport.width *= double(rect.width()) / full.width();
     viewport.height *= double(rect.height()) / full.height();
-    viewport.normalize();
-    rubberbandDragging = false;
-    requestRecalc();
+    viewport.normalize();*/
+    dragging = false;
+    //requestRecalc();
+}
+
+void MandelWidget::wheelEvent(QWheelEvent* we)
+{
+    QOpenGLWidget::wheelEvent(we);
+    float x = float(we->x()) / this->width();
+    float y = float(we->y()) / this->height();
+    float scale = 1.0f - we->angleDelta().y() * 0.001f;
+    printf("scale: %f\n", double(scale));
+    zoom(scale, x, y);
+    we->accept();
 }
 
 

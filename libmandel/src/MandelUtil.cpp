@@ -33,6 +33,15 @@ void MandelViewport::zoomCenter(float scale)
     height *= scale;
 }
 
+
+void MandelViewport::zoom(float scale, float xz, float yz)
+{
+    this->x += width * (1 - scale) * xz;
+    this->y += height * (1 - scale) * yz;
+    width *= scale;
+    height *= scale;
+}
+
 MandelViewport MandelViewport::standardView(void)
 {
     return MandelViewport{

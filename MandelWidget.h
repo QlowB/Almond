@@ -82,6 +82,7 @@ public:
 public:
     inline TexGrid(void) : dpp{ 1.0 } {}
     inline TexGrid(double dpp) : dpp{ dpp } {}
+    //TexGrid(const TexGrid&) = delete;
     std::pair<int, int> getCellIndices(double x, double y);
     std::pair<double, double> getPositions(int i, int j);
     Texture* getCell(int i, int j);
@@ -125,7 +126,7 @@ signals:
 class Calcer : public QObject
 {
     Q_OBJECT
-    std::unordered_map<std::tuple<int, int, int>, std::unique_ptr<Job>, TripleHash> jobs;
+    std::unordered_set<std::tuple<int, int, int>, TripleHash> jobs;
     mnd::MandelContext& mndContext;
     std::unique_ptr<QThreadPool> threadPool;
     Gradient& gradient;
@@ -145,6 +146,7 @@ public:
 
 public slots:
     void calc(TexGrid& grid, int level, int i, int j);
+    void notFinished(int level, int i, int j);
     void redirect(int level, int i, int j, Bitmap<RGBColor>* bmp);
 signals:
     void done(int level, int i, int j, Bitmap<RGBColor>* bmp);
@@ -233,8 +235,10 @@ private:
     bool initialized = false;
     int maxIterations = 2000;
 
-    bool rubberbandDragging = false;
+
     QRectF rubberband;
+    bool dragging = false;
+    int dragX, dragY;
 
     std::unique_ptr<Texture> tex;
     mnd::MandelViewport viewport;
@@ -261,7 +265,7 @@ public:
 
     void drawRubberband(void);
 
-    void zoom(float scale);
+    void zoom(float scale, float x = 0.5f, float y = 0.5f);
     void setMaxIterations(int maxIter);
 
     //void redraw();
@@ -272,6 +276,7 @@ public:
     void mousePressEvent(QMouseEvent* me) override;
     void mouseMoveEvent(QMouseEvent* me) override;
     void mouseReleaseEvent(QMouseEvent* me) override;
+    void wheelEvent(QWheelEvent * we) override;
 
     inline const mnd::MandelViewport& getViewport(void) const { return viewport; }
 signals:

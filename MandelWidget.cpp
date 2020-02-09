@@ -6,7 +6,7 @@ using namespace mnd;
 #include <QOpenGLVertexArrayObject>
 
 
-Texture::Texture(const Bitmap<RGBColor>& bitmap) :
+Texture::Texture(const Bitmap<RGBColor>& bitmap, GLint param) :
     context{ nullptr }
 {
     glGenTextures(1, &id);
@@ -27,8 +27,8 @@ Texture::Texture(const Bitmap<RGBColor>& bitmap) :
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, int(bitmap.width), int(bitmap.height), 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
 }
 
 Texture::Texture(const Bitmap<RGBColor>& bitmap, QOpenGLContext* context) :
@@ -153,23 +153,36 @@ void Job::run(void)
     mi.view.y = absY;
     mi.view.width = mi.view.height = gw;
     mi.bWidth = mi.bHeight = MandelV::chunkSize;
-    mi.maxIter = 500;
+    mi.maxIter = maxIter;
     mndContext.getDefaultGenerator().generate(mi, f.pixels.get());
-    Bitmap<RGBColor>* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([] (float f) {
-        return RGBColor{ uint8_t(f / 2), uint8_t(f / 2), uint8_t(f / 2) };
+    auto* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([&mi, this](float i) {
+        return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : gradient.get(i);
     }));
     emit done(level, i, j, rgb);
+}
+
+
+void Calcer::setMaxIter(int maxIter)
+{
+    this->maxIter = maxIter;
+    clearAll();
+}
+
+
+void Calcer::clearAll(void)
+{
+    this->threadPool->clear();
 }
 
 
 void Calcer::calc(TexGrid& grid, int level, int i, int j)
 {
     if (jobs.find({ level, i, j }) == jobs.end()) {
-        Job* job = new Job(mndContext, &grid, level, i, j);
-        connect(job, &Job::done, this, &Calcer::redirect);
-        jobs.insert({ level, i, j });
+        auto job = std::make_unique<Job>(mndContext, gradient, maxIter, &grid, level, i, j);
+        connect(job.get(), &Job::done, this, &Calcer::redirect);
+        jobs.insert({ std::tuple{ level, i, j }, std::move(job) });
         //jobs.push_back(std::move(job));
-        threadPool->start(job);
+        threadPool->start(job.get());
     }
 }
 
@@ -181,9 +194,11 @@ void Calcer::redirect(int level, int i, int j, Bitmap<RGBColor>* bmp)
 }
 
 
-MandelV::MandelV(mnd::MandelContext& mndContext) :
+MandelV::MandelV(mnd::MandelContext& mndContext, Gradient& gradient, int maxIter) :
     mndContext{ mndContext },
-    calcThread{ std::make_unique<Calcer>(mndContext) }
+    calcer{ mndContext, gradient, maxIter },
+    gradient{ gradient },
+    maxIter{ maxIter }
 {
     Bitmap<RGBColor> emp(8, 8);
     for(auto i = 0; i < emp.width; i++) {
@@ -196,30 +211,47 @@ MandelV::MandelV(mnd::MandelContext& mndContext) :
             }
         }
     }
-    empty = std::make_unique<Texture>(emp);
-    connect(calcThread.get(), &Calcer::done, this, &MandelV::cellReady);
+    empty = std::make_unique<Texture>(emp, GL_NEAREST);
+    connect(&calcer, &Calcer::done, this, &MandelV::cellReady);
 }
 
 
 int MandelV::getLevel(double dpp) {
-    return -int(::log2(dpp / chunkSize));
+    return int(::log2(dpp / chunkSize));
 }
 
 
 double MandelV::getDpp(int level)
 {
-    return ::pow(2, -level) * chunkSize;
+    return ::pow(2, level) * chunkSize;
 }
 
 
 TexGrid& MandelV::getGrid(int level)
 {
     auto it = levels.find(level);
-    if (it != levels.end())
+    if (it != levels.end()) {
         return it->second;
+    }
     else {
         levels.insert({ level, TexGrid(getDpp(level)) });
         return levels[level];
+    }
+}
+
+
+void MandelV::setMaxIter(int maxIter)
+{
+    this->maxIter = maxIter;
+    calcer.setMaxIter(maxIter);
+}
+
+
+
+void MandelV::clear(void)
+{
+    for(auto[level, grid] : this->levels) {
+        grid.clearCells();
     }
 }
 
@@ -232,19 +264,19 @@ void MandelV::garbageCollect(int level)
             grid.clearCells();
         }
         else if (dist > 10) {
-            if (grid.countAllocatedCells() > 20)
+            if (grid.countAllocatedCells() > 50)
                 grid.clearCells();
         }
         else if (dist > 3) {
-            if (grid.countAllocatedCells() > 80)
-                grid.clearCells();
-        }
-        else if (dist > 0) {
             if (grid.countAllocatedCells() > 150)
                 grid.clearCells();
         }
+        else if (dist > 0) {
+            if (grid.countAllocatedCells() > 350)
+                grid.clearCells();
+        }
         else {
-            if (grid.countAllocatedCells() > 250)
+            if (grid.countAllocatedCells() > 2500)
                 grid.clearCells();
         }
     }
@@ -254,7 +286,7 @@ void MandelV::garbageCollect(int level)
 void MandelV::paint(const mnd::MandelViewport& mvp)
 {
     double dpp = mvp.width / width;
-    int level = getLevel(dpp);
+    int level = getLevel(dpp) - 1;
     garbageCollect(level);
 
     auto& grid = getGrid(level);
@@ -262,6 +294,7 @@ void MandelV::paint(const mnd::MandelViewport& mvp)
 
     double w = width * gw / mvp.width;
     //double h = height * gw / mvp.height;
+    printf("level: %d, dpp: %f, width: %f\n", level, dpp, w);
 
     auto [left, top] = grid.getCellIndices(mvp.x, mvp.y);
     auto [right, bottom] = grid.getCellIndices(mvp.right(), mvp.bottom());
@@ -284,7 +317,7 @@ void MandelV::paint(const mnd::MandelViewport& mvp)
                 glEnd();*/
             }
             else {
-                calcThread->calc(grid, level, i, j);
+                calcer.calc(grid, level, i, j);
                 this->empty->drawRect(x, y, w, w);
             }
         }
@@ -486,7 +519,7 @@ void MandelWidget::initializeGL(void)
 void MandelWidget::paintGL(void)
 {
     if (v == nullptr) {
-        v = std::make_unique<MandelV>(mndContext);
+        v = std::make_unique<MandelV>(mndContext, gradient, maxIterations);
         QObject::connect(v.get(), &MandelV::redrawRequested, this, static_cast<void(QOpenGLWidget::*)(void)>(&QOpenGLWidget::update));
     }
     /*if (!initialized) {
@@ -536,8 +569,6 @@ void MandelWidget::paintGL(void)
 
     if (rubberbandDragging)
         drawRubberband();
-
-    printf("painted GL\n");
 }
 
 
@@ -563,6 +594,8 @@ void MandelWidget::zoom(float scale)
 void MandelWidget::setMaxIterations(int maxIter)
 {
     this->maxIterations = maxIter;
+    if (v)
+        v->setMaxIter(maxIter);
     requestRecalc();
 }
 

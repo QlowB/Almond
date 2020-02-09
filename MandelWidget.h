@@ -32,7 +32,7 @@ class Texture
     GLuint id;
     QOpenGLContext* context;
 public:
-    Texture(const Bitmap<RGBColor>& pict);
+    Texture(const Bitmap<RGBColor>& pict, GLint param = GL_LINEAR);
     Texture(const Bitmap<RGBColor>& pict, QOpenGLContext* context);
     ~Texture(void);
 
@@ -92,17 +92,25 @@ public:
 };
 
 
-class Job :  public QObject, public QRunnable
+class Job : public QObject, public QRunnable
 {
     Q_OBJECT
 public:
     mnd::MandelContext& mndContext;
+    Gradient& gradient;
+    int maxIter;
     TexGrid* grid;
     int level;
     int i, j;
 
-    inline Job(mnd::MandelContext& mndContext, TexGrid* grid, int level, int i, int j) :
+    inline Job(mnd::MandelContext& mndContext,
+               Gradient& gradient,
+               int maxIter,
+               TexGrid* grid,
+               int level, int i, int j) :
         mndContext{ mndContext },
+        gradient{ gradient },
+        maxIter{ maxIter },
         grid{ grid },
         level{ level },
         i{ i }, j{ j }
@@ -117,15 +125,23 @@ signals:
 class Calcer : public QObject
 {
     Q_OBJECT
-    std::unordered_set<std::tuple<int, int, int>, TripleHash> jobs;
+    std::unordered_map<std::tuple<int, int, int>, std::unique_ptr<Job>, TripleHash> jobs;
     mnd::MandelContext& mndContext;
     std::unique_ptr<QThreadPool> threadPool;
+    Gradient& gradient;
+    int maxIter;
 public:
-    inline Calcer(mnd::MandelContext& mc) :
+    inline Calcer(mnd::MandelContext& mc, Gradient& gradient, int maxIter) :
         mndContext{ mc },
-        threadPool{ std::make_unique<QThreadPool>() }
+        threadPool{ std::make_unique<QThreadPool>() },
+        gradient{ gradient },
+        maxIter{ maxIter }
     {
+        threadPool->setMaxThreadCount(4);
     }
+
+    void setMaxIter(int maxIter);
+    void clearAll(void);
 
 public slots:
     void calc(TexGrid& grid, int level, int i, int j);
@@ -140,18 +156,28 @@ class MandelV : public QObject
     Q_OBJECT
 public:
     std::unique_ptr<Texture> empty;
+
+    // a grid should not be deleted once constructed.
+    // to free up memory one can call TexGrid::clearCells()
     std::unordered_map<int, TexGrid> levels;
     mnd::MandelContext& mndContext;
-    std::unique_ptr<Calcer> calcThread;
+    Calcer calcer;
+    Gradient& gradient;
+    int maxIter;
     int width;
     int height;
 public:
-    static const int chunkSize = 128;
-    MandelV(mnd::MandelContext& mndContext);
+    static const int chunkSize = 256;
+    MandelV(mnd::MandelContext& mndContext, Gradient& gradient, int maxIter);
     int getLevel(double dpp);
     double getDpp(int level);
 
     TexGrid& getGrid(int level);
+
+    inline int getMaxIter(void) const { return this->maxIter; }
+    void setMaxIter(int maxIter);
+
+    void clear(void);
 
     void garbageCollect(int level);
     void paint(const mnd::MandelViewport& mvp);

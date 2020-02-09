@@ -80,9 +80,20 @@ MandelContext::MandelContext(void)
     cpuGenerator128 = std::make_unique<CpuGenerator<Fixed128>>();
     //cpuGeneratorFixedp = std::make_unique<CpuGenerator<fixed<1, 3>>>();
 
-    adaptiveGenerator = std::make_unique<AdaptiveGenerator>(cpuGeneratorFloat.get(), cpuGeneratorDouble.get());
-
     devices = createDevices();
+    if (devices.empty()) {
+        adaptiveGenerator = std::make_unique<AdaptiveGenerator>(cpuGeneratorFloat.get(), cpuGeneratorDouble.get());
+    }
+    else {
+        auto& device1 = devices[0];
+        Generator* floatGenerator = device1.getGeneratorFloat();
+        Generator* doubleGenerator = device1.getGeneratorDouble();
+        if (floatGenerator == nullptr)
+            floatGenerator = cpuGeneratorFloat.get();
+        if (doubleGenerator == nullptr)
+            doubleGenerator = cpuGeneratorDouble.get();
+        adaptiveGenerator = std::make_unique<AdaptiveGenerator>(floatGenerator, doubleGenerator);
+    }
 }
 
 

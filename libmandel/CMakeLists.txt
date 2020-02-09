@@ -11,6 +11,19 @@ project(mandel VERSION 1.0.0 DESCRIPTION "library for mandelbrot calculations")
 find_package(OpenCL)
 find_package(OpenMP)
 
+find_path(MPFR_INCLUDES
+  NAMES
+  mpfr.h
+  PATHS
+  $ENV{MPFR_DIR}
+  ${INCLUDE_INSTALL_DIR}
+)
+find_library(MPFR_LIBRARIES mpfr PATHS $ENV{MPFR_DIR} ${LIB_INSTALL_DIR})
+
+if(MPFR_INCLUDES AND MPFR_LIBRARIES)
+    set(MPFR_FOUND TRUE)
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 
 #FILE(GLOB MandelSources src/*.cpp)
@@ -73,5 +86,8 @@ if(OpenMP_CXX_FOUND)
 endif()
 if(OpenCL_FOUND)
     target_link_libraries(mandel PUBLIC OpenCL::OpenCL)
+endif()
+if(MPFR_FOUND)
+    target_link_libraries(mandel PUBLIC MPFR_LIBRARIES)
 endif()
 

@@ -232,20 +232,28 @@ void MandelV::paint(const mnd::MandelViewport& mvp)
     auto& grid = getGrid(level);
     double gw = getDpp(level) * chunkSize;
 
+    double w = width * gw / mvp.width;
+    //double h = height * gw / mvp.height;
+
     auto [left, top] = grid.getCellIndices(mvp.x, mvp.y);
     auto [right, bottom] = grid.getCellIndices(mvp.right(), mvp.bottom());
+    auto [realXLeft, realYTop] = grid.getPositions(left, top);
+    realXLeft = (realXLeft - mvp.x) * width / mvp.width;
+    realYTop = (realYTop - mvp.y) * height / mvp.height;
     for(int i = left; i <= right; i++) {
         for(int j = top; j <= bottom; j++) {
-
-            auto [absX, absY] = grid.getPositions(i, j);
-            double x = (absX - mvp.x) * width / mvp.width;
-            double y = (absY - mvp.y) * height / mvp.height;
-            double w = width * gw / mvp.width;
-            double h = height * gw / mvp.height;
+            double x = realXLeft + (i - left) * w;
+            double y = realYTop + (j - top) * w;
 
             Texture* t = grid.getCell(i, j);
             if (t != nullptr) {
                 t->drawRect(x, y, w, w);
+                /*glBegin(GL_LINE_LOOP);
+                glVertex2f(x, y);
+                glVertex2f(x + w, y);
+                glVertex2f(x + w, y + w);
+                glVertex2f(x, y + w);
+                glEnd();*/
             }
             else {
                 calcThread->calc(grid, level, i, j);

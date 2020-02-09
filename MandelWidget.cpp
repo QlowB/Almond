@@ -224,10 +224,38 @@ TexGrid& MandelV::getGrid(int level)
 }
 
 
+void MandelV::garbageCollect(int level)
+{
+    for(auto& [l, grid] : levels) {
+        int dist = ::abs(l - level);
+        if (dist > 20) {
+            grid.clearCells();
+        }
+        else if (dist > 10) {
+            if (grid.countAllocatedCells() > 20)
+                grid.clearCells();
+        }
+        else if (dist > 3) {
+            if (grid.countAllocatedCells() > 80)
+                grid.clearCells();
+        }
+        else if (dist > 0) {
+            if (grid.countAllocatedCells() > 150)
+                grid.clearCells();
+        }
+        else {
+            if (grid.countAllocatedCells() > 250)
+                grid.clearCells();
+        }
+    }
+}
+
+
 void MandelV::paint(const mnd::MandelViewport& mvp)
 {
     double dpp = mvp.width / width;
     int level = getLevel(dpp);
+    garbageCollect(level);
 
     auto& grid = getGrid(level);
     double gw = getDpp(level) * chunkSize;
@@ -267,7 +295,6 @@ void MandelV::cellReady(int level, int i, int j, Bitmap<RGBColor>* bmp)
 {
     this->getGrid(level).setCell(i, j, std::make_unique<Texture>(*bmp));
     delete bmp;
-    printf("cellReady: %d --> %d, %d\n", level, i, j);
     emit redrawRequested();
 }
 
@@ -550,6 +577,7 @@ void MandelWidget::requestRecalc()
 void MandelWidget::resizeGL(int width, int height)
 {
     //glViewport(0, 0, (GLint) width, (GLint) height);
+    this->update();
 }
 
 
@@ -570,6 +598,7 @@ void MandelWidget::resizeGL(int width, int height)
 
 void MandelWidget::resizeEvent(QResizeEvent* re)
 {
+    QOpenGLWidget::resizeEvent(re);
     double aspect = double(geometry().width()) / geometry().height();
 
     //if (viewport.width > viewport.height * aspect)
@@ -577,6 +606,11 @@ void MandelWidget::resizeEvent(QResizeEvent* re)
     //else
     //    viewport.width = (viewport.height * aspect);
 
+    if (v.get() != nullptr) {
+        v->width = this->width();
+        v->height = this->height();
+    }
+    printf("resized\n");
     requestRecalc();
     //redraw();
 }
@@ -623,7 +657,6 @@ void MandelWidget::viewUpdated(Bitmap<RGBColor>* bitmap)
     if (bitmap != nullptr) {
         tex = std::make_unique<Texture>(*bitmap);
         delete bitmap;
-        printf("viewUpdated\n");
         emit repaint();
     }
 }

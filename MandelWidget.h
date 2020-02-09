@@ -87,6 +87,7 @@ public:
     Texture* getCell(int i, int j);
     void setCell(int i, int j, std::unique_ptr<Texture> tex);
 
+    inline size_t countAllocatedCells(void) const { return cells.size(); }
     void clearCells(void);
 };
 
@@ -152,6 +153,7 @@ public:
 
     TexGrid& getGrid(int level);
 
+    void garbageCollect(int level);
     void paint(const mnd::MandelViewport& mvp);
 public slots:
     void cellReady(int level, int i, int j, Bitmap<RGBColor>* bmp);

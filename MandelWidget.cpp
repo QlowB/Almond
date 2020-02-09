@@ -59,7 +59,25 @@ Texture::Texture(const Bitmap<RGBColor>& bitmap, QOpenGLContext* context) :
 
 Texture::~Texture(void)
 {
-    glDeleteTextures(1, &id);
+    if (id != 0)
+        glDeleteTextures(1, &id);
+}
+
+
+Texture::Texture(Texture&& other) :
+    id{ other.id },
+    context{ other.context }
+{
+    other.id = 0;
+}
+
+
+Texture& Texture::operator=(Texture&& other)
+{
+    this->id = other.id;
+    this->context = other.context;
+    other.id = 0;
+    return *this;
 }
 
 
@@ -90,13 +108,13 @@ void Texture::drawRect(float x, float y, float width, float height)
 
 std::pair<int, int> TexGrid::getCellIndices(double x, double y)
 {
-    return { int(x / dpp / 64), int(y / dpp / 64) };
+    return { ::floor(x / dpp / MandelV::chunkSize), ::floor(y / dpp / MandelV::chunkSize) };
 }
 
 
 std::pair<double, double> TexGrid::getPositions(int x, int y)
 {
-    return { x * dpp * 64, y * dpp * 64 };
+    return { x * dpp * MandelV::chunkSize, y * dpp * MandelV::chunkSize };
 }
 
 
@@ -104,7 +122,7 @@ Texture* TexGrid::getCell(int i, int j)
 {
     auto cIt = cells.find({i, j});
     if (cIt != cells.end()) {
-        return &cIt->second;
+        return cIt->second.get();
     }
     else {
         return nullptr;
@@ -112,8 +130,60 @@ Texture* TexGrid::getCell(int i, int j)
 }
 
 
-MandelV::MandelV(QOpenGLContext* context) :
-    empty{ Bitmap<RGBColor>(1, 1) }
+void TexGrid::setCell(int i, int j, std::unique_ptr<Texture> tex)
+{
+    cells[{i, j}] = std::move(tex);
+}
+
+
+void TexGrid::clearCells(void)
+{
+    cells.clear();
+}
+
+
+void Job::run(void)
+{
+    auto [absX, absY] = grid->getPositions(i, j);
+    double gw = grid->dpp * MandelV::chunkSize;
+
+    Bitmap<float> f(MandelV::chunkSize, MandelV::chunkSize);
+    mnd::MandelInfo mi;
+    mi.view.x = absX;
+    mi.view.y = absY;
+    mi.view.width = mi.view.height = gw;
+    mi.bWidth = mi.bHeight = MandelV::chunkSize;
+    mi.maxIter = 500;
+    mndContext.getDefaultGenerator().generate(mi, f.pixels.get());
+    Bitmap<RGBColor>* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([] (float f) {
+        return RGBColor{ uint8_t(f / 2), uint8_t(f / 2), uint8_t(f / 2) };
+    }));
+    emit done(level, i, j, rgb);
+}
+
+
+void Calcer::calc(TexGrid& grid, int level, int i, int j)
+{
+    if (jobs.find({ level, i, j }) == jobs.end()) {
+        Job* job = new Job(mndContext, &grid, level, i, j);
+        connect(job, &Job::done, this, &Calcer::redirect);
+        jobs.insert({ level, i, j });
+        //jobs.push_back(std::move(job));
+        threadPool->start(job);
+    }
+}
+
+
+void Calcer::redirect(int level, int i, int j, Bitmap<RGBColor>* bmp)
+{
+    jobs.erase({ level, i, j });
+    emit done(level, i, j, bmp);
+}
+
+
+MandelV::MandelV(mnd::MandelContext& mndContext) :
+    mndContext{ mndContext },
+    calcThread{ std::make_unique<Calcer>(mndContext) }
 {
     Bitmap<RGBColor> emp(8, 8);
     for(auto i = 0; i < emp.width; i++) {
@@ -126,19 +196,19 @@ MandelV::MandelV(QOpenGLContext* context) :
             }
         }
     }
-    context->makeCurrent(nullptr);
-    empty = Texture(emp, context);
+    empty = std::make_unique<Texture>(emp);
+    connect(calcThread.get(), &Calcer::done, this, &MandelV::cellReady);
 }
 
 
 int MandelV::getLevel(double dpp) {
-    return -int(::log2(dpp / 64));
+    return -int(::log2(dpp / chunkSize));
 }
 
 
 double MandelV::getDpp(int level)
 {
-    return ::pow(2, -level) * 64;
+    return ::pow(2, -level) * chunkSize;
 }
 
 
@@ -156,14 +226,11 @@ TexGrid& MandelV::getGrid(int level)
 
 void MandelV::paint(const mnd::MandelViewport& mvp)
 {
-    this->empty.drawRect(0, 0, 100, 100);
-    return;
-    int width = 1024;
     double dpp = mvp.width / width;
     int level = getLevel(dpp);
 
     auto& grid = getGrid(level);
-    double gw = getDpp(level) * 64;
+    double gw = getDpp(level) * chunkSize;
 
     auto [left, top] = grid.getCellIndices(mvp.x, mvp.y);
     auto [right, bottom] = grid.getCellIndices(mvp.right(), mvp.bottom());
@@ -172,18 +239,28 @@ void MandelV::paint(const mnd::MandelViewport& mvp)
 
             auto [absX, absY] = grid.getPositions(i, j);
             double x = (absX - mvp.x) * width / mvp.width;
-            double y = (absY - mvp.y) * width / mvp.height;
-            double w = width / mvp.width * gw;
+            double y = (absY - mvp.y) * height / mvp.height;
+            double w = width * gw / mvp.width;
+            double h = height * gw / mvp.height;
 
             Texture* t = grid.getCell(i, j);
             if (t != nullptr) {
                 t->drawRect(x, y, w, w);
             }
             else {
-                this->empty.drawRect(x, y, w, w);
+                calcThread->calc(grid, level, i, j);
+                this->empty->drawRect(x, y, w, w);
             }
         }
     }
+}
+
+void MandelV::cellReady(int level, int i, int j, Bitmap<RGBColor>* bmp)
+{
+    this->getGrid(level).setCell(i, j, std::make_unique<Texture>(*bmp));
+    delete bmp;
+    printf("cellReady: %d --> %d, %d\n", level, i, j);
+    emit redrawRequested();
 }
 
 
@@ -343,11 +420,12 @@ MandelWidget::~MandelWidget()
 void MandelWidget::initializeGL(void)
 {
     this->context()->functions()->glClearColor(0, 0, 0, 0);
+    this->context()->makeCurrent(nullptr);
 
     glDisable(GL_DEPTH_TEST);
 
     // looks not even better
-    glDisable(GL_FRAMEBUFFER_SRGB);
+    //glDisable(GL_FRAMEBUFFER_SRGB);
 
     //glShadeModel(GL_SMOOTH);
 
@@ -360,16 +438,22 @@ void MandelWidget::initializeGL(void)
     auto bitmap = cpg.generate(mi);*/
     Bitmap<RGBColor> bitmap(1, 1);
     bitmap.get(0, 0) = RGBColor{50, 50, 50};
-    v = std::make_unique<MandelV>(context());
+    v = nullptr;
 
     tex = std::make_unique<Texture>(bitmap, context());
     mv.start();
     requestRecalc();
+
+
 }
 
 
 void MandelWidget::paintGL(void)
 {
+    if (v == nullptr) {
+        v = std::make_unique<MandelV>(mndContext);
+        QObject::connect(v.get(), &MandelV::redrawRequested, this, static_cast<void(QOpenGLWidget::*)(void)>(&QOpenGLWidget::update));
+    }
     /*if (!initialized) {
         emit needsUpdate(viewport);
         initialized = true;
@@ -377,7 +461,10 @@ void MandelWidget::paintGL(void)
 
     int width = this->width();
     int height = this->height();
+    v->width = width;
+    v->height = height;
 
+    //v = std::make_unique<MandelV>(context());
     /*CpuGenerator<double> cpg;
     ClGenerator clg;
     MandelGenerator& mg = cpg;
@@ -405,13 +492,12 @@ void MandelWidget::paintGL(void)
 
     glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
-    tex->drawRect(0, 0, width, height);
+    //tex->drawRect(0, 0, width, height);
 
     //v->empty = std::move(*tex)
     //v->empty.bind();
     v->paint(this->viewport);
     //*tex = std::move(v->empty);
-
 
     if (rubberbandDragging)
         drawRubberband();
@@ -448,13 +534,14 @@ void MandelWidget::setMaxIterations(int maxIter)
 
 void MandelWidget::requestRecalc()
 {
-    emit needsUpdate(MandelInfo{ viewport, this->width(), this->height(), maxIterations });
+    //emit needsUpdate(MandelInfo{ viewport, this->width(), this->height(), maxIterations });
+    this->update();
 }
 
 
 void MandelWidget::resizeGL(int width, int height)
 {
-    glViewport(0, 0, (GLint) width, (GLint) height);
+    //glViewport(0, 0, (GLint) width, (GLint) height);
 }
 
 

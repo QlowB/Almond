@@ -1,6 +1,10 @@
 #include "CpuGenerators.h"
 #include "Fixed.h"
 
+#ifdef WITH_MPFR
+#include "MpfrWrapper.h"
+#endif // WITH_MPFR
+
 #include <omp.h>
 #include <cmath>
 
@@ -63,6 +67,50 @@ void CpuGenerator<T, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInf
         }
     }
 }
+
+
+#ifdef WITH_MPFR
+template<unsigned int bits, bool parallel, bool smooth>
+void CpuGenerator<mnd::MpfrFloat<bits>, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
+{
+    const MandelViewport& view = info.view;
+    using T = mnd::MpfrFloat<bits>;
+
+    if constexpr (parallel)
+        omp_set_num_threads(2 * omp_get_num_procs());
+#pragma omp parallel for if (parallel)
+    for (long j = 0; j < info.bHeight; j++) {
+        T y = T(view.y) + T(j) * T(view.height / info.bHeight);
+        long i = 0;
+        for (i; i < info.bWidth; i++) {
+            T x = T(view.x + T(i) * T(view.width / info.bWidth));
+
+            T a = x;
+            T b = y;
+
+            int k = 0;
+            for (k = 0; k < info.maxIter; k++) {
+                T aa = a * a;
+                T bb = b * b;
+                T ab = a * b;
+                a = aa - bb + x;
+                b = ab + ab + y;
+                if (aa + bb > T(16)) {
+                    break;
+                }
+            }
+            if constexpr (smooth) {
+                if (k >= info.maxIter)
+                    data[i + j * info.bWidth] = info.maxIter;
+                else
+                    data[i + j * info.bWidth] = ((float) k) + 1 - ::log(::log(a * a + b * b) / 2) / ::log(2.0f);
+            }
+            else
+                data[i + j * info.bWidth] = k;
+        }
+    }
+}
+#endif // WITH_MPFR
 
 
 /*

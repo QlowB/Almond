@@ -3,6 +3,7 @@
 #include <QGLWidget>
 #include <QOpenGLWidget>
 #include <QThread>
+#include <QThreadPool>
 #include <qopengl.h>
 #include <qopenglfunctions.h>
 #include <qopenglcontext.h>
@@ -19,7 +20,10 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <tuple>
+#include <deque>
 #include <unordered_map>
+#include <unordered_set>
 
 class MandelWidget;
 
@@ -35,8 +39,8 @@ public:
     Texture(const Texture& other) = delete;
     Texture& operator=(const Texture& other) = delete;
 
-    Texture(Texture&& other) = default;
-    Texture& operator=(Texture&& other) = default;
+    Texture(Texture&& other);
+    Texture& operator=(Texture&& other);
 
     void bind(void) const;
     inline GLuint getId(void) const { return id; }
@@ -59,33 +63,100 @@ struct PairHash {
     }
 };
 
+struct TripleHash {
+    template <typename T1, typename T2, typename T3>
+    std::size_t operator () (const std::tuple<T1, T2, T3>& p) const {
+        auto h1 = std::hash<T1>{}(std::get<0>(p));
+        auto h2 = std::hash<T2>{}(std::get<1>(p));
+        auto h3 = std::hash<T3>{}(std::get<2>(p));
+        return (((h1 ^ 234579245) * 23452357 + h2) ^ 2345244345) * 23421 + h3;
+    }
+};
+
 
 class TexGrid
 {
+public:
     double dpp;
-    std::unordered_map<std::pair<int, int>, Texture, PairHash> cells;
+    std::unordered_map<std::pair<int, int>, std::unique_ptr<Texture>, PairHash> cells;
 public:
     inline TexGrid(void) : dpp{ 1.0 } {}
     inline TexGrid(double dpp) : dpp{ dpp } {}
     std::pair<int, int> getCellIndices(double x, double y);
     std::pair<double, double> getPositions(int i, int j);
     Texture* getCell(int i, int j);
+    void setCell(int i, int j, std::unique_ptr<Texture> tex);
+
+    void clearCells(void);
 };
 
 
-class MandelV
+class Job :  public QObject, public QRunnable
 {
+    Q_OBJECT
 public:
-    Texture empty;
+    mnd::MandelContext& mndContext;
+    TexGrid* grid;
+    int level;
+    int i, j;
+
+    inline Job(mnd::MandelContext& mndContext, TexGrid* grid, int level, int i, int j) :
+        mndContext{ mndContext },
+        grid{ grid },
+        level{ level },
+        i{ i }, j{ j }
+    {}
+
+    void run() override;
+signals:
+    void done(int level, int i, int j, Bitmap<RGBColor>* bmp);
+};
+
+
+class Calcer : public QObject
+{
+    Q_OBJECT
+    std::unordered_set<std::tuple<int, int, int>, TripleHash> jobs;
+    mnd::MandelContext& mndContext;
+    std::unique_ptr<QThreadPool> threadPool;
+public:
+    inline Calcer(mnd::MandelContext& mc) :
+        mndContext{ mc },
+        threadPool{ std::make_unique<QThreadPool>() }
+    {
+    }
+
+public slots:
+    void calc(TexGrid& grid, int level, int i, int j);
+    void redirect(int level, int i, int j, Bitmap<RGBColor>* bmp);
+signals:
+    void done(int level, int i, int j, Bitmap<RGBColor>* bmp);
+};
+
+
+class MandelV : public QObject
+{
+    Q_OBJECT
+public:
+    std::unique_ptr<Texture> empty;
     std::unordered_map<int, TexGrid> levels;
+    mnd::MandelContext& mndContext;
+    std::unique_ptr<Calcer> calcThread;
+    int width;
+    int height;
 public:
-    MandelV(QOpenGLContext* context);
+    static const int chunkSize = 128;
+    MandelV(mnd::MandelContext& mndContext);
     int getLevel(double dpp);
     double getDpp(int level);
 
     TexGrid& getGrid(int level);
 
     void paint(const mnd::MandelViewport& mvp);
+public slots:
+    void cellReady(int level, int i, int j, Bitmap<RGBColor>* bmp);
+signals:
+    void redrawRequested(void);
 };
 
 
@@ -119,6 +190,7 @@ public slots:
 signals:
     void updated(Bitmap<RGBColor>* bitmap);
 };
+
 
 class MandelWidget : public QOpenGLWidget
 {

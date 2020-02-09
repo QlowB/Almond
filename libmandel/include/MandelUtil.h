@@ -42,6 +42,9 @@ struct mnd::MandelViewport
      * \brief returns a viewport where the whole mandelbrot set can be observed
      */
     static MandelViewport standardView(void);
+
+    inline double right() const { return x + width; }
+    inline double bottom() const { return y + height; }
 };
 
 struct mnd::MandelInfo

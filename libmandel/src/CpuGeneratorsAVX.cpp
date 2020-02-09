@@ -44,8 +44,8 @@ void CpuGenerator<float, mnd::X86_AVX, parallel, smooth>::generate(const mnd::Ma
 
             __m256 counter = {0, 0, 0, 0, 0, 0, 0, 0};
             __m256 adder = {1, 1, 1, 1, 1, 1, 1, 1};
-            __m256 resultsa;
-            __m256 resultsb;
+            __m256 resultsa = {0, 0, 0, 0, 0, 0, 0, 0};
+            __m256 resultsb = {0, 0, 0, 0, 0, 0, 0, 0};
 
             __m256 threshold = {16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f};
 

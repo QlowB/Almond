@@ -31,7 +31,7 @@ public:
 
     static mnd::MandelViewport benchViewport(void);
 
-    std::pair<long long, std::chrono::nanoseconds> measureMips(const std::function<Bitmap<float>()>& bench) const;
+    std::pair<long long, std::chrono::nanoseconds> measureMips(const std::function<Bitmap<float>*()>& bench) const;
     double benchmarkResult(mnd::Generator& mg) const;
 
 public slots:

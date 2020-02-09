@@ -88,6 +88,105 @@ void Texture::drawRect(float x, float y, float width, float height)
 }
 
 
+std::pair<int, int> TexGrid::getCellIndices(double x, double y)
+{
+    return { int(x / dpp / 64), int(y / dpp / 64) };
+}
+
+
+std::pair<double, double> TexGrid::getPositions(int x, int y)
+{
+    return { x * dpp * 64, y * dpp * 64 };
+}
+
+
+Texture* TexGrid::getCell(int i, int j)
+{
+    auto cIt = cells.find({i, j});
+    if (cIt != cells.end()) {
+        return &cIt->second;
+    }
+    else {
+        return nullptr;
+    }
+}
+
+
+MandelV::MandelV(QOpenGLContext* context) :
+    empty{ Bitmap<RGBColor>(1, 1) }
+{
+    Bitmap<RGBColor> emp(8, 8);
+    for(auto i = 0; i < emp.width; i++) {
+        for(auto j = 0; j < emp.height; j++) {
+            if((i + j) & 0x1) { // if i+j is odd
+                emp.get(i, j) = RGBColor{ 255, 255, 255 };
+            }
+            else {
+                emp.get(i, j) = RGBColor{ 120, 120, 120 };
+            }
+        }
+    }
+    context->makeCurrent(nullptr);
+    empty = Texture(emp, context);
+}
+
+
+int MandelV::getLevel(double dpp) {
+    return -int(::log2(dpp / 64));
+}
+
+
+double MandelV::getDpp(int level)
+{
+    return ::pow(2, -level) * 64;
+}
+
+
+TexGrid& MandelV::getGrid(int level)
+{
+    auto it = levels.find(level);
+    if (it != levels.end())
+        return it->second;
+    else {
+        levels.insert({ level, TexGrid(getDpp(level)) });
+        return levels[level];
+    }
+}
+
+
+void MandelV::paint(const mnd::MandelViewport& mvp)
+{
+    this->empty.drawRect(0, 0, 100, 100);
+    return;
+    int width = 1024;
+    double dpp = mvp.width / width;
+    int level = getLevel(dpp);
+
+    auto& grid = getGrid(level);
+    double gw = getDpp(level) * 64;
+
+    auto [left, top] = grid.getCellIndices(mvp.x, mvp.y);
+    auto [right, bottom] = grid.getCellIndices(mvp.right(), mvp.bottom());
+    for(int i = left; i <= right; i++) {
+        for(int j = top; j <= bottom; j++) {
+
+            auto [absX, absY] = grid.getPositions(i, j);
+            double x = (absX - mvp.x) * width / mvp.width;
+            double y = (absY - mvp.y) * width / mvp.height;
+            double w = width / mvp.width * gw;
+
+            Texture* t = grid.getCell(i, j);
+            if (t != nullptr) {
+                t->drawRect(x, y, w, w);
+            }
+            else {
+                this->empty.drawRect(x, y, w, w);
+            }
+        }
+    }
+}
+
+
 MandelView::MandelView(mnd::Generator& generator, Gradient &gradient, MandelWidget* mWidget) :
     generator{ &generator },
     gradient{ gradient },
@@ -218,7 +317,7 @@ void MandelView::adaptViewport(const MandelInfo mi)
 
 
 MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
-    QGLWidget{ QGLFormat(QGL::SampleBuffers), parent },
+    QOpenGLWidget{ parent },
     mndContext{ ctxt },
     mv{ ctxt.getDefaultGenerator(), gradient, this }
 {
@@ -243,7 +342,7 @@ MandelWidget::~MandelWidget()
 
 void MandelWidget::initializeGL(void)
 {
-    qglClearColor(Qt::black);
+    this->context()->functions()->glClearColor(0, 0, 0, 0);
 
     glDisable(GL_DEPTH_TEST);
 
@@ -261,8 +360,9 @@ void MandelWidget::initializeGL(void)
     auto bitmap = cpg.generate(mi);*/
     Bitmap<RGBColor> bitmap(1, 1);
     bitmap.get(0, 0) = RGBColor{50, 50, 50};
+    v = std::make_unique<MandelV>(context());
 
-    tex = std::make_unique<Texture>(bitmap, context()->contextHandle());
+    tex = std::make_unique<Texture>(bitmap, context());
     mv.start();
     requestRecalc();
 }
@@ -306,6 +406,12 @@ void MandelWidget::paintGL(void)
     glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
     tex->drawRect(0, 0, width, height);
+
+    //v->empty = std::move(*tex)
+    //v->empty.bind();
+    v->paint(this->viewport);
+    //*tex = std::move(v->empty);
+
 
     if (rubberbandDragging)
         drawRubberband();

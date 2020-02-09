@@ -10,6 +10,10 @@ mnd::MandelViewport Benchmarker::benchViewport(void)
 }
 
 const std::vector<mnd::MandelInfo> Benchmarker::benches {
+    mnd::MandelInfo{ benchViewport(), 50, 50, 250 },
+    mnd::MandelInfo{ benchViewport(), 50, 50, 500 },
+    mnd::MandelInfo{ benchViewport(), 50, 100, 500 },
+    mnd::MandelInfo{ benchViewport(), 100, 100, 500 },
     mnd::MandelInfo{ benchViewport(), 100, 100, 1000 },
     mnd::MandelInfo{ benchViewport(), 100, 200, 1000 },
     mnd::MandelInfo{ benchViewport(), 200, 200, 1000 },
@@ -47,16 +51,16 @@ const std::vector<mnd::MandelInfo> Benchmarker::benches {
 };
 
 
-std::pair<long long, std::chrono::nanoseconds> Benchmarker::measureMips(const std::function<Bitmap<float>()>& bench) const
+std::pair<long long, std::chrono::nanoseconds> Benchmarker::measureMips(const std::function<Bitmap<float>*()>& bench) const
 {
     using namespace std::chrono;
     auto before = high_resolution_clock::now();
-    auto bitmap = bench();
+    auto* bitmap = bench();
     auto after = high_resolution_clock::now();
 
     long long sum = 0;
-    for (int i = 0; i < bitmap.width * bitmap.height; i++) {
-        sum += std::floor(bitmap.pixels[size_t(i)]);
+    for (int i = 0; i < bitmap->width * bitmap->height; i++) {
+        sum += std::floor(bitmap->pixels[size_t(i)]);
     }
 
     return std::make_pair(sum, duration_cast<nanoseconds>(after - before));
@@ -66,29 +70,29 @@ double Benchmarker::benchmarkResult(mnd::Generator& mg) const
 {
     int testIndex = 0;
 
-    for (int i = 0; i < benches.size(); i++) {
+    for (size_t i = 0; i < benches.size(); i++) {
         const mnd::MandelInfo& mi = benches[i];
-        auto data = std::make_unique<float[]>(mi.bWidth * mi.bHeight);
-        auto [iters, time] = measureMips([&mg, &mi, &data]() {
-            Bitmap<float> bmp(mi.bWidth, mi.bHeight);
+        //auto data = std::make_unique<float[]>(size_t(mi.bWidth * mi.bHeight));
+        Bitmap<float> bmp(mi.bWidth, mi.bHeight);
+        auto [iters, time] = measureMips([&mg, &mi, &bmp]() {
             mg.generate(mi, bmp.pixels.get());
-            return bmp;
+            return &bmp;
         });
         //printf("benchmark lvl %d, time %d ms\n", i, time.count() / 1000 / 1000);
         //fflush(stdout);
         if (time > std::chrono::milliseconds(1000)) {
-            testIndex = i + 2;
+            testIndex = i + 1;
             break;
         }
     }
 
 
     const mnd::MandelInfo& mi = benches[(testIndex >= benches.size()) ? (benches.size() - 1) : testIndex];
-    auto data = std::make_unique<float[]>(mi.bWidth * mi.bHeight);
-    auto [iters, time] = measureMips([&mg, &mi, &data]() {
-        Bitmap<float> bmp(mi.bWidth, mi.bHeight);
+    //auto data = std::make_unique<float[]>(mi.bWidth * mi.bHeight);
+    Bitmap<float> bmp(mi.bWidth, mi.bHeight);
+    auto [iters, time] = measureMips([&mg, &mi, &bmp]() {
         mg.generate(mi, bmp.pixels.get());
-        return bmp;
+        return &bmp;
     });
     //printf("bench time %d ms\n", time.count() / 1000 / 1000);
     //fflush(stdout);

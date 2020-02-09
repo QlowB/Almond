@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QGLWidget>
+#include <QOpenGLWidget>
 #include <QThread>
 #include <qopengl.h>
 #include <qopenglfunctions.h>
@@ -18,6 +19,7 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <unordered_map>
 
 class MandelWidget;
 
@@ -37,6 +39,7 @@ public:
     Texture& operator=(Texture&& other) = default;
 
     void bind(void) const;
+    inline GLuint getId(void) const { return id; }
 
     void drawRect(float x, float y, float width, float height);
 };
@@ -45,7 +48,44 @@ public:
 struct MandelClip
 {
     mnd::MandelViewport view;
+};
 
+struct PairHash {
+    template <typename T1, typename T2>
+    std::size_t operator () (const std::pair<T1, T2>& p) const {
+        auto h1 = std::hash<T1>{}(p.first);
+        auto h2 = std::hash<T2>{}(p.second);
+        return (h1 ^ 234579245) * 23452354 + h2;
+    }
+};
+
+
+class TexGrid
+{
+    double dpp;
+    std::unordered_map<std::pair<int, int>, Texture, PairHash> cells;
+public:
+    inline TexGrid(void) : dpp{ 1.0 } {}
+    inline TexGrid(double dpp) : dpp{ dpp } {}
+    std::pair<int, int> getCellIndices(double x, double y);
+    std::pair<double, double> getPositions(int i, int j);
+    Texture* getCell(int i, int j);
+};
+
+
+class MandelV
+{
+public:
+    Texture empty;
+    std::unordered_map<int, TexGrid> levels;
+public:
+    MandelV(QOpenGLContext* context);
+    int getLevel(double dpp);
+    double getDpp(int level);
+
+    TexGrid& getGrid(int level);
+
+    void paint(const mnd::MandelViewport& mvp);
 };
 
 
@@ -80,7 +120,7 @@ signals:
     void updated(Bitmap<RGBColor>* bitmap);
 };
 
-class MandelWidget : public QGLWidget
+class MandelWidget : public QOpenGLWidget
 {
     Q_OBJECT
 private:
@@ -99,6 +139,7 @@ private:
     std::unique_ptr<Texture> tex;
     mnd::MandelViewport viewport;
     MandelView mv;
+    std::unique_ptr<MandelV> v;
 public:
     MandelWidget(mnd::MandelContext& ctxt, QWidget* parent = nullptr);
     ~MandelWidget(void) override;

@@ -711,7 +711,7 @@ void MandelWidget::wheelEvent(QWheelEvent* we)
     QOpenGLWidget::wheelEvent(we);
     float x = float(we->x()) / this->width();
     float y = float(we->y()) / this->height();
-    float scale = 1.0f - we->angleDelta().y() * 0.001f;
+    float scale = ::pow(0.9975, we->angleDelta().y());
     printf("scale: %f\n", double(scale));
     zoom(scale, x, y);
     we->accept();

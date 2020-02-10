@@ -20,10 +20,6 @@ find_path(MPFR_INCLUDES
 )
 find_library(MPFR_LIBRARIES mpfr PATHS $ENV{MPFR_DIR} ${LIB_INSTALL_DIR})
 
-if(MPFR_INCLUDES AND MPFR_LIBRARIES)
-    set(MPFR_FOUND TRUE)
-    target_compile_definitions(mandel PUBLIC WITH_MPFR)
-endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -48,6 +44,10 @@ endif()
 
 add_library(mandel STATIC ${MandelSources})
 
+if(MPFR_INCLUDES AND MPFR_LIBRARIES)
+    set(MPFR_FOUND TRUE)
+    #target_compile_definitions(mandel PUBLIC WITH_MPFR)
+endif()
 
 if(OPENCL_FOUND)
     target_compile_definitions(mandel PUBLIC WITH_OPENCL)

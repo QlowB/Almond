@@ -81,7 +81,7 @@ MandelContext::MandelContext(void)
     //cpuGeneratorFixedp = std::make_unique<CpuGenerator<fixed<1, 3>>>();
 
     devices = createDevices();
-    if (devices.empty()) {
+    if (devices.empty() || true) {
         adaptiveGenerator = std::make_unique<AdaptiveGenerator>(cpuGeneratorFloat.get(), cpuGeneratorDouble.get());
     }
     else {

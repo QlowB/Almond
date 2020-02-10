@@ -2,38 +2,34 @@
 
 #include <QGLWidget>
 #include <QOpenGLWidget>
-#include <QThread>
 #include <QThreadPool>
-#include <qopengl.h>
-#include <qopenglfunctions.h>
-#include <qopenglcontext.h>
-#include <qscrollarea.h>
-#include <qlabel.h>
-#include <qevent.h>
-#include <qrubberband.h>
+#include <QMouseEvent>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions>
+#include <QMutex>
+//#include <qopengl.h>
+//#include <qopenglfunctions.h>
+//#include <qopenglcontext.h>
 
 #include "Bitmap.h"
 #include "Gradient.h"
 #include <Mandel.h>
 
-#include <future>
-#include <thread>
-#include <mutex>
 #include <atomic>
 #include <tuple>
 #include <deque>
 #include <unordered_map>
 #include <unordered_set>
 
-class MandelWidget;
+
+using GridIndex = long long;
+Q_DECLARE_METATYPE(GridIndex)
 
 class Texture
 {
     GLuint id;
-    QOpenGLContext* context;
 public:
     Texture(const Bitmap<RGBColor>& pict, GLint param = GL_LINEAR);
-    Texture(const Bitmap<RGBColor>& pict, QOpenGLContext* context);
     ~Texture(void);
 
     Texture(const Texture& other) = delete;
@@ -42,17 +38,30 @@ public:
     Texture(Texture&& other);
     Texture& operator=(Texture&& other);
 
+private:
     void bind(void) const;
+public:
     inline GLuint getId(void) const { return id; }
 
     void drawRect(float x, float y, float width, float height);
 };
 
 
-struct MandelClip
+class TextureClip
 {
-    mnd::MandelViewport view;
+    std::shared_ptr<Texture> texture;
+    float tx, ty, tw, th;
+public:
+    inline TextureClip(std::shared_ptr<Texture> tex) :
+        texture{ std::move(tex) },
+        tx{ 0 }, ty{ 0 }, tw{ 1 }, th{ 1 }
+    {}
+
+    void drawRect(float x, float y, float width, float height);
+
+    TextureClip clip(float x, float y, float w, float h);
 };
+
 
 struct PairHash {
     template <typename T1, typename T2>
@@ -74,19 +83,35 @@ struct TripleHash {
 };
 
 
+struct GridElement
+{
+    bool enoughResolution;
+    TextureClip img;
+    inline GridElement(bool enoughResolution, TextureClip img) :
+        enoughResolution{ enoughResolution },
+        img{ std::move(img) }
+    {}
+};
+
+
+class MandelV;
+
+
 class TexGrid
 {
 public:
+    MandelV& owner;
+    int level;
     double dpp;
-    std::unordered_map<std::pair<int, int>, std::unique_ptr<Texture>, PairHash> cells;
+    std::unordered_map<std::pair<GridIndex, GridIndex>, std::unique_ptr<GridElement>, PairHash> cells;
 public:
-    inline TexGrid(void) : dpp{ 1.0 } {}
-    inline TexGrid(double dpp) : dpp{ dpp } {}
-    //TexGrid(const TexGrid&) = delete;
-    std::pair<int, int> getCellIndices(double x, double y);
-    std::pair<double, double> getPositions(int i, int j);
-    Texture* getCell(int i, int j);
-    void setCell(int i, int j, std::unique_ptr<Texture> tex);
+    //inline TexGrid(MandelV& owner) : level{ 1.0 }, owner{ owner } {}
+    TexGrid(MandelV& owner, int level);
+
+    std::pair<GridIndex, GridIndex> getCellIndices(double x, double y);
+    std::pair<double, double> getPositions(GridIndex i, GridIndex j);
+    GridElement* getCell(GridIndex i, GridIndex j);
+    void setCell(GridIndex i, GridIndex j, std::unique_ptr<GridElement> tex);
 
     inline size_t countAllocatedCells(void) const { return cells.size(); }
     void clearCells(void);
@@ -102,13 +127,13 @@ public:
     int maxIter;
     TexGrid* grid;
     int level;
-    int i, j;
+    GridIndex i, j;
 
     inline Job(mnd::MandelContext& mndContext,
                Gradient& gradient,
                int maxIter,
                TexGrid* grid,
-               int level, int i, int j) :
+               int level, GridIndex i, GridIndex j) :
         mndContext{ mndContext },
         gradient{ gradient },
         maxIter{ maxIter },
@@ -119,37 +144,41 @@ public:
 
     void run() override;
 signals:
-    void done(int level, int i, int j, Bitmap<RGBColor>* bmp);
+    void done(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
 };
 
 
 class Calcer : public QObject
 {
     Q_OBJECT
-    std::unordered_set<std::tuple<int, int, int>, TripleHash> jobs;
+    /// tuple contains level, i, j of the job
+    std::unordered_map<std::tuple<int, GridIndex, GridIndex>, Job*, TripleHash> jobs;
+    QMutex jobsMutex;
     mnd::MandelContext& mndContext;
     std::unique_ptr<QThreadPool> threadPool;
     Gradient& gradient;
     int maxIter;
+    int currentLevel;
 public:
     inline Calcer(mnd::MandelContext& mc, Gradient& gradient, int maxIter) :
+        jobsMutex{ QMutex::Recursive },
         mndContext{ mc },
         threadPool{ std::make_unique<QThreadPool>() },
         gradient{ gradient },
         maxIter{ maxIter }
     {
-        threadPool->setMaxThreadCount(4);
     }
 
     void setMaxIter(int maxIter);
     void clearAll(void);
 
 public slots:
-    void calc(TexGrid& grid, int level, int i, int j);
-    void notFinished(int level, int i, int j);
-    void redirect(int level, int i, int j, Bitmap<RGBColor>* bmp);
+    void calc(TexGrid& grid, int level, GridIndex i, GridIndex j, int priority);
+    void setCurrentLevel(int level);
+    void notFinished(int level, GridIndex i, GridIndex j);
+    void redirect(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
 signals:
-    void done(int level, int i, int j, Bitmap<RGBColor>* bmp);
+    void done(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
 };
 
 
@@ -182,43 +211,13 @@ public:
     void clear(void);
 
     void garbageCollect(int level);
+    GridElement* searchAbove(int level, GridIndex i, GridIndex j, int recursionLevel);
+    std::unique_ptr<GridElement> searchUnder(int level, GridIndex i, GridIndex j, int recursionLevel);
     void paint(const mnd::MandelViewport& mvp);
 public slots:
-    void cellReady(int level, int i, int j, Bitmap<RGBColor>* bmp);
+    void cellReady(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
 signals:
     void redrawRequested(void);
-};
-
-
-class MandelView : public QObject
-{
-    Q_OBJECT
-private:
-    std::future<void> calc;
-    QThread calcThread;
-    std::mutex mut;
-    std::condition_variable condVar;
-    std::atomic<mnd::MandelInfo> toCalc;
-    std::atomic_bool hasToCalc;
-    std::atomic_bool finish;
-    mnd::Generator* generator;
-    Gradient& gradient;
-    MandelWidget* mWidget;
-    //QOpenGLContext* context;
-public:
-    MandelView(mnd::Generator& generator, Gradient& gradient, MandelWidget* mWidget);
-    ~MandelView(void);
-
-    void setGenerator(mnd::Generator &value);
-
-    void start();
-private slots:
-    void loop();
-
-public slots:
-    void adaptViewport(const mnd::MandelInfo vp);
-signals:
-    void updated(Bitmap<RGBColor>* bitmap);
 };
 
 
@@ -226,8 +225,6 @@ class MandelWidget : public QOpenGLWidget
 {
     Q_OBJECT
 private:
-    //QScrollArea qsa;
-    //QLabel ql;
     mnd::MandelContext& mndContext;
 
     Gradient gradient;
@@ -236,24 +233,17 @@ private:
     int maxIterations = 2000;
 
 
+    volatile bool rubberbanding = false;
     QRectF rubberband;
-    bool dragging = false;
+    volatile bool dragging = false;
     int dragX, dragY;
 
     std::unique_ptr<Texture> tex;
     mnd::MandelViewport viewport;
-    MandelView mv;
     std::unique_ptr<MandelV> v;
 public:
     MandelWidget(mnd::MandelContext& ctxt, QWidget* parent = nullptr);
     ~MandelWidget(void) override;
-
-
-    /*inline MandelWidget(const MandelWidget& other) :
-        mndContext{ other.mndContext },
-        mv{ other.mndContext }
-    {
-    }*/
 
     inline const Gradient& getGradient(void) const { return gradient; }
 

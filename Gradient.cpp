@@ -123,31 +123,24 @@ void Gradient::addColor(RGBColor c, float value)
     colors.push_back({ c, value });
 }
 
+
 RGBColor Gradient::get(float x) const
 {
-    /*while(x >= max) {
-        if (x < 2 * max)
-            x = 2 * max - x;
-        else
-            x -= max;
-    }*/
     if (colors.empty())
         return RGBColor();
     const auto [left, right, lerp] = getNeighbors(x);
     RGBColor lerped = lerpColors(left, right, lerp);
     return lerped;
-    //RGBColor lerped = lerpColors(RGBColor{0, 0, 0}, RGBColor{255, 255, 255}, x / 2000.0f);
-    //printf("rgb: %d, %d, %d\n", left.r, left.g, left.b);
-    return RGBColor{uint8_t(::sin(x * 0.1) * 127 + 127), 0, 0};
 }
+
 
 RGBColor Gradient::lerpColors(RGBColor a, RGBColor b, float val)
 {
     auto mklin = [] (double x) {
-        return x;//::pow(x, 2.4);
+        return x * x;//::pow(x, 2.4);
     };
     auto unlin = [] (double x) {
-        return x;// ::pow(x, 1.0 / 2.4);
+        return ::sqrt(x);// ::pow(x, 1.0 / 2.4);
     };
 
     return RGBColor{
@@ -156,6 +149,7 @@ RGBColor Gradient::lerpColors(RGBColor a, RGBColor b, float val)
         uint8_t(unlin(mklin(b.b) * val + mklin(a.b) * (1 - val)))
     };
 }
+
 
 std::tuple<RGBColor, RGBColor, float> Gradient::getNeighbors(float x) const
 {

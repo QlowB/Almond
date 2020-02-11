@@ -27,13 +27,17 @@ VideoStream::VideoStream(int width, int height, const std::string& filename) :
         exit(1);
     }
 
+    AVOutputFormat* oformat = av_guess_format("mp4", NULL, NULL);
+    if (oformat == nullptr)
+        throw "invalid format";
+
     codecContext = avcodec_alloc_context3(codec);
 
     pkt = av_packet_alloc();
     if (!pkt)
         exit(1);
 
-    codecContext->bit_rate = 50 * 1000 * 1000;
+    codecContext->bit_rate = 4 * 1000 * 1000;
     codecContext->width = width;
     codecContext->height = height;
     codecContext->time_base = AVRational{ 1, 60 };
@@ -43,21 +47,47 @@ VideoStream::VideoStream(int width, int height, const std::string& filename) :
     codecContext->max_b_frames = 1;
     codecContext->pix_fmt = AV_PIX_FMT_YUV420P;
 
+    formatContext = avformat_alloc_context();
+    formatContext->oformat = oformat;
+    formatContext->video_codec_id = oformat->video_codec;
+
+    stream = avformat_new_stream(formatContext, codec);
+    if (!stream)
+        throw "error";
+
+    params = avcodec_parameters_alloc();
+    avcodec_parameters_from_context(params, codecContext);
+    stream->codecpar = params;
+
+    /*AVCPBProperties *props;
+    props = (AVCPBProperties*) av_stream_new_side_data(
+        stream, AV_PKT_DATA_CPB_PROPERTIES, sizeof(*props));
+    props->buffer_size = 1024 * 1024;
+    props->max_bitrate = 0;
+    props->min_bitrate = 0;
+    props->avg_bitrate = 0;
+    props->vbv_delay = UINT64_MAX;*/
+
     if (codec->id == AV_CODEC_ID_H264)
-        av_opt_set(codecContext->priv_data, "preset", "slow", 0);
+        av_opt_set(codecContext->priv_data, "preset", "veryfast", 0);
 
     if (avcodec_open2(codecContext, codec, nullptr) < 0) {
         fprintf(stderr, "could not open codec\n");
         exit(1);
     }
+    avio_open(&formatContext->pb, filename.c_str(), AVIO_FLAG_WRITE);
 
-    file = fopen(filename.c_str(), "wb");
+    if (avformat_write_header(formatContext, NULL) < 0) {
+        throw "error";
+    }
+    /*file = fopen(filename.c_str(), "wb");
     if (!file) {
         fprintf(stderr, "could not open %s\n", filename.c_str());
         exit(1);
-    }
+    }*/
 
     picture = av_frame_alloc();
+    av_frame_make_writable(picture);
     picture->format = codecContext->pix_fmt;
     picture->width  = codecContext->width;
     picture->height = codecContext->height;
@@ -75,20 +105,20 @@ VideoStream::VideoStream(int width, int height, const std::string& filename) :
 }
 
 
-static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
-    FILE *outfile)
+void VideoStream::encode(AVFrame* frame)
 {
     int ret;
 
     /* send the frame to the encoder */
-    ret = avcodec_send_frame(enc_ctx, frame);
+    ret = avcodec_send_frame(codecContext, frame);
     if (ret < 0) {
         fprintf(stderr, "error sending a frame for encoding\n");
         exit(1);
     }
 
     while (ret >= 0) {
-        ret = avcodec_receive_packet(enc_ctx, pkt);
+        ret = avcodec_receive_packet(codecContext, pkt);
+        //ret = avcodec_encode_video2(codecContext, pkt, picture, &gotPacket);
         if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
             return;
         else if (ret < 0) {
@@ -97,7 +127,9 @@ static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
         }
 
         printf("encoded frame %3d\"PRId64\" (size=%5d)\n", pkt->pts, pkt->size);
-        fwrite(pkt->data, 1, pkt->size, outfile);
+        //fwrite(pkt->data, 1, pkt->size, outfile);
+        //av_interleaved_write_frame(formatContext, pkt);
+        av_write_frame(formatContext, pkt);
         av_packet_unref(pkt);
     }
 }
@@ -106,12 +138,18 @@ static void encode(AVCodecContext *enc_ctx, AVFrame *frame, AVPacket *pkt,
 VideoStream::~VideoStream()
 {
     /* flush the encoder */
-    encode(codecContext, nullptr, pkt, file);
+    encode(nullptr);
+    av_write_trailer(this->formatContext);
 
     /* add sequence end code to have a real MPEG file */
-    fwrite(endcode, 1, sizeof(endcode), file);
-    fclose(file);
+    //fwrite(endcode, 1, sizeof(endcode), file);
+    //fclose(file);
 
+    avcodec_close(codecContext);
+    avio_close(formatContext->pb);
+    av_frame_unref(picture);
+    //av_free(codecContext);
+    avcodec_parameters_free(&params);
     avcodec_free_context(&codecContext);
     av_frame_free(&picture);
     av_packet_free(&pkt);
@@ -146,6 +184,8 @@ VideoStream::~VideoStream()
 
 void VideoStream::addFrame(const Bitmap<RGBColor>& frame)
 {
+    //av_frame_free(&picture);
+    //picture = av_frame_alloc();
     int retval = av_frame_make_writable(picture);
     if (retval < 0)
         exit(1);
@@ -186,7 +226,7 @@ void VideoStream::addFrame(const Bitmap<RGBColor>& frame)
     picture->pts = frameIndex++;
 
     /* encode the image */
-    encode(codecContext, picture, pkt, file);
+    encode(picture);
 }
 
 #endif // FFMPEG_ENABLED

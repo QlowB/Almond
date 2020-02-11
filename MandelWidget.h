@@ -18,6 +18,7 @@
 #include <atomic>
 #include <tuple>
 #include <deque>
+#include <chrono>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -47,7 +48,18 @@ public:
 };
 
 
-class TextureClip
+class CellImage
+{
+public:
+    virtual ~CellImage(void);
+
+    virtual void drawRect(float x, float y, float width, float height) = 0;
+    virtual std::shared_ptr<CellImage> clip(short i, short j) = 0;
+    virtual int getRecalcPriority(void) const = 0;
+};
+
+
+class TextureClip : public CellImage
 {
     std::shared_ptr<Texture> texture;
     float tx, ty, tw, th;
@@ -56,10 +68,31 @@ public:
         texture{ std::move(tex) },
         tx{ 0 }, ty{ 0 }, tw{ 1 }, th{ 1 }
     {}
+    virtual ~TextureClip(void);
 
     void drawRect(float x, float y, float width, float height);
 
     TextureClip clip(float x, float y, float w, float h);
+    std::shared_ptr<CellImage> clip(short i, short j);
+    int getRecalcPriority(void) const;
+};
+
+
+class QuadImage : public CellImage
+{
+    std::shared_ptr<CellImage> cells[2][2];
+public:
+    inline QuadImage(std::shared_ptr<CellImage> i00,
+                     std::shared_ptr<CellImage> i01,
+                     std::shared_ptr<CellImage> i10,
+                     std::shared_ptr<CellImage> i11) :
+        cells{ { std::move(i00), std::move(i01) }, { std::move(i10), std::move(i11) } }
+    {}
+    virtual ~QuadImage(void);
+
+    void drawRect(float x, float y, float width, float height);
+    std::shared_ptr<CellImage> clip(short i, short j);
+    int getRecalcPriority(void) const;
 };
 
 
@@ -86,8 +119,8 @@ struct TripleHash {
 struct GridElement
 {
     bool enoughResolution;
-    TextureClip img;
-    inline GridElement(bool enoughResolution, TextureClip img) :
+    std::shared_ptr<CellImage> img;
+    inline GridElement(bool enoughResolution, std::shared_ptr<CellImage> img) :
         enoughResolution{ enoughResolution },
         img{ std::move(img) }
     {}
@@ -210,9 +243,9 @@ public:
 
     void clear(void);
 
-    void garbageCollect(int level);
+    void garbageCollect(int level, GridIndex i, GridIndex j);
     GridElement* searchAbove(int level, GridIndex i, GridIndex j, int recursionLevel);
-    std::unique_ptr<GridElement> searchUnder(int level, GridIndex i, GridIndex j, int recursionLevel);
+    GridElement* searchUnder(int level, GridIndex i, GridIndex j, int recursionLevel);
     void paint(const mnd::MandelViewport& mvp);
 public slots:
     void cellReady(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
@@ -238,8 +271,10 @@ private:
     volatile bool dragging = false;
     int dragX, dragY;
 
-    std::unique_ptr<Texture> tex;
-    mnd::MandelViewport viewport;
+    mnd::MandelViewport currentViewport;
+    mnd::MandelViewport targetViewport;
+    std::chrono::time_point<std::chrono::high_resolution_clock> lastAnimUpdate;
+
     std::unique_ptr<MandelV> v;
 public:
     MandelWidget(mnd::MandelContext& ctxt, QWidget* parent = nullptr);
@@ -253,7 +288,11 @@ public:
 
     void paintGL() override;
 
+private:
+    void updateAnimations(void);
+
     void drawRubberband(void);
+public:
 
     void zoom(float scale, float x = 0.5f, float y = 0.5f);
     void setMaxIterations(int maxIter);
@@ -268,10 +307,10 @@ public:
     void mouseReleaseEvent(QMouseEvent* me) override;
     void wheelEvent(QWheelEvent * we) override;
 
-    inline const mnd::MandelViewport& getViewport(void) const { return viewport; }
+    inline const mnd::MandelViewport& getViewport(void) const { return targetViewport; }
 signals:
     void needsUpdate(const mnd::MandelInfo vp);
 public slots:
-    void viewUpdated(Bitmap<RGBColor>* bitmap);
+    //void viewUpdated(Bitmap<RGBColor>* bitmap);
 };
 

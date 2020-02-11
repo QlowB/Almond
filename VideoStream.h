@@ -23,9 +23,12 @@ class VideoStream
 {
     const AVCodec* codec;
     AVCodecContext* codecContext;
-    FILE* file;
+    AVFormatContext* formatContext;
+    AVCodecParameters* params;
+    //FILE* file;
     AVFrame* picture;
     AVPacket* pkt;
+    AVStream* stream;
     SwsContext* swsContext;
     static const uint8_t endcode[];
 
@@ -36,6 +39,8 @@ class VideoStream
 public:
     VideoStream(int width, int height, const std::string& filename);
     ~VideoStream(void);
+
+    void encode(AVFrame* frame);
 
     void addFrame(const Bitmap<RGBColor>& frame);
 };

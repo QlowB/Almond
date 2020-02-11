@@ -23,36 +23,6 @@ Almond::Almond(QWidget *parent) :
     //mw->show();
 }
 
-void Almond::on_pushButton_clicked()
-{
-    ExportImageDialog dialog(this);
-    //dialog.show();
-    auto response = dialog.exec();
-    if (response == 1) {
-        mnd::MandelInfo mi;
-        mi.maxIter = dialog.getMaxIterations();
-        mi.view = mw->getViewport();
-        mi.bWidth = dialog.getWidth();
-        mi.bHeight = dialog.getHeight();
-        mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        mnd::Generator& g = mandelContext.getCpuGeneratorFloat();
-        auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
-        g.generate(mi, fmap.pixels.get());
-        auto bitmap = fmap.map<RGBColor>([&mi, this] (float i) {
-            return i >= mi.maxIter ? RGBColor{ 0,0,0 } : mw->getGradient().get(i);
-        });
-        QImage img((unsigned char*) bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
-        img.save(dialog.getPath());
-    }
-}
-
-
-void Almond::on_pushButton_2_clicked()
-{
-    BenchmarkDialog bd(mandelContext, this);
-    //bd.show();
-    bd.exec();
-}
 
 void Almond::on_zoom_out_clicked()
 {
@@ -104,5 +74,40 @@ void Almond::on_exportVideo_clicked()
         auto bitmap = fmap.map<RGBColor>([](float i) { return i < 0 ? RGBColor{ 0,0,0 } : RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127), uint8_t(sin(i * 0.01f) * 127 + 127), uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
         QImage img((unsigned char*)bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
         img.save(dialog.getPath());*/
+    }
+}
+
+void Almond::on_smooth_stateChanged(int checked)
+{
+    this->mw->setSmoothColoring(checked != Qt::Unchecked);
+}
+
+void Almond::on_runBenchmark_clicked()
+{
+    BenchmarkDialog bd(mandelContext, this);
+    //bd.show();
+    bd.exec();
+}
+
+void Almond::on_exportImage_clicked()
+{
+    ExportImageDialog dialog(this);
+    //dialog.show();
+    auto response = dialog.exec();
+    if (response == 1) {
+        mnd::MandelInfo mi;
+        mi.maxIter = dialog.getMaxIterations();
+        mi.view = mw->getViewport();
+        mi.bWidth = dialog.getWidth();
+        mi.bHeight = dialog.getHeight();
+        mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
+        mnd::Generator& g = mandelContext.getCpuGeneratorFloat();
+        auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
+        g.generate(mi, fmap.pixels.get());
+        auto bitmap = fmap.map<RGBColor>([&mi, this] (float i) {
+            return i >= mi.maxIter ? RGBColor{ 0,0,0 } : mw->getGradient().get(i);
+        });
+        QImage img((unsigned char*) bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
+        img.save(dialog.getPath());
     }
 }

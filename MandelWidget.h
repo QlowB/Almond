@@ -26,6 +26,10 @@
 using GridIndex = long long;
 Q_DECLARE_METATYPE(GridIndex)
 
+
+class MandelView;
+class MandelWidget;
+
 class Texture
 {
     GLuint id;
@@ -138,7 +142,6 @@ struct GridElement
 };
 
 
-class MandelView;
 
 
 class TexGrid
@@ -166,29 +169,32 @@ class Job : public QObject, public QRunnable
 {
     Q_OBJECT
 public:
-    mnd::MandelContext& mndContext;
-    Gradient& gradient;
+    mnd::Generator* generator;
+    const Gradient& gradient;
     int maxIter;
     TexGrid* grid;
     int level;
     GridIndex i, j;
+    long calcState = 0;
 
-    inline Job(mnd::MandelContext& mndContext,
-               Gradient& gradient,
+    inline Job( mnd::Generator* generator,
+               const Gradient& gradient,
                int maxIter,
                TexGrid* grid,
-               int level, GridIndex i, GridIndex j) :
-        mndContext{ mndContext },
+               int level, GridIndex i, GridIndex j,
+               long calcState) :
+        generator{ generator },
         gradient{ gradient },
         maxIter{ maxIter },
         grid{ grid },
         level{ level },
-        i{ i }, j{ j }
+        i{ i }, j{ j },
+        calcState{ calcState }
     {}
 
     void run() override;
 signals:
-    void done(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
+    void done(int level, GridIndex i, GridIndex j, long calcState, Bitmap<RGBColor>* bmp);
 };
 
 
@@ -198,15 +204,17 @@ class Calcer : public QObject
     /// tuple contains level, i, j of the job
     std::unordered_map<std::tuple<int, GridIndex, GridIndex>, Job*, TripleHash> jobs;
     QMutex jobsMutex;
-    mnd::MandelContext& mndContext;
+    mnd::Generator* generator;
     std::unique_ptr<QThreadPool> threadPool;
-    Gradient& gradient;
+    const Gradient& gradient;
     int maxIter;
     int currentLevel;
+
+    volatile long calcState = 0;
 public:
-    inline Calcer(mnd::MandelContext& mc, Gradient& gradient, int maxIter) :
+    inline Calcer(mnd::Generator* generator, const Gradient& gradient, int maxIter) :
         jobsMutex{ QMutex::Recursive },
-        mndContext{ mc },
+        generator{ generator },
         threadPool{ std::make_unique<QThreadPool>() },
         gradient{ gradient },
         maxIter{ maxIter }
@@ -216,12 +224,15 @@ public:
 
     void setMaxIter(int maxIter);
     void clearAll(void);
+    void setGenerator(mnd::Generator* generator) { this->generator = generator; changeState(); }
+
+    inline void changeState(void) { calcState++; }
 
 public slots:
     void calc(TexGrid& grid, int level, GridIndex i, GridIndex j, int priority);
     void setCurrentLevel(int level);
     void notFinished(int level, GridIndex i, GridIndex j);
-    void redirect(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
+    void redirect(int level, GridIndex i, GridIndex j, long calcState, Bitmap<RGBColor>* bmp);
 signals:
     void done(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
 };
@@ -236,15 +247,15 @@ public:
     // a grid should not be deleted once constructed.
     // to free up memory one can call TexGrid::clearCells()
     std::unordered_map<int, TexGrid> levels;
-    mnd::MandelContext& mndContext;
+    mnd::Generator* generator;
     Calcer calcer;
-    Gradient& gradient;
+    MandelWidget& owner;
     int maxIter;
     int width;
     int height;
 public:
     static const int chunkSize = 256;
-    MandelView(mnd::MandelContext& mndContext, Gradient& gradient, int maxIter);
+    MandelView(mnd::Generator* generator, MandelWidget& owner, int maxIter);
     int getLevel(double dpp);
     double getDpp(int level);
 
@@ -252,6 +263,8 @@ public:
 
     inline int getMaxIter(void) const { return this->maxIter; }
     void setMaxIter(int maxIter);
+
+    void setGenerator(mnd::Generator* generator);
 
     void clearCells(void);
 
@@ -271,6 +284,8 @@ class MandelWidget : public QOpenGLWidget
     Q_OBJECT
 private:
     mnd::MandelContext& mndContext;
+
+    bool smoothColoring = true;
 
     Gradient gradient;
 
@@ -294,6 +309,9 @@ public:
 
     inline const Gradient& getGradient(void) const { return gradient; }
     void setGradient(Gradient g);
+
+    inline bool getSmoothColoring(void) const { return smoothColoring; }
+    void setSmoothColoring(bool sc);
 
     void initializeGL(void) override;
 

@@ -109,7 +109,7 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
 }
 
 
-ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
+ClGeneratorFloat::ClGeneratorFloat(cl::Device device, bool smooth) :
     ClGenerator{ device }
 {
     /*Platform p = getPlatform();
@@ -117,7 +117,7 @@ ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode = this->getKernelCode();
+    std::string kcode = this->getKernelCode(smooth);
 
     sources.push_back({ kcode.c_str(), kcode.length() });
 
@@ -130,47 +130,9 @@ ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
 }
 
 
-std::string ClGeneratorFloat::getKernelCode(void) const
+std::string ClGeneratorFloat::getKernelCode(bool smooth) const
 {
-    if (false && device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() == 4) {
-        return
-            "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max) {\n"
-            "   int index = get_global_id(0) * 4;\n"
-            "   int x = index % (width);\n"
-            "   int y = index / (width);\n"
-            "   float4 av = (float4)(x * pixelScaleX + xl, (x + 1) * pixelScaleX + xl, (x + 2) * pixelScaleX + xl, (x + 3) * pixelScaleX + xl);\n"
-    //                        "(x + 4) * pixelScale + xl, (x + 5) * pixelScale + xl, (x + 6) * pixelScale + xl, (x + 7) * pixelScale + xl);\n"
-            "   float4 bv = (float4)(y * pixelScaleY + yt);\n"
-            "   float4 ca = av;\n"
-            "   float4 cb = bv;\n"
-            ""
-            "   int4 counter = (int4) 1;"
-            "   float4 threshold = (float4) 16;"
-            "   int n = 0;\n"
-            "   while (n < max) {\n"
-            "       float4 aa = av * av;\n"
-            "       float4 bb = bv * bv;\n"
-            "       float4 ab = av * bv;\n"
-            "       av = aa - bb + ca;\n"
-            "       bv = 2 * ab + cb;\n"
-            "       counter += -(threshold > (aa + bb));\n"
-            "       if(all(threshold < (aa + bb))) break;\n"
-            "       //if (aa + bb > 16) break;\n"
-            "       n++;\n"
-            "   }\n\n"
-            "   A[index] = (float) counter[0];\n"
-            "   A[index + 1] = (float) counter[1];\n"
-            "   A[index + 2] = (float) counter[2];\n"
-            "   A[index + 3] = (float) counter[3];\n"
-    /*        "   A[index + 4] = (float) counter[4];\n"
-            "   A[index + 5] = (float) counter[5];\n"
-            "   A[index + 6] = (float) counter[6];\n"
-            "   A[index + 7] = (float) counter[7];\n"*/
-    //        "   A[get_global_id(0)] = 1;\n"
-            "}\n";
-    }
-    else {
-
+    if (smooth) {
         return 
     //        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable"
             "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max) {"
@@ -201,16 +163,47 @@ std::string ClGeneratorFloat::getKernelCode(void) const
     //        "   A[get_global_id(0)] = 5;"
             "}";
     }
+    else {
+        return
+    //        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable"
+            "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max) {"
+            "   int index = get_global_id(0);\n"
+            "   int x = index % width;"
+            "   int y = index / width;"
+            "   float a = x * pixelScaleX + xl;"
+            "   float b = y * pixelScaleY + yt;"
+            "   float ca = a;"
+            "   float cb = b;"
+            ""
+            "   int n = 0;"
+            "   while (n < max - 1) {"
+            "       float aa = a * a;"
+            "       float bb = b * b;"
+            "       float ab = a * b;"
+            "       if (aa + bb > 16) break;"
+            "       a = aa - bb + ca;"
+            "       b = 2 * ab + cb;"
+            "       n++;"
+            "   }\n"
+                // N + 1 - log (log  |Z(N)|) / log 2
+            "   if (n >= max - 1)\n"
+            "       A[index] = max;\n"
+            "   else"
+            "       A[index] = ((float)n);\n"
+//            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
+    //        "   A[get_global_id(0)] = 5;"
+            "}";
+    }
 }
 
 
-ClGeneratorDouble::ClGeneratorDouble(cl::Device device) :
+ClGeneratorDouble::ClGeneratorDouble(cl::Device device, bool smooth) :
     ClGenerator{ device }
 {
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode = this->getKernelCode();
+    std::string kcode = this->getKernelCode(smooth);
 
     sources.push_back({ kcode.c_str(), kcode.length() });
 
@@ -245,48 +238,81 @@ void ClGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
 }
 
 
-std::string ClGeneratorDouble::getKernelCode(void) const
+std::string ClGeneratorDouble::getKernelCode(bool smooth) const
 {
-    return 
-        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
-        "__kernel void iterate(__global float* A, const int width, double xl, double yt, double pixelScaleX, double pixelScaleY, int max) {\n"
-        "   int index = get_global_id(0);\n"
-        "   int x = index % width;"
-        "   int y = index / width;"
-        "   double a = x * pixelScaleX + xl;"
-        "   double b = y * pixelScaleY + yt;"
-        "   double ca = a;"
-        "   double cb = b;"
-        ""
-        "   int n = 0;"
-        "   while (n < max - 1) {"
-        "       double aa = a * a;"
-        "       double bb = b * b;"
-        "       double ab = a * b;"
-        "       if (aa + bb > 16) break;"
-        "       a = aa - bb + ca;"
-        "       b = 2 * ab + cb;"
-        "       n++;"
-        "   }\n"
-        // N + 1 - log (log  |Z(N)|) / log 2
-        "   if (n >= max - 1)\n"
-        "       A[index] = max;\n"
-        "   else"
-        "       A[index] = ((float)n) + 1 - log(log(a * a + b * b) / 2) / log(2.0f);\n"
-        //            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
-        //        "   A[get_global_id(0)] = 5;"
-        "}";
+    if (smooth) {
+        return
+            "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
+            "__kernel void iterate(__global float* A, const int width, double xl, double yt, double pixelScaleX, double pixelScaleY, int max) {\n"
+            "   int index = get_global_id(0);\n"
+            "   int x = index % width;"
+            "   int y = index / width;"
+            "   double a = x * pixelScaleX + xl;"
+            "   double b = y * pixelScaleY + yt;"
+            "   double ca = a;"
+            "   double cb = b;"
+            ""
+            "   int n = 0;"
+            "   while (n < max - 1) {"
+            "       double aa = a * a;"
+            "       double bb = b * b;"
+            "       double ab = a * b;"
+            "       if (aa + bb > 16) break;"
+            "       a = aa - bb + ca;"
+            "       b = 2 * ab + cb;"
+            "       n++;"
+            "   }\n"
+            // N + 1 - log (log  |Z(N)|) / log 2
+            "   if (n >= max - 1)\n"
+            "       A[index] = max;\n"
+            "   else"
+            "       A[index] = ((float)n) + 1 - log(log(a * a + b * b) / 2) / log(2.0f);\n"
+            //            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
+            //        "   A[get_global_id(0)] = 5;"
+            "}";
+    }
+    else {
+        return
+            "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
+            "__kernel void iterate(__global float* A, const int width, double xl, double yt, double pixelScaleX, double pixelScaleY, int max) {\n"
+            "   int index = get_global_id(0);\n"
+            "   int x = index % width;"
+            "   int y = index / width;"
+            "   double a = x * pixelScaleX + xl;"
+            "   double b = y * pixelScaleY + yt;"
+            "   double ca = a;"
+            "   double cb = b;"
+            ""
+            "   int n = 0;"
+            "   while (n < max - 1) {"
+            "       double aa = a * a;"
+            "       double bb = b * b;"
+            "       double ab = a * b;"
+            "       if (aa + bb > 16) break;"
+            "       a = aa - bb + ca;"
+            "       b = 2 * ab + cb;"
+            "       n++;"
+            "   }\n"
+            // N + 1 - log (log  |Z(N)|) / log 2
+            "   if (n >= max - 1)\n"
+            "       A[index] = max;\n"
+            "   else"
+            "       A[index] = ((float)n);\n"
+            //            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
+            //        "   A[get_global_id(0)] = 5;"
+            "}";
+    }
 }
 
 
 
-ClGenerator128::ClGenerator128(cl::Device device) :
+ClGenerator128::ClGenerator128(cl::Device device, bool smooth) :
     ClGenerator{ device }
 {
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode = this->getKernelCode();
+    std::string kcode = this->getKernelCode(smooth);
 
     sources.push_back({ kcode.c_str(), kcode.length() });
 
@@ -324,7 +350,7 @@ void ClGenerator128::generate(const mnd::MandelInfo& info, float* data)
 #include <fstream>
 #include <streambuf>
 
-std::string ClGenerator128::getKernelCode(void) const
+std::string ClGenerator128::getKernelCode(bool smooth) const
 {
     //fprintf(stderr, "starting file read\n");
     std::ifstream t("mandel128.cl");

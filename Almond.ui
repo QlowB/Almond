@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>666</width>
-    <height>563</height>
+    <width>763</width>
+    <height>524</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -23,22 +23,22 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout_left">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QPushButton" name="chooseGradient">
-            <property name="text">
-             <string>Choose Gradient</string>
-            </property>
-           </widget>
-          </item>
-          <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QVBoxLayout" name="verticalLayout_right">
+        <item>
+         <layout class="QFormLayout" name="formLayout">
+          <item row="1" column="0">
            <widget class="QLabel" name="label">
             <property name="text">
-             <string>Max. Iterations</string>
+             <string>max. iterations</string>
             </property>
            </widget>
           </item>
-          <item>
+          <item row="1" column="1">
            <widget class="QLineEdit" name="maxIterations">
             <property name="text">
              <string>2000</string>
@@ -48,32 +48,36 @@
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QPushButton" name="zoom_in">
+          <item row="0" column="0" colspan="2">
+           <widget class="QPushButton" name="chooseGradient">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
-             <string>Zoom In</string>
+             <string>Choose Gradient</string>
             </property>
            </widget>
           </item>
-          <item>
-           <widget class="QPushButton" name="zoom_out">
+          <item row="2" column="0" colspan="2">
+           <widget class="QCheckBox" name="smooth">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="text">
-             <string>Zoom Out</string>
+             <string>smooth coloring</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
          </layout>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <layout class="QVBoxLayout" name="verticalLayout_right">
-        <item>
-         <widget class="QPushButton" name="pushButton_2">
-          <property name="text">
-           <string>Run Benchmark</string>
-          </property>
-         </widget>
         </item>
         <item>
          <spacer name="verticalSpacer">
@@ -89,6 +93,40 @@
          </spacer>
         </item>
         <item>
+         <widget class="QPushButton" name="zoom_in">
+          <property name="text">
+           <string>Zoom In</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="zoom_out">
+          <property name="text">
+           <string>Zoom Out</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="verticalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="runBenchmark">
+          <property name="text">
+           <string>Run Benchmark</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="exportVideo">
           <property name="text">
            <string>Export Video</string>
@@ -96,7 +134,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButton">
+         <widget class="QPushButton" name="exportImage">
           <property name="text">
            <string>Export Image</string>
           </property>

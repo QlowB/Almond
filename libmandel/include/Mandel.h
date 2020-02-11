@@ -31,15 +31,19 @@ private:
     std::unique_ptr<Generator> floatGenerator;
     std::unique_ptr<Generator> doubleGenerator;
     std::unique_ptr<Generator> generator128;
+    std::unique_ptr<Generator> floatGeneratorSmooth;
+    std::unique_ptr<Generator> doubleGeneratorSmooth;
+    std::unique_ptr<Generator> generator128Smooth;
+
     MandelDevice(void);
 public:
 
     inline const std::string& getVendor(void) const { return vendor; }
     const std::string& getName(void) const;
 
-    Generator* getGeneratorFloat(void) const;
-    Generator* getGeneratorDouble(void) const;
-    Generator* getGenerator128(void) const;
+    Generator* getGeneratorFloat(bool smooth = true) const;
+    Generator* getGeneratorDouble(bool smooth = true) const;
+    Generator* getGenerator128(bool smooth = true) const;
 };
 
 
@@ -55,7 +59,13 @@ private:
     std::unique_ptr<Generator> cpuGenerator128;
     std::unique_ptr<Generator> cpuGeneratorFixedp;
 
+    std::unique_ptr<Generator> cpuGeneratorFloatSmooth;
+    std::unique_ptr<Generator> cpuGeneratorDoubleSmooth;
+    std::unique_ptr<Generator> cpuGenerator128Smooth;
+    std::unique_ptr<Generator> cpuGeneratorFixedpSmooth;
+
     std::unique_ptr<Generator> adaptiveGenerator;
+    std::unique_ptr<Generator> adaptiveGeneratorSmooth;
 
     std::vector<MandelDevice> devices;
 
@@ -64,7 +74,7 @@ private:
     std::vector<MandelDevice> createDevices(void);
 public:
 
-    Generator& getDefaultGenerator(void);
+    Generator& getDefaultGenerator(bool smooth = true);
     const std::vector<MandelDevice>& getDevices(void);
 
     Generator& getCpuGeneratorFloat(void);

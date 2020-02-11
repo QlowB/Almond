@@ -34,42 +34,42 @@ public:
     virtual void generate(const MandelInfo& info, float* data);
 
 protected:
-    virtual std::string getKernelCode(void) const = 0;
+    virtual std::string getKernelCode(bool smooth) const = 0;
 };
 
 
 class mnd::ClGeneratorFloat : public ClGenerator
 {
 public:
-    ClGeneratorFloat(cl::Device device);
+    ClGeneratorFloat(cl::Device device, bool smooth);
     virtual ~ClGeneratorFloat(void) = default;
 
 protected:
-    virtual std::string getKernelCode(void) const;
+    virtual std::string getKernelCode(bool smooth) const;
 };
 
 
 class mnd::ClGeneratorDouble : public ClGenerator
 {
 public:
-    ClGeneratorDouble(cl::Device device);
+    ClGeneratorDouble(cl::Device device, bool smooth);
     virtual ~ClGeneratorDouble(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data);
 protected:
-    virtual std::string getKernelCode(void) const;
+    virtual std::string getKernelCode(bool smooth) const;
 };
 
 
 class mnd::ClGenerator128 : public ClGenerator
 {
 public:
-    ClGenerator128(cl::Device device);
+    ClGenerator128(cl::Device device, bool smooth);
     virtual ~ClGenerator128(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data);
 protected:
-    virtual std::string getKernelCode(void) const;
+    virtual std::string getKernelCode(bool smooth) const;
 };
 
 #endif // WITH_OPENCL

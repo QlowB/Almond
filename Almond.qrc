@@ -1,5 +1,7 @@
 <RCC>
-    <qresource prefix="Almond">
+    <qresource prefix="gradients">
+        <file alias="default">gradients/default.xml</file>
         <file alias="clouds">gradients/clouds.xml</file>
+        <file alias="rainbow">gradients/rainbow.xml</file>
     </qresource>
 </RCC>

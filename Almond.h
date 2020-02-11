@@ -21,10 +21,6 @@ public:
     Almond(QWidget *parent = Q_NULLPTR);
 
 private slots:
-    void on_pushButton_clicked();
-
-    void on_pushButton_2_clicked();
-
     void on_zoom_out_clicked();
 
     void on_zoom_in_clicked();
@@ -34,6 +30,12 @@ private slots:
     void on_chooseGradient_clicked();
 
     void on_exportVideo_clicked();
+
+    void on_smooth_stateChanged(int arg1);
+
+    void on_runBenchmark_clicked();
+
+    void on_exportImage_clicked();
 
 private:
     Ui::AlmondClass ui;

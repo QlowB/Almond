@@ -20,35 +20,40 @@ MandelContext mnd::initializeContext(void)
 
 MandelDevice::MandelDevice(void) :
     floatGenerator{ nullptr },
-    doubleGenerator{ nullptr }
+    doubleGenerator{ nullptr },
+    generator128{ nullptr },
+    floatGeneratorSmooth{ nullptr },
+    doubleGeneratorSmooth{ nullptr },
+    generator128Smooth{ nullptr }
+
 {
 }
 
 
-mnd::Generator* MandelDevice::getGeneratorFloat(void) const
+mnd::Generator* MandelDevice::getGeneratorFloat(bool smooth) const
 {
-    if (floatGenerator)
+    if (smooth)
+        return floatGeneratorSmooth.get();
+    else
         return floatGenerator.get();
-    else
-        return nullptr;
 }
 
 
-mnd::Generator* MandelDevice::getGeneratorDouble(void) const
+mnd::Generator* MandelDevice::getGeneratorDouble(bool smooth) const
 {
-    if (doubleGenerator)
+    if (smooth)
+        return doubleGeneratorSmooth.get();
+    else
         return doubleGenerator.get();
-    else
-        return nullptr;
 }
 
 
-mnd::Generator* MandelDevice::getGenerator128(void) const
+mnd::Generator* MandelDevice::getGenerator128(bool smooth) const
 {
-    if (generator128)
-        return generator128.get();
+    if (smooth)
+        return generator128Smooth.get();
     else
-        return nullptr;
+        return generator128.get();
 }
 
 
@@ -57,41 +62,58 @@ MandelContext::MandelContext(void)
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
     if (cpuInfo.hasAvx()) {
-        cpuGeneratorFloat = std::make_unique<CpuGenerator<float, mnd::X86_AVX>>();
-        cpuGeneratorDouble = std::make_unique<CpuGenerator<double, mnd::X86_AVX>>();
+        cpuGeneratorFloat = std::make_unique<CpuGenerator<float, mnd::X86_AVX, true, false>>();
+        cpuGeneratorDouble = std::make_unique<CpuGenerator<double, mnd::X86_AVX, true, false>>();
+        cpuGeneratorFloatSmooth = std::make_unique<CpuGenerator<float, mnd::X86_AVX, true, true>>();
+        cpuGeneratorDoubleSmooth = std::make_unique<CpuGenerator<double, mnd::X86_AVX, true, true>>();
     }
     else if (cpuInfo.hasSse2()) {
-        cpuGeneratorFloat = std::make_unique<CpuGenerator<float, mnd::X86_SSE2>>();
-        cpuGeneratorDouble = std::make_unique<CpuGenerator<double, mnd::X86_SSE2>>();
+        cpuGeneratorFloat = std::make_unique<CpuGenerator<float, mnd::X86_SSE2, true, false>>();
+        cpuGeneratorDouble = std::make_unique<CpuGenerator<double, mnd::X86_SSE2, true, false>>();
+        cpuGeneratorFloatSmooth = std::make_unique<CpuGenerator<float, mnd::X86_SSE2, true, true>>();
+        cpuGeneratorDoubleSmooth = std::make_unique<CpuGenerator<double, mnd::X86_SSE2, true, true>>();
     }
     else
 #elif defined(__aarch64__)
     if (true) {
-        cpuGeneratorFloat = std::make_unique<CpuGenerator<float, mnd::ARM_NEON>>();
-        cpuGeneratorDouble = std::make_unique<CpuGenerator<double, mnd::ARM_NEON>>();
+        cpuGeneratorFloat = std::make_unique<CpuGenerator<float, mnd::ARM_NEON, true, false>>();
+        cpuGeneratorDouble = std::make_unique<CpuGenerator<double, mnd::ARM_NEON, true, false>>();
+        cpuGeneratorFloatSmooth = std::make_unique<CpuGenerator<float, mnd::ARM_NEON>>();
+        cpuGeneratorDoubleSmooth = std::make_unique<CpuGenerator<double, mnd::ARM_NEON>>();
     }
     else
 #endif
     {
-        cpuGeneratorFloat = std::make_unique<CpuGenerator<float>>();
-        cpuGeneratorDouble = std::make_unique<CpuGenerator<double>>();
+        cpuGeneratorFloat = std::make_unique<CpuGenerator<float, mnd::NONE, true, false>>();
+        cpuGeneratorDouble = std::make_unique<CpuGenerator<double, mnd::NONE, true, false>>();
+        cpuGeneratorFloatSmooth = std::make_unique<CpuGenerator<float, mnd::NONE, true, true>>();
+        cpuGeneratorDoubleSmooth = std::make_unique<CpuGenerator<double, mnd::NONE, true, true>>();
     }
 
-    cpuGenerator128 = std::make_unique<CpuGenerator<Fixed128>>();
+    cpuGenerator128 = std::make_unique<CpuGenerator<Fixed128, mnd::NONE, true, false>>();
+    cpuGenerator128Smooth = std::make_unique<CpuGenerator<Fixed128>>();
     //cpuGeneratorFixedp = std::make_unique<CpuGenerator<fixed<1, 3>>>();
 
     devices = createDevices();
-    if (devices.empty() || true) {
+    if (devices.empty()) {
         adaptiveGenerator = std::make_unique<AdaptiveGenerator>(cpuGeneratorFloat.get(), cpuGeneratorDouble.get());
+        adaptiveGeneratorSmooth = std::make_unique<AdaptiveGenerator>(cpuGeneratorFloatSmooth.get(), cpuGeneratorDoubleSmooth.get());
     }
     else {
         auto& device1 = devices[0];
-        Generator* floatGenerator = device1.getGeneratorFloat();
-        Generator* doubleGenerator = device1.getGeneratorDouble();
+        Generator* floatGenerator = device1.getGeneratorFloat(false);
+        Generator* doubleGenerator = device1.getGeneratorDouble(false);
+        Generator* floatGeneratorSmooth = device1.getGeneratorFloat(true);
+        Generator* doubleGeneratorSmooth = device1.getGeneratorDouble(true);
         if (floatGenerator == nullptr)
             floatGenerator = cpuGeneratorFloat.get();
         if (doubleGenerator == nullptr)
             doubleGenerator = cpuGeneratorDouble.get();
+        if (floatGeneratorSmooth == nullptr)
+            floatGeneratorSmooth = cpuGeneratorFloatSmooth.get();
+        if (doubleGeneratorSmooth == nullptr)
+            doubleGeneratorSmooth = cpuGeneratorDoubleSmooth.get();
+        adaptiveGeneratorSmooth = std::make_unique<AdaptiveGenerator>(floatGeneratorSmooth, doubleGeneratorSmooth);
         adaptiveGenerator = std::make_unique<AdaptiveGenerator>(floatGenerator, doubleGenerator);
     }
 }
@@ -131,7 +153,8 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             md.name = device.getInfo<CL_DEVICE_NAME>();
             md.vendor = device.getInfo<CL_DEVICE_VENDOR>();
             try {
-                md.floatGenerator = std::make_unique<ClGeneratorFloat>(device);
+                md.floatGenerator = std::make_unique<ClGeneratorFloat>(device, false);
+                md.floatGeneratorSmooth = std::make_unique<ClGeneratorFloat>(device, true);
             }
             catch (const std::string& err) {
                 printf("err: %s", err.c_str());
@@ -139,7 +162,8 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 
             if (supportsDouble) {
                 try {
-                    md.doubleGenerator = std::make_unique<ClGeneratorDouble>(device);
+                    md.doubleGenerator = std::make_unique<ClGeneratorDouble>(device, false);
+                    md.doubleGeneratorSmooth = std::make_unique<ClGeneratorDouble>(device, true);
                 }
                 catch (const std::string& err) {
                 }
@@ -167,9 +191,12 @@ const std::string& MandelDevice::getName(void) const
 }
 
 
-Generator& MandelContext::getDefaultGenerator(void)
+Generator& MandelContext::getDefaultGenerator(bool smooth)
 {
-    return *adaptiveGenerator;
+    if (smooth)
+        return *adaptiveGeneratorSmooth;
+    else
+        return *adaptiveGenerator;
 }
 
 

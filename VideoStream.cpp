@@ -15,7 +15,7 @@
 const uint8_t VideoStream::endcode[] = { 0, 0, 1, 0xb7 };
 
 
-VideoStream::VideoStream(int width, int height, const std::string& filename) :
+VideoStream::VideoStream(int width, int height, const std::string& filename, int bitrate, const char* preset) :
     width{ width & (~1) }, height{ height & (~1) }
 {
     // only needed with ffmpeg version < 4
@@ -37,7 +37,7 @@ VideoStream::VideoStream(int width, int height, const std::string& filename) :
     if (!pkt)
         exit(1);
 
-    codecContext->bit_rate = 4 * 1000 * 1000;
+    codecContext->bit_rate = bitrate * 1000;
     codecContext->width = width;
     codecContext->height = height;
     codecContext->time_base = AVRational{ 1, 60 };
@@ -69,7 +69,7 @@ VideoStream::VideoStream(int width, int height, const std::string& filename) :
     props->vbv_delay = UINT64_MAX;*/
 
     if (codec->id == AV_CODEC_ID_H264)
-        av_opt_set(codecContext->priv_data, "preset", "veryfast", 0);
+        av_opt_set(codecContext->priv_data, "preset", preset, 0);
 
     if (avcodec_open2(codecContext, codec, nullptr) < 0) {
         fprintf(stderr, "could not open codec\n");
@@ -129,6 +129,10 @@ void VideoStream::encode(AVFrame* frame)
         printf("encoded frame %3d\"PRId64\" (size=%5d)\n", pkt->pts, pkt->size);
         //fwrite(pkt->data, 1, pkt->size, outfile);
         //av_interleaved_write_frame(formatContext, pkt);
+
+        av_packet_rescale_ts(pkt, (AVRational){1, 25}, stream->time_base);
+        pkt->stream_index = stream->index;
+
         av_write_frame(formatContext, pkt);
         av_packet_unref(pkt);
     }
@@ -184,8 +188,6 @@ VideoStream::~VideoStream()
 
 void VideoStream::addFrame(const Bitmap<RGBColor>& frame)
 {
-    //av_frame_free(&picture);
-    //picture = av_frame_alloc();
     int retval = av_frame_make_writable(picture);
     if (retval < 0)
         exit(1);

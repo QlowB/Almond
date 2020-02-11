@@ -16,6 +16,11 @@ struct ExportVideoInfo
     int maxIterations;
 
     std::string path;
+
+    /// bitrate in kbps
+    int bitrate;
+
+    std::string preset;
 };
 
 

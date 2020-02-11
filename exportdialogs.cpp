@@ -73,6 +73,7 @@ ExportVideoDialog::ExportVideoDialog(QWidget* parent, const ExportVideoInfo& evi
     evd.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
     evd.vidWidth->setValidator(new QIntValidator(1, 10000000, this));
     evd.vidHeight->setValidator(new QIntValidator(1, 10000000, this));
+    evd.bitrate->setValidator(new QIntValidator(1, 10000000, this));
 
     evd.startX->setText(QString::number(evi.start.x));
     evd.startY->setText(QString::number(evi.start.y));
@@ -83,6 +84,21 @@ ExportVideoDialog::ExportVideoDialog(QWidget* parent, const ExportVideoInfo& evi
     evd.endY->setText(QString::number(evi.end.y));
     evd.endW->setText(QString::number(evi.end.width));
     evd.endH->setText(QString::number(evi.end.height));
+
+    auto presets = {
+        "ultrafast",
+        "superfast",
+        "veryfast",
+        "faster",
+        "fast",
+        "medium",
+        "slow",
+        "slower",
+        "veryslow",
+    };
+    for (auto& preset : presets) {
+        evd.encodingPresetBox->addItem(preset);
+    }
 }
 
 const ExportVideoInfo& ExportVideoDialog::getExportVideoInfo(void) const
@@ -103,6 +119,9 @@ void ExportVideoDialog::on_buttonBox_accepted()
     evi.width = evd.vidWidth->text().toInt();
     evi.height = evd.vidHeight->text().toInt();
     evi.maxIterations = evd.maxIterations->text().toInt();
+
+    evi.bitrate = evd.bitrate->text().toInt();
+    evi.preset = evd.encodingPresetBox->currentText().toStdString();
     /*evi.start = mnd::MandelViewport {
         evd.startX->text().toDouble(),
         evd.startY->text().toDouble(),
@@ -132,7 +151,7 @@ void ExportVideoDialog::on_pushButton_clicked()
 {
     QString saveAs = QFileDialog::getSaveFileName(this,
             tr("Save exported image"), "",
-            tr("H264 video (*.h264);;All Files (*)"));
+            tr("MP4 video (*.mp4);;All Files (*)"));
     evd.savePath->setText(saveAs);
     this->repaint();
 }
@@ -151,7 +170,7 @@ bool exportVideo(const ExportVideoInfo& evi)
     mi.bHeight = evi.height;
     mi.maxIter = evi.maxIterations;
 
-    VideoStream vs(evi.width, evi.height, evi.path);
+    VideoStream vs(evi.width, evi.height, evi.path, evi.bitrate, evi.preset.c_str());
 
     double x = evi.end.x + evi.end.width / 2;
     double y = evi.end.y + evi.end.height / 2;

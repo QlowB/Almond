@@ -51,6 +51,11 @@ public:
 class CellImage
 {
 public:
+    CellImage(void) = default;
+    CellImage(CellImage&& b) = default;
+    CellImage(const CellImage& b) = default;
+    CellImage& operator=(const CellImage& b) = default;
+    CellImage& operator=(CellImage&& b) = default;
     virtual ~CellImage(void);
 
     virtual void drawRect(float x, float y, float width, float height) = 0;
@@ -64,10 +69,16 @@ class TextureClip : public CellImage
     std::shared_ptr<Texture> texture;
     float tx, ty, tw, th;
 public:
-    inline TextureClip(std::shared_ptr<Texture> tex) :
+    inline TextureClip(std::shared_ptr<Texture> tex,
+                       float tx, float ty, float tw, float th) :
         texture{ std::move(tex) },
-        tx{ 0 }, ty{ 0 }, tw{ 1 }, th{ 1 }
+        tx{ tx }, ty{ ty }, tw{ tw }, th{ th }
     {}
+
+    inline TextureClip(std::shared_ptr<Texture> tex) :
+        TextureClip{ tex, 0.0f, 0.0f, 1.0f, 1.0f }
+    {}
+
     virtual ~TextureClip(void);
 
     void drawRect(float x, float y, float width, float height);
@@ -127,19 +138,19 @@ struct GridElement
 };
 
 
-class MandelV;
+class MandelView;
 
 
 class TexGrid
 {
 public:
-    MandelV& owner;
+    MandelView& owner;
     int level;
     double dpp;
     std::unordered_map<std::pair<GridIndex, GridIndex>, std::unique_ptr<GridElement>, PairHash> cells;
 public:
     //inline TexGrid(MandelV& owner) : level{ 1.0 }, owner{ owner } {}
-    TexGrid(MandelV& owner, int level);
+    TexGrid(MandelView& owner, int level);
 
     std::pair<GridIndex, GridIndex> getCellIndices(double x, double y);
     std::pair<double, double> getPositions(GridIndex i, GridIndex j);
@@ -200,6 +211,7 @@ public:
         gradient{ gradient },
         maxIter{ maxIter }
     {
+        threadPool->setMaxThreadCount(1);
     }
 
     void setMaxIter(int maxIter);
@@ -215,7 +227,7 @@ signals:
 };
 
 
-class MandelV : public QObject
+class MandelView : public QObject
 {
     Q_OBJECT
 public:
@@ -232,7 +244,7 @@ public:
     int height;
 public:
     static const int chunkSize = 256;
-    MandelV(mnd::MandelContext& mndContext, Gradient& gradient, int maxIter);
+    MandelView(mnd::MandelContext& mndContext, Gradient& gradient, int maxIter);
     int getLevel(double dpp);
     double getDpp(int level);
 
@@ -241,7 +253,7 @@ public:
     inline int getMaxIter(void) const { return this->maxIter; }
     void setMaxIter(int maxIter);
 
-    void clear(void);
+    void clearCells(void);
 
     void garbageCollect(int level, GridIndex i, GridIndex j);
     GridElement* searchAbove(int level, GridIndex i, GridIndex j, int recursionLevel);
@@ -275,12 +287,13 @@ private:
     mnd::MandelViewport targetViewport;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastAnimUpdate;
 
-    std::unique_ptr<MandelV> v;
+    std::unique_ptr<MandelView> mandelView;
 public:
     MandelWidget(mnd::MandelContext& ctxt, QWidget* parent = nullptr);
     ~MandelWidget(void) override;
 
     inline const Gradient& getGradient(void) const { return gradient; }
+    void setGradient(Gradient g);
 
     void initializeGL(void) override;
 

@@ -73,9 +73,10 @@ void Almond::on_maxIterations_editingFinished()
 
 void Almond::on_chooseGradient_clicked()
 {
-    QGradient qg;
-    GradientChooseDialog gcd;
     auto response = gcd.exec();
+    auto gradient = gcd.getGradient();
+    if (gradient)
+        mw->setGradient(std::move(*gradient));
 }
 
 void Almond::on_exportVideo_clicked()

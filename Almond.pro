@@ -31,7 +31,6 @@ SOURCES += \
         Gradient.cpp \
         MandelVideoGenerator.cpp \
         MandelWidget.cpp \
-        SectionManager.cpp \
         VideoStream.cpp \
         benchmarkdialog.cpp \
         exportdialogs.cpp \
@@ -45,7 +44,6 @@ HEADERS += \
         Gradient.h \
         MandelVideoGenerator.h \
         MandelWidget.h \
-        SectionManager.h \
         VideoStream.h \
         benchmarkdialog.h \
         exportdialogs.h \

@@ -18,7 +18,7 @@ void MandelVideoGenerator::generate(void)
     mi.bHeight = evi.height * 2;
     mi.maxIter = evi.maxIterations;
 
-    VideoStream vs(evi.width, evi.height, evi.path);
+    VideoStream vs(evi.width, evi.height, evi.path, evi.bitrate, evi.preset.c_str());
 
     double x = evi.end.x + evi.end.width / 2;
     double y = evi.end.y + evi.end.height / 2;

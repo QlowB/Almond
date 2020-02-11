@@ -6,6 +6,7 @@
 #include <Mandel.h>
 #include "MandelWidget.h"
 #include "exportdialogs.h"
+#include "gradientchoosedialog.h"
 
 #include <memory>
 
@@ -15,6 +16,7 @@ class Almond : public QMainWindow
 private:
     mnd::MandelContext mandelContext;
     std::unique_ptr<MandelWidget> mw;
+    GradientChooseDialog gcd;
 public:
     Almond(QWidget *parent = Q_NULLPTR);
 

@@ -27,7 +27,9 @@ VideoStream::VideoStream(int width, int height, const std::string& filename, int
         exit(1);
     }
 
-    AVOutputFormat* oformat = av_guess_format("mp4", NULL, NULL);
+    AVOutputFormat* oformat = av_guess_format(nullptr, filename.c_str(), nullptr);
+    if (!oformat)
+        oformat = av_guess_format("mp4", nullptr, nullptr);
     if (oformat == nullptr)
         throw "invalid format";
 
@@ -130,7 +132,7 @@ void VideoStream::encode(AVFrame* frame)
         //fwrite(pkt->data, 1, pkt->size, outfile);
         //av_interleaved_write_frame(formatContext, pkt);
 
-        av_packet_rescale_ts(pkt, (AVRational){1, 25}, stream->time_base);
+        av_packet_rescale_ts(pkt, AVRational{1, 60}, stream->time_base);
         pkt->stream_index = stream->index;
 
         av_write_frame(formatContext, pkt);

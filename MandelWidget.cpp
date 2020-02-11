@@ -757,14 +757,16 @@ void MandelWidget::mouseReleaseEvent(QMouseEvent* me)
     QOpenGLWidget::mouseReleaseEvent(me);
     if (rubberbanding) {
         QRect rect = rubberband.toRect();
-        QRect full = this->geometry();
+        if(rect.width() != 0 && rect.height() != 0) {
+            QRect full = this->geometry();
 
-        targetViewport.x += double(rect.left()) * targetViewport.width / full.width();
-        targetViewport.y += double(rect.top()) * targetViewport.height / full.height();
-        targetViewport.width *= double(rect.width()) / full.width();
-        targetViewport.height *= double(rect.height()) / full.height();
-        targetViewport.normalize();
-        currentViewport = targetViewport;
+            targetViewport.x += double(rect.left()) * targetViewport.width / full.width();
+            targetViewport.y += double(rect.top()) * targetViewport.height / full.height();
+            targetViewport.width *= double(rect.width()) / full.width();
+            targetViewport.height *= double(rect.height()) / full.height();
+            targetViewport.normalize();
+            currentViewport = targetViewport;
+        }
         requestRecalc();
         rubberbanding = false;
     }

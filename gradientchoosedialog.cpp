@@ -1,6 +1,18 @@
 #include "gradientchoosedialog.h"
 
 #include <QtXml/QDomDocument>
+#include <QFile>
+#include <QResource>
+#include <QDir>
+
+
+//resource hacks
+static const std::string clouds_xml = "";
+
+std::map<std::string, std::string> GradientChooseDialog::presets {
+    { "clouds", clouds_xml }
+};
+
 
 GradientChooseDialog::GradientChooseDialog()
 {
@@ -8,6 +20,13 @@ GradientChooseDialog::GradientChooseDialog()
     QFont f("unexistent");
     f.setStyleHint(QFont::Monospace);
     gcd.plainTextEdit->setFont(f);
+
+
+    QFile qf(":/Almond/clouds");
+    QString str = QString::fromUtf8(qf.readAll());
+    printf("%s\n", str.toStdString().c_str());
+    gcd.presets->addItem("clouds");
+    gcd.presets->addItem("none");
 }
 
 #if 0
@@ -48,4 +67,11 @@ void GradientChooseDialog::on_buttonBox_accepted()
 void GradientChooseDialog::on_buttonBox_clicked(QAbstractButton *button)
 {
 
+}
+
+void GradientChooseDialog::on_presets_currentIndexChanged(const QString& index)
+{
+    QResource gr(":/gradients/clouds.xml");
+    QString str = QString::fromUtf8(reinterpret_cast<const char*>(gr.data()));
+    emit gcd.plainTextEdit->setPlainText(str);
 }

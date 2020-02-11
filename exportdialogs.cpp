@@ -151,7 +151,7 @@ void ExportVideoDialog::on_pushButton_clicked()
 {
     QString saveAs = QFileDialog::getSaveFileName(this,
             tr("Save exported image"), "",
-            tr("MP4 video (*.mp4);;All Files (*)"));
+            tr("AVI video (*.avi);;MP4 video (*.mp4);;All Files (*)"));
     evd.savePath->setText(saveAs);
     this->repaint();
 }

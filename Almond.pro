@@ -10,7 +10,6 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = Almond
 TEMPLATE = app
-
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -55,6 +54,7 @@ FORMS += \
         exportimagedialog.ui \
         exportvideodialog.ui \
         gradientchooser.ui
+
 
 
 # Default rules for deployment.
@@ -114,8 +114,7 @@ unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lswscale
 #INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 #DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-RESOURCES += \
-    Almond.qrc
+RESOURCES += Almond.qrc
 
 unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel
 

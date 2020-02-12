@@ -2,16 +2,8 @@
 
 #include <QFile>
 #include <QResource>
-#include <QDir>
 
-
-//resource hacks
-static const std::string clouds_xml = "";
-
-std::map<std::string, std::string> GradientChooseDialog::presets {
-    { "clouds", clouds_xml }
-};
-
+#include <QColorDialog>
 
 GradientChooseDialog::GradientChooseDialog()
 {

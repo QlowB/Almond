@@ -14,7 +14,6 @@ class GradientChooseDialog : public QDialog
 private:
     Ui::GradientChooser gcd;
     std::unique_ptr<Gradient> chosenGradient = nullptr;
-    static std::map<std::string, std::string> presets;
 public:
     GradientChooseDialog();
 private slots:

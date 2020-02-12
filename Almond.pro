@@ -31,6 +31,7 @@ SOURCES += \
         Color.cpp \
         CubicSpline.cpp \
         Gradient.cpp \
+        GradientWidget.cpp \
         MandelVideoGenerator.cpp \
         MandelWidget.cpp \
         VideoStream.cpp \
@@ -45,6 +46,7 @@ HEADERS += \
         Color.h \
         CubicSpline.h \
         Gradient.h \
+        GradientWidget.h \
         MandelVideoGenerator.h \
         MandelWidget.h \
         VideoStream.h \

@@ -1,5 +1,6 @@
 <gradient repeat="true">
     <color r="0" g="0" b="0" p="0" />
+    <color r="125" g="50" b="15" p="20" />
     <color r="250" g="70" b="24" p="40" />
     <color r="200" g="230" b="30" p="80" />
     <color r="70" g="223" b="30" p="105" />

@@ -28,6 +28,8 @@ CONFIG += c++17
 SOURCES += \
         Almond.cpp \
         Bitmap.cpp \
+        Color.cpp \
+        CubicSpline.cpp \
         Gradient.cpp \
         MandelVideoGenerator.cpp \
         MandelWidget.cpp \
@@ -41,6 +43,7 @@ HEADERS += \
         Almond.h \
         Bitmap.h \
         Color.h \
+        CubicSpline.h \
         Gradient.h \
         MandelVideoGenerator.h \
         MandelWidget.h \

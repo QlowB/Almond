@@ -341,10 +341,12 @@ TexGrid& MandelView::getGrid(int level)
 
 void MandelView::setMaxIter(int maxIter)
 {
-    this->maxIter = maxIter;
-    calcer.setMaxIter(maxIter);
-    clearCells();
-    emit redrawRequested();
+    if (this->maxIter != maxIter) {
+        this->maxIter = maxIter;
+        calcer.setMaxIter(maxIter);
+        clearCells();
+        emit redrawRequested();
+    }
 }
 
 
@@ -693,12 +695,21 @@ void MandelWidget::zoom(float scale, float x, float y)
 }
 
 
+void MandelWidget::setViewport(const mnd::MandelViewport& viewport)
+{
+    targetViewport = viewport;
+    currentViewport = viewport;
+    //lastAnimUpdate = std::chrono::high_resolution_clock::now();
+    //currentViewport.zoom(scale, x, y);
+    requestRecalc();
+}
+
+
 void MandelWidget::setMaxIterations(int maxIter)
 {
     this->maxIterations = maxIter;
     if (mandelView)
         mandelView->setMaxIter(maxIter);
-    requestRecalc();
 }
 
 

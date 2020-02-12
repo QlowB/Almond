@@ -107,6 +107,13 @@
          </widget>
         </item>
         <item>
+         <widget class="QPushButton" name="resetZoom">
+          <property name="text">
+           <string>Reset Zoom</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="verticalSpacer_2">
           <property name="orientation">
            <enum>Qt::Vertical</enum>

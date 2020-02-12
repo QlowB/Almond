@@ -110,14 +110,14 @@ void Benchmarker::start(void)
     double nTests = 3;
 
     auto& devices = mndContext.getDevices();
-    for (int i = 0; i < devices.size(); i++) {
-        if (mnd::Generator* gpuf; gpuf = devices[i].getGeneratorFloat()) {
+    for (size_t i = 0; i < devices.size(); i++) {
+        if (mnd::Generator* gpuf; (gpuf = devices[i].getGeneratorFloat())) {
             nTests++;
         }
-        if (mnd::Generator* gpud; gpud = devices[i].getGeneratorDouble()) {
+        if (mnd::Generator* gpud; (gpud = devices[i].getGeneratorDouble())) {
             nTests++;
         }
-        if (mnd::Generator* gpu128; gpu128 = devices[i].getGenerator128()) {
+        if (mnd::Generator* gpu128; (gpu128 = devices[i].getGenerator128())) {
             nTests++;
         }
     }
@@ -141,26 +141,25 @@ void Benchmarker::start(void)
     br.percentage += progress;
     emit update(br);
 
-    for (int i = 0; i < devices.size(); i++) {
+    for (size_t i = 0; i < devices.size(); i++) {
         br.values.push_back({});
         std::vector<double>& gpu = br.values[br.values.size() - 1];
-        if (mnd::Generator* gpuf; gpuf = devices[i].getGeneratorFloat()) {
+        if (mnd::Generator* gpuf; (gpuf = devices[i].getGeneratorFloat())) {
             gpu.push_back(benchmarkResult(*gpuf));
             br.percentage += progress;
             emit update(br);
         }
-        if (mnd::Generator* gpud; gpud = devices[i].getGeneratorDouble()) {
+        if (mnd::Generator* gpud; (gpud = devices[i].getGeneratorDouble())) {
             gpu.push_back(benchmarkResult(*gpud));
             br.percentage += progress;
             emit update(br);
         }
-        if (mnd::Generator* gpu128; gpu128 = devices[i].getGenerator128()) {
+        if (mnd::Generator* gpu128; (gpu128 = devices[i].getGenerator128())) {
             gpu.push_back(benchmarkResult(*gpu128));
             br.percentage += progress;
             emit update(br);
         }
     }
-    printf("benchmark finished\n");
     emit update(br);
     emit finished();
 }

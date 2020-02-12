@@ -326,6 +326,7 @@ private:
 public:
 
     void zoom(float scale, float x = 0.5f, float y = 0.5f);
+    void setViewport(const mnd::MandelViewport& viewport);
     void setMaxIterations(int maxIter);
 
     //void redraw();

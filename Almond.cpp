@@ -101,7 +101,7 @@ void Almond::on_exportImage_clicked()
         mi.bWidth = dialog.getWidth();
         mi.bHeight = dialog.getHeight();
         mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        mnd::Generator& g = mandelContext.getCpuGeneratorFloat();
+        mnd::Generator& g = mandelContext.getDefaultGenerator(this->mw->getSmoothColoring());
         auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
         g.generate(mi, fmap.pixels.get());
         auto bitmap = fmap.map<RGBColor>([&mi, this] (float i) {
@@ -110,4 +110,9 @@ void Almond::on_exportImage_clicked()
         QImage img((unsigned char*) bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
         img.save(dialog.getPath());
     }
+}
+
+void Almond::on_resetZoom_clicked()
+{
+    mw->setViewport(mnd::MandelViewport::standardView());
 }

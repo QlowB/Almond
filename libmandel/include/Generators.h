@@ -35,9 +35,10 @@ public:
 
 class mnd::AdaptiveGenerator : public Generator
 {
-    std::vector<std::pair<double, Generator*>> generators;
+    std::vector<std::pair<Real, Generator*>> generators;
 public:
     AdaptiveGenerator(Generator* floatGen, Generator* doubleGen);
+    AdaptiveGenerator(Generator* floatGen, Generator* doubleGen, Generator* quadGen);
     virtual ~AdaptiveGenerator(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data);

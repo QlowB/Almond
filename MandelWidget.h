@@ -23,7 +23,7 @@
 #include <unordered_set>
 
 
-using GridIndex = long long;
+using GridIndex = mnd::Integer;
 Q_DECLARE_METATYPE(GridIndex)
 
 
@@ -142,21 +142,19 @@ struct GridElement
 };
 
 
-
-
 class TexGrid
 {
 public:
     MandelView& owner;
     int level;
-    double dpp;
+    mnd::Real dpp;
     std::unordered_map<std::pair<GridIndex, GridIndex>, std::unique_ptr<GridElement>, PairHash> cells;
 public:
     //inline TexGrid(MandelV& owner) : level{ 1.0 }, owner{ owner } {}
     TexGrid(MandelView& owner, int level);
 
-    std::pair<GridIndex, GridIndex> getCellIndices(double x, double y);
-    std::pair<double, double> getPositions(GridIndex i, GridIndex j);
+    std::pair<GridIndex, GridIndex> getCellIndices(mnd::Real x, mnd::Real y);
+    std::pair<mnd::Real, mnd::Real> getPositions(GridIndex i, GridIndex j);
     GridElement* getCell(GridIndex i, GridIndex j);
     void setCell(GridIndex i, GridIndex j, std::unique_ptr<GridElement> tex);
 
@@ -256,8 +254,8 @@ public:
 public:
     static const int chunkSize = 256;
     MandelView(mnd::Generator* generator, MandelWidget& owner, int maxIter);
-    int getLevel(double dpp);
-    double getDpp(int level);
+    int getLevel(mnd::Real dpp);
+    mnd::Real getDpp(int level);
 
     TexGrid& getGrid(int level);
 

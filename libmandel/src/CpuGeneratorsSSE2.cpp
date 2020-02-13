@@ -7,15 +7,18 @@
 
 using mnd::CpuGenerator;
 
-template class CpuGenerator<float, mnd::X86_SSE2, false, false>;
-template class CpuGenerator<float, mnd::X86_SSE2, false, true>;
-template class CpuGenerator<float, mnd::X86_SSE2, true, false>;
-template class CpuGenerator<float, mnd::X86_SSE2, true, true>;
+namespace mnd
+{
+    template class CpuGenerator<float, mnd::X86_SSE2, false, false>;
+    template class CpuGenerator<float, mnd::X86_SSE2, false, true>;
+    template class CpuGenerator<float, mnd::X86_SSE2, true, false>;
+    template class CpuGenerator<float, mnd::X86_SSE2, true, true>;
 
-template class CpuGenerator<double, mnd::X86_SSE2, false, false>;
-template class CpuGenerator<double, mnd::X86_SSE2, false, true>;
-template class CpuGenerator<double, mnd::X86_SSE2, true, false>;
-template class CpuGenerator<double, mnd::X86_SSE2, true, true>;
+    template class CpuGenerator<double, mnd::X86_SSE2, false, false>;
+    template class CpuGenerator<double, mnd::X86_SSE2, false, true>;
+    template class CpuGenerator<double, mnd::X86_SSE2, true, false>;
+    template class CpuGenerator<double, mnd::X86_SSE2, true, true>;
+}
 
 template<bool parallel, bool smooth>
 void CpuGenerator<float, mnd::X86_SSE2, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)

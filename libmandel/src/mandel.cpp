@@ -21,10 +21,8 @@ MandelContext mnd::initializeContext(void)
 MandelDevice::MandelDevice(void) :
     floatGenerator{ nullptr },
     doubleGenerator{ nullptr },
-    generator128{ nullptr },
     floatGeneratorSmooth{ nullptr },
-    doubleGeneratorSmooth{ nullptr },
-    generator128Smooth{ nullptr }
+    doubleGeneratorSmooth{ nullptr }
 
 {
 }
@@ -48,6 +46,17 @@ mnd::Generator* MandelDevice::getGeneratorDouble(bool smooth) const
 }
 
 
+/*
+mnd::Generator* MandelDevice::getGeneratorQuad(bool smooth) const
+{
+    if (smooth)
+        return quadGeneratorSmooth.get();
+    else
+        return quadGenerator.get();
+}*/
+
+
+/*
 mnd::Generator* MandelDevice::getGenerator128(bool smooth) const
 {
     if (smooth)
@@ -55,9 +64,11 @@ mnd::Generator* MandelDevice::getGenerator128(bool smooth) const
     else
         return generator128.get();
 }
+*/
 
-
-MandelContext::MandelContext(void)
+MandelContext::MandelContext(void) :
+    cpuGeneratorQuad{ nullptr },
+    cpuGeneratorQuadSmooth{ nullptr }
 {
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
@@ -90,14 +101,29 @@ MandelContext::MandelContext(void)
         cpuGeneratorDoubleSmooth = std::make_unique<CpuGenerator<double, mnd::NONE, true, true>>();
     }
 
-    cpuGenerator128 = std::make_unique<CpuGenerator<Fixed128, mnd::NONE, true, false>>();
-    cpuGenerator128Smooth = std::make_unique<CpuGenerator<Fixed128>>();
+    //cpuGenerator128 = std::make_unique<CpuGenerator<Fixed128, mnd::NONE, true, false>>();
+    //cpuGenerator128Smooth = std::make_unique<CpuGenerator<Fixed128>>();
     //cpuGeneratorFixedp = std::make_unique<CpuGenerator<fixed<1, 3>>>();
+
+#ifdef WITH_BOOST
+    cpuGeneratorQuad = std::make_unique<CpuGenerator<Float128, mnd::NONE, true, false>>();
+    cpuGeneratorQuadSmooth = std::make_unique<CpuGenerator<Float128, mnd::NONE, true, true>>();
+#endif // WITH_BOOST
 
     devices = createDevices();
     if (devices.empty()) {
-        adaptiveGenerator = std::make_unique<AdaptiveGenerator>(cpuGeneratorFloat.get(), cpuGeneratorDouble.get());
-        adaptiveGeneratorSmooth = std::make_unique<AdaptiveGenerator>(cpuGeneratorFloatSmooth.get(), cpuGeneratorDoubleSmooth.get());
+#ifdef WITH_BOOST
+        adaptiveGenerator = std::make_unique<AdaptiveGenerator>(
+            cpuGeneratorFloat.get(), cpuGeneratorDouble.get(), cpuGeneratorQuad.get());
+        adaptiveGeneratorSmooth = std::make_unique<AdaptiveGenerator>(
+            cpuGeneratorFloatSmooth.get(), cpuGeneratorDoubleSmooth.get(),
+            cpuGeneratorQuadSmooth.get());
+#else
+        adaptiveGenerator = std::make_unique<AdaptiveGenerator>(
+            cpuGeneratorFloat.get(), cpuGeneratorDouble.get());
+        adaptiveGeneratorSmooth = std::make_unique<AdaptiveGenerator>(
+            cpuGeneratorFloatSmooth.get(), cpuGeneratorDoubleSmooth.get());
+#endif
     }
     else {
         auto& device1 = devices[0];
@@ -113,8 +139,13 @@ MandelContext::MandelContext(void)
             floatGeneratorSmooth = cpuGeneratorFloatSmooth.get();
         if (doubleGeneratorSmooth == nullptr)
             doubleGeneratorSmooth = cpuGeneratorDoubleSmooth.get();
+#ifdef WITH_BOOST
+        adaptiveGeneratorSmooth = std::make_unique<AdaptiveGenerator>(floatGeneratorSmooth, doubleGeneratorSmooth, cpuGeneratorQuadSmooth.get());
+        adaptiveGenerator = std::make_unique<AdaptiveGenerator>(floatGenerator, doubleGenerator, cpuGeneratorQuad.get());
+#else
         adaptiveGeneratorSmooth = std::make_unique<AdaptiveGenerator>(floatGeneratorSmooth, doubleGeneratorSmooth);
         adaptiveGenerator = std::make_unique<AdaptiveGenerator>(floatGenerator, doubleGenerator);
+#endif
     }
 }
 
@@ -218,7 +249,7 @@ Generator& MandelContext::getCpuGeneratorDouble(void)
 }
 
 
-Generator& MandelContext::getCpuGenerator128(void)
+Generator* MandelContext::getCpuGeneratorQuad(void)
 {
-    return *cpuGenerator128;
+    return cpuGeneratorQuad.get();
 }

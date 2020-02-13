@@ -6,6 +6,9 @@
 
 QT       += core gui opengl xml
 
+QMAKE_LINK=clang++
+QMAKE_CXX=clang++
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = Almond

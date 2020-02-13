@@ -1,5 +1,5 @@
 #include "CpuGenerators.h"
-#include "Fixed.h"
+#include "Types.h"
 
 #ifdef WITH_MPFR
 #include "MpfrWrapper.h"
@@ -12,20 +12,33 @@
 
 using mnd::CpuGenerator;
 
-template class CpuGenerator<float, mnd::NONE, false, false>;
-template class CpuGenerator<float, mnd::NONE, false, true>;
-template class CpuGenerator<float, mnd::NONE, true, false>;
-template class CpuGenerator<float, mnd::NONE, true, true>;
+namespace mnd
+{
+    template class CpuGenerator<float, mnd::NONE, false, false>;
+    template class CpuGenerator<float, mnd::NONE, false, true>;
+    template class CpuGenerator<float, mnd::NONE, true, false>;
+    template class CpuGenerator<float, mnd::NONE, true, true>;
 
-template class CpuGenerator<double, mnd::NONE, false, false>;
-template class CpuGenerator<double, mnd::NONE, false, true>;
-template class CpuGenerator<double, mnd::NONE, true, false>;
-template class CpuGenerator<double, mnd::NONE, true, true>;
+    template class CpuGenerator<double, mnd::NONE, false, false>;
+    template class CpuGenerator<double, mnd::NONE, false, true>;
+    template class CpuGenerator<double, mnd::NONE, true, false>;
+    template class CpuGenerator<double, mnd::NONE, true, true>;
 
-template class CpuGenerator<Fixed128, mnd::NONE, false, false>;
-template class CpuGenerator<Fixed128, mnd::NONE, false, true>;
-template class CpuGenerator<Fixed128, mnd::NONE, true, false>;
-template class CpuGenerator<Fixed128, mnd::NONE, true, true>;
+    /*
+    template class CpuGenerator<Fixed128, mnd::NONE, false, false>;
+    template class CpuGenerator<Fixed128, mnd::NONE, false, true>;
+    template class CpuGenerator<Fixed128, mnd::NONE, true, false>;
+    template class CpuGenerator<Fixed128, mnd::NONE, true, true>;
+    */
+
+#ifdef WITH_BOOST
+#include <boost/multiprecision/cpp_bin_float.hpp>
+    template class CpuGenerator<mnd::Float128, mnd::NONE, false, false>;
+    template class CpuGenerator<mnd::Float128, mnd::NONE, false, true>;
+    template class CpuGenerator<mnd::Float128, mnd::NONE, true, false>;
+    template class CpuGenerator<mnd::Float128, mnd::NONE, true, true>;
+#endif
+}
 
 
 template<typename T, bool parallel, bool smooth>
@@ -60,7 +73,7 @@ void CpuGenerator<T, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInf
                 if (k >= info.maxIter)
                     data[i + j * info.bWidth] = info.maxIter;
                 else
-                    data[i + j * info.bWidth] = ((float) k) + 1 - ::log(::log(a * a + b * b) / 2) / ::log(2.0f);
+                    data[i + j * info.bWidth] = ((float) k) + 1 - ::logf(::logf(float(a * a + b * b)) / 2) / ::logf(2.0f);
             }
             else
                 data[i + j * info.bWidth] = k;

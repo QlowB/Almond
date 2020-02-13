@@ -105,9 +105,12 @@ void Benchmarker::start(void)
 {
     mnd::Generator& cpuf = mndContext.getCpuGeneratorFloat();
     mnd::Generator& cpud = mndContext.getCpuGeneratorDouble();
-    mnd::Generator& cpu128 = mndContext.getCpuGenerator128();
+    mnd::Generator* cpu128 = mndContext.getCpuGeneratorQuad();
 
-    double nTests = 3;
+    double nTests = 2;
+
+    if (cpu128)
+        nTests++;
 
     auto& devices = mndContext.getDevices();
     for (size_t i = 0; i < devices.size(); i++) {
@@ -117,9 +120,10 @@ void Benchmarker::start(void)
         if (mnd::Generator* gpud; (gpud = devices[i].getGeneratorDouble())) {
             nTests++;
         }
-        if (mnd::Generator* gpu128; (gpu128 = devices[i].getGenerator128())) {
+        /*
+        if (mnd::Generator* gpu128; (gpu128 = devices[i].getGeneratorQuad())) {
             nTests++;
-        }
+        }*/
     }
 
     double progress = 90.0 / nTests;
@@ -137,9 +141,11 @@ void Benchmarker::start(void)
     cpu.push_back(benchmarkResult(cpud));
     br.percentage += progress;
     emit update(br);
-    cpu.push_back(benchmarkResult(cpu128));
-    br.percentage += progress;
-    emit update(br);
+    if (cpu128) {
+        cpu.push_back(benchmarkResult(*cpu128));
+        br.percentage += progress;
+        emit update(br);
+    }
 
     for (size_t i = 0; i < devices.size(); i++) {
         br.values.push_back({});
@@ -154,11 +160,11 @@ void Benchmarker::start(void)
             br.percentage += progress;
             emit update(br);
         }
-        if (mnd::Generator* gpu128; (gpu128 = devices[i].getGenerator128())) {
+        /*if (mnd::Generator* gpu128; (gpu128 = devices[i].getGenerator128())) {
             gpu.push_back(benchmarkResult(*gpu128));
             br.percentage += progress;
             emit update(br);
-        }
+        }*/
     }
     emit update(br);
     emit finished();
@@ -177,7 +183,7 @@ BenchmarkDialog::BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent
     int nDevices = devices.size() + 1;
     ui.tableWidget->setColumnCount(3);
     ui.tableWidget->setRowCount(nDevices);
-    ui.tableWidget->setHorizontalHeaderLabels({"Single Precision", "Double Precision", "128-bit Fixed Point"});
+    ui.tableWidget->setHorizontalHeaderLabels({"Single Precision", "Double Precision", "Quad Precision"});
 
     QString cpuDesc = ("CPU [" + mndContext.getCpuInfo().getBrand() + "]").c_str();
     ui.tableWidget->setVerticalHeaderItem(0, new QTableWidgetItem(cpuDesc));

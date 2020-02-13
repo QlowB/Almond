@@ -1,6 +1,8 @@
 #ifndef MANDEL_MANDELUTIL_H
 #define MANDEL_MANDELUTIL_H
 
+#include "Types.h"
+
 namespace mnd 
 {
     struct MandelViewport;
@@ -11,16 +13,16 @@ namespace mnd
 struct mnd::MandelViewport
 {
     /// real part of the top left corner
-    double x = -2.1;
+    Real x = -2.1;
 
     /// imaginary part of the top left corner
-    double y = -1.5;
+    Real y = -1.5;
 
     /// real-part span of the picture to be generated
-    double width = 3;
+    Real width = 3;
 
     /// imaginary-part span of the picture to be generated
-    double height = 3;
+    Real height = 3;
 
     /*!
      * \brief adjusts the aspect ratio of the viewport, making sure
@@ -50,8 +52,8 @@ struct mnd::MandelViewport
      */
     static MandelViewport standardView(void);
 
-    inline double right() const { return x + width; }
-    inline double bottom() const { return y + height; }
+    inline Real right() const { return x + width; }
+    inline Real bottom() const { return y + height; }
 };
 
 struct mnd::MandelInfo
@@ -66,7 +68,7 @@ struct mnd::MandelInfo
     long bHeight;
     
     /// maximum iterations
-    int maxIter;
+    long maxIter;
 };
 
 #endif // MANDEL_MANDELUTIL_H

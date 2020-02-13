@@ -8,15 +8,18 @@
 
 using mnd::CpuGenerator;
 
-template class CpuGenerator<float, mnd::X86_AVX, false, false>;
-template class CpuGenerator<float, mnd::X86_AVX, false, true>;
-template class CpuGenerator<float, mnd::X86_AVX, true, false>;
-template class CpuGenerator<float, mnd::X86_AVX, true, true>;
+namespace mnd
+{
+    template class CpuGenerator<float, mnd::X86_AVX, false, false>;
+    template class CpuGenerator<float, mnd::X86_AVX, false, true>;
+    template class CpuGenerator<float, mnd::X86_AVX, true, false>;
+    template class CpuGenerator<float, mnd::X86_AVX, true, true>;
 
-template class CpuGenerator<double, mnd::X86_AVX, false, false>;
-template class CpuGenerator<double, mnd::X86_AVX, false, true>;
-template class CpuGenerator<double, mnd::X86_AVX, true, false>;
-template class CpuGenerator<double, mnd::X86_AVX, true, true>;
+    template class CpuGenerator<double, mnd::X86_AVX, false, false>;
+    template class CpuGenerator<double, mnd::X86_AVX, false, true>;
+    template class CpuGenerator<double, mnd::X86_AVX, true, false>;
+    template class CpuGenerator<double, mnd::X86_AVX, true, true>;
+}
 
 template<bool parallel, bool smooth>
 void CpuGenerator<float, mnd::X86_AVX, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
@@ -109,14 +112,14 @@ void CpuGenerator<double, mnd::X86_AVX, parallel, smooth>::generate(const mnd::M
         omp_set_num_threads(2 * omp_get_num_procs());
 #pragma omp parallel for if (smooth)
     for (long j = 0; j < info.bHeight; j++) {
-        T y = T(view.y) + T(j) * view.height / info.bHeight;
+        T y = T(view.y + T(j) * view.height / info.bHeight);
         long i = 0;
         for (i; i < info.bWidth; i += 4) {
             __m256d xs = {
-                double(view.x) + double(i) * view.width / info.bWidth,
-                double(view.x) + double(i + 1) * view.width / info.bWidth,
-                double(view.x) + double(i + 2) * view.width / info.bWidth,
-                double(view.x) + double(i + 3) * view.width / info.bWidth
+                double(view.x + double(i) * view.width / info.bWidth),
+                double(view.x + double(i + 1) * view.width / info.bWidth),
+                double(view.x + double(i + 2) * view.width / info.bWidth),
+                double(view.x + double(i + 3) * view.width / info.bWidth)
             };
 
             int itRes[4] = { 0, 0, 0, 0 };

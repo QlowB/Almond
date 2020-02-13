@@ -30,10 +30,13 @@ private:
 
     std::unique_ptr<Generator> floatGenerator;
     std::unique_ptr<Generator> doubleGenerator;
-    std::unique_ptr<Generator> generator128;
+    //std::unique_ptr<Generator> quadGenerator;
+    //std::unique_ptr<Generator> generator128;
+
     std::unique_ptr<Generator> floatGeneratorSmooth;
     std::unique_ptr<Generator> doubleGeneratorSmooth;
-    std::unique_ptr<Generator> generator128Smooth;
+    //std::unique_ptr<Generator> quadGeneratorSmooth;
+    //std::unique_ptr<Generator> generator128Smooth;
 
     MandelDevice(void);
 public:
@@ -43,7 +46,8 @@ public:
 
     Generator* getGeneratorFloat(bool smooth = true) const;
     Generator* getGeneratorDouble(bool smooth = true) const;
-    Generator* getGenerator128(bool smooth = true) const;
+    //Generator* getGeneratorQuad(bool smooth = true) const;
+    //Generator* getGenerator128(bool smooth = true) const;
 };
 
 
@@ -56,13 +60,15 @@ private:
 
     std::unique_ptr<Generator> cpuGeneratorFloat;
     std::unique_ptr<Generator> cpuGeneratorDouble;
-    std::unique_ptr<Generator> cpuGenerator128;
-    std::unique_ptr<Generator> cpuGeneratorFixedp;
+    std::unique_ptr<Generator> cpuGeneratorQuad;
+    //std::unique_ptr<Generator> cpuGenerator128;
+    //std::unique_ptr<Generator> cpuGeneratorFixedp;
 
     std::unique_ptr<Generator> cpuGeneratorFloatSmooth;
     std::unique_ptr<Generator> cpuGeneratorDoubleSmooth;
-    std::unique_ptr<Generator> cpuGenerator128Smooth;
-    std::unique_ptr<Generator> cpuGeneratorFixedpSmooth;
+    std::unique_ptr<Generator> cpuGeneratorQuadSmooth;
+    //std::unique_ptr<Generator> cpuGenerator128Smooth;
+    //std::unique_ptr<Generator> cpuGeneratorFixedpSmooth;
 
     std::unique_ptr<Generator> adaptiveGenerator;
     std::unique_ptr<Generator> adaptiveGeneratorSmooth;
@@ -79,7 +85,8 @@ public:
 
     Generator& getCpuGeneratorFloat(void);
     Generator& getCpuGeneratorDouble(void); 
-    Generator& getCpuGenerator128(void); 
+    Generator* getCpuGeneratorQuad(void); 
+    //Generator& getCpuGenerator128(void); 
 
     const CpuInfo& getCpuInfo(void) const { return cpuInfo; }
 };

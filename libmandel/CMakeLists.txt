@@ -10,6 +10,8 @@ project(mandel VERSION 1.0.0 DESCRIPTION "library for mandelbrot calculations")
 
 find_package(OpenCL)
 find_package(OpenMP)
+set(Boost_DEBUG 1)
+find_package(Boost 1.53)
 
 find_path(MPFR_INCLUDES
   NAMES
@@ -63,6 +65,12 @@ endif(OPENCL_FOUND)
 if (APPLE AND OpenCL_FOUND)
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -framework OpenCL")
 endif()
+
+    target_compile_definitions(mandel PUBLIC WITH_BOOST)
+if(BOOST_FOUND)
+    target_compile_definitions(mandel PUBLIC WITH_BOOST)
+    include_directories(${Boost_INCLUDE_DIR})
+endif(BOOST_FOUND)
 
 if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
     if (MSVC)

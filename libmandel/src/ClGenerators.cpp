@@ -87,8 +87,8 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
 
     Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
-    float pixelScaleX = info.view.width / info.bWidth;
-    float pixelScaleY = info.view.height / info.bHeight;
+    float pixelScaleX = float(info.view.width / info.bWidth);
+    float pixelScaleY = float(info.view.height / info.bHeight);
 
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);
@@ -221,8 +221,8 @@ void ClGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
 
     Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
-    float pixelScaleX = info.view.width / info.bWidth;
-    float pixelScaleY = info.view.height / info.bHeight;
+    double pixelScaleX = double(info.view.width / info.bWidth);
+    double pixelScaleY = double(info.view.height / info.bHeight);
 
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);
@@ -330,8 +330,8 @@ void ClGenerator128::generate(const mnd::MandelInfo& info, float* data)
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
 
     Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
-    float pixelScaleX = info.view.width / info.bWidth;
-    float pixelScaleY = info.view.height / info.bHeight;
+    float pixelScaleX = float(info.view.width / info.bWidth);
+    float pixelScaleY = float(info.view.height / info.bHeight);
 
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);

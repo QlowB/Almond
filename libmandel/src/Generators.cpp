@@ -17,11 +17,21 @@ AdaptiveGenerator::AdaptiveGenerator(Generator* floatGen, Generator* doubleGen)
 }
 
 
+AdaptiveGenerator::AdaptiveGenerator(Generator* floatGen, Generator* doubleGen, Generator* quadGen)
+{
+    generators.push_back({ 0.0000001, floatGen });
+    generators.push_back({ 1.0e-17, doubleGen });
+    generators.push_back({ 0.0, quadGen });
+}
+
+
 void AdaptiveGenerator::generate(const mnd::MandelInfo& info, float* data)
 {
-    double pixelW = info.view.width / info.bWidth;
-    double pixelH = info.view.height / info.bHeight;
-    double minimum = pixelW < pixelH ? pixelW : pixelH;
+    printf("w: %ld, h: %ld\n", info.bWidth, info.bHeight);
+    fflush(stdout);
+    Real pixelW = info.view.width / info.bWidth;
+    Real pixelH = info.view.height / info.bHeight;
+    Real minimum = pixelW < pixelH ? pixelW : pixelH;
 
     Generator* toUse = nullptr;
     int i = 0;
@@ -37,7 +47,9 @@ void AdaptiveGenerator::generate(const mnd::MandelInfo& info, float* data)
         toUse->generate(info, data);
     }
     else {
-
+        for (long s = 0; s < info.bWidth * info.bHeight; s++) {
+            data[s] = 0.0;
+        }
     }
 }
 

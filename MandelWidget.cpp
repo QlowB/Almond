@@ -166,13 +166,13 @@ TexGrid::TexGrid(MandelView& owner, int level) :
 }
 
 
-std::pair<GridIndex, GridIndex> TexGrid::getCellIndices(double x, double y)
+std::pair<GridIndex, GridIndex> TexGrid::getCellIndices(mnd::Real x, mnd::Real y)
 {
     return { ::floor(x / dpp / MandelView::chunkSize), ::floor(y / dpp / MandelView::chunkSize) };
 }
 
 
-std::pair<double, double> TexGrid::getPositions(GridIndex x, GridIndex y)
+std::pair<mnd::Real, mnd::Real> TexGrid::getPositions(GridIndex x, GridIndex y)
 {
     return { x * dpp * MandelView::chunkSize, y * dpp * MandelView::chunkSize };
 }
@@ -205,7 +205,7 @@ void TexGrid::clearCells(void)
 void Job::run(void)
 {
     auto [absX, absY] = grid->getPositions(i, j);
-    double gw = grid->dpp * MandelView::chunkSize;
+    mnd::Real gw = grid->dpp * MandelView::chunkSize;
 
     Bitmap<float> f(MandelView::chunkSize, MandelView::chunkSize);
     mnd::MandelInfo mi;
@@ -214,6 +214,8 @@ void Job::run(void)
     mi.view.width = mi.view.height = gw;
     mi.bWidth = mi.bHeight = MandelView::chunkSize;
     mi.maxIter = maxIter;
+    printf("w: %ld, h: %ld\n", mi.bWidth, mi.bHeight);
+    fflush(stdout);
     generator->generate(mi, f.pixels.get());
     auto* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([&mi, this](float i) {
         return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : gradient.get(i);
@@ -315,12 +317,12 @@ MandelView::MandelView(mnd::Generator* generator, MandelWidget& owner, int maxIt
 }
 
 
-int MandelView::getLevel(double dpp) {
+int MandelView::getLevel(mnd::Real dpp) {
     return int(::log2(dpp / chunkSize));
 }
 
 
-double MandelView::getDpp(int level)
+mnd::Real MandelView::getDpp(int level)
 {
     return ::pow(2, level) * chunkSize;
 }
@@ -472,25 +474,25 @@ GridElement* MandelView::searchUnder(int level, GridIndex i, GridIndex j, int re
 
 void MandelView::paint(const mnd::MandelViewport& mvp)
 {
-    double dpp = mvp.width / width;
+    mnd::Real dpp = mvp.width / width;
     int level = getLevel(dpp) - 1;
     auto& grid = getGrid(level);
-    double gw = getDpp(level) * chunkSize;
+    mnd::Real gw = getDpp(level) * chunkSize;
     auto [left, top] = grid.getCellIndices(mvp.x, mvp.y);
     auto [right, bottom] = grid.getCellIndices(mvp.right(), mvp.bottom());
 
     garbageCollect(level, (left + right) / 2, (top + bottom) / 2);
     emit calcer.setCurrentLevel(level);
 
-    double w = width * gw / mvp.width;
+    mnd::Real w = width * gw / mvp.width;
 
     auto [realXLeft, realYTop] = grid.getPositions(left, top);
     realXLeft = (realXLeft - mvp.x) * width / mvp.width;
     realYTop = (realYTop - mvp.y) * height / mvp.height;
     for(GridIndex i = left; i <= right; i++) {
         for(GridIndex j = top; j <= bottom; j++) {
-            double x = realXLeft + (i - left) * w;
-            double y = realYTop + (j - top) * w;
+            mnd::Real x = realXLeft + (i - left) * w;
+            mnd::Real y = realYTop + (j - top) * w;
 
             GridElement* t = grid.getCell(i, j);
 
@@ -730,19 +732,14 @@ void MandelWidget::resizeEvent(QResizeEvent* re)
     QOpenGLWidget::resizeEvent(re);
     double aspect = double(geometry().width()) / geometry().height();
 
-    //if (viewport.width > viewport.height * aspect)
-    currentViewport.height = (currentViewport.width / aspect);
+    currentViewport.height = currentViewport.width / aspect;
     targetViewport = currentViewport;
-    //else
-    //    viewport.width = (viewport.height * aspect);
 
     if (mandelView.get() != nullptr) {
         mandelView->width = this->width();
         mandelView->height = this->height();
     }
-    //printf("resized\n");
     requestRecalc();
-    //redraw();
 }
 
 
@@ -801,10 +798,10 @@ void MandelWidget::mouseReleaseEvent(QMouseEvent* me)
         if(rect.width() != 0 && rect.height() != 0) {
             QRect full = this->geometry();
 
-            targetViewport.x += double(rect.left()) * targetViewport.width / full.width();
-            targetViewport.y += double(rect.top()) * targetViewport.height / full.height();
-            targetViewport.width *= double(rect.width()) / full.width();
-            targetViewport.height *= double(rect.height()) / full.height();
+            targetViewport.x += mnd::Real(rect.left()) * targetViewport.width / full.width();
+            targetViewport.y += mnd::Real(rect.top()) * targetViewport.height / full.height();
+            targetViewport.width *= mnd::Real(rect.width()) / full.width();
+            targetViewport.height *= mnd::Real(rect.height()) / full.height();
             targetViewport.normalize();
             currentViewport = targetViewport;
         }
@@ -822,7 +819,6 @@ void MandelWidget::wheelEvent(QWheelEvent* we)
     float x = float(we->x()) / this->width();
     float y = float(we->y()) / this->height();
     float scale = ::powf(0.9975f, we->angleDelta().y());
-    //printf("scale: %f\n", double(scale));
     zoom(scale, x, y);
     if (!we->pixelDelta().isNull())
         this->currentViewport = this->targetViewport;

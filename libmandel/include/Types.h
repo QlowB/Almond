@@ -16,10 +16,14 @@ namespace mnd
 
 
 #ifdef WITH_BOOST
-#if defined(__GNUC__) || defined(__INTEL_COMPILER)
+#if 0//defined(__GNUC__) || defined(__INTEL_COMPILER)
     using Float128 = boost::multiprecision::float128;
 #else
-    using Float128 = boost::multiprecision::cpp_bin_float_quad;
+    //using Float128 = boost::multiprecision::cpp_bin_float_quad;
+    using Float128 = boost::multiprecision::number<
+        boost::multiprecision::backends::cpp_bin_float<
+            112, boost::multiprecision::backends::digit_base_2, void, boost::int16_t, -16382, 16383>,
+            boost::multiprecision::et_off>;
 #endif
     inline Float128 abs(const Float128& x) { return boost::multiprecision::abs(x); }
     inline Float128 floor(const Float128& x) { return boost::multiprecision::floor(x); }
@@ -27,8 +31,22 @@ namespace mnd
     inline Float128 log2(const Float128& x) { return boost::multiprecision::log2(x); }
     inline Float128 pow(const Float128& x, const Float128& y) { return boost::multiprecision::pow(x, y); }
 
+
+/*
+    using Float256 = boost::multiprecision::number<
+        boost::multiprecision::backends::cpp_bin_float<
+            240, boost::multiprecision::backends::digit_base_2, void, boost::int16_t, -16382, 16383>,
+            boost::multiprecision::et_off>;
+*/
+    using Float256 = long double;
+    /*inline Float256 abs(const Float256& x) { return boost::multiprecision::abs(x); }
+    inline Float256 floor(const Float256& x) { return boost::multiprecision::floor(x); }
+    inline Float256 log(const Float256& x) { return boost::multiprecision::log(x); }
+    inline Float256 log2(const Float256& x) { return boost::multiprecision::log2(x); }
+    inline Float256 pow(const Float256& x, const Float256& y) { return boost::multiprecision::pow(x, y); }
+*/
     using Real = Float128;
-    using Integer = boost::multiprecision::int128_t;
+    using Integer = boost::multiprecision::int256_t;
 #else
     using Real = double;
     using Integer = int64_t;

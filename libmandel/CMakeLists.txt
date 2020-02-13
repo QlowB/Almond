@@ -31,7 +31,7 @@ SET(MandelSources
     src/ClGenerators.cpp
     src/CpuGenerators.cpp
     src/Generators.cpp
-    src/mandel.cpp
+    src/Mandel.cpp
     src/Hardware.cpp
     src/MandelUtil.cpp
 )

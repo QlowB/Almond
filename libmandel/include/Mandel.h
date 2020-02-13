@@ -61,6 +61,7 @@ private:
     std::unique_ptr<Generator> cpuGeneratorFloat;
     std::unique_ptr<Generator> cpuGeneratorDouble;
     std::unique_ptr<Generator> cpuGeneratorQuad;
+    std::unique_ptr<Generator> cpuGeneratorOct;
     //std::unique_ptr<Generator> cpuGenerator128;
     //std::unique_ptr<Generator> cpuGeneratorFixedp;
 
@@ -86,6 +87,7 @@ public:
     Generator& getCpuGeneratorFloat(void);
     Generator& getCpuGeneratorDouble(void); 
     Generator* getCpuGeneratorQuad(void); 
+    Generator* getCpuGeneratorOct(void); 
     //Generator& getCpuGenerator128(void); 
 
     const CpuInfo& getCpuInfo(void) const { return cpuInfo; }

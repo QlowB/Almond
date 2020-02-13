@@ -6,9 +6,6 @@
 
 QT       += core gui opengl xml
 
-QMAKE_LINK=clang++
-QMAKE_CXX=clang++
-
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = Almond
@@ -85,9 +82,11 @@ win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
 else:unix: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
 
-INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
-DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+win32:INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+win32:DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
+win32:INCLUDEPATH += ../libs/boost_1_72_0
+DEFINES += WITH_BOOST=1
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
 #else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL

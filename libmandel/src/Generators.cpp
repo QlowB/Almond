@@ -20,15 +20,13 @@ AdaptiveGenerator::AdaptiveGenerator(Generator* floatGen, Generator* doubleGen)
 AdaptiveGenerator::AdaptiveGenerator(Generator* floatGen, Generator* doubleGen, Generator* quadGen)
 {
     generators.push_back({ 0.0000001, floatGen });
-    generators.push_back({ 1.0e-17, doubleGen });
+    generators.push_back({ 5.0e-16, doubleGen });
     generators.push_back({ 0.0, quadGen });
 }
 
 
 void AdaptiveGenerator::generate(const mnd::MandelInfo& info, float* data)
 {
-    printf("w: %ld, h: %ld\n", info.bWidth, info.bHeight);
-    fflush(stdout);
     Real pixelW = info.view.width / info.bWidth;
     Real pixelH = info.view.height / info.bHeight;
     Real minimum = pixelW < pixelH ? pixelW : pixelH;

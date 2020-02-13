@@ -20,12 +20,12 @@ void MandelVideoGenerator::generate(void)
 
     VideoStream vs(evi.width, evi.height, evi.path, evi.bitrate, evi.preset.c_str());
 
-    double x = evi.end.x + evi.end.width / 2;
-    double y = evi.end.y + evi.end.height / 2;
-    double w = evi.start.width;
-    double h = evi.start.height;
+    mnd::Real x = evi.end.x + evi.end.width / 2;
+    mnd::Real y = evi.end.y + evi.end.height / 2;
+    mnd::Real w = evi.start.width;
+    mnd::Real h = evi.start.height;
 
-    double bigW = 10000000000000000.0;
+    mnd::Real bigW = 10000000000000000.0;
     double bigFac = 1.0;
     Bitmap<RGBColor> big;
     Bitmap<RGBColor> small;

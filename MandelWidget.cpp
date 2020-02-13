@@ -168,13 +168,13 @@ TexGrid::TexGrid(MandelView& owner, int level) :
 
 std::pair<GridIndex, GridIndex> TexGrid::getCellIndices(mnd::Real x, mnd::Real y)
 {
-    return { ::floor(x / dpp / MandelView::chunkSize), ::floor(y / dpp / MandelView::chunkSize) };
+    return { GridIndex(mnd::floor(x / dpp / MandelView::chunkSize)), GridIndex(mnd::floor(y / dpp / MandelView::chunkSize)) };
 }
 
 
 std::pair<mnd::Real, mnd::Real> TexGrid::getPositions(GridIndex x, GridIndex y)
 {
-    return { x * dpp * MandelView::chunkSize, y * dpp * MandelView::chunkSize };
+    return { mnd::Real(x) * dpp * MandelView::chunkSize, mnd::Real(y) * dpp * MandelView::chunkSize };
 }
 
 
@@ -208,17 +208,15 @@ void Job::run(void)
     mnd::Real gw = grid->dpp * MandelView::chunkSize;
 
     Bitmap<float> f(MandelView::chunkSize, MandelView::chunkSize);
-    mnd::MandelInfo mi;
-    mi.view.x = absX;
-    mi.view.y = absY;
-    mi.view.width = mi.view.height = gw;
-    mi.bWidth = mi.bHeight = MandelView::chunkSize;
-    mi.maxIter = maxIter;
-    printf("w: %ld, h: %ld\n", mi.bWidth, mi.bHeight);
-    fflush(stdout);
-    generator->generate(mi, f.pixels.get());
+    std::unique_ptr<mnd::MandelInfo> mi = std::make_unique<mnd::MandelInfo>();
+    mi->view.x = absX;
+    mi->view.y = absY;
+    mi->view.width = mi->view.height = gw;
+    mi->bWidth = mi->bHeight = MandelView::chunkSize;
+    mi->maxIter = maxIter;
+    generator->generate(*mi, f.pixels.get());
     auto* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([&mi, this](float i) {
-        return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : gradient.get(i);
+        return i >= mi->maxIter ? RGBColor{ 0, 0, 0 } : gradient.get(i);
     }));
     emit done(level, i, j, calcState, rgb);
 }
@@ -318,7 +316,7 @@ MandelView::MandelView(mnd::Generator* generator, MandelWidget& owner, int maxIt
 
 
 int MandelView::getLevel(mnd::Real dpp) {
-    return int(::log2(dpp / chunkSize));
+    return int(log2(dpp / chunkSize));
 }
 
 
@@ -417,7 +415,7 @@ GridElement* MandelView::searchAbove(int level, GridIndex i, GridIndex j, int re
 
     if (above != nullptr) {
         auto newElement = std::make_unique<GridElement>(
-            false, above->img->clip((i & 1), (j & 1))
+            false, above->img->clip(short(i & 1), short(j & 1))
         );
         GridElement* ret = newElement.get();
         grid.setCell(i, j, std::move(newElement));
@@ -491,8 +489,8 @@ void MandelView::paint(const mnd::MandelViewport& mvp)
     realYTop = (realYTop - mvp.y) * height / mvp.height;
     for(GridIndex i = left; i <= right; i++) {
         for(GridIndex j = top; j <= bottom; j++) {
-            mnd::Real x = realXLeft + (i - left) * w;
-            mnd::Real y = realYTop + (j - top) * w;
+            mnd::Real x = w * int(i - left) + realXLeft;
+            mnd::Real y = w * int(j - top) + realYTop;
 
             GridElement* t = grid.getCell(i, j);
 
@@ -510,7 +508,7 @@ void MandelView::paint(const mnd::MandelViewport& mvp)
             }
 
             if (t != nullptr) {
-                t->img->drawRect(x, y, w, w);
+                t->img->drawRect(float(x), float(y), float(w), float(w));
                 /*glBegin(GL_LINE_LOOP);
                 glVertex2f(x, y);
                 glVertex2f(x + w, y);
@@ -524,7 +522,7 @@ void MandelView::paint(const mnd::MandelViewport& mvp)
             }
             else {
                 calcer.calc(grid, level, i, j, 1000);
-                this->empty->drawRect(x, y, w, w);
+                this->empty->drawRect(float(x), float(y), float(w), float(w));
             }
         }
     }
@@ -655,8 +653,8 @@ void MandelWidget::updateAnimations(void)
 
     lastAnimUpdate = now;
 
-    if (::abs(currentViewport.width / targetViewport.width - 1.0) < 0.1e-5
-            && ::abs(currentViewport.height / targetViewport.height - 1.0) < 0.1e-5) {
+    if (mnd::abs(currentViewport.width / targetViewport.width - 1.0) < 0.1e-5
+            && mnd::abs(currentViewport.height / targetViewport.height - 1.0) < 0.1e-5) {
         // animation finished
     }
     else {

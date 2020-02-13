@@ -75,6 +75,17 @@ ExportVideoDialog::ExportVideoDialog(QWidget* parent, const ExportVideoInfo& evi
     evd.vidHeight->setValidator(new QIntValidator(1, 10000000, this));
     evd.bitrate->setValidator(new QIntValidator(1, 10000000, this));
 
+#ifdef WITH_BOOST
+    evd.startX->setText(QString::fromStdString(evi.start.x.str()));
+    evd.startY->setText(QString::fromStdString(evi.start.y.str()));
+    evd.startW->setText(QString::fromStdString(evi.start.width.str()));
+    evd.startH->setText(QString::fromStdString(evi.start.height.str()));
+
+    evd.endX->setText(QString::fromStdString(evi.end.x.str()));
+    evd.endY->setText(QString::fromStdString(evi.end.y.str()));
+    evd.endW->setText(QString::fromStdString(evi.end.width.str()));
+    evd.endH->setText(QString::fromStdString(evi.end.height.str()));
+#else
     evd.startX->setText(QString::number(evi.start.x));
     evd.startY->setText(QString::number(evi.start.y));
     evd.startW->setText(QString::number(evi.start.width));
@@ -84,6 +95,7 @@ ExportVideoDialog::ExportVideoDialog(QWidget* parent, const ExportVideoInfo& evi
     evd.endY->setText(QString::number(evi.end.y));
     evd.endW->setText(QString::number(evi.end.width));
     evd.endH->setText(QString::number(evi.end.height));
+#endif // WITH_BOOST
 
     auto presets = {
         "ultrafast",
@@ -156,7 +168,7 @@ void ExportVideoDialog::on_pushButton_clicked()
     this->repaint();
 }
 
-
+/*
 bool exportVideo(const ExportVideoInfo& evi)
 {
     auto lerp = [] (double a, double b, double v) {
@@ -191,3 +203,4 @@ bool exportVideo(const ExportVideoInfo& evi)
     }
     return true;
 }
+*/

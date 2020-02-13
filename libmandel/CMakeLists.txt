@@ -10,7 +10,7 @@ project(mandel VERSION 1.0.0 DESCRIPTION "library for mandelbrot calculations")
 
 find_package(OpenCL)
 find_package(OpenMP)
-set(Boost_DEBUG 1)
+#set(Boost_DEBUG 1)
 find_package(Boost 1.53)
 
 find_path(MPFR_INCLUDES
@@ -67,10 +67,10 @@ if (APPLE AND OpenCL_FOUND)
 endif()
 
     target_compile_definitions(mandel PUBLIC WITH_BOOST)
-if(BOOST_FOUND)
+if(Boost_FOUND)
     target_compile_definitions(mandel PUBLIC WITH_BOOST)
-    include_directories(${Boost_INCLUDE_DIR})
-endif(BOOST_FOUND)
+    target_include_directories(mandel PRIVATE ${Boost_INCLUDE_DIRS})
+endif(Boost_FOUND)
 
 if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
     if (MSVC)

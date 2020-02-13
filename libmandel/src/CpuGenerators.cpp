@@ -24,12 +24,12 @@ namespace mnd
     template class CpuGenerator<double, mnd::NONE, true, false>;
     template class CpuGenerator<double, mnd::NONE, true, true>;
 
-    /*
+    
     template class CpuGenerator<Fixed128, mnd::NONE, false, false>;
     template class CpuGenerator<Fixed128, mnd::NONE, false, true>;
     template class CpuGenerator<Fixed128, mnd::NONE, true, false>;
     template class CpuGenerator<Fixed128, mnd::NONE, true, true>;
-    */
+    
 
 #ifdef WITH_BOOST
 #include <boost/multiprecision/cpp_bin_float.hpp>
@@ -86,6 +86,58 @@ void CpuGenerator<T, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInf
     }
 }
 
+
+#if defined(WITH_BOOST) || 1
+template<bool parallel, bool smooth>
+void CpuGenerator<Fixed128, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
+{
+    using T = Fixed128;
+    const MandelViewport& view = info.view;
+
+    const auto fixedFromFloat = [] (const mnd::Float128& f) {
+        boost::multiprecision::int128_t frac = boost::multiprecision::int128_t(f * 4294967296.0 * 4294967296.0 * 4294967296.0);
+        std::vector<uint32_t> bits;
+        export_bits(frac, std::back_inserter(bits), 32);
+        bits.clear();
+        while (bits.size() < 4) bits.push_back(0);
+        return Fixed128{ bits[0], bits[1], bits[2], bits[3] };
+    };
+
+    if constexpr (parallel)
+        omp_set_num_threads(2 * omp_get_num_procs());
+#pragma omp parallel for if (parallel)
+    for (long j = 0; j < info.bHeight; j++) {
+        T y = fixedFromFloat(view.y + mnd::Real(j) * view.height / info.bHeight);
+        long i = 0;
+        for (i; i < info.bWidth; i++) {
+            T x = fixedFromFloat(view.x + mnd::Real(i) * view.width / info.bWidth);
+
+            T a = x;
+            T b = y;
+
+            int k = 0;
+            for (k = 0; k < info.maxIter; k++) {
+                T aa = a * a;
+                T bb = b * b;
+                T ab = a * b;
+                a = aa - bb + x;
+                b = ab + ab + y;
+                if (aa + bb > T(16)) {
+                    break;
+                }
+            }
+            if constexpr (smooth) {
+                if (k >= info.maxIter)
+                    data[i + j * info.bWidth] = info.maxIter;
+                else
+                    data[i + j * info.bWidth] = ((float) k) + 1 - ::logf(::logf(float(a * a + b * b)) / 2) / ::logf(2.0f);
+            }
+            else
+                data[i + j * info.bWidth] = k;
+        }
+    }
+}
+#endif // WITH_BOOST
 
 #ifdef WITH_MPFR
 template<unsigned int bits, bool parallel, bool smooth>

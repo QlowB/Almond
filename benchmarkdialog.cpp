@@ -106,7 +106,7 @@ void Benchmarker::start(void)
     mnd::Generator& cpuf = mndContext.getCpuGeneratorFloat();
     mnd::Generator& cpud = mndContext.getCpuGeneratorDouble();
     mnd::Generator* cpu128 = mndContext.getCpuGeneratorQuad();
-    mnd::Generator* cpu256 = mndContext.getCpuGeneratorOct();
+    mnd::Generator* cpu256 = mndContext.getCpuGenerator128();
 
     double nTests = 2;
 

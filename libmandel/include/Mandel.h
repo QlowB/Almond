@@ -62,14 +62,12 @@ private:
     std::unique_ptr<Generator> cpuGeneratorDouble;
     std::unique_ptr<Generator> cpuGeneratorQuad;
     std::unique_ptr<Generator> cpuGeneratorOct;
-    //std::unique_ptr<Generator> cpuGenerator128;
-    //std::unique_ptr<Generator> cpuGeneratorFixedp;
+    std::unique_ptr<Generator> cpuGenerator128;
 
     std::unique_ptr<Generator> cpuGeneratorFloatSmooth;
     std::unique_ptr<Generator> cpuGeneratorDoubleSmooth;
     std::unique_ptr<Generator> cpuGeneratorQuadSmooth;
-    //std::unique_ptr<Generator> cpuGenerator128Smooth;
-    //std::unique_ptr<Generator> cpuGeneratorFixedpSmooth;
+    std::unique_ptr<Generator> cpuGenerator128Smooth;
 
     std::unique_ptr<Generator> adaptiveGenerator;
     std::unique_ptr<Generator> adaptiveGeneratorSmooth;
@@ -88,7 +86,7 @@ public:
     Generator& getCpuGeneratorDouble(void); 
     Generator* getCpuGeneratorQuad(void); 
     Generator* getCpuGeneratorOct(void); 
-    //Generator& getCpuGenerator128(void); 
+    Generator* getCpuGenerator128(void); 
 
     const CpuInfo& getCpuInfo(void) const { return cpuInfo; }
 };

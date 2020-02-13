@@ -19,8 +19,8 @@ AdaptiveGenerator::AdaptiveGenerator(Generator* floatGen, Generator* doubleGen)
 
 AdaptiveGenerator::AdaptiveGenerator(Generator* floatGen, Generator* doubleGen, Generator* quadGen)
 {
-    generators.push_back({ 0.0000001, floatGen });
-    generators.push_back({ 5.0e-16, doubleGen });
+    //generators.push_back({ 0.0000001, floatGen });
+    //generators.push_back({ 5.0e-16, doubleGen });
     generators.push_back({ 0.0, quadGen });
 }
 

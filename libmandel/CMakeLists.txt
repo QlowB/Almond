@@ -26,6 +26,7 @@ find_library(MPFR_LIBRARIES mpfr PATHS $ENV{MPFR_DIR} ${LIB_INSTALL_DIR})
 
 set(CMAKE_CXX_STANDARD 17)
 
+
 #FILE(GLOB MandelSources src/*.cpp)
 SET(MandelSources
     src/ClGenerators.cpp
@@ -46,6 +47,16 @@ endif()
 #    message(${MandelSources})
 
 add_library(mandel STATIC ${MandelSources})
+
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT LTO_SUPPORTED)
+
+if (LTO_SUPPORTED)
+    message("enable link-time optimization")
+    set_property(TARGET mandel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif(LTO_SUPPORTED)
+
 
 if(MPFR_INCLUDES AND MPFR_LIBRARIES)
     set(MPFR_FOUND TRUE)

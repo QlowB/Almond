@@ -101,7 +101,6 @@ MandelContext::MandelContext(void) :
         cpuGeneratorDoubleSmooth = std::make_unique<CpuGenerator<double, mnd::NONE, true, true>>();
     }
 
-    //cpuGenerator128 = std::make_unique<CpuGenerator<Fixed128, mnd::NONE, true, false>>();
     //cpuGenerator128Smooth = std::make_unique<CpuGenerator<Fixed128>>();
     //cpuGeneratorFixedp = std::make_unique<CpuGenerator<fixed<1, 3>>>();
 
@@ -109,6 +108,8 @@ MandelContext::MandelContext(void) :
     cpuGeneratorQuad = std::make_unique<CpuGenerator<Float128, mnd::NONE, true, false>>();
     cpuGeneratorQuadSmooth = std::make_unique<CpuGenerator<Float128, mnd::NONE, true, true>>();
     cpuGeneratorOct = std::make_unique<CpuGenerator<Float256, mnd::NONE, true, false>>();
+    cpuGenerator128 = std::make_unique<CpuGenerator<Fixed128, mnd::NONE, true, false>>();
+    cpuGenerator128Smooth = std::make_unique<CpuGenerator<Fixed128, mnd::NONE, true, true>>();
 #endif // WITH_BOOST
 
     devices = createDevices();
@@ -141,8 +142,8 @@ MandelContext::MandelContext(void) :
         if (doubleGeneratorSmooth == nullptr)
             doubleGeneratorSmooth = cpuGeneratorDoubleSmooth.get();
 #ifdef WITH_BOOST
-        adaptiveGeneratorSmooth = std::make_unique<AdaptiveGenerator>(floatGeneratorSmooth, doubleGeneratorSmooth, cpuGeneratorQuadSmooth.get());
-        adaptiveGenerator = std::make_unique<AdaptiveGenerator>(floatGenerator, doubleGenerator, cpuGeneratorQuad.get());
+        adaptiveGeneratorSmooth = std::make_unique<AdaptiveGenerator>(floatGeneratorSmooth, doubleGeneratorSmooth, cpuGenerator128Smooth.get());
+        adaptiveGenerator = std::make_unique<AdaptiveGenerator>(floatGenerator, doubleGenerator, cpuGenerator128.get());
 #else
         adaptiveGeneratorSmooth = std::make_unique<AdaptiveGenerator>(floatGeneratorSmooth, doubleGeneratorSmooth);
         adaptiveGenerator = std::make_unique<AdaptiveGenerator>(floatGenerator, doubleGenerator);
@@ -259,4 +260,10 @@ Generator* MandelContext::getCpuGeneratorQuad(void)
 Generator* MandelContext::getCpuGeneratorOct(void)
 {
     return cpuGeneratorOct.get();
+}
+
+
+Generator* MandelContext::getCpuGenerator128(void)
+{
+    return cpuGenerator128.get();
 }

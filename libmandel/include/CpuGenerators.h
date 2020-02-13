@@ -94,6 +94,13 @@ public:
 };
 #endif
 
+template<bool parallel, bool smooth>
+class mnd::CpuGenerator<Fixed128, mnd::NONE, parallel, smooth> : public Generator
+{
+public:
+    virtual void generate(const MandelInfo& info, float* data);
+};
+
 /*
 class mnd::CpuGeneratorFloat : public Generator
 {

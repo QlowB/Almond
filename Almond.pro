@@ -76,7 +76,7 @@ else:unix:QMAKE_CXXFLAGS+= -fopenmp
 win32:QMAKE_LFLAGS +=  -openmp
 else:unix:QMAKE_LFLAGS+= -fopenmp
 LIBS += -fopenmp
-unix:LIBS += -lm -latomic
+unix:LIBS += -lm -latomic -lquadmath
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec

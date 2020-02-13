@@ -27,17 +27,19 @@ void MandelViewport::normalize(void)
 
 void MandelViewport::zoomCenter(float scale)
 {
-    x += width * (1 - scale) / 2;
+    /*x += width * (1 - scale) / 2;
     y += height * (1 - scale) / 2;
     width *= scale;
-    height *= scale;
+    height *= scale;*/
+    zoom(scale, 0.5f, 0.5f);
 }
 
 
 void MandelViewport::zoom(float scale, float xz, float yz)
 {
-    this->x += width * (1 - scale) * xz;
-    this->y += height * (1 - scale) * yz;
+    mnd::Real scaleR = 1.0f - scale;
+    this->x += width * scaleR * mnd::Real(xz);
+    this->y += height * scaleR * mnd::Real(yz);
     width *= scale;
     height *= scale;
 }

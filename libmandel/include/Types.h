@@ -24,6 +24,8 @@ namespace mnd
     inline Float128 abs(const Float128& x) { return boost::multiprecision::abs(x); }
     inline Float128 floor(const Float128& x) { return boost::multiprecision::floor(x); }
     inline Float128 log(const Float128& x) { return boost::multiprecision::log(x); }
+    inline Float128 log2(const Float128& x) { return boost::multiprecision::log2(x); }
+    inline Float128 pow(const Float128& x, const Float128& y) { return boost::multiprecision::pow(x, y); }
 
     using Real = Float128;
     using Integer = boost::multiprecision::int128_t;
@@ -38,6 +40,10 @@ namespace mnd
     inline float floor(float x) { return ::floorf(x); }
     inline double log(double x) { return ::log(x); }
     inline float log(float x) { return ::logf(x); }
+    inline double log2(double x) { return ::log2(x); }
+    inline float log2(float x) { return ::log2f(x); }
+    inline double pow(double x, double y) { return ::pow(x, y); }
+    inline float pow(float x, float y) { return ::powf(x, y); }
 }
 
 

@@ -11,6 +11,7 @@ project(mandel VERSION 1.0.0 DESCRIPTION "library for mandelbrot calculations")
 find_package(OpenCL)
 find_package(OpenMP)
 #set(Boost_DEBUG 1)
+set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.53)
 
 find_path(MPFR_INCLUDES
@@ -70,6 +71,7 @@ endif()
 if(Boost_FOUND)
     target_compile_definitions(mandel PUBLIC WITH_BOOST)
     target_include_directories(mandel PRIVATE ${Boost_INCLUDE_DIRS})
+    target_link_libraries(mandel PRIVATE ${Boost_LIBRARIES})
 endif(Boost_FOUND)
 
 if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")

@@ -160,6 +160,7 @@ public:
 
     inline size_t countAllocatedCells(void) const { return cells.size(); }
     void clearCells(void);
+    void clearUncleanCells(void);
 };
 
 
@@ -252,7 +253,7 @@ public:
     int width;
     int height;
 public:
-    static const int chunkSize = 256;
+    static const int chunkSize;
     MandelView(mnd::Generator* generator, MandelWidget& owner, int maxIter);
     int getLevel(mnd::Real dpp);
     mnd::Real getDpp(int level);

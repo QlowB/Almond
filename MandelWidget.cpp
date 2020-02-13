@@ -202,6 +202,16 @@ void TexGrid::clearCells(void)
 }
 
 
+void TexGrid::clearUncleanCells(void)
+{
+    for (auto it = cells.begin(); it != cells.end();) {
+        if (it->second->img->getRecalcPriority() > 1)
+            cells.erase(it++);
+        else ++it;
+    }
+}
+
+
 void Job::run(void)
 {
     auto [absX, absY] = grid->getPositions(i, j);
@@ -293,6 +303,8 @@ void Calcer::redirect(int level, GridIndex i, GridIndex j, long calcState, Bitma
 }
 
 
+const int MandelView::chunkSize = 256;
+
 MandelView::MandelView(mnd::Generator* generator, MandelWidget& owner, int maxIter) :
     generator{ generator },
     calcer{ generator, owner.getGradient(), maxIter },
@@ -316,13 +328,13 @@ MandelView::MandelView(mnd::Generator* generator, MandelWidget& owner, int maxIt
 
 
 int MandelView::getLevel(mnd::Real dpp) {
-    return int(log2(dpp / chunkSize));
+    return int(mnd::log2(dpp / chunkSize));
 }
 
 
 mnd::Real MandelView::getDpp(int level)
 {
-    return ::pow(2, level) * chunkSize;
+    return mnd::pow(mnd::Real(2), mnd::Real(level)) * chunkSize;
 }
 
 
@@ -373,6 +385,10 @@ void MandelView::garbageCollect(int level, GridIndex i, GridIndex j)
 {
     for(auto& [l, grid] : levels) {
         int dist = ::abs(l - level);
+
+        if (dist == 1) {
+            grid.clearUncleanCells();
+        }
 
         if (dist > 20) {
             grid.clearCells();
@@ -485,8 +501,8 @@ void MandelView::paint(const mnd::MandelViewport& mvp)
     mnd::Real w = width * gw / mvp.width;
 
     auto [realXLeft, realYTop] = grid.getPositions(left, top);
-    realXLeft = (realXLeft - mvp.x) * width / mvp.width;
-    realYTop = (realYTop - mvp.y) * height / mvp.height;
+    realXLeft = ((realXLeft - mvp.x) * mnd::Real(width)) / mvp.width;
+    realYTop = ((realYTop - mvp.y) * mnd::Real(height)) / mvp.height;
     for(GridIndex i = left; i <= right; i++) {
         for(GridIndex j = top; j <= bottom; j++) {
             mnd::Real x = w * int(i - left) + realXLeft;
@@ -642,24 +658,25 @@ void MandelWidget::paintGL(void)
 
 void MandelWidget::updateAnimations(void)
 {
-    auto now = std::chrono::high_resolution_clock::now();
-    auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastAnimUpdate).count();
-    double factor = ::pow(0.97, millis);
-
-    currentViewport.x = currentViewport.x * factor + targetViewport.x * (1.0 - factor);
-    currentViewport.y = currentViewport.y * factor + targetViewport.y * (1.0 - factor);
-    currentViewport.width = currentViewport.width * factor + targetViewport.width * (1.0 - factor);
-    currentViewport.height = currentViewport.height * factor + targetViewport.height * (1.0 - factor);
-
-    lastAnimUpdate = now;
-
     if (mnd::abs(currentViewport.width / targetViewport.width - 1.0) < 0.1e-5
             && mnd::abs(currentViewport.height / targetViewport.height - 1.0) < 0.1e-5) {
         // animation finished
+        currentViewport = targetViewport;
     }
     else {
+        auto now = std::chrono::high_resolution_clock::now();
+        auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastAnimUpdate).count();
+        double factor = ::pow(0.97, millis);
+
+        currentViewport.x = currentViewport.x * factor + targetViewport.x * (1.0 - factor);
+        currentViewport.y = currentViewport.y * factor + targetViewport.y * (1.0 - factor);
+        currentViewport.width = currentViewport.width * factor + targetViewport.width * (1.0 - factor);
+        currentViewport.height = currentViewport.height * factor + targetViewport.height * (1.0 - factor);
+
+        lastAnimUpdate = now;
         emit update();
     }
+
 }
 
 

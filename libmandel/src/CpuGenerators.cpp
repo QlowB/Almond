@@ -43,6 +43,13 @@ namespace mnd
     template class CpuGenerator<mnd::Float256, mnd::NONE, true, false>;
     template class CpuGenerator<mnd::Float256, mnd::NONE, true, true>;
 #endif
+
+#ifdef WITH_QD
+    template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, false, false>;
+    template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, false, true>;
+    template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, true, false>;
+    template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, true, true>;
+#endif
 }
 
 
@@ -51,14 +58,19 @@ void CpuGenerator<T, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInf
 {
     const MandelViewport& view = info.view;
 
+    T viewx = mnd::convert<T>(view.x);
+    T viewy = mnd::convert<T>(view.y);
+    T wpp = mnd::convert<T>(view.width / info.bWidth);
+    T hpp = mnd::convert<T>(view.height / info.bHeight);
+
     if constexpr (parallel)
         omp_set_num_threads(2 * omp_get_num_procs());
 #pragma omp parallel for if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
-        T y = T(view.y) + T(j) * T(view.height / info.bHeight);
+        T y = viewy + T(double(j)) * hpp;
         long i = 0;
         for (i; i < info.bWidth; i++) {
-            T x = T(view.x + T(i) * T(view.width / info.bWidth));
+            T x = viewx + T(double(i)) * wpp;
 
             T a = x;
             T b = y;
@@ -78,7 +90,7 @@ void CpuGenerator<T, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInf
                 if (k >= info.maxIter)
                     data[i + j * info.bWidth] = info.maxIter;
                 else
-                    data[i + j * info.bWidth] = ((float) k) + 1 - ::logf(::logf(float(a * a + b * b)) / 2) / ::logf(2.0f);
+                    data[i + j * info.bWidth] = ((float) k) + 1 - ::logf(::logf(mnd::convert<float>(a * a + b * b)) / 2) / ::logf(2.0f);
             }
             else
                 data[i + j * info.bWidth] = k;

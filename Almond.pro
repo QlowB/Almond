@@ -124,7 +124,7 @@ unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lswscale
 
 RESOURCES += Almond.qrc
 
-unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel
+unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel -lqd
 
 INCLUDEPATH += $$PWD/libmandel/include
 DEPENDPATH += $$PWD/libmandel/include

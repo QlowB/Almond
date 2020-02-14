@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
 
-
-
 set(ARCH "X86_64" CACHE STRING "Target Architecture")
 
 #message(CMAKE_SYSTEM_PROCESSOR)
@@ -57,6 +55,15 @@ if (LTO_SUPPORTED)
     set_property(TARGET mandel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif(LTO_SUPPORTED)
 
+FILE(GLOB QdSources qd-2.3.22/src/*.cpp)
+
+target_compile_definitions(mandel PUBLIC WITH_QD)
+add_library(qd STATIC ${QdSources})
+target_include_directories(qd PUBLIC qd-2.3.22/include)
+target_include_directories(qd PUBLIC qd-2.3.22)
+
+#target_include_directories(mandel PUBLI#C qd-2.3.22/include)
+target_link_libraries(mandel PUBLIC qd)
 
 if(MPFR_INCLUDES AND MPFR_LIBRARIES)
     set(MPFR_FOUND TRUE)

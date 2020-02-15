@@ -1,4 +1,5 @@
 #include "ClGenerators.h"
+#include "doubledouble.h"
 
 #ifdef WITH_OPENCL
 
@@ -307,12 +308,13 @@ std::string ClGeneratorDouble::getKernelCode(bool smooth) const
 
 
 ClGeneratorDoubleDouble::ClGeneratorDoubleDouble(cl::Device device, bool smooth) :
-    ClGenerator{ device }
+    ClGenerator{ device },
+    smooth{ smooth }
 {
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode = this->getKernelCode(smooth);
+    std::string kcode = this->getKernelCode(false);
 
     sources.push_back({ kcode.c_str(), kcode.length() });
 
@@ -330,17 +332,26 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
 
     Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
-    double pixelScaleX = double(info.view.width / info.bWidth);
-    double pixelScaleY = double(info.view.height / info.bHeight);
+
+    mnd::DoubleDouble x = mnd::convert<mnd::DoubleDouble>(info.view.x);
+    mnd::DoubleDouble y = mnd::convert<mnd::DoubleDouble>(info.view.y);
+
+    mnd::DoubleDouble psx = mnd::convert<mnd::DoubleDouble>(info.view.width / info.bWidth);
+    mnd::DoubleDouble psy = mnd::convert<mnd::DoubleDouble>(info.view.height / info.bHeight);
 
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);
     iterate.setArg(1, int(info.bWidth));
-    iterate.setArg(2, double(info.view.x));
-    iterate.setArg(3, double(info.view.y));
-    iterate.setArg(4, double(pixelScaleX));
-    iterate.setArg(5, double(pixelScaleY));
-    iterate.setArg(6, int(info.maxIter));
+    iterate.setArg(2, x.x[0]);
+    iterate.setArg(3, x.x[1]);
+    iterate.setArg(4, y.x[0]);
+    iterate.setArg(5, y.x[1]);
+    iterate.setArg(6, psx.x[0]);
+    iterate.setArg(7, psx.x[1]);
+    iterate.setArg(8, psy.x[0]);
+    iterate.setArg(9, psy.x[1]);
+    iterate.setArg(10, int(info.maxIter));
+    iterate.setArg(11, int(smooth ? 1 : 0));
 
     cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
@@ -349,35 +360,7 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorDoubleDouble::getKernelCode(bool smooth) const
 {
-    return
-        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
-        "__kernel void iterate(__global float* A, const int width, double xl, double yt, double pixelScaleX, double pixelScaleY, int max) {\n"
-        "   int index = get_global_id(0);\n"
-        "   int x = index % width;"
-        "   int y = index / width;"
-        "   double a = x * pixelScaleX + xl;"
-        "   double b = y * pixelScaleY + yt;"
-        "   double ca = a;"
-        "   double cb = b;"
-        ""
-        "   int n = 0;"
-        "   while (n < max - 1) {"
-        "       double aa = a * a;"
-        "       double bb = b * b;"
-        "       double ab = a * b;"
-        "       if (aa + bb > 16) break;"
-        "       a = aa - bb + ca;"
-        "       b = 2 * ab + cb;"
-        "       n++;"
-        "   }\n"
-        // N + 1 - log (log  |Z(N)|) / log 2
-        "   if (n >= max - 1)\n"
-        "       A[index] = max;\n"
-        "   else"
-        "       A[index] = ((float)n);\n"
-        //            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
-        //        "   A[get_global_id(0)] = 5;"
-        "}";
+    return (char*) doubledouble_cl;
 }
 
 

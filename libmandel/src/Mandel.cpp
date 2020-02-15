@@ -46,6 +46,15 @@ mnd::Generator* MandelDevice::getGeneratorDouble(bool smooth) const
 }
 
 
+mnd::Generator* MandelDevice::getGeneratorDoubleDouble(bool smooth) const
+{
+    if (smooth)
+        return doubleDoubleGeneratorSmooth.get();
+    else
+        return doubleDoubleGenerator.get();
+}
+
+
 /*
 mnd::Generator* MandelDevice::getGeneratorQuad(bool smooth) const
 {
@@ -130,24 +139,35 @@ MandelContext::MandelContext(void) :
         auto& device1 = devices[0];
         Generator* floatGenerator = device1.getGeneratorFloat(false);
         Generator* doubleGenerator = device1.getGeneratorDouble(false);
+        Generator* doubleDoubleGenerator = device1.getGeneratorDoubleDouble(false);
         Generator* floatGeneratorSmooth = device1.getGeneratorFloat(true);
         Generator* doubleGeneratorSmooth = device1.getGeneratorDouble(true);
+        Generator* doubleDoubleGeneratorSmooth = device1.getGeneratorDoubleDouble(true);
         if (floatGenerator != nullptr)
             adaptiveGenerator->addGenerator(1.0e-7, *floatGenerator);
         else
             adaptiveGenerator->addGenerator(1.0e-7, *cpuGeneratorFloat);
+
         if (doubleGenerator != nullptr)
             adaptiveGenerator->addGenerator(0.5e-15, *doubleGenerator);
         else
             adaptiveGenerator->addGenerator(0.5e-15, *cpuGeneratorDouble);
+
         if (floatGeneratorSmooth != nullptr)
             adaptiveGeneratorSmooth->addGenerator(1.0e-7, *floatGeneratorSmooth);
         else
             adaptiveGeneratorSmooth->addGenerator(1.0e-7, *cpuGeneratorFloatSmooth);
+
         if (doubleGeneratorSmooth != nullptr)
             adaptiveGeneratorSmooth->addGenerator(0.5e-15, *doubleGeneratorSmooth);
         else
             adaptiveGeneratorSmooth->addGenerator(0.5e-15, *cpuGeneratorDoubleSmooth);
+
+        if (doubleDoubleGenerator != nullptr)
+            adaptiveGenerator->addGenerator(Real("1.0e-29"), *doubleDoubleGenerator);
+        if (doubleDoubleGeneratorSmooth != nullptr)
+            adaptiveGeneratorSmooth->addGenerator(Real("1.0e-29"), *doubleDoubleGeneratorSmooth);
+
     }
 
 #ifdef WITH_QD
@@ -208,8 +228,12 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
                 try {
                     md.doubleGenerator = std::make_unique<ClGeneratorDouble>(device, false);
                     md.doubleGeneratorSmooth = std::make_unique<ClGeneratorDouble>(device, true);
+                    md.doubleDoubleGenerator = std::make_unique<ClGeneratorDoubleDouble>(device, false);
+                    md.doubleDoubleGeneratorSmooth = std::make_unique<ClGeneratorDoubleDouble>(device, true);
                 }
                 catch (const std::string& err) {
+                    printf("err: %s", err.c_str());
+                    fflush(stdout);
                 }
             }
 

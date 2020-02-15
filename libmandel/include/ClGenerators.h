@@ -8,7 +8,7 @@
 #ifdef __APPLE__
 #include <OpenCL/cl.hpp>
 #else
-#include <CL/cl2.hpp>
+#include <CL/cl.hpp>
 #endif
 
 namespace mnd
@@ -64,6 +64,7 @@ protected:
 
 class mnd::ClGeneratorDoubleDouble : public ClGenerator
 {
+    bool smooth;
 public:
     ClGeneratorDoubleDouble(cl::Device device, bool smooth);
     virtual ~ClGeneratorDoubleDouble(void) = default;

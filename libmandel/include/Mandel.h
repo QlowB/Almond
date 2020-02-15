@@ -31,11 +31,13 @@ private:
 
     std::unique_ptr<Generator> floatGenerator;
     std::unique_ptr<Generator> doubleGenerator;
+    std::unique_ptr<Generator> doubleDoubleGenerator;
     //std::unique_ptr<Generator> quadGenerator;
     //std::unique_ptr<Generator> generator128;
 
     std::unique_ptr<Generator> floatGeneratorSmooth;
     std::unique_ptr<Generator> doubleGeneratorSmooth;
+    std::unique_ptr<Generator> doubleDoubleGeneratorSmooth;
     //std::unique_ptr<Generator> quadGeneratorSmooth;
     //std::unique_ptr<Generator> generator128Smooth;
 
@@ -47,6 +49,7 @@ public:
 
     Generator* getGeneratorFloat(bool smooth = true) const;
     Generator* getGeneratorDouble(bool smooth = true) const;
+    Generator* getGeneratorDoubleDouble(bool smooth = true) const;
     //Generator* getGeneratorQuad(bool smooth = true) const;
     //Generator* getGenerator128(bool smooth = true) const;
 };

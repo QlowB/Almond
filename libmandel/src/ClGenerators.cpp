@@ -11,6 +11,7 @@ using namespace cl;
 using mnd::ClGenerator;
 using mnd::ClGeneratorFloat;
 using mnd::ClGeneratorDouble;
+using mnd::ClGeneratorDoubleDouble;
 using mnd::ClGenerator128;
 
 Platform getPlatform() {
@@ -324,7 +325,7 @@ ClGeneratorDoubleDouble::ClGeneratorDoubleDouble(cl::Device device, bool smooth)
 }
 
 
-void ClGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
+void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
 {
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
 
@@ -346,7 +347,7 @@ void ClGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
 }
 
 
-std::string ClGeneratorDouble::getKernelCode(bool smooth) const
+std::string ClGeneratorDoubleDouble::getKernelCode(bool smooth) const
 {
     return
         "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"

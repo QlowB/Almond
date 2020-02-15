@@ -297,6 +297,8 @@ private:
     volatile bool dragging = false;
     int dragX, dragY;
 
+    bool displayInfo = false;
+
     mnd::MandelViewport currentViewport;
     mnd::MandelViewport targetViewport;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastAnimUpdate;
@@ -312,6 +314,9 @@ public:
     inline bool getSmoothColoring(void) const { return smoothColoring; }
     void setSmoothColoring(bool sc);
 
+    inline bool doesDisplayInfo(void) const { return displayInfo; }
+    void setDisplayInfo(bool di);
+
     void initializeGL(void) override;
 
     void resizeGL(int w, int h) override;
@@ -322,6 +327,7 @@ private:
     void updateAnimations(void);
 
     void drawRubberband(void);
+    void drawInfo(void);
 public:
 
     void zoom(float scale, float x = 0.5f, float y = 0.5f);

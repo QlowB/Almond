@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1064</width>
-    <height>423</height>
+    <width>864</width>
+    <height>401</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,8 +25,17 @@
      </item>
      <item>
       <widget class="QLabel" name="label">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="text">
-        <string>All results are measured in mega-iterations per second.</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Measure the preformance of Almond on this machine. To obtain good results, run the benchmarks while no other compute-heavy tasks are running on the computer.&lt;/p&gt;&lt;p&gt;The benchmarking consists of several renders of the Mandelbrot fractal each using a different datatype for the underlying operations. The more precision the type allows for, the slower it performs (normally). If you have a video card, Almond will try to use it to do calculations as the tasks are exceptionally well suited for parallel execution.&lt;/p&gt;&lt;p&gt;All results are measured in mega-iterations per second.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -38,51 +47,43 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="run">
-       <property name="text">
-        <string>Run</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QProgressBar" name="progressBar">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="maximum">
-        <number>100</number>
-       </property>
-       <property name="value">
-        <number>0</number>
-       </property>
-       <property name="textVisible">
-        <bool>false</bool>
-       </property>
-       <property name="invertedAppearance">
-        <bool>false</bool>
-       </property>
-      </widget>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QPushButton" name="run">
+         <property name="text">
+          <string>Run</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QProgressBar" name="progressBar">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="textVisible">
+          <bool>false</bool>
+         </property>
+         <property name="invertedAppearance">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <widget class="QTableWidget" name="tableWidget">
        <property name="editTriggers">
         <set>QAbstractItemView::NoEditTriggers</set>
        </property>
-       <property name="alternatingRowColors">
-        <bool>true</bool>
-       </property>
-       <property name="verticalScrollMode">
-        <enum>QAbstractItemView::ScrollPerPixel</enum>
-       </property>
-       <property name="horizontalScrollMode">
-        <enum>QAbstractItemView::ScrollPerPixel</enum>
-       </property>
-       <property name="rowCount">
-        <number>0</number>
-       </property>
-       <property name="columnCount">
-        <number>0</number>
-       </property>
+       <attribute name="horizontalHeaderMinimumSectionSize">
+        <number>130</number>
+       </attribute>
       </widget>
      </item>
     </layout>

@@ -266,7 +266,7 @@ std::string ClGeneratorDouble::getKernelCode(bool smooth) const
             "   if (n >= max - 1)\n"
             "       A[index] = max;\n"
             "   else"
-            "       A[index] = ((float)n) + 1 - log(log(a * a + b * b) / 2) / log(2.0f);\n"
+            "       A[index] = ((float)n) + 1 - log(log((float)(a * a + b * b)) / 2) / log(2.0f);\n"
             //            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
             //        "   A[get_global_id(0)] = 5;"
             "}";

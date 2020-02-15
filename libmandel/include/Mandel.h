@@ -65,15 +65,17 @@ private:
     std::unique_ptr<Generator> cpuGeneratorOct;
     std::unique_ptr<Generator> cpuGenerator128;
     std::unique_ptr<Generator> cpuGeneratorDD;
+    std::unique_ptr<Generator> cpuGeneratorQD;
 
     std::unique_ptr<Generator> cpuGeneratorFloatSmooth;
     std::unique_ptr<Generator> cpuGeneratorDoubleSmooth;
     std::unique_ptr<Generator> cpuGeneratorQuadSmooth;
     std::unique_ptr<Generator> cpuGenerator128Smooth;
     std::unique_ptr<Generator> cpuGeneratorDDSmooth;
+    std::unique_ptr<Generator> cpuGeneratorQDSmooth;
 
-    std::unique_ptr<Generator> adaptiveGenerator;
-    std::unique_ptr<Generator> adaptiveGeneratorSmooth;
+    std::unique_ptr<AdaptiveGenerator> adaptiveGenerator;
+    std::unique_ptr<AdaptiveGenerator> adaptiveGeneratorSmooth;
 
     std::vector<MandelDevice> devices;
 
@@ -91,6 +93,7 @@ public:
     Generator* getCpuGeneratorOct(void);
     Generator* getCpuGenerator128(void);
     Generator* getCpuGeneratorDD(void);
+    Generator* getCpuGeneratorQD(void);
 
     const CpuInfo& getCpuInfo(void) const { return cpuInfo; }
 };

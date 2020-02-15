@@ -25,10 +25,10 @@ namespace mnd
     template class CpuGenerator<double, mnd::NONE, true, true>;
 
     
-    template class CpuGenerator<Fixed128, mnd::NONE, false, false>;
-    template class CpuGenerator<Fixed128, mnd::NONE, false, true>;
-    template class CpuGenerator<Fixed128, mnd::NONE, true, false>;
-    template class CpuGenerator<Fixed128, mnd::NONE, true, true>;
+    //template class CpuGenerator<Fixed128, mnd::NONE, false, false>;
+    //template class CpuGenerator<Fixed128, mnd::NONE, false, true>;
+    //template class CpuGenerator<Fixed128, mnd::NONE, true, false>;
+    //template class CpuGenerator<Fixed128, mnd::NONE, true, true>;
     
 
 #ifdef WITH_BOOST
@@ -49,6 +49,11 @@ namespace mnd
     template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, false, true>;
     template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, true, false>;
     template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, true, true>;
+
+    template class CpuGenerator<mnd::QuadDouble, mnd::NONE, false, false>;
+    template class CpuGenerator<mnd::QuadDouble, mnd::NONE, false, true>;
+    template class CpuGenerator<mnd::QuadDouble, mnd::NONE, true, false>;
+    template class CpuGenerator<mnd::QuadDouble, mnd::NONE, true, true>;
 #endif
 }
 
@@ -98,7 +103,7 @@ void CpuGenerator<T, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInf
     }
 }
 
-
+/*
 #if defined(WITH_BOOST) || 1
 template<bool parallel, bool smooth>
 void CpuGenerator<Fixed128, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
@@ -150,6 +155,7 @@ void CpuGenerator<Fixed128, mnd::NONE, parallel, smooth>::generate(const mnd::Ma
     }
 }
 #endif // WITH_BOOST
+*/
 
 #ifdef WITH_MPFR
 template<unsigned int bits, bool parallel, bool smooth>

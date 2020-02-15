@@ -1,9 +1,10 @@
 #include "MandelWidget.h"
 #include <cmath>
+#include <sstream>
 
 using namespace mnd;
 
-#include <QOpenGLVertexArrayObject>
+#include <QPainter>
 
 
 Texture::Texture(const Bitmap<RGBColor>& bitmap, GLint param)
@@ -236,6 +237,7 @@ void Calcer::setMaxIter(int maxIter)
 {
     this->maxIter = maxIter;
     clearAll();
+    changeState();
 }
 
 
@@ -472,7 +474,6 @@ GridElement* MandelView::searchUnder(int level, GridIndex i, GridIndex j, int re
         && u01 != nullptr
         && u10 != nullptr
         && u11 != nullptr) {
-        GLuint FramebufferName = 0;
         auto newElement = std::make_unique<GridElement>(
             false, std::make_shared<QuadImage>(u00->img, u01->img, u10->img, u11->img)
         );
@@ -605,6 +606,15 @@ void MandelWidget::setSmoothColoring(bool sc)
 }
 
 
+void MandelWidget::setDisplayInfo(bool di)
+{
+    if (di != this->displayInfo) {
+        this->displayInfo = di;
+        emit update();
+    }
+}
+
+
 void MandelWidget::initializeGL(void)
 {
     this->context()->functions()->glClearColor(0, 0, 0, 0);
@@ -653,6 +663,8 @@ void MandelWidget::paintGL(void)
 
     if (rubberbanding)
         drawRubberband();
+    if (displayInfo)
+        drawInfo();
 }
 
 
@@ -700,6 +712,47 @@ void MandelWidget::drawRubberband(void)
     glVertex2d(rubberband.x(), rubberband.bottom());
     glEnd();
     glDisable(GL_BLEND);
+}
+
+
+void MandelWidget::drawInfo(void)
+{
+    const float DIST_FROM_BORDER = 15;
+    float maxWidth = this->width() - 2 * DIST_FROM_BORDER;
+    mnd::Real distPerPixel = currentViewport.width / this->width();
+    float log10 = (mnd::convert<float>(mnd::log(distPerPixel)) + ::logf(maxWidth)) / ::log(10);
+    mnd::Real displayDist = mnd::pow(mnd::Real(10), ::floor(log10));
+    float pixels = mnd::convert<float>(displayDist / distPerPixel);
+    int factor = 1;
+    for (int i = 9; i > 1; i--) {
+        if (pixels * i < maxWidth) {
+            factor *= i;
+            pixels *= i;
+            displayDist *= i;
+            break;
+        }
+    }
+
+    std::stringstream dis;
+    if (::abs(log10) < 3) {
+        dis << mnd::convert<float>(displayDist);
+    }
+    else {
+        dis << factor << "e" << int(::floor(log10));
+    }
+
+    float lineY = this->height() - DIST_FROM_BORDER;
+    float lineXEnd = DIST_FROM_BORDER + pixels;
+
+    QPainter infoPainter{ this };
+    infoPainter.setPen(Qt::white);
+    infoPainter.setFont(QFont("Arial", 12));
+    infoPainter.drawLine(QPointF{ DIST_FROM_BORDER, lineY }, QPointF{ lineXEnd, lineY });
+    infoPainter.drawLine(QPointF{ DIST_FROM_BORDER, lineY }, QPointF{ DIST_FROM_BORDER, lineY - 5 });
+    infoPainter.drawLine(QPointF{ lineXEnd, lineY }, QPointF{ lineXEnd, lineY - 5 });
+    infoPainter.drawText(DIST_FROM_BORDER, lineY - 20, lineXEnd - DIST_FROM_BORDER, 20, Qt::AlignCenter, QString::fromStdString(dis.str()));
+    //infoPainter.drawText(0, this->height() - 30, this->width(), 30, Qt::AlignBottom | Qt::AlignVCenter, QString::fromStdString(ss.str()));
+    infoPainter.end();
 }
 
 

@@ -71,10 +71,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 win32:LIBS += -lopengl32
 else:LIBS += -lOpenGL
 
-win32:QMAKE_CXXFLAGS+= -openmp
-else:unix:QMAKE_CXXFLAGS+= -fopenmp
+win32:QMAKE_CXXFLAGS += -openmp
+else:unix:QMAKE_CXXFLAGS +=
 win32:QMAKE_LFLAGS +=  -openmp
-else:unix:QMAKE_LFLAGS+= -fopenmp
+else:unix:QMAKE_LFLAGS+= -fopenmp -flto
 LIBS += -fopenmp
 unix:LIBS += -lm -latomic -lquadmath
 

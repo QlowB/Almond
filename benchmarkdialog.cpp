@@ -105,14 +105,19 @@ void Benchmarker::start(void)
 {
     mnd::Generator& cpuf = mndContext.getCpuGeneratorFloat();
     mnd::Generator& cpud = mndContext.getCpuGeneratorDouble();
+    mnd::Generator* cpudd = mndContext.getCpuGeneratorDD();
+    mnd::Generator* cpuqd = mndContext.getCpuGeneratorQD();
     mnd::Generator* cpu128 = mndContext.getCpuGeneratorQuad();
-    mnd::Generator* cpu256 = mndContext.getCpuGeneratorDD();
+    mnd::Generator* cpu256 = mndContext.getCpuGeneratorOct();
 
     double nTests = 2;
 
+    if (cpudd)
+        nTests++;
+    if (cpuqd)
+        nTests++;
     if (cpu128)
         nTests++;
-
     if (cpu256)
         nTests++;
 
@@ -145,6 +150,17 @@ void Benchmarker::start(void)
     cpu.push_back(benchmarkResult(cpud));
     br.percentage += progress;
     emit update(br);
+
+    if (cpudd) {
+        cpu.push_back(benchmarkResult(*cpudd));
+        br.percentage += progress;
+        emit update(br);
+    }
+    if (cpuqd) {
+        cpu.push_back(benchmarkResult(*cpuqd));
+        br.percentage += progress;
+        emit update(br);
+    }
     if (cpu128) {
         cpu.push_back(benchmarkResult(*cpu128));
         br.percentage += progress;
@@ -190,9 +206,9 @@ BenchmarkDialog::BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent
 
     auto& devices = mndContext.getDevices();
     int nDevices = devices.size() + 1;
-    ui.tableWidget->setColumnCount(4);
+    ui.tableWidget->setColumnCount(6);
     ui.tableWidget->setRowCount(nDevices);
-    ui.tableWidget->setHorizontalHeaderLabels({"Single Precision", "Double Precision", "Quad Precision", "Oct Precision"});
+    ui.tableWidget->setHorizontalHeaderLabels({"Single Precision", "Double Precision", "Double-Double Precision", "Quad-Double Precision", "Quad Precision", "Oct Precision"});
 
     QString cpuDesc = ("CPU [" + mndContext.getCpuInfo().getBrand() + "]").c_str();
     ui.tableWidget->setVerticalHeaderItem(0, new QTableWidgetItem(cpuDesc));

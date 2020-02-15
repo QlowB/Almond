@@ -3,21 +3,17 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QGradient>
-#include "benchmarkdialog.h"
 #include "gradientchoosedialog.h"
 
 #include <cmath>
 
 Almond::Almond(QWidget *parent) :
-    QMainWindow(parent),
-    mandelContext(mnd::initializeContext())
+    QMainWindow{ parent },
+    mandelContext{ mnd::initializeContext() }
 {
     ui.setupUi(this);
-    printf("not yet created!\n");
     mw = std::make_unique<MandelWidget>(mandelContext, ui.centralWidget);
-    //qRegisterMetaType<MandelWidget>("MandelWidget");
-    printf("created!\n");
-    ui.verticalLayout_left->addWidget(mw.get());
+    ui.mainContainer->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
     //ui.verticalLayout_left->addWidget(new MyGLWidget(ui.centralWidget));
     //mw->show();
@@ -84,9 +80,9 @@ void Almond::on_smooth_stateChanged(int checked)
 
 void Almond::on_runBenchmark_clicked()
 {
-    BenchmarkDialog bd(mandelContext, this);
-    //bd.show();
-    bd.exec();
+    if (!benchmarkDialog)
+        benchmarkDialog = std::make_unique<BenchmarkDialog>(mandelContext, this);
+    benchmarkDialog->exec();
 }
 
 void Almond::on_exportImage_clicked()
@@ -115,4 +111,9 @@ void Almond::on_exportImage_clicked()
 void Almond::on_resetZoom_clicked()
 {
     mw->setViewport(mnd::MandelViewport::standardView());
+}
+
+void Almond::on_displayInfo_stateChanged(int checked)
+{
+    this->mw->setDisplayInfo(checked != Qt::Unchecked);
 }

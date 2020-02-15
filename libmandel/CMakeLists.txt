@@ -33,6 +33,7 @@ SET(MandelSources
     src/Mandel.cpp
     src/Hardware.cpp
     src/MandelUtil.cpp
+    src/Types.cpp
 )
 FILE(GLOB MandelHeaders include/*.h)
 
@@ -46,15 +47,6 @@ endif()
 
 add_library(mandel STATIC ${MandelSources})
 
-
-include(CheckIPOSupported)
-check_ipo_supported(RESULT LTO_SUPPORTED)
-
-if (LTO_SUPPORTED)
-    message("enable link-time optimization")
-    set_property(TARGET mandel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif(LTO_SUPPORTED)
-
 FILE(GLOB QdSources qd-2.3.22/src/*.cpp)
 
 target_compile_definitions(mandel PUBLIC WITH_QD)
@@ -64,6 +56,16 @@ target_include_directories(qd PUBLIC qd-2.3.22)
 
 #target_include_directories(mandel PUBLI#C qd-2.3.22/include)
 target_link_libraries(mandel PUBLIC qd)
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT LTO_SUPPORTED)
+
+if (LTO_SUPPORTED AND WITH_LTO)
+    message("Enabling link-time optimization.")
+    set_property(TARGET mandel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    set_property(TARGET qd PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
 
 if(MPFR_INCLUDES AND MPFR_LIBRARIES)
     set(MPFR_FOUND TRUE)

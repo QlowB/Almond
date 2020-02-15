@@ -5,7 +5,6 @@
 
 mnd::MandelViewport Benchmarker::benchViewport(void)
 {
-    //return mnd::MandelViewport{ -0.758267525104592591494, -0.066895616551111110830, 0.000000043217777777655, 0.000000043217777777655 };
     return mnd::MandelViewport{ -1.250000598933854152929, 0.0001879894057291665530, 0.0000003839916666666565, 0.0000003839916666666565 };
 }
 
@@ -60,7 +59,7 @@ std::pair<long long, std::chrono::nanoseconds> Benchmarker::measureMips(const st
 
     long long sum = 0;
     for (int i = 0; i < bitmap->width * bitmap->height; i++) {
-        sum += std::floor(bitmap->pixels[size_t(i)]);
+        sum += static_cast<long long>(std::floor(bitmap->pixels[size_t(i)]));
     }
 
     return std::make_pair(sum, duration_cast<nanoseconds>(after - before));
@@ -68,7 +67,7 @@ std::pair<long long, std::chrono::nanoseconds> Benchmarker::measureMips(const st
 
 double Benchmarker::benchmarkResult(mnd::Generator& mg) const
 {
-    int testIndex = 0;
+    size_t testIndex = 0;
 
     for (size_t i = 0; i < benches.size(); i++) {
         const mnd::MandelInfo& mi = benches[i];
@@ -205,14 +204,14 @@ BenchmarkDialog::BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent
     printf("bench!\n"); fflush(stdout);
 
     auto& devices = mndContext.getDevices();
-    int nDevices = devices.size() + 1;
+    size_t nDevices = devices.size() + 1;
     ui.tableWidget->setColumnCount(6);
-    ui.tableWidget->setRowCount(nDevices);
+    ui.tableWidget->setRowCount(int(nDevices));
     ui.tableWidget->setHorizontalHeaderLabels({"Single Precision", "Double Precision", "Double-Double Precision", "Quad-Double Precision", "Quad Precision", "Oct Precision"});
 
     QString cpuDesc = ("CPU [" + mndContext.getCpuInfo().getBrand() + "]").c_str();
     ui.tableWidget->setVerticalHeaderItem(0, new QTableWidgetItem(cpuDesc));
-    for (int i = 0; i < devices.size(); i++) {
+    for (size_t i = 0; i < devices.size(); i++) {
         std::string cpuDescS = std::string("GPU ") + std::to_string(i + 1) + " [" + devices[i].getName().c_str() + "]";
         QString cpuDesc = QString::fromLatin1(cpuDescS.c_str());
         /*printf("brand [%d]: --> %s <--\n", (int) cpuDescS.size(), cpuDescS.c_str());
@@ -222,7 +221,7 @@ BenchmarkDialog::BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent
         printf("\n");*/
         auto label = new QTableWidgetItem(cpuDesc);
         label->setStatusTip(QString::fromLatin1(devices[i].getName().c_str()));
-        ui.tableWidget->setVerticalHeaderItem(i + 1, label);
+        ui.tableWidget->setVerticalHeaderItem(int(i + 1), label);
     }
 
     qRegisterMetaType<BenchmarkResult>();
@@ -239,9 +238,9 @@ BenchmarkDialog::BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent
 void BenchmarkDialog::update(BenchmarkResult br)
 {
     std::vector<double> cpu = br.values[0];
-    for (int j = 0; j < int(br.values.size()); j++) {
-        for (int i = 0; i < int(br.values[j].size()); i++) {
-            ui.tableWidget->setItem(j, i, new QTableWidgetItem(QString::number(br.values[j][i])));
+    for (size_t j = 0; j < br.values.size(); j++) {
+        for (size_t i = 0; i < br.values[j].size(); i++) {
+            ui.tableWidget->setItem(int(j), int(i), new QTableWidgetItem(QString::number(br.values[j][i])));
         }
     }
     ui.progressBar->setValue(int(br.percentage));

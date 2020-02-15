@@ -8,7 +8,7 @@
 #ifdef __APPLE__
 #include <OpenCL/cl.hpp>
 #else
-#include <CL/cl.hpp>
+#include <CL/cl2.hpp>
 #endif
 
 namespace mnd
@@ -60,6 +60,17 @@ protected:
     virtual std::string getKernelCode(bool smooth) const;
 };
 
+
+class mnd::ClGeneratorDoubleDouble : public ClGenerator
+{
+public:
+    ClGeneratorDoubleDouble(cl::Device device, bool smooth);
+    virtual ~ClGeneratorDouble(void) = default;
+
+    virtual void generate(const MandelInfo& info, float* data);
+protected:
+    virtual std::string getKernelCode(bool smooth) const;
+};
 
 class mnd::ClGenerator128 : public ClGenerator
 {

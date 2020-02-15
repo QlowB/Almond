@@ -116,6 +116,7 @@ struct PairHash {
     std::size_t operator () (const std::pair<T1, T2>& p) const {
         auto h1 = std::hash<T1>{}(p.first);
         auto h2 = std::hash<T2>{}(p.second);
+        //boost::hash_combine(h1, p.second);
         return (h1 ^ 234579245) * 23452354 + h2;
     }
 };
@@ -318,9 +319,6 @@ public:
     void setDisplayInfo(bool di);
 
     void initializeGL(void) override;
-
-    void resizeGL(int w, int h) override;
-
     void paintGL() override;
 
 private:
@@ -334,8 +332,6 @@ public:
     void setViewport(const mnd::MandelViewport& viewport);
     void setMaxIterations(int maxIter);
 
-    //void redraw();
-
     void requestRecalc(void);
 
     void resizeEvent(QResizeEvent* re) override;
@@ -347,7 +343,5 @@ public:
     inline const mnd::MandelViewport& getViewport(void) const { return targetViewport; }
 signals:
     void needsUpdate(const mnd::MandelInfo vp);
-public slots:
-    //void viewUpdated(Bitmap<RGBColor>* bitmap);
 };
 

@@ -126,11 +126,6 @@ MandelContext::MandelContext(void) :
     adaptiveGenerator = std::make_unique<AdaptiveGenerator>();
     adaptiveGeneratorSmooth = std::make_unique<AdaptiveGenerator>();
 
-    adaptiveGenerator->addGenerator(1.0e-7, *cpuGeneratorFloat);
-    adaptiveGenerator->addGenerator(0.5e-15, *cpuGeneratorDouble);
-    adaptiveGeneratorSmooth->addGenerator(1.0e-7, *cpuGeneratorFloatSmooth);
-    adaptiveGeneratorSmooth->addGenerator(0.5e-15, *cpuGeneratorDoubleSmooth);
-
     {
         auto& device1 = devices[0];
         Generator* floatGenerator = device1.getGeneratorFloat(false);
@@ -139,19 +134,27 @@ MandelContext::MandelContext(void) :
         Generator* doubleGeneratorSmooth = device1.getGeneratorDouble(true);
         if (floatGenerator != nullptr)
             adaptiveGenerator->addGenerator(1.0e-7, *floatGenerator);
+        else
+            adaptiveGenerator->addGenerator(1.0e-7, *cpuGeneratorFloat);
         if (doubleGenerator != nullptr)
             adaptiveGenerator->addGenerator(0.5e-15, *doubleGenerator);
+        else
+            adaptiveGenerator->addGenerator(0.5e-15, *cpuGeneratorDouble);
         if (floatGeneratorSmooth != nullptr)
             adaptiveGeneratorSmooth->addGenerator(1.0e-7, *floatGeneratorSmooth);
+        else
+            adaptiveGeneratorSmooth->addGenerator(1.0e-7, *cpuGeneratorFloatSmooth);
         if (doubleGeneratorSmooth != nullptr)
             adaptiveGeneratorSmooth->addGenerator(0.5e-15, *doubleGeneratorSmooth);
+        else
+            adaptiveGeneratorSmooth->addGenerator(0.5e-15, *cpuGeneratorDoubleSmooth);
     }
 
 #ifdef WITH_QD
         adaptiveGenerator->addGenerator(Real("1.0e-29"), *cpuGeneratorDD);
         adaptiveGeneratorSmooth->addGenerator(Real("1.0e-29"), *cpuGeneratorDDSmooth);
-        adaptiveGenerator->addGenerator(Real("1.0e-50"), *cpuGeneratorQD);
-        adaptiveGeneratorSmooth->addGenerator(Real("1.0e-50"), *cpuGeneratorQDSmooth);
+        adaptiveGenerator->addGenerator(Real("1.0e-57"), *cpuGeneratorQD);
+        adaptiveGeneratorSmooth->addGenerator(Real("1.0e-57"), *cpuGeneratorQDSmooth);
 #endif
 #ifdef WITH_BOOST
         //adaptiveGenerator->addGenerator(1.0e-28, *cpuGeneratorQuad);

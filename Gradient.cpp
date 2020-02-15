@@ -86,7 +86,7 @@ Gradient Gradient::readXml(const QString& xml)
         uint8_t b = uint8_t(child.attributeNode("b").value().toInt());
         float p = child.attributeNode("p").value().toInt();
 
-        printf("rgb (%s): %d, %d, %d\n", child.text().toUtf8().data(), r, g, b);
+        //printf("rgb (%s): %d, %d, %d\n", child.text().toUtf8().data(), r, g, b);
         colorArr.push_back({ { r, g, b }, p });
     }
 

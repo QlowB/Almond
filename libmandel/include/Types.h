@@ -12,6 +12,7 @@
 //#       include <boost/multiprecision/float128.hpp>
 #   endif
 #   include <boost/multiprecision/cpp_int.hpp>
+#   include <boost/functional/hash.hpp>
 #endif
 
 #ifdef WITH_QD

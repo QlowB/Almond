@@ -51,8 +51,7 @@ FILE(GLOB QdSources qd-2.3.22/src/*.cpp)
 
 target_compile_definitions(mandel PUBLIC WITH_QD)
 add_library(qd STATIC ${QdSources})
-target_include_directories(qd PUBLIC qd-2.3.22/include)
-target_include_directories(qd PUBLIC qd-2.3.22)
+target_include_directories(qd PUBLIC qd-2.3.22/include qd-2.3.22)
 
 #target_include_directories(mandel PUBLI#C qd-2.3.22/include)
 target_link_libraries(mandel PUBLIC qd)

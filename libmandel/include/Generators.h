@@ -4,6 +4,7 @@
 #include "MandelUtil.h"
 
 #include <vector>
+#include <map>
 #include <utility>
 
 

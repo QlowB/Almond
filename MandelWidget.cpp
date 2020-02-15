@@ -623,7 +623,7 @@ void MandelWidget::initializeGL(void)
     glDisable(GL_DEPTH_TEST);
 
     // looks not even better
-    //glDisable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_FRAMEBUFFER_SRGB);
 
     //glShadeModel(GL_SMOOTH);
 
@@ -678,12 +678,13 @@ void MandelWidget::updateAnimations(void)
     else {
         auto now = std::chrono::high_resolution_clock::now();
         auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastAnimUpdate).count();
-        double factor = ::pow(0.97, millis);
+        const mnd::Real factor = mnd::Real(::pow(0.97, millis));
+        const mnd::Real one(1.0);
 
-        currentViewport.x = currentViewport.x * factor + targetViewport.x * (1.0 - factor);
-        currentViewport.y = currentViewport.y * factor + targetViewport.y * (1.0 - factor);
-        currentViewport.width = currentViewport.width * factor + targetViewport.width * (1.0 - factor);
-        currentViewport.height = currentViewport.height * factor + targetViewport.height * (1.0 - factor);
+        currentViewport.x = currentViewport.x * factor + targetViewport.x * (one - factor);
+        currentViewport.y = currentViewport.y * factor + targetViewport.y * (one - factor);
+        currentViewport.width = currentViewport.width * factor + targetViewport.width * (one - factor);
+        currentViewport.height = currentViewport.height * factor + targetViewport.height * (one - factor);
 
         lastAnimUpdate = now;
         emit update();
@@ -720,7 +721,7 @@ void MandelWidget::drawInfo(void)
     const float DIST_FROM_BORDER = 15;
     float maxWidth = this->width() - 2 * DIST_FROM_BORDER;
     mnd::Real distPerPixel = currentViewport.width / this->width();
-    float log10 = (mnd::convert<float>(mnd::log(distPerPixel)) + ::logf(maxWidth)) / ::log(10);
+    float log10 = (mnd::convert<float>(mnd::log(distPerPixel)) + ::logf(maxWidth)) / ::logf(10);
     mnd::Real displayDist = mnd::pow(mnd::Real(10), ::floor(log10));
     float pixels = mnd::convert<float>(displayDist / distPerPixel);
     int factor = 1;
@@ -750,8 +751,8 @@ void MandelWidget::drawInfo(void)
     infoPainter.drawLine(QPointF{ DIST_FROM_BORDER, lineY }, QPointF{ lineXEnd, lineY });
     infoPainter.drawLine(QPointF{ DIST_FROM_BORDER, lineY }, QPointF{ DIST_FROM_BORDER, lineY - 5 });
     infoPainter.drawLine(QPointF{ lineXEnd, lineY }, QPointF{ lineXEnd, lineY - 5 });
-    infoPainter.drawText(DIST_FROM_BORDER, lineY - 20, lineXEnd - DIST_FROM_BORDER, 20, Qt::AlignCenter, QString::fromStdString(dis.str()));
-    //infoPainter.drawText(0, this->height() - 30, this->width(), 30, Qt::AlignBottom | Qt::AlignVCenter, QString::fromStdString(ss.str()));
+    infoPainter.drawText(int(DIST_FROM_BORDER), int(lineY - 20), int(lineXEnd - DIST_FROM_BORDER), 20,
+                         Qt::AlignCenter, QString::fromStdString(dis.str()));
     infoPainter.end();
 }
 
@@ -784,12 +785,6 @@ void MandelWidget::setMaxIterations(int maxIter)
 
 
 void MandelWidget::requestRecalc()
-{
-    emit update();
-}
-
-
-void MandelWidget::resizeGL(int width, int height)
 {
     emit update();
 }

@@ -458,7 +458,7 @@ struct Fixed64
     ~Fixed64() = default;
 
 
-    inline Fixed64(uint64_t bits, bool dummy) :
+    inline Fixed64(uint64_t bits, bool /* dummy */) :
         bits{ bits }
     {
     }
@@ -502,7 +502,7 @@ struct Fixed64
         int32_t newLo = loup & 0xFFFFFFFF + (lolo >> 32);*/
         double d = int32_t(bits >> 32) + double(uint32_t(bits)) / (1ULL << 32);
         double od = int32_t(other.bits >> 32) + double(uint32_t(other.bits)) / (1ULL << 32);
-        return d * od * (other.sign != sign) ? -1 : 1;
+        return d * od * ((other.sign != sign) ? -1 : 1);
 
         //return Fixed64{ (uint64_t(newUp) << 32) | newLo, true };
     }

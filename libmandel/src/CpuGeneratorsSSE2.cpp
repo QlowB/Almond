@@ -9,19 +9,15 @@ using mnd::CpuGenerator;
 
 namespace mnd
 {
-    template class CpuGenerator<float, mnd::X86_SSE2, false, false>;
-    template class CpuGenerator<float, mnd::X86_SSE2, false, true>;
-    template class CpuGenerator<float, mnd::X86_SSE2, true, false>;
-    template class CpuGenerator<float, mnd::X86_SSE2, true, true>;
+    template class CpuGenerator<float, mnd::X86_SSE2, false>;
+    template class CpuGenerator<float, mnd::X86_SSE2, true>;
 
-    template class CpuGenerator<double, mnd::X86_SSE2, false, false>;
-    template class CpuGenerator<double, mnd::X86_SSE2, false, true>;
-    template class CpuGenerator<double, mnd::X86_SSE2, true, false>;
-    template class CpuGenerator<double, mnd::X86_SSE2, true, true>;
+    template class CpuGenerator<double, mnd::X86_SSE2, false>;
+    template class CpuGenerator<double, mnd::X86_SSE2, true>;
 }
 
-template<bool parallel, bool smooth>
-void CpuGenerator<float, mnd::X86_SSE2, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
+template<bool parallel>
+void CpuGenerator<float, mnd::X86_SSE2, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
     using T = float;
     const MandelViewport& view = info.view;
@@ -81,8 +77,8 @@ void CpuGenerator<float, mnd::X86_SSE2, parallel, smooth>::generate(const mnd::M
 }
 
 
-template<bool parallel, bool smooth>
-void CpuGenerator<double, mnd::X86_SSE2, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
+template<bool parallel>
+void CpuGenerator<double, mnd::X86_SSE2, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
     using T = double;
     const MandelViewport& view = info.view;

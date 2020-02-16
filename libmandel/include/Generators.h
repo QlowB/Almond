@@ -14,6 +14,19 @@ namespace mnd
     class Generator;
 
     class AdaptiveGenerator;
+
+    enum class Precision : int
+    {
+        FLOAT,
+        DOUBLE,
+        DOUBLE_DOUBLE,
+        FLOAT128,
+        QUAD_DOUBLE,
+        FLOAT256,
+        INFINITE
+    };
+
+    Real getPrecision(Precision p);
 }
 
 
@@ -43,6 +56,7 @@ public:
     virtual ~AdaptiveGenerator(void) = default;
 
     void addGenerator(const Real& precision, Generator& generator);
+    void addGenerator(Precision p, Generator& generator);
 
     virtual void generate(const MandelInfo& info, float* data);
 };

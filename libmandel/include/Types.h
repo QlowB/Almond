@@ -125,6 +125,12 @@ namespace mnd
 #endif
 
     std::string toString(const Real& num);
+
+
+/*
+    template<typename T>
+    constexpr mnd::Real precision(void);
+*/
 }
 
 

@@ -13,7 +13,7 @@ namespace mnd
         ARM_NEON,
     };
 
-    template<typename T, mnd::CpuExtension ex = mnd::NONE, bool parallel = true, bool smooth = true>
+    template<typename T, mnd::CpuExtension ex = mnd::NONE, bool parallel = true>
     class CpuGenerator;
 
 
@@ -39,7 +39,7 @@ namespace mnd
 }
 
 
-template<typename T, mnd::CpuExtension ex, bool parallel, bool smooth>
+template<typename T, mnd::CpuExtension ex, bool parallel>
 class mnd::CpuGenerator : public Generator
 {
 public:
@@ -47,8 +47,8 @@ public:
 };
 
 
-template<typename T, bool parallel, bool smooth>
-class mnd::CpuGenerator<T, mnd::NONE, parallel, smooth> : public Generator
+template<typename T, bool parallel>
+class mnd::CpuGenerator<T, mnd::NONE, parallel> : public Generator
 {
 public:
     virtual void generate(const MandelInfo& info, float* data);
@@ -56,46 +56,46 @@ public:
 
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
-template<bool parallel, bool smooth>
-class mnd::CpuGenerator<float, mnd::X86_SSE2, parallel, smooth> : public Generator
+template<bool parallel>
+class mnd::CpuGenerator<float, mnd::X86_SSE2, parallel> : public Generator
 {
 public:
     virtual void generate(const MandelInfo& info, float* data);
 };
 
-template<bool parallel, bool smooth>
-class mnd::CpuGenerator<double, mnd::X86_SSE2, parallel, smooth> : public Generator
+template<bool parallel>
+class mnd::CpuGenerator<double, mnd::X86_SSE2, parallel> : public Generator
 {
 public:
     virtual void generate(const MandelInfo& info, float* data);
 };
 
 
-template<bool parallel, bool smooth>
-class mnd::CpuGenerator<float, mnd::X86_AVX, parallel, smooth> : public Generator
+template<bool parallel>
+class mnd::CpuGenerator<float, mnd::X86_AVX, parallel> : public Generator
 {
 public:
     virtual void generate(const MandelInfo& info, float* data);
 };
 
-template<bool parallel, bool smooth>
-class mnd::CpuGenerator<double, mnd::X86_AVX, parallel, smooth> : public Generator
+template<bool parallel>
+class mnd::CpuGenerator<double, mnd::X86_AVX, parallel> : public Generator
 {
 public:
     virtual void generate(const MandelInfo& info, float* data);
 };
 
 #elif defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) 
-template<typename T, bool parallel, bool smooth>
-class mnd::CpuGenerator<T, mnd::ARM_NEON, parallel, smooth> : public Generator
+template<typename T, bool parallel>
+class mnd::CpuGenerator<T, mnd::ARM_NEON, parallel> : public Generator
 {
 public:
     virtual void generate(const MandelInfo& info, float* data);
 };
 #endif
 
-template<bool parallel, bool smooth>
-class mnd::CpuGenerator<Fixed128, mnd::NONE, parallel, smooth> : public Generator
+template<bool parallel>
+class mnd::CpuGenerator<Fixed128, mnd::NONE, parallel> : public Generator
 {
 public:
     virtual void generate(const MandelInfo& info, float* data);

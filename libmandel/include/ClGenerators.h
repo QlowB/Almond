@@ -33,7 +33,6 @@ public:
     virtual ~ClGenerator(void);
 
     virtual void generate(const MandelInfo& info, float* data);
-
 protected:
     virtual std::string getKernelCode(bool smooth) const = 0;
 };
@@ -42,7 +41,7 @@ protected:
 class mnd::ClGeneratorFloat : public ClGenerator
 {
 public:
-    ClGeneratorFloat(cl::Device device, bool smooth);
+    ClGeneratorFloat(cl::Device device);
     virtual ~ClGeneratorFloat(void) = default;
 
 protected:
@@ -53,7 +52,7 @@ protected:
 class mnd::ClGeneratorDouble : public ClGenerator
 {
 public:
-    ClGeneratorDouble(cl::Device device, bool smooth);
+    ClGeneratorDouble(cl::Device device);
     virtual ~ClGeneratorDouble(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data);
@@ -66,7 +65,7 @@ class mnd::ClGeneratorDoubleDouble : public ClGenerator
 {
     bool smooth;
 public:
-    ClGeneratorDoubleDouble(cl::Device device, bool smooth);
+    ClGeneratorDoubleDouble(cl::Device device);
     virtual ~ClGeneratorDoubleDouble(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data);
@@ -77,7 +76,7 @@ protected:
 class mnd::ClGenerator128 : public ClGenerator
 {
 public:
-    ClGenerator128(cl::Device device, bool smooth);
+    ClGenerator128(cl::Device device);
     virtual ~ClGenerator128(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data);

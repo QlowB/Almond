@@ -69,6 +69,9 @@ struct mnd::MandelInfo
     
     /// maximum iterations
     long maxIter;
+
+    /// smooth coloring
+    bool smooth;
 };
 
 #endif // MANDEL_MANDELUTIL_H

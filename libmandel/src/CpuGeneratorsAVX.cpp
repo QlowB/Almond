@@ -10,19 +10,15 @@ using mnd::CpuGenerator;
 
 namespace mnd
 {
-    template class CpuGenerator<float, mnd::X86_AVX, false, false>;
-    template class CpuGenerator<float, mnd::X86_AVX, false, true>;
-    template class CpuGenerator<float, mnd::X86_AVX, true, false>;
-    template class CpuGenerator<float, mnd::X86_AVX, true, true>;
+    template class CpuGenerator<float, mnd::X86_AVX, false>;
+    template class CpuGenerator<float, mnd::X86_AVX, true>;
 
-    template class CpuGenerator<double, mnd::X86_AVX, false, false>;
-    template class CpuGenerator<double, mnd::X86_AVX, false, true>;
-    template class CpuGenerator<double, mnd::X86_AVX, true, false>;
-    template class CpuGenerator<double, mnd::X86_AVX, true, true>;
+    template class CpuGenerator<double, mnd::X86_AVX, false>;
+    template class CpuGenerator<double, mnd::X86_AVX, true>;
 }
 
-template<bool parallel, bool smooth>
-void CpuGenerator<float, mnd::X86_AVX, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
+template<bool parallel>
+void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
     using T = float;
     const MandelViewport& view = info.view;
@@ -63,7 +59,7 @@ void CpuGenerator<float, mnd::X86_AVX, parallel, smooth>::generate(const mnd::Ma
                 a = _mm256_add_ps(_mm256_sub_ps(aa, bb), xs);
                 b = _mm256_add_ps(abab, ys);
                 __m256 cmp = _mm256_cmp_ps(_mm256_add_ps(aa, bb), threshold, _CMP_LE_OQ);
-                if constexpr (smooth) {
+                if (info.smooth) {
                     resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
                     resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
                 }
@@ -88,7 +84,7 @@ void CpuGenerator<float, mnd::X86_AVX, parallel, smooth>::generate(const mnd::Ma
 
             _mm256_store_ps(ftRes, counter);
             for (int k = 0; k < 8 && i + k < info.bWidth; k++) {
-                if constexpr (smooth) {
+                if (info.smooth) {
                     data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
                         ftRes[k] >= info.maxIter ? info.maxIter :
                         ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
@@ -102,15 +98,15 @@ void CpuGenerator<float, mnd::X86_AVX, parallel, smooth>::generate(const mnd::Ma
 }
 
 
-template<bool parallel, bool smooth>
-void CpuGenerator<double, mnd::X86_AVX, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
+template<bool parallel>
+void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
     using T = double;
     const MandelViewport& view = info.view;
 
     if constexpr(parallel)
         omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for if (smooth)
+#pragma omp parallel for schedule(static, 1) if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y + T(j) * view.height / info.bHeight);
         long i = 0;

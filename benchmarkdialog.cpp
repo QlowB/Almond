@@ -71,30 +71,26 @@ double Benchmarker::benchmarkResult(mnd::Generator& mg) const
 
     for (size_t i = 0; i < benches.size(); i++) {
         const mnd::MandelInfo& mi = benches[i];
-        //auto data = std::make_unique<float[]>(size_t(mi.bWidth * mi.bHeight));
         Bitmap<float> bmp(mi.bWidth, mi.bHeight);
         auto [iters, time] = measureMips([&mg, &mi, &bmp]() {
             mg.generate(mi, bmp.pixels.get());
             return &bmp;
         });
-        //printf("benchmark lvl %d, time %d ms\n", i, time.count() / 1000 / 1000);
-        //fflush(stdout);
-        if (time > std::chrono::milliseconds(1000)) {
-            testIndex = i + 1;
+        if (time > std::chrono::milliseconds(500)) {
+            testIndex = i + 0;
+            //printf("testing index %d\n", testIndex);
+            fflush(stdout);
             break;
         }
     }
 
 
     const mnd::MandelInfo& mi = benches[(testIndex >= benches.size()) ? (benches.size() - 1) : testIndex];
-    //auto data = std::make_unique<float[]>(mi.bWidth * mi.bHeight);
     Bitmap<float> bmp(mi.bWidth, mi.bHeight);
     auto [iters, time] = measureMips([&mg, &mi, &bmp]() {
         mg.generate(mi, bmp.pixels.get());
         return &bmp;
     });
-    //printf("bench time %d ms\n", time.count() / 1000 / 1000);
-    //fflush(stdout);
 
     return double(iters) / time.count() * 1000;
 }
@@ -195,7 +191,7 @@ void Benchmarker::start(void)
 
 
 BenchmarkDialog::BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent) :
-    QDialog(parent),
+    QDialog{ parent },
     mndContext{ mndContext },
     benchmarker{ mndContext }
 {

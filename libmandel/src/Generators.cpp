@@ -25,7 +25,7 @@ AdaptiveGenerator::AdaptiveGenerator(Generator* floatGen, Generator* doubleGen, 
 }*/
 
 
-void AdaptiveGenerator::addGenerator(const Real& precision, Generator& generator)
+void AdaptiveGenerator::addGenerator(const mnd::Real& precision, mnd::Generator& generator)
 {
     generators.insert({ precision, &generator });
 }

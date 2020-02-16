@@ -171,21 +171,21 @@ class Job : public QObject, public QRunnable
 public:
     mnd::Generator* generator;
     const Gradient& gradient;
-    int maxIter;
+    MandelWidget& owner;
     TexGrid* grid;
     int level;
     GridIndex i, j;
     long calcState = 0;
 
-    inline Job( mnd::Generator* generator,
+    inline Job(mnd::Generator* generator,
                const Gradient& gradient,
-               int maxIter,
+               MandelWidget& owner,
                TexGrid* grid,
                int level, GridIndex i, GridIndex j,
                long calcState) :
         generator{ generator },
         gradient{ gradient },
-        maxIter{ maxIter },
+        owner{ owner },
         grid{ grid },
         level{ level },
         i{ i }, j{ j },
@@ -206,22 +206,15 @@ class Calcer : public QObject
     QMutex jobsMutex;
     mnd::Generator* generator;
     std::unique_ptr<QThreadPool> threadPool;
+    MandelWidget& owner;
     const Gradient& gradient;
     int maxIter;
+    bool smooth;
     int currentLevel;
 
     volatile long calcState = 0;
 public:
-    inline Calcer(mnd::Generator* generator, const Gradient& gradient, int maxIter) :
-        jobsMutex{ QMutex::Recursive },
-        generator{ generator },
-        threadPool{ std::make_unique<QThreadPool>() },
-        gradient{ gradient },
-        maxIter{ maxIter }
-    {
-        threadPool->setMaxThreadCount(1);
-    }
-
+    Calcer(mnd::Generator* generator, MandelWidget& owner, int maxIter, bool smooth);
     void setMaxIter(int maxIter);
     void clearAll(void);
     void setGenerator(mnd::Generator* generator) { this->generator = generator; changeState(); }
@@ -318,6 +311,9 @@ public:
     inline bool doesDisplayInfo(void) const { return displayInfo; }
     void setDisplayInfo(bool di);
 
+    inline int getMaxIterations(void) const { return maxIterations; }
+    void setMaxIterations(int maxIter);
+
     void initializeGL(void) override;
     void paintGL() override;
 
@@ -330,7 +326,6 @@ public:
 
     void zoom(float scale, float x = 0.5f, float y = 0.5f);
     void setViewport(const mnd::MandelViewport& viewport);
-    void setMaxIterations(int maxIter);
 
     void requestRecalc(void);
 

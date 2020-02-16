@@ -23,7 +23,7 @@ namespace mnd
         FLOAT128,
         QUAD_DOUBLE,
         FLOAT256,
-        INFINITE
+        INF_PREC,
     };
 
     Real getPrecision(Precision p);

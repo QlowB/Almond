@@ -7,6 +7,7 @@
 #include "MandelWidget.h"
 #include "exportdialogs.h"
 #include "gradientchoosedialog.h"
+#include "choosegenerators.h"
 #include "benchmarkdialog.h"
 
 #include <memory>
@@ -18,6 +19,7 @@ private:
     mnd::MandelContext mandelContext;
     std::unique_ptr<MandelWidget> mw;
     std::unique_ptr<BenchmarkDialog> benchmarkDialog;
+    std::unique_ptr<ChooseGenerators> generatorsDialog;
     GradientChooseDialog gcd;
 public:
     Almond(QWidget *parent = Q_NULLPTR);
@@ -34,6 +36,8 @@ private slots:
     void on_resetZoom_clicked();
 
     void on_displayInfo_stateChanged(int arg1);
+
+    void on_chooseGenerator_clicked();
 
 private:
     Ui::AlmondClass ui;

@@ -547,7 +547,7 @@ struct Fixed32
 
     inline Fixed32(double x)
     {
-        int integerPart = ::floor(x);
+        int integerPart = int(::floor(x));
         double fractionalPart = x - integerPart;
         /*if (x < 0) {
             integerPart--;

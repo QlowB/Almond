@@ -54,13 +54,15 @@ private:
 
     MandelDevice(void);
 public:
+    MandelDevice(const MandelDevice&) = delete;
+    MandelDevice(MandelDevice&&) = default;
+    MandelDevice& operator=(const MandelDevice&) = delete;
+    MandelDevice& operator=(MandelDevice&&) = default;
 
     inline const std::string& getVendor(void) const { return vendor; }
     inline const std::string& getName(void) const { return name; }
 
     Generator* getGenerator(GeneratorType type) const;
-    //Generator* getGeneratorQuad(bool smooth = true) const;
-    //Generator* getGenerator128(bool smooth = true) const;
 };
 
 
@@ -82,8 +84,12 @@ private:
     std::unique_ptr<AdaptiveGenerator> createAdaptiveGenerator(void);
     std::vector<MandelDevice> createDevices(void);
 public:
+    MandelContext(const MandelContext&) = delete;
+    MandelContext(MandelContext&&) = default;
+    MandelContext& operator=(const MandelContext&) = delete;
+    MandelContext& operator=(MandelContext&&) = default;
 
-    Generator& getDefaultGenerator(bool smooth = true);
+    Generator& getDefaultGenerator(void);
     const std::vector<MandelDevice>& getDevices(void);
 
     Generator* getCpuGenerator(mnd::GeneratorType type);

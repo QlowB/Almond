@@ -173,6 +173,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="chooseGenerator">
+         <property name="text">
+          <string>Select Generators</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="exportVideo">
          <property name="text">
           <string>Export Video</string>

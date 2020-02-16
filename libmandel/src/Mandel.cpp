@@ -123,6 +123,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
     ag->addGenerator(Precision::DOUBLE_DOUBLE, *doubleDoubleGen);
     ag->addGenerator(Precision::QUAD_DOUBLE, *quadDoubleGen);
     ag->addGenerator(Precision::FLOAT256, *f256Gen);
+    ag->addGenerator(Precision::INF_PREC, *f256Gen);
 
     return ag;
 }
@@ -195,7 +196,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 }
 
 
-Generator& MandelContext::getDefaultGenerator(bool smooth)
+Generator& MandelContext::getDefaultGenerator(void)
 {
     return *adaptiveGenerator;
 }

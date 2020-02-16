@@ -135,6 +135,10 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
                 a = _mm256_add_pd(_mm256_sub_pd(aa, bb), xs);
                 b = _mm256_add_pd(abab, ys);
                 __m256i cmp = _mm256_castpd_si256(_mm256_cmp_pd(_mm256_add_pd(aa, bb), threshold, _CMP_LE_OQ));
+                /*if (info.smooth) {
+                    resultsa = _mm256_or_pd(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
+                    resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
+                }*/
                 adder = _mm256_and_pd(adder, _mm256_castsi256_pd(cmp));
                 counter = _mm256_add_pd(counter, adder);
                 if ((k & 0x7) == 0 && _mm256_testz_si256(cmp, cmp) != 0) {

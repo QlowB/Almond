@@ -36,6 +36,7 @@ SOURCES += \
         MandelWidget.cpp \
         VideoStream.cpp \
         benchmarkdialog.cpp \
+        choosegenerators.cpp \
         exportdialogs.cpp \
         gradientchoosedialog.cpp \
         main.cpp
@@ -51,12 +52,14 @@ HEADERS += \
         MandelWidget.h \
         VideoStream.h \
         benchmarkdialog.h \
+        choosegenerators.h \
         exportdialogs.h \
         gradientchoosedialog.h
 
 FORMS += \
         Almond.ui \
         benchmarks.ui \
+        choosegenerators.ui \
         exportimagedialog.ui \
         exportvideodialog.ui \
         gradientchooser.ui

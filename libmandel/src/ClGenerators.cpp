@@ -100,6 +100,7 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
     iterate.setArg(4, float(pixelScaleX));
     iterate.setArg(5, float(pixelScaleY));
     iterate.setArg(6, int(info.maxIter));
+    iterate.setArg(7, int(info.smooth ? 1 : 0));
 
     // TODO check for overflow
     if (false && device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() == 4) {
@@ -114,8 +115,6 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
 ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
     ClGenerator{ device }
 {
-    /*Platform p = getPlatform();
-    device = getDevice(p, 0, true);*/
     context = Context{ device };
     Program::Sources sources;
 
@@ -134,68 +133,36 @@ ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
 
 std::string ClGeneratorFloat::getKernelCode(bool smooth) const
 {
-    if (smooth) {
-        return 
-    //        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable"
-            "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max) {"
-            "   int index = get_global_id(0);\n"
-            "   int x = index % width;"
-            "   int y = index / width;"
-            "   float a = x * pixelScaleX + xl;"
-            "   float b = y * pixelScaleY + yt;"
-            "   float ca = a;"
-            "   float cb = b;"
-            ""
-            "   int n = 0;"
-            "   while (n < max - 1) {"
-            "       float aa = a * a;"
-            "       float bb = b * b;"
-            "       float ab = a * b;"
-            "       if (aa + bb > 16) break;"
-            "       a = aa - bb + ca;"
-            "       b = 2 * ab + cb;"
-            "       n++;"
-            "   }\n"
-                // N + 1 - log (log  |Z(N)|) / log 2
-            "   if (n >= max - 1)\n"
-            "       A[index] = max;\n"
-            "   else"
-            "       A[index] = ((float)n) + 1 - log(log(a * a + b * b) / 2) / log(2.0f);\n"
-//            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
-    //        "   A[get_global_id(0)] = 5;"
-            "}";
-    }
-    else {
-        return
-    //        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable"
-            "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max) {"
-            "   int index = get_global_id(0);\n"
-            "   int x = index % width;"
-            "   int y = index / width;"
-            "   float a = x * pixelScaleX + xl;"
-            "   float b = y * pixelScaleY + yt;"
-            "   float ca = a;"
-            "   float cb = b;"
-            ""
-            "   int n = 0;"
-            "   while (n < max - 1) {"
-            "       float aa = a * a;"
-            "       float bb = b * b;"
-            "       float ab = a * b;"
-            "       if (aa + bb > 16) break;"
-            "       a = aa - bb + ca;"
-            "       b = 2 * ab + cb;"
-            "       n++;"
-            "   }\n"
-                // N + 1 - log (log  |Z(N)|) / log 2
-            "   if (n >= max - 1)\n"
-            "       A[index] = max;\n"
-            "   else"
-            "       A[index] = ((float)n);\n"
-//            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
-    //        "   A[get_global_id(0)] = 5;"
-            "}";
-    }
+    return 
+//        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable"
+        "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth) {"
+        "   int index = get_global_id(0);\n"
+        "   int x = index % width;"
+        "   int y = index / width;"
+        "   float a = x * pixelScaleX + xl;"
+        "   float b = y * pixelScaleY + yt;"
+        "   float ca = a;"
+        "   float cb = b;"
+        ""
+        "   int n = 0;"
+        "   while (n < max - 1) {"
+        "       float aa = a * a;"
+        "       float bb = b * b;"
+        "       float ab = a * b;"
+        "       if (aa + bb > 16) break;"
+        "       a = aa - bb + ca;"
+        "       b = 2 * ab + cb;"
+        "       n++;"
+        "   }\n"
+        "   if (n >= max - 1)\n"
+        "       A[index] = max;\n"
+        "   else {"
+        "       if (smooth != 0)\n"
+        "           A[index] = ((float)n) + 1 - log(log(a * a + b * b) / 2) / log(2.0f);\n"
+        "       else\n"
+        "           A[index] = ((float)n);\n"
+        "   }"
+        "}";
 }
 
 
@@ -234,6 +201,7 @@ void ClGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
     iterate.setArg(4, double(pixelScaleX));
     iterate.setArg(5, double(pixelScaleY));
     iterate.setArg(6, int(info.maxIter));
+    iterate.setArg(7, int(info.smooth ? 1 : 0));
 
     cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
@@ -242,68 +210,37 @@ void ClGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorDouble::getKernelCode(bool smooth) const
 {
-    if (smooth) {
-        return
-            "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
-            "__kernel void iterate(__global float* A, const int width, double xl, double yt, double pixelScaleX, double pixelScaleY, int max) {\n"
-            "   int index = get_global_id(0);\n"
-            "   int x = index % width;"
-            "   int y = index / width;"
-            "   double a = x * pixelScaleX + xl;"
-            "   double b = y * pixelScaleY + yt;"
-            "   double ca = a;"
-            "   double cb = b;"
-            ""
-            "   int n = 0;"
-            "   while (n < max - 1) {"
-            "       double aa = a * a;"
-            "       double bb = b * b;"
-            "       double ab = a * b;"
-            "       if (aa + bb > 16) break;"
-            "       a = aa - bb + ca;"
-            "       b = 2 * ab + cb;"
-            "       n++;"
-            "   }\n"
-            // N + 1 - log (log  |Z(N)|) / log 2
-            "   if (n >= max - 1)\n"
-            "       A[index] = max;\n"
-            "   else"
-            "       A[index] = ((float)n) + 1 - log(log((float)(a * a + b * b)) / 2) / log(2.0f);\n"
-            //            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
-            //        "   A[get_global_id(0)] = 5;"
-            "}";
-    }
-    else {
-        return
-            "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
-            "__kernel void iterate(__global float* A, const int width, double xl, double yt, double pixelScaleX, double pixelScaleY, int max) {\n"
-            "   int index = get_global_id(0);\n"
-            "   int x = index % width;"
-            "   int y = index / width;"
-            "   double a = x * pixelScaleX + xl;"
-            "   double b = y * pixelScaleY + yt;"
-            "   double ca = a;"
-            "   double cb = b;"
-            ""
-            "   int n = 0;"
-            "   while (n < max - 1) {"
-            "       double aa = a * a;"
-            "       double bb = b * b;"
-            "       double ab = a * b;"
-            "       if (aa + bb > 16) break;"
-            "       a = aa - bb + ca;"
-            "       b = 2 * ab + cb;"
-            "       n++;"
-            "   }\n"
-            // N + 1 - log (log  |Z(N)|) / log 2
-            "   if (n >= max - 1)\n"
-            "       A[index] = max;\n"
-            "   else"
-            "       A[index] = ((float)n);\n"
-            //            "   A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);\n"
-            //        "   A[get_global_id(0)] = 5;"
-            "}";
-    }
+    return
+        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
+        "__kernel void iterate(__global float* A, const int width, double xl, double yt, double pixelScaleX, double pixelScaleY, int max, int smooth) {\n"
+        "   int index = get_global_id(0);\n"
+        "   int x = index % width;"
+        "   int y = index / width;"
+        "   double a = x * pixelScaleX + xl;"
+        "   double b = y * pixelScaleY + yt;"
+        "   double ca = a;"
+        "   double cb = b;"
+        ""
+        "   int n = 0;"
+        "   while (n < max - 1) {"
+        "       double aa = a * a;"
+        "       double bb = b * b;"
+        "       double ab = a * b;"
+        "       if (aa + bb > 16) break;"
+        "       a = aa - bb + ca;"
+        "       b = 2 * ab + cb;"
+        "       n++;"
+        "   }\n"
+        // N + 1 - log (log  |Z(N)|) / log 2
+        "   if (n >= max - 1)\n"
+        "       A[index] = max;\n"
+        "   else {"
+        "       if (smooth != 0)\n"
+        "           A[index] = ((float)n) + 1 - log(log((float)(a * a + b * b)) / 2) / log(2.0f);\n"
+        "       else\n"
+        "           A[index] = ((float)n);\n"
+        "   }"
+        "}";
 }
 
 

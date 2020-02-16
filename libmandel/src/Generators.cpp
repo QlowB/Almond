@@ -31,7 +31,7 @@ void AdaptiveGenerator::addGenerator(const mnd::Real& precision, mnd::Generator&
 }
 
 
-void AdaptiveGenerator::addGenerator(Precision p, Generator& generator)
+void AdaptiveGenerator::addGenerator(mnd::Precision p, Generator& generator)
 {
     generators.insert({ getPrecision(p), &generator });
 }
@@ -85,7 +85,7 @@ namespace mnd
             { Precision::DOUBLE_DOUBLE, Real("1.0e-29") },
             { Precision::QUAD_DOUBLE, Real("1.0e-56") },
             { Precision::FLOAT256, Real("1.0e-58") },
-            { Precision::INFINITE, Real(0.0) },
+            { Precision::INF_PREC, Real(0.0) },
         };
 
         return precs.at(p);

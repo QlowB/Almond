@@ -81,7 +81,7 @@ void CpuGenerator<T, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info,
             }
             if (info.smooth) {
                 if (k >= info.maxIter)
-                    data[i + j * info.bWidth] = info.maxIter;
+                    data[i + j * info.bWidth] = float(info.maxIter);
                 else
                     data[i + j * info.bWidth] = ((float) k) + 1 - ::logf(::logf(mnd::convert<float>(a * a + b * b)) / 2) / ::logf(2.0f);
             }

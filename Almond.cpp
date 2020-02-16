@@ -7,7 +7,7 @@
 
 #include <cmath>
 
-Almond::Almond(QWidget *parent) :
+Almond::Almond(QWidget* parent) :
     QMainWindow{ parent },
     mandelContext{ mnd::initializeContext() }
 {
@@ -25,10 +25,12 @@ void Almond::on_zoom_out_clicked()
     mw->zoom(2);
 }
 
+
 void Almond::on_zoom_in_clicked()
 {
     mw->zoom(0.5);
 }
+
 
 void Almond::on_maxIterations_editingFinished()
 {
@@ -37,6 +39,7 @@ void Almond::on_maxIterations_editingFinished()
     mw->setMaxIterations(maxIter);
 }
 
+
 void Almond::on_chooseGradient_clicked()
 {
     auto response = gcd.exec();
@@ -44,6 +47,7 @@ void Almond::on_chooseGradient_clicked()
     if (gradient)
         mw->setGradient(std::move(*gradient));
 }
+
 
 void Almond::on_exportVideo_clicked()
 {
@@ -73,10 +77,12 @@ void Almond::on_exportVideo_clicked()
     }
 }
 
+
 void Almond::on_smooth_stateChanged(int checked)
 {
     this->mw->setSmoothColoring(checked != Qt::Unchecked);
 }
+
 
 void Almond::on_runBenchmark_clicked()
 {
@@ -84,6 +90,7 @@ void Almond::on_runBenchmark_clicked()
         benchmarkDialog = std::make_unique<BenchmarkDialog>(mandelContext, this);
     benchmarkDialog->exec();
 }
+
 
 void Almond::on_exportImage_clicked()
 {
@@ -97,23 +104,33 @@ void Almond::on_exportImage_clicked()
         mi.bWidth = dialog.getWidth();
         mi.bHeight = dialog.getHeight();
         mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        mnd::Generator& g = mandelContext.getDefaultGenerator(this->mw->getSmoothColoring());
+        mnd::Generator& g = mandelContext.getDefaultGenerator();
         auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
         g.generate(mi, fmap.pixels.get());
         auto bitmap = fmap.map<RGBColor>([&mi, this] (float i) {
             return i >= mi.maxIter ? RGBColor{ 0,0,0 } : mw->getGradient().get(i);
         });
-        QImage img((unsigned char*) bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
+        QImage img(reinterpret_cast<unsigned char*>(bitmap.pixels.get()), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
         img.save(dialog.getPath());
     }
 }
+
 
 void Almond::on_resetZoom_clicked()
 {
     mw->setViewport(mnd::MandelViewport::standardView());
 }
 
+
 void Almond::on_displayInfo_stateChanged(int checked)
 {
     this->mw->setDisplayInfo(checked != Qt::Unchecked);
+}
+
+
+void Almond::on_chooseGenerator_clicked()
+{
+    if (!generatorsDialog)
+        generatorsDialog = std::make_unique<ChooseGenerators>(this);
+    generatorsDialog->exec();
 }

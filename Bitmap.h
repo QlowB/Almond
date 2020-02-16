@@ -35,7 +35,7 @@ public:
     template<typename T>
     Bitmap<T> map(std::function<T(Pixel)> f) const {
         Bitmap<T> b{ width, height };
-        for (::size_t i = 0; i < width * height; i++) {
+        for (long i = 0; i < width * height; i++) {
             b.pixels[i] = f(pixels[i]);
         }
         return b;

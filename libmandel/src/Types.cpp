@@ -19,6 +19,7 @@ namespace mnd
 #endif // WITH_BOOST
 
 
+/*
     template<>
     constexpr Real precision<float>(void)
     {
@@ -57,5 +58,6 @@ namespace mnd
         return Real("1.0e-60");
     }
 #endif // WITH_BOOST
+*/
 }
 

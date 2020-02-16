@@ -14,52 +14,40 @@ using mnd::CpuGenerator;
 
 namespace mnd
 {
-    template class CpuGenerator<float, mnd::NONE, false, false>;
-    template class CpuGenerator<float, mnd::NONE, false, true>;
-    template class CpuGenerator<float, mnd::NONE, true, false>;
-    template class CpuGenerator<float, mnd::NONE, true, true>;
+    template class CpuGenerator<float, mnd::NONE, false>;
+    template class CpuGenerator<float, mnd::NONE, true>;
 
-    template class CpuGenerator<double, mnd::NONE, false, false>;
-    template class CpuGenerator<double, mnd::NONE, false, true>;
-    template class CpuGenerator<double, mnd::NONE, true, false>;
-    template class CpuGenerator<double, mnd::NONE, true, true>;
+    template class CpuGenerator<double, mnd::NONE, false>;
+    template class CpuGenerator<double, mnd::NONE, true>;
 
     
-    //template class CpuGenerator<Fixed128, mnd::NONE, false, false>;
+    //template class CpuGenerator<Fixed128, mnd::NONE, false>;
     //template class CpuGenerator<Fixed128, mnd::NONE, false, true>;
-    //template class CpuGenerator<Fixed128, mnd::NONE, true, false>;
+    //template class CpuGenerator<Fixed128, mnd::NONE, true>;
     //template class CpuGenerator<Fixed128, mnd::NONE, true, true>;
     
 
 #ifdef WITH_BOOST
 #include <boost/multiprecision/cpp_bin_float.hpp>
-    template class CpuGenerator<mnd::Float128, mnd::NONE, false, false>;
-    template class CpuGenerator<mnd::Float128, mnd::NONE, false, true>;
-    template class CpuGenerator<mnd::Float128, mnd::NONE, true, false>;
-    template class CpuGenerator<mnd::Float128, mnd::NONE, true, true>;
+    template class CpuGenerator<mnd::Float128, mnd::NONE, false>;
+    template class CpuGenerator<mnd::Float128, mnd::NONE, true>;
 
-    template class CpuGenerator<mnd::Float256, mnd::NONE, false, false>;
-    template class CpuGenerator<mnd::Float256, mnd::NONE, false, true>;
-    template class CpuGenerator<mnd::Float256, mnd::NONE, true, false>;
-    template class CpuGenerator<mnd::Float256, mnd::NONE, true, true>;
+    template class CpuGenerator<mnd::Float256, mnd::NONE, false>;
+    template class CpuGenerator<mnd::Float256, mnd::NONE, true>;
 #endif
 
 #ifdef WITH_QD
-    template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, false, false>;
-    template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, false, true>;
-    template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, true, false>;
-    template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, true, true>;
+    template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, false>;
+    template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, true>;
 
-    template class CpuGenerator<mnd::QuadDouble, mnd::NONE, false, false>;
-    template class CpuGenerator<mnd::QuadDouble, mnd::NONE, false, true>;
-    template class CpuGenerator<mnd::QuadDouble, mnd::NONE, true, false>;
-    template class CpuGenerator<mnd::QuadDouble, mnd::NONE, true, true>;
+    template class CpuGenerator<mnd::QuadDouble, mnd::NONE, false>;
+    template class CpuGenerator<mnd::QuadDouble, mnd::NONE, true>;
 #endif
 }
 
 
-template<typename T, bool parallel, bool smooth>
-void CpuGenerator<T, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
+template<typename T, bool parallel>
+void CpuGenerator<T, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
     const MandelViewport& view = info.view;
 
@@ -91,7 +79,7 @@ void CpuGenerator<T, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInf
                     break;
                 }
             }
-            if constexpr (smooth) {
+            if (info.smooth) {
                 if (k >= info.maxIter)
                     data[i + j * info.bWidth] = info.maxIter;
                 else
@@ -105,8 +93,8 @@ void CpuGenerator<T, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInf
 
 /*
 #if defined(WITH_BOOST) || 1
-template<bool parallel, bool smooth>
-void CpuGenerator<Fixed128, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
+template<bool parallel>
+void CpuGenerator<Fixed128, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
     using T = Fixed128;
     const MandelViewport& view = info.view;
@@ -158,8 +146,8 @@ void CpuGenerator<Fixed128, mnd::NONE, parallel, smooth>::generate(const mnd::Ma
 */
 
 #ifdef WITH_MPFR
-template<unsigned int bits, bool parallel, bool smooth>
-void CpuGenerator<mnd::MpfrFloat<bits>, mnd::NONE, parallel, smooth>::generate(const mnd::MandelInfo& info, float* data)
+template<unsigned int bits, bool parallel>
+void CpuGenerator<mnd::MpfrFloat<bits>, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
     const MandelViewport& view = info.view;
     using T = mnd::MpfrFloat<bits>;
@@ -187,7 +175,7 @@ void CpuGenerator<mnd::MpfrFloat<bits>, mnd::NONE, parallel, smooth>::generate(c
                     break;
                 }
             }
-            if constexpr (smooth) {
+            if (info.smooth) {
                 if (k >= info.maxIter)
                     data[i + j * info.bWidth] = info.maxIter;
                 else

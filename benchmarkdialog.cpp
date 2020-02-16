@@ -9,44 +9,44 @@ mnd::MandelViewport Benchmarker::benchViewport(void)
 }
 
 const std::vector<mnd::MandelInfo> Benchmarker::benches {
-    mnd::MandelInfo{ benchViewport(), 50, 50, 250 },
-    mnd::MandelInfo{ benchViewport(), 50, 50, 500 },
-    mnd::MandelInfo{ benchViewport(), 50, 100, 500 },
-    mnd::MandelInfo{ benchViewport(), 100, 100, 500 },
-    mnd::MandelInfo{ benchViewport(), 100, 100, 1000 },
-    mnd::MandelInfo{ benchViewport(), 100, 200, 1000 },
-    mnd::MandelInfo{ benchViewport(), 200, 200, 1000 },
-    mnd::MandelInfo{ benchViewport(), 200, 200, 2000 },
-    mnd::MandelInfo{ benchViewport(), 200, 400, 2000 },
-    mnd::MandelInfo{ benchViewport(), 400, 400, 2000 },
-    mnd::MandelInfo{ benchViewport(), 400, 400, 4000 },
-    mnd::MandelInfo{ benchViewport(), 400, 800, 4000 },
-    mnd::MandelInfo{ benchViewport(), 800, 800, 4000 },
-    mnd::MandelInfo{ benchViewport(), 800, 800, 8000 },
-    mnd::MandelInfo{ benchViewport(), 800, 800, 16000 },
-    mnd::MandelInfo{ benchViewport(), 800, 1600, 16000 },
-    mnd::MandelInfo{ benchViewport(), 1600, 1600, 16000 },
-    mnd::MandelInfo{ benchViewport(), 1600, 1600, 32000 },
-    mnd::MandelInfo{ benchViewport(), 1600, 1600, 64000 },
-    mnd::MandelInfo{ benchViewport(), 1600, 3200, 64000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 64000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 128000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 256000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 512000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 1024000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 2048000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 6400, 2048000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 2048000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 4096000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 8192000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 16384000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 32768000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 65536000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 131072000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 262144000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 524288000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 1048576000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 2097152000 },
+    mnd::MandelInfo{ benchViewport(), 50, 50, 250, false },
+    mnd::MandelInfo{ benchViewport(), 50, 50, 500, false },
+    mnd::MandelInfo{ benchViewport(), 50, 100, 500, false },
+    mnd::MandelInfo{ benchViewport(), 100, 100, 500, false },
+    mnd::MandelInfo{ benchViewport(), 100, 100, 1000, false },
+    mnd::MandelInfo{ benchViewport(), 100, 200, 1000, false },
+    mnd::MandelInfo{ benchViewport(), 200, 200, 1000, false },
+    mnd::MandelInfo{ benchViewport(), 200, 200, 2000, false },
+    mnd::MandelInfo{ benchViewport(), 200, 400, 2000, false },
+    mnd::MandelInfo{ benchViewport(), 400, 400, 2000, false },
+    mnd::MandelInfo{ benchViewport(), 400, 400, 4000, false },
+    mnd::MandelInfo{ benchViewport(), 400, 800, 4000, false },
+    mnd::MandelInfo{ benchViewport(), 800, 800, 4000, false },
+    mnd::MandelInfo{ benchViewport(), 800, 800, 8000, false },
+    mnd::MandelInfo{ benchViewport(), 800, 800, 16000, false },
+    mnd::MandelInfo{ benchViewport(), 800, 1600, 16000, false },
+    mnd::MandelInfo{ benchViewport(), 1600, 1600, 16000, false },
+    mnd::MandelInfo{ benchViewport(), 1600, 1600, 32000, false },
+    mnd::MandelInfo{ benchViewport(), 1600, 1600, 64000, false },
+    mnd::MandelInfo{ benchViewport(), 1600, 3200, 64000, false },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 64000, false },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 128000, false },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 256000, false },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 512000, false },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 1024000, false },
+    mnd::MandelInfo{ benchViewport(), 3200, 3200, 2048000, false },
+    mnd::MandelInfo{ benchViewport(), 3200, 6400, 2048000, false },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 2048000, false },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 4096000, false },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 8192000, false },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 16384000, false },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 32768000, false },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 65536000, false },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 131072000, false },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 262144000, false },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 524288000, false },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 1048576000, false },
+    mnd::MandelInfo{ benchViewport(), 6400, 6400, 2097152000, false },
 };
 
 
@@ -102,6 +102,7 @@ double Benchmarker::benchmarkResult(mnd::Generator& mg) const
 
 void Benchmarker::start(void)
 {
+    /*
     mnd::Generator& cpuf = mndContext.getCpuGeneratorFloat();
     mnd::Generator& cpud = mndContext.getCpuGeneratorDouble();
     mnd::Generator* cpudd = mndContext.getCpuGeneratorDD();
@@ -190,6 +191,7 @@ void Benchmarker::start(void)
         }
     }
     emit update(br);
+    */
     emit finished();
 }
 
@@ -200,7 +202,7 @@ BenchmarkDialog::BenchmarkDialog(mnd::MandelContext& mndContext, QWidget *parent
     benchmarker{ mndContext }
 {
     ui.setupUi(this);
-    printf("bench!\n"); fflush(stdout);
+    //printf("bench!\n"); fflush(stdout);
 
     auto& devices = mndContext.getDevices();
     size_t nDevices = devices.size() + 1;

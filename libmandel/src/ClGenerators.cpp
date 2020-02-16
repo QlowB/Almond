@@ -111,7 +111,7 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
 }
 
 
-ClGeneratorFloat::ClGeneratorFloat(cl::Device device, bool smooth) :
+ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
     ClGenerator{ device }
 {
     /*Platform p = getPlatform();
@@ -119,7 +119,7 @@ ClGeneratorFloat::ClGeneratorFloat(cl::Device device, bool smooth) :
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode = this->getKernelCode(smooth);
+    std::string kcode = this->getKernelCode(false);
 
     sources.push_back({ kcode.c_str(), kcode.length() });
 
@@ -199,13 +199,13 @@ std::string ClGeneratorFloat::getKernelCode(bool smooth) const
 }
 
 
-ClGeneratorDouble::ClGeneratorDouble(cl::Device device, bool smooth) :
+ClGeneratorDouble::ClGeneratorDouble(cl::Device device) :
     ClGenerator{ device }
 {
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode = this->getKernelCode(smooth);
+    std::string kcode = this->getKernelCode(false);
 
     sources.push_back({ kcode.c_str(), kcode.length() });
 
@@ -307,9 +307,8 @@ std::string ClGeneratorDouble::getKernelCode(bool smooth) const
 }
 
 
-ClGeneratorDoubleDouble::ClGeneratorDoubleDouble(cl::Device device, bool smooth) :
-    ClGenerator{ device },
-    smooth{ smooth }
+ClGeneratorDoubleDouble::ClGeneratorDoubleDouble(cl::Device device) :
+    ClGenerator{ device }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -351,7 +350,7 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
     iterate.setArg(8, psy.x[0]);
     iterate.setArg(9, psy.x[1]);
     iterate.setArg(10, int(info.maxIter));
-    iterate.setArg(11, int(smooth ? 1 : 0));
+    iterate.setArg(11, int(info.smooth ? 1 : 0));
 
     cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
@@ -364,13 +363,13 @@ std::string ClGeneratorDoubleDouble::getKernelCode(bool smooth) const
 }
 
 
-ClGenerator128::ClGenerator128(cl::Device device, bool smooth) :
+ClGenerator128::ClGenerator128(cl::Device device) :
     ClGenerator{ device }
 {
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode = this->getKernelCode(smooth);
+    std::string kcode = this->getKernelCode(false);
 
     sources.push_back({ kcode.c_str(), kcode.length() });
 

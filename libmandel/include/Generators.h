@@ -57,6 +57,9 @@ public:
 
     void addGenerator(const Real& precision, Generator& generator);
     void addGenerator(Precision p, Generator& generator);
+    
+    const std::map<Real, Generator*, std::greater<Real>>& getGenerators(void) const { return generators; }
+    inline void clear(void) { generators.clear(); }
 
     virtual void generate(const MandelInfo& info, float* data);
 };

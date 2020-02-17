@@ -89,7 +89,7 @@ public:
     MandelContext& operator=(const MandelContext&) = delete;
     MandelContext& operator=(MandelContext&&) = default;
 
-    Generator& getDefaultGenerator(void);
+    AdaptiveGenerator& getDefaultGenerator(void);
     const std::vector<MandelDevice>& getDevices(void);
 
     Generator* getCpuGenerator(mnd::GeneratorType type);

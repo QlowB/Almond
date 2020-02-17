@@ -569,9 +569,10 @@ void MandelView::cellReady(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>
 }
 
 
-MandelWidget::MandelWidget(mnd::MandelContext& ctxt, QWidget* parent) :
+MandelWidget::MandelWidget(mnd::MandelContext& ctxt, mnd::Generator* generator, QWidget* parent) :
     QOpenGLWidget{ parent },
     mndContext{ ctxt },
+    generator{ generator },
     gradient{ Gradient::defaultGradient() }
 {
     this->setContentsMargins(0, 0, 0, 0);
@@ -637,6 +638,16 @@ void MandelWidget::setMaxIterations(int maxIter)
 }
 
 
+void MandelWidget::setGenerator(mnd::Generator* generator)
+{
+    if (this->generator != generator) {
+        this->generator = generator;
+        if (mandelView)
+            mandelView->setGenerator(generator);
+    }
+}
+
+
 void MandelWidget::initializeGL(void)
 {
     this->context()->functions()->glClearColor(0, 0, 0, 0);
@@ -657,7 +668,7 @@ void MandelWidget::initializeGL(void)
 void MandelWidget::paintGL(void)
 {
     if (mandelView == nullptr) {
-        mandelView = std::make_unique<MandelView>(&mndContext.getDefaultGenerator(), *this, maxIterations);
+        mandelView = std::make_unique<MandelView>(generator, *this, maxIterations);
         QObject::connect(mandelView.get(), &MandelView::redrawRequested, this, static_cast<void(QOpenGLWidget::*)(void)>(&QOpenGLWidget::update));
     }
 

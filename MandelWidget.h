@@ -277,6 +277,7 @@ class MandelWidget : public QOpenGLWidget
     Q_OBJECT
 private:
     mnd::MandelContext& mndContext;
+    mnd::Generator* generator;
 
     bool smoothColoring = true;
 
@@ -299,7 +300,7 @@ private:
 
     std::unique_ptr<MandelView> mandelView;
 public:
-    MandelWidget(mnd::MandelContext& ctxt, QWidget* parent = nullptr);
+    MandelWidget(mnd::MandelContext& ctxt, mnd::Generator* generator, QWidget* parent = nullptr);
     ~MandelWidget(void) override;
 
     inline const Gradient& getGradient(void) const { return gradient; }
@@ -313,6 +314,9 @@ public:
 
     inline int getMaxIterations(void) const { return maxIterations; }
     void setMaxIterations(int maxIter);
+
+    inline mnd::Generator* getGenerator(void) const { return generator; }
+    void setGenerator(mnd::Generator* generator);
 
     void initializeGL(void) override;
     void paintGL() override;

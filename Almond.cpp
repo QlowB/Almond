@@ -12,11 +12,17 @@ Almond::Almond(QWidget* parent) :
     mandelContext{ mnd::initializeContext() }
 {
     ui.setupUi(this);
-    mw = std::make_unique<MandelWidget>(mandelContext, ui.centralWidget);
+    currentGenerator = &mandelContext.getDefaultGenerator();
+    mw = std::make_unique<MandelWidget>(mandelContext, currentGenerator, ui.centralWidget);
     ui.mainContainer->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
     //ui.verticalLayout_left->addWidget(new MyGLWidget(ui.centralWidget));
     //mw->show();
+}
+
+
+Almond::~Almond(void)
+{
 }
 
 
@@ -131,6 +137,15 @@ void Almond::on_displayInfo_stateChanged(int checked)
 void Almond::on_chooseGenerator_clicked()
 {
     if (!generatorsDialog)
-        generatorsDialog = std::make_unique<ChooseGenerators>(this);
+        generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, this);
     generatorsDialog->exec();
+
+    if (generatorsDialog->getChosenGenerator()) {
+        this->currentGenerator = generatorsDialog->getChosenGenerator();
+    }
+    else {
+        this->currentGenerator = &mandelContext.getDefaultGenerator();
+    }
+    this->mw->setGenerator(currentGenerator);
+    printf("dialog executed\n"); fflush(stdout);
 }

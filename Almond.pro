@@ -133,7 +133,7 @@ INCLUDEPATH += $$PWD/libmandel/include
 DEPENDPATH += $$PWD/libmandel/include
 
 win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/mandel.lib  $$PWD/libmandel/qd.lib
-else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/qd.lib
+else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/libqd.a
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/' -lopencl

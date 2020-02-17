@@ -17,7 +17,11 @@ using mnd::CpuInfo;
 
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
-CpuInfo::CpuInfo(void)
+CpuInfo::CpuInfo(void) :
+    sse2{ false },
+    avx{ false },
+    avx512{ false },
+    neon{ false }
 {
 
 
@@ -46,7 +50,7 @@ CpuInfo::CpuInfo(void)
     nExtData = dat[0];
 #endif
 
-    for (int i = 0; i <= nData; i++) {
+    for (unsigned int i = 0; i <= nData; i++) {
 #ifdef __GNUC__
         __get_cpuid(i, &dat[0], &dat[1], &dat[2], &dat[3]);
 #else
@@ -55,7 +59,7 @@ CpuInfo::CpuInfo(void)
         cpuData.push_back(dat);
     }
 
-    for (int i = 0x80000000; i <= nExtData; i++) {
+    for (unsigned int i = 0x80000000; i <= nExtData; i++) {
 #ifdef __GNUC__
         __get_cpuid(i, &dat[0], &dat[1], &dat[2], &dat[3]);
 #else
@@ -107,7 +111,11 @@ CpuInfo::CpuInfo(void)
 
 #elif defined(__arm__) || defined(__aarch64__)
 
-CpuInfo::CpuInfo(void)
+CpuInfo::CpuInfo(void) :
+    sse2{ false },
+    avx{ false },
+    avx512{ false },
+    neon{ false }
 {
 #if defined(__aarch64__)
     arch = Arch::ARM64;

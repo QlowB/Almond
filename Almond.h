@@ -20,9 +20,11 @@ private:
     std::unique_ptr<MandelWidget> mw;
     std::unique_ptr<BenchmarkDialog> benchmarkDialog;
     std::unique_ptr<ChooseGenerators> generatorsDialog;
+    mnd::Generator* currentGenerator;
     GradientChooseDialog gcd;
 public:
     Almond(QWidget *parent = Q_NULLPTR);
+    ~Almond(void);
 
 private slots:
     void on_zoom_out_clicked();

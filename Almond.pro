@@ -81,12 +81,13 @@ else:unix:QMAKE_LFLAGS+= -fopenmp -flto
 LIBS += -fopenmp
 unix:LIBS += -lm -latomic -lquadmath
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
 else:unix: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
 
-win32:INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
-win32:DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
+win32:FFMPEGPATH = $$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/
+win32:INCLUDEPATH += $$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/include
+win32:DEPENDPATH += $$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/include
 
 win32:INCLUDEPATH += ../libs/boost_1_72_0
 DEFINES += WITH_BOOST=1
@@ -95,32 +96,33 @@ DEFINES += WITH_BOOST=1
 #else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
 #else:unix: LIBS += -lOpenCL
 
+
 win32:INCLUDEPATH += $$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/include'
 win32:DEPENDPATH += $$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/include'
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavformat
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavformat
-else:unix: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavformat
+win32:CONFIG(release, debug|release): LIBS += -L$FFMPEGPATH -lavformat
+else:win32:CONFIG(debug, debug|release): LIBS += -L$FFMPEGPATH -lavformat
+else:unix: LIBS += -L$FFMPEGPATH -lavformat
 
 #INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 #DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavdevice
+unix|win32: LIBS += -L$FFMPEGPATH -lavdevice
 
 #INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 #DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavfilter
+unix|win32: LIBS += -L$FFMPEGPATH -lavfilter
 
 #INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 #DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavutil
+unix|win32: LIBS += -L$FFMPEGPATH -lavutil
 
 #INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 #DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-unix|win32: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lswscale
+unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 
 #INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 #DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
@@ -136,14 +138,14 @@ win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/mandel.lib  $$PWD/libmandel/
 else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/qd.lib
 
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/' -lopencl
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/' -lopencl
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/' -lopencl
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/' -lopencl
 else:unix: LIBS += -lOpenCL
 
 win32:INCLUDEPATH += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/include'
 win32:DEPENDPATH += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/include'
 
-win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/libopencl.a'
-else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/libopencl.a'
-else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/opencl.lib'
-else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86/opencl.lib'
+win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/libopencl.a'
+else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/libopencl.a'
+else:win32:!win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/opencl.lib'
+else:win32:!win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/opencl.lib'

@@ -196,7 +196,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 }
 
 
-Generator& MandelContext::getDefaultGenerator(void)
+AdaptiveGenerator& MandelContext::getDefaultGenerator(void)
 {
     return *adaptiveGenerator;
 }

@@ -35,13 +35,13 @@ public:
     inline const std::string& getBrand(void) const { return brand; };
 
 
-#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
+//#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
     inline bool hasSse2(void) const { return sse2; };
     inline bool hasAvx(void) const { return avx; };
     inline bool hasAvx512(void) const { return avx512; };
-#elif defined(__arm__) || defined(__aarch64__)
+//#elif defined(__arm__) || defined(__aarch64__)
     inline bool hasNeon(void) const { return neon; };
-#endif
+//#endif
 };
 
 #endif // MANDEL_HARDWARE_H

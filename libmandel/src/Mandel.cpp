@@ -38,7 +38,8 @@ MandelContext::MandelContext(void)
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
     if (cpuInfo.hasAvx()) {
-        auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX, true>>();
+        //auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX, true>>();
+        auto fl = std::make_unique<CpuGenerator<Fixed512, mnd::NONE, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_AVX, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_AVX512, std::move(db) });

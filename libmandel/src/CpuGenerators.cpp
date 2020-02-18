@@ -34,6 +34,9 @@ namespace mnd
 
     template class CpuGenerator<mnd::Float256, mnd::NONE, false>;
     template class CpuGenerator<mnd::Float256, mnd::NONE, true>;
+
+    template class CpuGenerator<Fixed512, mnd::NONE, false>;
+    template class CpuGenerator<Fixed512, mnd::NONE, true>;
 #endif
 
 #ifdef WITH_QD

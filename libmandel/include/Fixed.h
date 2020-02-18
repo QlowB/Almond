@@ -7,6 +7,75 @@
 #include <array>
 #include <vector>
 
+#include <boost/multiprecision/cpp_int.hpp>
+#include <boost/multiprecision/cpp_bin_float.hpp>
+
+
+struct Fixed512
+{
+    using Once = boost::multiprecision::int512_t;
+    using Twice = boost::multiprecision::int1024_t;
+
+    Once body;
+
+    inline explicit Fixed512(const Once& body) :
+        body{ body }
+    {}
+
+    using Float256 = boost::multiprecision::number<
+        boost::multiprecision::backends::cpp_bin_float<
+            240, boost::multiprecision::backends::digit_base_2, void, boost::int16_t, -16382, 16383>,
+            boost::multiprecision::et_off>;
+
+    inline Fixed512(const Float256& val)
+    {
+        body = Once{ val * boost::multiprecision::pow(Float256{2}, 512 - 32) };
+    }
+
+    inline Fixed512(double val)
+    {
+        body = Once{ boost::multiprecision::pow(Float256{2}, 512 - 32) * val };
+    }
+
+    inline operator Float256(void) const {
+        return boost::multiprecision::pow(Float256{ 0.5 }, 512 - 32) * Float256{ body };
+    }
+
+    inline Fixed512& operator += (const Fixed512& other) {
+        body += other.body;
+        return *this;
+    }
+
+    inline Fixed512 operator + (const Fixed512& other) const {
+        return Fixed512{ body + other.body };
+    }
+
+    inline Fixed512& operator -= (const Fixed512& other) {
+        body -= other.body;
+        return *this;
+    }
+
+    inline Fixed512 operator - (const Fixed512& other) const {
+        return Fixed512{ body - other.body };
+    }
+
+    inline Fixed512 operator * (const Fixed512& other) const {
+        auto prod = Twice{ this->body } * other.body;
+        return Fixed512{ Once{ prod >> (512 - 64) } };
+    }
+
+    inline Fixed512& operator *= (const Fixed512& other) {
+        auto prod = Twice{ this->body } * other.body;
+        body = Once{ prod >> (512 - 64) };
+        return *this;
+    }
+
+    inline bool operator > (const Fixed512& other) {
+        return this->body > other.body;
+    }
+};
+
+
 struct Fixed128
 {
     uint64_t upper;

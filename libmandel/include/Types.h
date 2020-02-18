@@ -110,7 +110,7 @@ namespace mnd
         return float(x.x[0] + x.x[1]);
     }
 
-        template<>
+    template<>
     inline QuadDouble convert<QuadDouble, Real>(const Real& x)
     {
         std::string s = x.str();
@@ -120,7 +120,13 @@ namespace mnd
     template<>
     inline float convert<float, QuadDouble>(const QuadDouble& x)
     {
-        return float(x.x[0] + x.x[1]);
+        return float(x.x[0] + x.x[1] + x.x[2] + x.x[3]);
+    }
+
+    template<>
+    inline float convert<float, Fixed512>(const Fixed512& x)
+    {
+        return float(Real(x));
     }
 #endif
 

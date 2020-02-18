@@ -20,6 +20,12 @@ ExportImageDialog::ExportImageDialog(QWidget* parent) :
 }
 
 
+void ExportImageDialog::setMaxIterations(int mi)
+{
+    eid.maxIterations->setText(QString::number(mi));
+}
+
+
 int ExportImageDialog::getMaxIterations(void) const
 {
     return std::stoi(eid.maxIterations->text().toStdString());

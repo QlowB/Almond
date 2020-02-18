@@ -29,12 +29,12 @@ struct Fixed512
 
     inline Fixed512(const Float256& val)
     {
-        body = Once{ val * boost::multiprecision::pow(Float256{2}, 512 - 32) };
+        body = Once{ val * boost::multiprecision::pow(Float256{ 2 }, 512 - 32) };
     }
 
     inline Fixed512(double val)
     {
-        body = Once{ boost::multiprecision::pow(Float256{2}, 512 - 32) * val };
+        body = Once{ boost::multiprecision::pow(Float256{ 2 }, 512 - 32) * val };
     }
 
     inline operator Float256(void) const {
@@ -61,7 +61,7 @@ struct Fixed512
 
     inline Fixed512 operator * (const Fixed512& other) const {
         auto prod = Twice{ this->body } * other.body;
-        return Fixed512{ Once{ prod >> (512 - 64) } };
+        return Fixed512{ Once{ prod >> (512 - 32) } };
     }
 
     inline Fixed512& operator *= (const Fixed512& other) {

@@ -18,6 +18,7 @@ private:
 public:
     ExportImageDialog(QWidget* parent);
 
+    void setMaxIterations(int mi);
     int getMaxIterations(void) const;
     int getWidth(void) const;
     int getHeight(void) const;

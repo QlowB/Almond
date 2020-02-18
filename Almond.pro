@@ -35,7 +35,6 @@ SOURCES += \
         MandelVideoGenerator.cpp \
         MandelWidget.cpp \
         VideoStream.cpp \
-        benchmarkdialog.cpp \
         choosegenerators.cpp \
         exportdialogs.cpp \
         gradientchoosedialog.cpp \
@@ -51,14 +50,12 @@ HEADERS += \
         MandelVideoGenerator.h \
         MandelWidget.h \
         VideoStream.h \
-        benchmarkdialog.h \
         choosegenerators.h \
         exportdialogs.h \
         gradientchoosedialog.h
 
 FORMS += \
         Almond.ui \
-        benchmarks.ui \
         choosegenerators.ui \
         exportimagedialog.ui \
         exportvideodialog.ui \
@@ -131,8 +128,8 @@ RESOURCES += Almond.qrc
 
 unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel -lqd
 
-INCLUDEPATH += $$PWD/libmandel/include
-DEPENDPATH += $$PWD/libmandel/include
+INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include
+DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include
 
 win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/mandel.lib  $$PWD/libmandel/qd.lib
 else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/libqd.a

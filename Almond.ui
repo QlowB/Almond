@@ -166,13 +166,6 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="runBenchmark">
-         <property name="text">
-          <string>Run Benchmark</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QPushButton" name="chooseGenerator">
          <property name="text">
           <string>Select Generators</string>

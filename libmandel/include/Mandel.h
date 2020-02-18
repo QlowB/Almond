@@ -36,9 +36,11 @@ enum class mnd::GeneratorType
     DOUBLE_AVX512,
     DOUBLE_NEON,
     DOUBLE_DOUBLE,
+    DOUBLE_DOUBLE_AVX,
     QUAD_DOUBLE,
     FLOAT128,
-    FLOAT256
+    FLOAT256,
+    FIXED512
 };
 
 
@@ -63,6 +65,8 @@ public:
     inline const std::string& getName(void) const { return name; }
 
     Generator* getGenerator(GeneratorType type) const;
+
+    std::vector<GeneratorType> getSupportedTypes(void) const;
 };
 
 
@@ -93,6 +97,7 @@ public:
     const std::vector<MandelDevice>& getDevices(void);
 
     Generator* getCpuGenerator(mnd::GeneratorType type);
+    std::vector<GeneratorType> getSupportedTypes(void) const;
 
     const CpuInfo& getCpuInfo(void) const { return cpuInfo; }
 };

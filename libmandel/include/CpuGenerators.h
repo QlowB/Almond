@@ -10,6 +10,7 @@ namespace mnd
         NONE,
         X86_SSE2,
         X86_AVX,
+        X86_AVX_FMA,
         ARM_NEON,
     };
 
@@ -93,6 +94,13 @@ public:
     virtual void generate(const MandelInfo& info, float* data);
 };
 #endif
+
+template<bool parallel>
+class mnd::CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel> : public Generator
+{
+public:
+    virtual void generate(const MandelInfo& info, float* data);
+};
 
 template<bool parallel>
 class mnd::CpuGenerator<Fixed128, mnd::NONE, parallel> : public Generator

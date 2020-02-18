@@ -60,7 +60,7 @@ void CpuGenerator<T, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info,
     T hpp = mnd::convert<T>(view.height / info.bHeight);
 
     if constexpr (parallel)
-        omp_set_num_threads(2 * omp_get_num_procs());
+        omp_set_num_threads(omp_get_num_procs());
 #pragma omp parallel for if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
         T y = viewy + T(double(j)) * hpp;
@@ -78,7 +78,7 @@ void CpuGenerator<T, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info,
                 T ab = a * b;
                 a = aa - bb + x;
                 b = ab + ab + y;
-                if (aa + bb > T(16)) {
+                if (aa + bb > T(16.0)) {
                     break;
                 }
             }

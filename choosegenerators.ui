@@ -6,12 +6,12 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>647</width>
-    <height>377</height>
+    <width>976</width>
+    <height>493</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Select Generators</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -19,7 +19,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -27,17 +27,32 @@
         </attribute>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
          <item>
-          <widget class="QTableWidget" name="tableWidget_2">
+          <widget class="QTableWidget" name="generatorTable">
            <property name="editTriggers">
             <set>QAbstractItemView::NoEditTriggers</set>
            </property>
-           <property name="columnCount">
-            <number>1</number>
+           <property name="alternatingRowColors">
+            <bool>true</bool>
            </property>
+           <attribute name="horizontalHeaderDefaultSectionSize">
+            <number>200</number>
+           </attribute>
+           <attribute name="horizontalHeaderMinimumSectionSize">
+            <number>100</number>
+           </attribute>
            <attribute name="verticalHeaderVisible">
             <bool>false</bool>
            </attribute>
-           <column/>
+           <column>
+            <property name="text">
+             <string>Generator Type</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Performance</string>
+            </property>
+           </column>
           </widget>
          </item>
          <item>
@@ -58,7 +73,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Measure the preformance of Almond on this machine. To obtain good results, run the benchmarks while no other compute-heavy tasks are running on the computer.&lt;/p&gt;&lt;p&gt;The benchmarking consists of several renders of the Mandelbrot fractal each using a different datatype for the underlying operations. The more precision the type allows for, the slower it performs (normally). If you have a video card, Almond will try to use it to do calculations as the tasks are exceptionally well suited for parallel execution.&lt;/p&gt;&lt;p&gt;All results are measured in mega-iterations per second.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Measure the preformance of Almond on this machine. To obtain good results, run the benchmarks while no other compute-heavy tasks are running on the computer.&lt;/p&gt;&lt;p&gt;The benchmarking consists of several renders of the Mandelbrot fractal using the specified datatype for the underlying operations. The more precision the type allows for, the slower it performs (normally). If you have a video card, Almond will try to use it to do calculations as the tasks are exceptionally well suited for parallel execution.&lt;/p&gt;&lt;p&gt;All results are measured in mega-iterations per second.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="wordWrap">
               <bool>true</bool>
@@ -76,8 +91,14 @@
             <layout class="QHBoxLayout" name="horizontalLayout_2">
              <item>
               <widget class="QPushButton" name="run">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="text">
-                <string>Run</string>
+                <string>Run All Benchmarks</string>
                </property>
               </widget>
              </item>

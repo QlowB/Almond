@@ -33,32 +33,44 @@ mnd::Generator* MandelDevice::getGenerator(mnd::GeneratorType type) const
 }
 
 
+std::vector<mnd::GeneratorType> MandelDevice::getSupportedTypes(void) const
+{
+    std::vector<GeneratorType> types;
+    for (auto& [type, gen] : generators) {
+        types.push_back(type);
+    }
+    return types;
+}
+
+
 MandelContext::MandelContext(void)
 {
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
     if (cpuInfo.hasAvx()) {
         //auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX, true>>();
-        auto fl = std::make_unique<CpuGenerator<Fixed512, mnd::NONE, true>>();
+        auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_AVX, std::move(fl) });
-        cpuGenerators.insert({ GeneratorType::DOUBLE_AVX512, std::move(db) });
+        cpuGenerators.insert({ GeneratorType::DOUBLE_AVX, std::move(db) });
+        if (cpuInfo.hasFma()) {
+            auto ddavx = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>>();
+            cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX, std::move(ddavx) });
+        }
     }
-    else if (cpuInfo.hasSse2()) {
+    if (cpuInfo.hasSse2()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_SSE2, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::X86_SSE2, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_SSE2, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_SSE2, std::move(db) });
     }
-    else
 #elif defined(__aarch64__)
-    if (true) {
+    if (cpuInfo.hasNeon()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::ARM_NEON, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::ARM_NEON, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_NEON, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_NEON, std::move(db) });
     }
-    else
 #endif
     {
         auto fl = std::make_unique<CpuGenerator<float, mnd::NONE, true>>();
@@ -78,8 +90,11 @@ MandelContext::MandelContext(void)
     auto dd = std::make_unique<CpuGenerator<DoubleDouble, mnd::NONE, true>>();
     auto qd = std::make_unique<CpuGenerator<QuadDouble, mnd::NONE, true>>();
     cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE, std::move(dd) });
-    cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE, std::move(qd) });
+    cpuGenerators.insert({ GeneratorType::QUAD_DOUBLE, std::move(qd) });
 #endif // WITH_QD
+
+    auto fix512 = std::make_unique<CpuGenerator<Fixed512, mnd::NONE, true>>();
+    cpuGenerators.insert({ GeneratorType::FIXED512, std::move(fix512) });
 
     devices = createDevices();
 
@@ -216,4 +231,14 @@ Generator* MandelContext::getCpuGenerator(mnd::GeneratorType type)
         return it->second.get();
     else
         return nullptr;
+}
+
+
+std::vector<mnd::GeneratorType> MandelContext::getSupportedTypes(void) const
+{
+    std::vector<GeneratorType> types;
+    for (auto& [type, gen] : cpuGenerators) {
+        types.push_back(type);
+    }
+    return types;
 }

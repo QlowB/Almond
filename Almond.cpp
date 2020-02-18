@@ -90,17 +90,10 @@ void Almond::on_smooth_stateChanged(int checked)
 }
 
 
-void Almond::on_runBenchmark_clicked()
-{
-    if (!benchmarkDialog)
-        benchmarkDialog = std::make_unique<BenchmarkDialog>(mandelContext, this);
-    benchmarkDialog->exec();
-}
-
-
 void Almond::on_exportImage_clicked()
 {
     ExportImageDialog dialog(this);
+    dialog.setMaxIterations(mw->getMaxIterations());
     //dialog.show();
     auto response = dialog.exec();
     if (response == 1) {

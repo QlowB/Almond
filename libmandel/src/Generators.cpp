@@ -47,6 +47,7 @@ void AdaptiveGenerator::generate(const mnd::MandelInfo& info, float* data)
     auto firstSmaller = generators.lower_bound(neededPrecision);
     if (firstSmaller != generators.end()) {
         //printf("use generator with precision: %s\n", mnd::toString(firstSmaller->first).c_str());
+        //printf("gen: %p\n", firstSmaller->second);fflush(stdout);
         firstSmaller->second->generate(info, data);
     }
     else {

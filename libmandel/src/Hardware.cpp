@@ -20,6 +20,7 @@ using mnd::CpuInfo;
 CpuInfo::CpuInfo(void) :
     sse2{ false },
     avx{ false },
+    fma{ false },
     avx512{ false },
     neon{ false }
 {
@@ -106,6 +107,7 @@ CpuInfo::CpuInfo(void) :
 
     sse2 = edx1[26];
     avx = ecx1[28];
+    fma = ecx1[12];
     avx512 = ebx7[16];
 }
 

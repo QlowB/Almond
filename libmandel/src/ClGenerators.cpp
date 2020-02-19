@@ -13,6 +13,7 @@ using mnd::ClGenerator;
 using mnd::ClGeneratorFloat;
 using mnd::ClGeneratorDouble;
 using mnd::ClGeneratorDoubleDouble;
+using mnd::ClGeneratorQuadDouble;
 using mnd::ClGenerator128;
 
 Platform getPlatform() {
@@ -20,7 +21,7 @@ Platform getPlatform() {
     std::vector<Platform> all_platforms;
     Platform::get(&all_platforms);
 
-    if (all_platforms.size()==0) {
+    if (all_platforms.size() == 0) {
         std::cout << "No platforms found. Check OpenCL installation!\n";
         exit(1);
     }
@@ -295,6 +296,62 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
 
 
 std::string ClGeneratorDoubleDouble::getKernelCode(bool smooth) const
+{
+    return (char*) doubledouble_cl;
+}
+
+
+ClGeneratorQuadDouble::ClGeneratorQuadDouble(cl::Device device) :
+    ClGenerator{ device }
+{
+    context = Context{ device };
+    Program::Sources sources;
+
+    std::string kcode = this->getKernelCode(false);
+
+    sources.push_back({ kcode.c_str(), kcode.length() });
+
+    program = Program{ context, sources };
+    if (program.build({ device }) != CL_SUCCESS) {
+        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
+    }
+
+    queue = CommandQueue(context, device);
+}
+
+
+void ClGeneratorQuadDouble::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+
+    mnd::DoubleDouble x = mnd::convert<mnd::DoubleDouble>(info.view.x);
+    mnd::DoubleDouble y = mnd::convert<mnd::DoubleDouble>(info.view.y);
+
+    mnd::DoubleDouble psx = mnd::convert<mnd::DoubleDouble>(info.view.width / info.bWidth);
+    mnd::DoubleDouble psy = mnd::convert<mnd::DoubleDouble>(info.view.height / info.bHeight);
+
+    Kernel iterate = Kernel(program, "iterate");
+    iterate.setArg(0, buffer_A);
+    iterate.setArg(1, int(info.bWidth));
+    iterate.setArg(2, x.x[0]);
+    iterate.setArg(3, x.x[1]);
+    iterate.setArg(4, y.x[0]);
+    iterate.setArg(5, y.x[1]);
+    iterate.setArg(6, psx.x[0]);
+    iterate.setArg(7, psx.x[1]);
+    iterate.setArg(8, psy.x[0]);
+    iterate.setArg(9, psy.x[1]);
+    iterate.setArg(10, int(info.maxIter));
+    iterate.setArg(11, int(info.smooth ? 1 : 0));
+
+    cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+
+std::string ClGeneratorQuadDouble::getKernelCode(bool smooth) const
 {
     return (char*) doubledouble_cl;
 }

@@ -157,12 +157,14 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
         std::string name = platform.getInfo<CL_PLATFORM_NAME>();
         std::string profile = platform.getInfo<CL_PLATFORM_PROFILE>();
 
+        printf("using opencl platform: %s\n", name.c_str());
+
         //std::string ext = platform.getInfo<CL_PLATFORM_EXTENSIONS>();
         //printf("Platform extensions: %s\n", ext.c_str());
         //printf("Platform: %s, %s\n", name.c_str(), profile.c_str());
 
         std::vector<cl::Device> devices;
-        platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+        platform.getDevices(CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_CPU, &devices);
         for (auto& device : devices) {
             //printf("Device: %s\n", device.getInfo<CL_DEVICE_NAME>().c_str());
             //printf("preferred float width: %d\n", device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>());
@@ -178,6 +180,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 
             md.name = device.getInfo<CL_DEVICE_NAME>();
             md.vendor = device.getInfo<CL_DEVICE_VENDOR>();
+            printf("    using opencl device: %s\n", md.name.c_str());
             try {
                 md.generators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(device) });
             }
@@ -189,6 +192,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
                 try {
                     md.generators.insert({ GeneratorType::DOUBLE, std::make_unique<ClGeneratorDouble>(device) });
                     md.generators.insert({ GeneratorType::DOUBLE_DOUBLE, std::make_unique<ClGeneratorDoubleDouble>(device) });
+                    md.generators.insert({ GeneratorType::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(device) });
                 }
                 catch (const std::string& err) {
                     printf("err: %s", err.c_str());

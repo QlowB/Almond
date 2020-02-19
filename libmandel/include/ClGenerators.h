@@ -17,6 +17,7 @@ namespace mnd
     class ClGeneratorFloat;
     class ClGeneratorDouble;
     class ClGeneratorDoubleDouble;
+    class ClGeneratorQuadDouble;
     class ClGenerator128;
 }
 
@@ -72,6 +73,20 @@ public:
 protected:
     virtual std::string getKernelCode(bool smooth) const;
 };
+
+
+class mnd::ClGeneratorQuadDouble : public ClGenerator
+{
+    bool smooth;
+public:
+    ClGeneratorQuadDouble(cl::Device device);
+    virtual ~ClGeneratorQuadDouble(void) = default;
+
+    virtual void generate(const MandelInfo& info, float* data);
+protected:
+    virtual std::string getKernelCode(bool smooth) const;
+};
+
 
 class mnd::ClGenerator128 : public ClGenerator
 {

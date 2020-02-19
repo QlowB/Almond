@@ -14,19 +14,54 @@ inline double2 quickTwoSum(double a, double b) {
 }
 
 inline double2 twoProd(double a, double b) {
-//#ifdef QD_FMS
     double p = a * b;
     double e = fma(a, b, -p);
     return (double2)(p, e);
-//#else
-//  double a_hi, a_lo, b_hi, b_lo;
-//  double p = a * b;
-//  split(a, a_hi, a_lo);
-//  split(b, b_hi, b_lo);
-//  err = ((a_hi * b_hi - p) + a_hi * b_lo + a_lo * b_hi) + a_lo * b_lo;
-//  return p;
-//#endif
 }
+
+
+inline void threeSum(double* a, double* b, double* c) {
+    double2 t = twoSum(*a, *b);
+    double2 at3 = twoSum(*c, t.s0);
+    double2 bc = twoSum(t.s1, at3.s1);
+    *a = at3.s0;
+    *b = bc.s0;
+    *c = bc.s1;
+}
+
+
+inline void threeSum2(double* a, double* b, double* c) {
+    double2 t = twoSum(*a, *b);
+    double2 at3 = twoSum(*c, t.s0);
+    *a = at3.s0;
+    *b = t.s1 + at3.s1;
+}
+
+
+inline double4 add(double4 a, double4 b) {
+    double2 su0 = twoSum(a.s0, b.s0);
+    double2 su1 = twoSum(a.s1, b.s1);
+    double2 su2 = twoSum(a.s2, b.s2);
+    double2 su3 = twoSum(a.s3, b.s3);
+
+    double2 s1t0 = twoSum(su1.s0, su0.s1);
+    threeSum(&su2.s0, &su0.s1, &su1.s1);
+    threeSum2(&su3.s0, &su0.s1, &su2.s1);
+    su0.s1 = su0.s1 + su1.s1 + su3.s1;
+
+    renorm(su0.s0, su1.s0, su2.s0, su3.s0, su0.s1);
+    return (double4)(su0.s0, su1.s0, su2.s0, su3.s0);
+}
+
+
+
+
+
+
+
+
+
+
 
 inline double2 mul(double2 a, double2 b) {
     double2 p = twoProd(a.s0, b.s0);

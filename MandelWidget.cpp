@@ -541,10 +541,10 @@ void MandelView::paint(const mnd::MandelViewport& mvp)
             if (t != nullptr) {
                 t->img->drawRect(float(x), float(y), float(w), float(w));
                 /*glBegin(GL_LINE_LOOP);
-                glVertex2f(x, y);
-                glVertex2f(x + w, y);
-                glVertex2f(x + w, y + w);
-                glVertex2f(x, y + w);
+                glVertex2f(float(x), float(y));
+                glVertex2f(float(x) + float(w), float(y));
+                glVertex2f(float(x) + float(w), float(y) + float(w));
+                glVertex2f(float(x), float(y) + float(w));
                 glEnd();*/
 
                 if (!t->enoughResolution) {

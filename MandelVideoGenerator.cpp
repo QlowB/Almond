@@ -18,7 +18,7 @@ void MandelVideoGenerator::generate(void)
     mi.bHeight = evi.height * 2;
     mi.maxIter = evi.maxIterations;
 
-    VideoStream vs(evi.width, evi.height, evi.path, evi.bitrate, evi.preset.c_str());
+    VideoStream vs(evi.width, evi.height, evi.path, evi.bitrate, evi.fps, evi.preset.c_str());
 
     mnd::Real x = evi.end.x + evi.end.width / 2;
     mnd::Real y = evi.end.y + evi.end.height / 2;
@@ -36,9 +36,9 @@ void MandelVideoGenerator::generate(void)
         if (bigW > 2 * w) {
             Bitmap<float> raw{ evi.width * 2, evi.height * 2 };
             gen.generate(mi, raw.pixels.get());
-            auto before = std::chrono::high_resolution_clock::now();
+            //auto before = std::chrono::high_resolution_clock::now();
             big = raw.map<RGBColor>([&mi, this] (float i) {
-                return i >= mi.maxIter ? RGBColor{ 0,0,0 } : evi.gradient.get(i);
+                return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : evi.gradient.get(i);
             });
             /*mi.view.zoomCenter(0.5);
             gen.generate(mi, raw.pixels.get());
@@ -51,9 +51,9 @@ void MandelVideoGenerator::generate(void)
 
         vs.addFrame(overlay(big, small, bigFac));
 
-        w *= 0.99;
-        h *= 0.99;
-        bigFac *= 0.99;
+        w *= ::pow(0.99, evi.zoomSpeed);
+        h *= ::pow(0.99, evi.zoomSpeed);
+        bigFac *= ::pow(0.99, evi.zoomSpeed);
     }
 }
 

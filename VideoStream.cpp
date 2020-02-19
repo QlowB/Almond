@@ -15,7 +15,7 @@
 const uint8_t VideoStream::endcode[] = { 0, 0, 1, 0xb7 };
 
 
-VideoStream::VideoStream(int width, int height, const std::string& filename, int bitrate, const char* preset) :
+VideoStream::VideoStream(int width, int height, const std::string& filename, int bitrate, int fps, const char* preset) :
     width{ width & (~1) }, height{ height & (~1) }
 {
     // only needed with ffmpeg version < 4
@@ -42,8 +42,8 @@ VideoStream::VideoStream(int width, int height, const std::string& filename, int
     codecContext->bit_rate = bitrate * 1000;
     codecContext->width = width;
     codecContext->height = height;
-    codecContext->time_base = AVRational{ 1, 60 };
-    codecContext->framerate = AVRational{ 60, 1 };
+    codecContext->time_base = AVRational{ 1, fps };
+    codecContext->framerate = AVRational{ fps, 1 };
 
     codecContext->gop_size = 5; /* emit one intra frame every five frames */
     codecContext->max_b_frames = 1;

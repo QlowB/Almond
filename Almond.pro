@@ -27,6 +27,7 @@ CONFIG += c++17
 
 SOURCES += \
         Almond.cpp \
+        BackgroundTask.cpp \
         Bitmap.cpp \
         Color.cpp \
         CubicSpline.cpp \
@@ -42,6 +43,7 @@ SOURCES += \
 
 HEADERS += \
         Almond.h \
+        BackgroundTask.h \
         Bitmap.h \
         Color.h \
         CubicSpline.h \

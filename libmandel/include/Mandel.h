@@ -20,6 +20,9 @@ namespace mnd
     class MandelDevice;
 
     extern MandelContext initializeContext(void);
+
+    const std::string& getGeneratorName(mnd::GeneratorType);
+    GeneratorType getTypeFromName(const std::string& name);
 }
 
 

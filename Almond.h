@@ -5,6 +5,7 @@
 
 #include <Mandel.h>
 #include "MandelWidget.h"
+#include "BackgroundTask.h"
 #include "exportdialogs.h"
 #include "gradientchoosedialog.h"
 #include "choosegenerators.h"
@@ -26,6 +27,8 @@ public:
     Almond(QWidget *parent = Q_NULLPTR);
     ~Almond(void);
 
+    void submitBackgroundTask(BackgroundTask* task);
+
 private slots:
     void on_zoom_out_clicked();
     void on_zoom_in_clicked();
@@ -39,6 +42,8 @@ private slots:
     void on_displayInfo_stateChanged(int arg1);
 
     void on_chooseGenerator_clicked();
+
+    void backgroundTaskFinished();
 
 private:
     Ui::AlmondClass ui;

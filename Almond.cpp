@@ -16,6 +16,7 @@ Almond::Almond(QWidget* parent) :
     mw = std::make_unique<MandelWidget>(mandelContext, currentGenerator, ui.centralWidget);
     ui.mainContainer->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
+    ui.backgroundProgress->setVisible(false);
     //ui.verticalLayout_left->addWidget(new MyGLWidget(ui.centralWidget));
     //mw->show();
 }

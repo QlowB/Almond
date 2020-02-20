@@ -80,6 +80,8 @@ ExportVideoDialog::ExportVideoDialog(QWidget* parent, const ExportVideoInfo& evi
     evd.vidWidth->setValidator(new QIntValidator(1, 10000000, this));
     evd.vidHeight->setValidator(new QIntValidator(1, 10000000, this));
     evd.bitrate->setValidator(new QIntValidator(1, 10000000, this));
+    evd.fps->setValidator(new QIntValidator(1, 8000, this));
+    evd.zoomSpeed->setValidator(new QDoubleValidator(0.0, 100.0, -1, this));
 
 #ifdef WITH_BOOST
     evd.startX->setText(QString::fromStdString(evi.start.x.str()));
@@ -140,6 +142,8 @@ void ExportVideoDialog::on_buttonBox_accepted()
 
     evi.bitrate = evd.bitrate->text().toInt();
     evi.preset = evd.encodingPresetBox->currentText().toStdString();
+    evi.fps = evd.fps->text().toInt();
+    evi.zoomSpeed = QLocale::system().toDouble(evd.zoomSpeed->text());
     /*evi.start = mnd::MandelViewport {
         evd.startX->text().toDouble(),
         evd.startY->text().toDouble(),

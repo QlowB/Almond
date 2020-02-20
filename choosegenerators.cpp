@@ -124,30 +124,18 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, QWidget *parent)
     QRegExp floatingpoint{ "^[-+]?(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][-+]\\d+)?$" };
     floatValidator = std::make_unique<QRegExpValidator>(floatingpoint, this);
 
-    auto genName = [] (mnd::GeneratorType type) {
-        static const std::map<mnd::GeneratorType, QString> names {
-            { mnd::GeneratorType::FLOAT, "float" },
-            { mnd::GeneratorType::FLOAT_SSE2, "float SSE2" },
-            { mnd::GeneratorType::FLOAT_AVX, "float AVX" },
-            { mnd::GeneratorType::FLOAT_AVX512, "float AVX512" },
-            { mnd::GeneratorType::FLOAT_NEON, "float Neon" },
-            { mnd::GeneratorType::DOUBLE, "double" },
-            { mnd::GeneratorType::DOUBLE_SSE2, "double SSE2" },
-            { mnd::GeneratorType::DOUBLE_AVX, "double AVX" },
-            { mnd::GeneratorType::DOUBLE_AVX512, "double AVX512" },
-            { mnd::GeneratorType::DOUBLE_NEON, "double Neon" },
-            { mnd::GeneratorType::DOUBLE_DOUBLE, "double double" },
-            { mnd::GeneratorType::DOUBLE_DOUBLE_AVX, "double double AVX" },
-            { mnd::GeneratorType::QUAD_DOUBLE, "quad double" },
-            { mnd::GeneratorType::FLOAT128, "float128" },
-            { mnd::GeneratorType::FLOAT256, "float256" },
-            { mnd::GeneratorType::FIXED512, "fixed512" },
-        };
+    for (auto genType : mndCtxt.getSupportedTypes()) {
+        const std::string& typeName = mnd::getGeneratorName(genType);
+        generators.insert({ QString::fromStdString(typeName), mndCtxt.getCpuGenerator(genType) });
+    }
+    for (auto& device : mndCtxt.getDevices()) {
+        for (auto genType : device.getSupportedTypes()) {
+            const std::string& typeName = mnd::getGeneratorName(genType) + " [" + device.getName() + "]";
+            generators.insert({ QString::fromStdString(typeName), device.getGenerator(genType) });
+        }
+    }
 
-        return names.at(type);
-    };
-
-    generators = std::map<QString, mnd::Generator*> {
+    /*generators = std::map<QString, mnd::Generator*> {
         { "float", mndCtxt.getCpuGenerator(mnd::GeneratorType::FLOAT) },
         { "double", mndCtxt.getCpuGenerator(mnd::GeneratorType::DOUBLE) },
         { "double double", mndCtxt.getCpuGenerator(mnd::GeneratorType::DOUBLE_DOUBLE) },
@@ -184,7 +172,7 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, QWidget *parent)
             generators.insert({ QString("double double ") + QString::fromStdString(device.getName()),
                                 gen });
         }
-    }
+    }*/
 
     auto& defGen = mndCtxt.getDefaultGenerator();
     for (auto it = defGen.getGenerators().rbegin(); it != defGen.getGenerators().rend(); it++) {
@@ -210,18 +198,22 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, QWidget *parent)
 
     std::vector<mnd::GeneratorType> generatorTypes = mndCtxt.getSupportedTypes();
     for (size_t i = 0; i < generatorTypes.size(); i++) {
-        ui->generatorTable->insertRow(ui->generatorTable->rowCount());
-        ui->generatorTable->setItem(ui->generatorTable->rowCount() - 1, 0, new QTableWidgetItem);
-        ui->generatorTable->item(ui->generatorTable->rowCount() - 1, 0)->setText(genName(generatorTypes[i]));
+        int rowCount = ui->generatorTable->rowCount();
+        ui->generatorTable->insertRow(rowCount);
+        ui->generatorTable->setItem(rowCount, 0, new QTableWidgetItem);
+        const std::string& genName = mnd::getGeneratorName(generatorTypes[i]);
+        ui->generatorTable->item(rowCount, 0)->setText(QString::fromStdString(genName));
         actualGenerators.push_back(mndCtxt.getCpuGenerator(generatorTypes[i]));
     }
 
     for (auto& device : mndCtxt.getDevices()) {
         std::vector<mnd::GeneratorType> generatorTypes = device.getSupportedTypes();
         for (size_t i = 0; i < generatorTypes.size(); i++) {
-            ui->generatorTable->insertRow(ui->generatorTable->rowCount());
-            ui->generatorTable->setItem(ui->generatorTable->rowCount() - 1, 0, new QTableWidgetItem);
-            ui->generatorTable->item(ui->generatorTable->rowCount() - 1, 0)->setText(genName(generatorTypes[i]) + " [" + QString::fromStdString(device.getName()) + "]");
+            int rowCount = ui->generatorTable->rowCount();
+            ui->generatorTable->insertRow(rowCount);
+            ui->generatorTable->setItem(rowCount, 0, new QTableWidgetItem);
+            const std::string& genName = mnd::getGeneratorName(generatorTypes[i]) + " [" + device.getName() + "]";
+            ui->generatorTable->item(rowCount, 0)->setText(QString::fromStdString(genName));
             actualGenerators.push_back(device.getGenerator(generatorTypes[i]));
         }
     }
@@ -272,8 +264,6 @@ void ChooseGenerators::on_buttonBox_accepted()
     createdGenerator->clear();
     try {
         for (size_t i = 0; i < tableContent.size(); i++) {
-            //std::cout << tableContent.at(i).first << std::endl;
-            //std::cout << tableContent.at(i).second << std::endl;
             QString precString = tableContent.at(i).first->text();
             QString genString = tableContent.at(i).second->currentText();
 

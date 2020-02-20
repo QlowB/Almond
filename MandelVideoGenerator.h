@@ -14,6 +14,8 @@ struct ExportVideoInfo
     int width;
     int height;
     int maxIterations;
+    int fps;
+    double zoomSpeed;
 
     std::string path;
 

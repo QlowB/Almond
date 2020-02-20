@@ -4,11 +4,63 @@
 #include "CpuGenerators.h"
 #include "ClGenerators.h"
 
+#include <map>
+
 using mnd::MandelDevice;
 using mnd::MandelContext;
 using mnd::Generator;
 using mnd::AdaptiveGenerator;
 
+template<typename T, typename U>
+static std::map<U, T> invertMap(const std::map<T, U>& m)
+{
+    std::map<U, T> res;
+    std::transform(m.begin(), m.end(), std::inserter(res, res.end()), [](auto& pair) {
+        return std::pair{ pair.second, pair.first };
+    });
+    return res;
+}
+
+
+static const std::map<mnd::GeneratorType, std::string> typeNames =
+{
+    { mnd::GeneratorType::FLOAT, "float" },
+    { mnd::GeneratorType::FLOAT_SSE2, "float SSE2" },
+    { mnd::GeneratorType::FLOAT_AVX, "float AVX" },
+    { mnd::GeneratorType::FLOAT_AVX512, "float AVX512" },
+    { mnd::GeneratorType::FLOAT_NEON, "float Neon" },
+    { mnd::GeneratorType::DOUBLE, "double" },
+    { mnd::GeneratorType::DOUBLE_SSE2, "double SSE2" },
+    { mnd::GeneratorType::DOUBLE_AVX, "double AVX" },
+    { mnd::GeneratorType::DOUBLE_AVX512, "double AVX512" },
+    { mnd::GeneratorType::DOUBLE_NEON, "double Neon" },
+    { mnd::GeneratorType::DOUBLE_DOUBLE, "double double" },
+    { mnd::GeneratorType::DOUBLE_DOUBLE_AVX, "double double AVX" },
+    { mnd::GeneratorType::QUAD_DOUBLE, "quad double" },
+    { mnd::GeneratorType::FLOAT128, "float128" },
+    { mnd::GeneratorType::FLOAT256, "float256" },
+    { mnd::GeneratorType::FIXED512, "fixed512" },
+};
+
+
+static const std::map<std::string, mnd::GeneratorType> nameTypes = invertMap(typeNames);
+
+
+namespace mnd
+{
+
+    const std::string& getGeneratorName(mnd::GeneratorType type)
+    {
+        return typeNames.at(type);
+    }
+
+
+    mnd::GeneratorType getTypeFromName(const std::string& name)
+    {
+        return nameTypes.at(name);
+    }
+
+}
 
 
 MandelContext mnd::initializeContext(void)
@@ -157,14 +209,14 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
         std::string name = platform.getInfo<CL_PLATFORM_NAME>();
         std::string profile = platform.getInfo<CL_PLATFORM_PROFILE>();
 
-        printf("using opencl platform: %s\n", name.c_str());
+        //printf("using opencl platform: %s\n", name.c_str());
 
         //std::string ext = platform.getInfo<CL_PLATFORM_EXTENSIONS>();
         //printf("Platform extensions: %s\n", ext.c_str());
         //printf("Platform: %s, %s\n", name.c_str(), profile.c_str());
 
         std::vector<cl::Device> devices;
-        platform.getDevices(CL_DEVICE_TYPE_GPU | CL_DEVICE_TYPE_CPU, &devices);
+        platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
         for (auto& device : devices) {
             //printf("Device: %s\n", device.getInfo<CL_DEVICE_NAME>().c_str());
             //printf("preferred float width: %d\n", device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>());
@@ -180,7 +232,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 
             md.name = device.getInfo<CL_DEVICE_NAME>();
             md.vendor = device.getInfo<CL_DEVICE_VENDOR>();
-            printf("    using opencl device: %s\n", md.name.c_str());
+            //printf("    using opencl device: %s\n", md.name.c_str());
             try {
                 md.generators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(device) });
             }

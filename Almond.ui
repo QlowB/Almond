@@ -186,6 +186,31 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QProgressBar" name="backgroundProgress">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximum">
+          <number>1</number>
+         </property>
+         <property name="value">
+          <number>0</number>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+         <property name="format">
+          <string>Background Tasks</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
     </layout>

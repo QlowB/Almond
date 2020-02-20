@@ -37,7 +37,7 @@ class VideoStream
 
     int64_t frameIndex = 0;
 public:
-    VideoStream(int width, int height, const std::string& filename, int bitrate, const char* preset);
+    VideoStream(int width, int height, const std::string& filename, int bitrate, int fps, const char* preset);
     ~VideoStream(void);
 
     void encode(AVFrame* frame);

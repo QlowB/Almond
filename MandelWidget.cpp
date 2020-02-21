@@ -802,7 +802,8 @@ void MandelWidget::zoom(float scale, float x, float y)
 void MandelWidget::setViewport(const mnd::MandelViewport& viewport)
 {
     targetViewport = viewport;
-    currentViewport = viewport;
+    targetViewport.adjustAspectRatio(this->width(), this->height());
+    currentViewport = targetViewport;
     //lastAnimUpdate = std::chrono::high_resolution_clock::now();
     //currentViewport.zoom(scale, x, y);
     requestRecalc();

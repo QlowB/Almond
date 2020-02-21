@@ -164,20 +164,23 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
             AvxDoubleDouble a = xs;
             AvxDoubleDouble b = ys;
 
+            __m256d resultsa;
+            __m256d resultsb;
+
             for (int k = 0; k < info.maxIter; k++) {
                 AvxDoubleDouble aa = a * a;
                 AvxDoubleDouble bb = b * b;
                 AvxDoubleDouble abab = a * b; abab = abab + abab;
                 a = aa - bb + xs;
                 b = abab + ys;
-                __m256i cmp = _mm256_castpd_si256(_mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ));
-                /*if (info.smooth) {
-                    resultsa = _mm256_or_pd(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
-                    resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
-                }*/
-                adder = _mm256_and_pd(adder, _mm256_castsi256_pd(cmp));
+                __m256d cmp = _mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ);
+                if (info.smooth) {
+                    resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a.x[0]));
+                    resultsb = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsb), _mm256_and_pd(cmp, b.x[0]));
+                }
+                adder = _mm256_and_pd(adder, cmp);
                 counter = _mm256_add_pd(counter, adder);
-                if (_mm256_testz_si256(cmp, cmp) != 0) {
+                if (_mm256_testz_si256(_mm256_castpd_si256(cmp), _mm256_castpd_si256(cmp)) != 0) {
                     break;
                 }
             }
@@ -191,9 +194,17 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
 
             double resData[8];
             double* ftRes = alignVec(resData);
+            double* resa = (double*) &resultsa;
+            double* resb = (double*) &resultsb;
             _mm256_store_pd(ftRes, counter);
-            for (int k = 0; k < 4 && i + k < info.bWidth; k++)
-                data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+            for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
+                if (info.smooth)
+                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                        ftRes[k] >= info.maxIter ? info.maxIter :
+                        ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
+                else
+                    data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+            }
         }
     }
     return;

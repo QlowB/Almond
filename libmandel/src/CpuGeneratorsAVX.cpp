@@ -36,22 +36,22 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
         long i = 0;
         for (i; i < info.bWidth; i += 8) {
             __m256 xs = {
-                float(view.x + double(i) * view.width / info.bWidth),
-                float(view.x + double(i + 1) * view.width / info.bWidth),
-                float(view.x + double(i + 2) * view.width / info.bWidth),
-                float(view.x + double(i + 3) * view.width / info.bWidth),
-                float(view.x + double(i + 4) * view.width / info.bWidth),
-                float(view.x + double(i + 5) * view.width / info.bWidth),
-                float(view.x + double(i + 6) * view.width / info.bWidth),
-                float(view.x + double(i + 7) * view.width / info.bWidth)
+                float(view.x + float(i) * view.width / info.bWidth),
+                float(view.x + float(i + 1) * view.width / info.bWidth),
+                float(view.x + float(i + 2) * view.width / info.bWidth),
+                float(view.x + float(i + 3) * view.width / info.bWidth),
+                float(view.x + float(i + 4) * view.width / info.bWidth),
+                float(view.x + float(i + 5) * view.width / info.bWidth),
+                float(view.x + float(i + 6) * view.width / info.bWidth),
+                float(view.x + float(i + 7) * view.width / info.bWidth)
             };
 
-            __m256 counter = {0, 0, 0, 0, 0, 0, 0, 0};
-            __m256 adder = {1, 1, 1, 1, 1, 1, 1, 1};
-            __m256 resultsa = {0, 0, 0, 0, 0, 0, 0, 0};
-            __m256 resultsb = {0, 0, 0, 0, 0, 0, 0, 0};
+            __m256 counter = { 0, 0, 0, 0, 0, 0, 0, 0 };
+            __m256 adder = { 1, 1, 1, 1, 1, 1, 1, 1 };
+            __m256 resultsa = { 0, 0, 0, 0, 0, 0, 0, 0 };
+            __m256 resultsb = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-            __m256 threshold = {16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f};
+            __m256 threshold = { 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f };
 
             __m256 a = xs;
             __m256 b = ys;
@@ -129,6 +129,9 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
             __m256d counter = { 0, 0, 0, 0 };
             __m256d adder = { 1, 1, 1, 1 };
 
+            __m256d resultsa = { 0, 0, 0, 0 };
+            __m256d resultsb = { 0, 0, 0, 0 };
+
             __m256d a = xs;
             __m256d b = ys;
 
@@ -138,14 +141,14 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
                 __m256d abab = _mm256_mul_pd(a, b); abab = _mm256_add_pd(abab, abab);
                 a = _mm256_add_pd(_mm256_sub_pd(aa, bb), xs);
                 b = _mm256_add_pd(abab, ys);
-                __m256i cmp = _mm256_castpd_si256(_mm256_cmp_pd(_mm256_add_pd(aa, bb), threshold, _CMP_LE_OQ));
-                /*if (info.smooth) {
-                    resultsa = _mm256_or_pd(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
-                    resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
-                }*/
-                adder = _mm256_and_pd(adder, _mm256_castsi256_pd(cmp));
+                __m256d cmp = _mm256_cmp_pd(_mm256_add_pd(aa, bb), threshold, _CMP_LE_OQ);
+                if (info.smooth) {
+                    resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a));
+                    resultsb = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsb), _mm256_and_pd(cmp, b));
+                }
+                adder = _mm256_and_pd(adder, cmp);
                 counter = _mm256_add_pd(counter, adder);
-                if ((k & 0x7) == 0 && _mm256_testz_si256(cmp, cmp) != 0) {
+                if ((k & 0x3) == 0 && _mm256_testz_si256(_mm256_castpd_si256(cmp), _mm256_castpd_si256(cmp)) != 0) {
                     break;
                 }
             }
@@ -159,9 +162,17 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
 
             double resData[8];
             double* ftRes = alignVec(resData);
+            double* resa = (double*) &resultsa;
+            double* resb = (double*) &resultsb;
             _mm256_store_pd(ftRes, counter);
-            for (int k = 0; k < 4 && i + k < info.bWidth; k++)
-                data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+            for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
+                if (info.smooth)
+                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                        ftRes[k] >= info.maxIter ? info.maxIter :
+                        ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
+                else
+                    data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+            }
         }
     }
 }
@@ -323,20 +334,23 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd
             AvxDoubleDouble a = xs;
             AvxDoubleDouble b = ys;
 
+            __m256d resultsa;
+            __m256d resultsb;
+
             for (int k = 0; k < info.maxIter; k++) {
                 AvxDoubleDouble aa = a * a;
                 AvxDoubleDouble bb = b * b;
                 AvxDoubleDouble abab = a * b; abab = abab + abab;
                 a = aa - bb + xs;
                 b = abab + ys;
-                __m256i cmp = _mm256_castpd_si256(_mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ));
-                /*if (info.smooth) {
-                    resultsa = _mm256_or_pd(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
-                    resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
-                }*/
-                adder = _mm256_and_pd(adder, _mm256_castsi256_pd(cmp));
+                __m256d cmp = _mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ);
+                if (info.smooth) {
+                    resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a.x[0]));
+                    resultsb = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsb), _mm256_and_pd(cmp, b.x[0]));
+                }
+                adder = _mm256_and_pd(adder, cmp);
                 counter = _mm256_add_pd(counter, adder);
-                if (_mm256_testz_si256(cmp, cmp) != 0) {
+                if (_mm256_testz_si256(_mm256_castpd_si256(cmp), _mm256_castpd_si256(cmp)) != 0) {
                     break;
                 }
             }
@@ -350,9 +364,18 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd
 
             double resData[8];
             double* ftRes = alignVec(resData);
+            double* resa = (double*) &resultsa;
+            double* resb = (double*) &resultsb;
             _mm256_store_pd(ftRes, counter);
-            for (int k = 0; k < 4 && i + k < info.bWidth; k++)
-                data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+
+            for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
+                if (info.smooth)
+                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                        ftRes[k] >= info.maxIter ? info.maxIter :
+                        ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
+                else
+                    data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+            }
         }
     }
 }

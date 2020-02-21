@@ -27,6 +27,16 @@ Almond::~Almond(void)
 }
 
 
+void Almond::submitBackgroundTask(BackgroundTask* task)
+{
+    bool taken = QThreadPool::globalInstance()->tryTake(task->getRunnable());
+    if (taken) {
+        ui.backgroundProgress->setRange(0, 0);
+        ui.backgroundProgress->setVisible(true);
+    }
+}
+
+
 void Almond::on_zoom_out_clicked()
 {
     mw->zoom(2);

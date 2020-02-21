@@ -7,6 +7,8 @@ class BackgroundTask
 {
 public:
     BackgroundTask(QRunnable* task);
+
+    QRunnable* getRunnable(void);
 };
 
 #endif // BACKGROUNDTASK_H

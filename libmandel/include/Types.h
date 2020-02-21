@@ -94,7 +94,7 @@ namespace mnd
         return static_cast<T>(x);
     }
 
-#if defined(WITH_BOOST) && defined(WITH_QD)
+#if defined(WITH_BOOST)
     template<>
     inline DoubleDouble convert<DoubleDouble, Real>(const Real& x)
     {

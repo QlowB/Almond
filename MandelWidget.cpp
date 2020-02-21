@@ -14,7 +14,7 @@ Texture::Texture(const Bitmap<RGBColor>& bitmap, GLint param)
 
     int lineLength = (bitmap.width * 3 + 3) & ~3;
 
-    std::unique_ptr<unsigned char[]> pixels = std::make_unique<unsigned char[]>(lineLength * bitmap.height);
+    /*std::unique_ptr<unsigned char[]> pixels = std::make_unique<unsigned char[]>(lineLength * bitmap.height);
     for (int i = 0; i < bitmap.width; i++) {
         for (int j = 0; j < bitmap.height; j++) {
             int index = i * 3 + j * lineLength;
@@ -23,8 +23,8 @@ Texture::Texture(const Bitmap<RGBColor>& bitmap, GLint param)
             pixels[index + 1] = c.g;
             pixels[index + 2] = c.b;
         }
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, int(bitmap.width), int(bitmap.height), 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.get());
+    }*/
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, int(bitmap.width), int(bitmap.height), 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<char*> (bitmap.pixels.get()));
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);

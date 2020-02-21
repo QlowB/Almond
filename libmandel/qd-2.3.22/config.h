@@ -1,6 +1,8 @@
 /* config.h.  Generated from config.h.in by configure.  */
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+#include <algorithm>
+
 /* Define to dummy `main' function (if any) required to link to the Fortran
    libraries. */
 /* #undef FC_DUMMY_MAIN */

@@ -86,6 +86,13 @@ public:
     virtual void generate(const MandelInfo& info, float* data);
 };
 
+template<bool parallel>
+class mnd::CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel> : public Generator
+{
+public:
+    virtual void generate(const MandelInfo& info, float* data);
+};
+
 #elif defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) 
 template<typename T, bool parallel>
 class mnd::CpuGenerator<T, mnd::ARM_NEON, parallel> : public Generator

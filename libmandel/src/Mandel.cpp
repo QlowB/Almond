@@ -36,6 +36,7 @@ static const std::map<mnd::GeneratorType, std::string> typeNames =
     { mnd::GeneratorType::DOUBLE_NEON, "double Neon" },
     { mnd::GeneratorType::DOUBLE_DOUBLE, "double double" },
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX, "double double AVX" },
+    { mnd::GeneratorType::DOUBLE_DOUBLE_AVX_FMA, "double double AVX+FMA" },
     { mnd::GeneratorType::QUAD_DOUBLE, "quad double" },
     { mnd::GeneratorType::FLOAT128, "float128" },
     { mnd::GeneratorType::FLOAT256, "float256" },
@@ -100,14 +101,15 @@ MandelContext::MandelContext(void)
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
     if (cpuInfo.hasAvx()) {
-        //auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX, true>>();
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX, true>>();
+        auto ddb = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_AVX, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_AVX, std::move(db) });
+        cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX, std::move(ddb) });
         if (cpuInfo.hasFma()) {
             auto ddavx = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>>();
-            cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX, std::move(ddavx) });
+            cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX_FMA, std::move(ddavx) });
         }
     }
     if (cpuInfo.hasSse2()) {
@@ -169,6 +171,9 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
     else if (cpuInfo.hasSse2()) {
         floatGen = getCpuGenerator(GeneratorType::FLOAT_SSE2);
         doubleGen = getCpuGenerator(GeneratorType::DOUBLE_SSE2);
+    }
+    if (cpuInfo.hasAvx() && cpuInfo.hasFma()) {
+        doubleDoubleGen = getCpuGenerator(GeneratorType::DOUBLE_DOUBLE_AVX_FMA);
     }
 
     if (!devices.empty()) {

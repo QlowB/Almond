@@ -57,9 +57,7 @@ class CellImage
 public:
     CellImage(void) = default;
     CellImage(CellImage&& b) = default;
-    CellImage(const CellImage& b) = default;
-    CellImage& operator=(const CellImage& b) = default;
-    CellImage& operator=(CellImage&& b) = default;
+    CellImage(const CellImage& b) = delete;
     virtual ~CellImage(void);
 
     virtual void drawRect(float x, float y, float width, float height) = 0;
@@ -83,6 +81,9 @@ public:
         TextureClip{ tex, 0.0f, 0.0f, 1.0f, 1.0f }
     {}
 
+    TextureClip(TextureClip&&) = default;
+    TextureClip(const TextureClip&) = delete;
+
     virtual ~TextureClip(void);
 
     void drawRect(float x, float y, float width, float height);
@@ -103,6 +104,10 @@ public:
                      std::shared_ptr<CellImage> i11) :
         cells{ { std::move(i00), std::move(i01) }, { std::move(i10), std::move(i11) } }
     {}
+
+    QuadImage(QuadImage&&) = default;
+    QuadImage(const QuadImage&) = delete;
+
     virtual ~QuadImage(void);
 
     void drawRect(float x, float y, float width, float height);

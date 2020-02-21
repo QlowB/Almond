@@ -40,6 +40,7 @@ enum class mnd::GeneratorType
     DOUBLE_NEON,
     DOUBLE_DOUBLE,
     DOUBLE_DOUBLE_AVX,
+    DOUBLE_DOUBLE_AVX_FMA,
     QUAD_DOUBLE,
     FLOAT128,
     FLOAT256,

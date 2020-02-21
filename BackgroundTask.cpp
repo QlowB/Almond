@@ -4,3 +4,11 @@ BackgroundTask::BackgroundTask(QRunnable* q)
 {
 
 }
+
+
+QRunnable* BackgroundTask::getRunnable(void)
+{
+    return nullptr;
+}
+
+

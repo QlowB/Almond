@@ -37,6 +37,11 @@ void Almond::submitBackgroundTask(BackgroundTask* task)
 }
 
 
+void Almond::backgroundTaskFinished(void)
+{
+}
+
+
 void Almond::on_zoom_out_clicked()
 {
     mw->zoom(2);

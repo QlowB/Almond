@@ -81,8 +81,8 @@ namespace mnd
     Real getPrecision(Precision p)
     {
         static const std::map<Precision, Real> precs {
-            { Precision::FLOAT, 1.0e-7 },
-            { Precision::DOUBLE, 1.0e-15 },
+            { Precision::FLOAT, Real("1.0e-7") },
+            { Precision::DOUBLE, Real("1.0e-15") },
             { Precision::DOUBLE_DOUBLE, Real("1.0e-29") },
             { Precision::QUAD_DOUBLE, Real("1.0e-56") },
             { Precision::FLOAT256, Real("1.0e-58") },

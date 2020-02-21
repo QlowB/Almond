@@ -235,11 +235,11 @@ void Job::run(void)
 
 
 Calcer::Calcer(mnd::Generator* generator, MandelWidget& owner, int maxIter, bool smooth) :
-    generator{ generator },
     jobsMutex{ QMutex::Recursive },
+    generator{ generator },
     owner{ owner },
-    gradient{ owner.getGradient() },
     threadPool{ std::make_unique<QThreadPool>() },
+    gradient{ owner.getGradient() },
     maxIter{ maxIter },
     smooth{ smooth }
 {

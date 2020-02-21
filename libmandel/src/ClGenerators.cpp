@@ -152,7 +152,7 @@ std::string ClGeneratorFloat::getKernelCode(bool smooth) const
         "       float ab = a * b;"
         "       if (aa + bb > 16) break;"
         "       a = aa - bb + ca;"
-        "       b = 2 * ab + cb;"
+        "       b = ab + ab + cb;"
         "       n++;"
         "   }\n"
         "   if (n >= max - 1)\n"
@@ -229,7 +229,7 @@ std::string ClGeneratorDouble::getKernelCode(bool smooth) const
         "       double ab = a * b;"
         "       if (aa + bb > 16) break;"
         "       a = aa - bb + ca;"
-        "       b = 2 * ab + cb;"
+        "       b = ab + ab + cb;"
         "       n++;"
         "   }\n"
         // N + 1 - log (log  |Z(N)|) / log 2

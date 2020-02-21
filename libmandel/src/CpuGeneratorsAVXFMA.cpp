@@ -129,10 +129,9 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
     T wpp = mnd::convert<T>(view.width / info.bWidth);
     T hpp = mnd::convert<T>(view.height / info.bHeight);
 
-//    if constexpr(parallel)
-//        omp_set_num_threads(2 * omp_get_num_procs());
-//#pragma omp parallel for schedule(static, 1) if (parallel)
-
+    if constexpr(parallel)
+        omp_set_num_threads(omp_get_num_procs());
+#pragma omp parallel for schedule(static, 1) if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
         T y = viewy + T(double(j)) * hpp;
         __m256d y0s = { y.x[0], y.x[0], y.x[0], y.x[0] };
@@ -205,73 +204,6 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
                 else
                     data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
             }
-        }
-    }
-    return;
-
-
-
-    for (long j = 0; j < info.bHeight; j++) {
-        T y = viewy + T(double(j)) * hpp;
-        __m256d y0s = { y.x[0], y.x[0], y.x[0], y.x[0] };
-        __m256d y1s = { y.x[1], y.x[1], y.x[1], y.x[1] };
-        AvxDoubleDouble ys{ y0s, y1s };
-        long i = 0;
-        for (i; i < info.bWidth; i += 4) {
-            T x1 = viewx + T(double(i)) * wpp;
-            T x2 = viewx + T(double(i + 1)) * wpp;
-            T x3 = viewx + T(double(i + 2)) * wpp;
-            T x4 = viewx + T(double(i + 3)) * wpp;
-
-            __m256d x0s = {
-                x1.x[0], x2.x[0], x3.x[0], x4.x[0],
-            };
-
-            __m256d x1s = {
-                x1.x[1], x2.x[1], x3.x[1], x4.x[1],
-            };
-
-            AvxDoubleDouble xs{ x0s, x1s };
-
-            int itRes[4] = { 0, 0, 0, 0 };
-
-            __m256d threshold = { 16.0, 16.0, 16.0, 16.0 };
-            __m256d counter = { 0, 0, 0, 0 };
-            __m256d adder = { 1, 1, 1, 1 };
-
-            AvxDoubleDouble a = xs;
-            AvxDoubleDouble b = ys;
-
-            for (int k = 0; k < info.maxIter; k++) {
-                AvxDoubleDouble aa = a * a;
-                AvxDoubleDouble bb = b * b;
-                AvxDoubleDouble abab = a * b; abab = abab + abab;
-                a = aa - bb + xs;
-                b = abab + ys;
-                __m256i cmp = _mm256_castpd_si256(_mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ));
-                /*if (info.smooth) {
-                    resultsa = _mm256_or_pd(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
-                    resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
-                }*/
-                adder = _mm256_and_pd(adder, _mm256_castsi256_pd(cmp));
-                counter = _mm256_add_pd(counter, adder);
-                if ((k & 7) == 0 && _mm256_testz_si256(cmp, cmp) != 0) {
-                    break;
-                }
-            }
-
-            auto alignVec = [](double* data) -> double* {
-                void* aligned = data;
-                ::size_t length = 64;
-                std::align(32, 4 * sizeof(double), aligned, length);
-                return static_cast<double*>(aligned);
-            };
-
-            double resData[8];
-            double* ftRes = alignVec(resData);
-            _mm256_store_pd(ftRes, counter);
-            for (int k = 0; k < 4 && i + k < info.bWidth; k++)
-                data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
         }
     }
 }

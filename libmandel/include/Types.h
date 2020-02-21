@@ -17,10 +17,8 @@
 #   include <boost/functional/hash.hpp>
 #endif
 
-#ifdef WITH_QD
-#   include <qd/dd_real.h>
-#   include <qd/qd_real.h>
-#endif
+#include <qd/dd_real.h>
+#include <qd/qd_real.h>
 
 namespace mnd
 {
@@ -62,7 +60,6 @@ namespace mnd
 #endif
 
 
-#ifdef WITH_QD
     using DoubleDouble = dd_real;
     using QuadDouble = qd_real;
 
@@ -78,7 +75,6 @@ namespace mnd
     inline QuadDouble log(const QuadDouble& x) { return ::log(x); }
     inline QuadDouble log2(const QuadDouble& x) { return ::log(x) / ::log(QuadDouble(2.0)); }
     inline QuadDouble pow(const QuadDouble& x, const QuadDouble& y) { return ::pow(x, y); }
-#endif
 
     inline double abs(double x) { return ::abs(x); }
     inline float abs(float x) { return ::abs(x); }

@@ -140,12 +140,10 @@ MandelContext::MandelContext(void)
     cpuGenerators.insert({ GeneratorType::FLOAT256, std::move(oct) });
 #endif // WITH_BOOST
 
-#ifdef WITH_QD
     auto dd = std::make_unique<CpuGenerator<DoubleDouble, mnd::NONE, true>>();
     auto qd = std::make_unique<CpuGenerator<QuadDouble, mnd::NONE, true>>();
     cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE, std::move(dd) });
     cpuGenerators.insert({ GeneratorType::QUAD_DOUBLE, std::move(qd) });
-#endif // WITH_QD
 
     auto fix512 = std::make_unique<CpuGenerator<Fixed512, mnd::NONE, true>>();
     cpuGenerators.insert({ GeneratorType::FIXED512, std::move(fix512) });

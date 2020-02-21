@@ -23,8 +23,8 @@ void CpuGenerator<float, mnd::X86_SSE2, parallel>::generate(const mnd::MandelInf
     const MandelViewport& view = info.view;
 
     if constexpr(parallel)
-    omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for if (parallel)
+    omp_set_num_threads(omp_get_num_procs());
+#pragma omp parallel for schedule(static, 1) if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         long i = 0;
@@ -100,8 +100,8 @@ void CpuGenerator<double, mnd::X86_SSE2, parallel>::generate(const mnd::MandelIn
     using T = double;
     const MandelViewport& view = info.view;
     if constexpr(parallel)
-        omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for if (parallel)
+        omp_set_num_threads(omp_get_num_procs());
+#pragma omp parallel for schedule(static, 1) if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         long i = 0;

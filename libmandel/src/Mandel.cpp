@@ -29,6 +29,7 @@ static const std::map<mnd::GeneratorType, std::string> typeNames =
     { mnd::GeneratorType::FLOAT_AVX, "float AVX" },
     { mnd::GeneratorType::FLOAT_AVX512, "float AVX512" },
     { mnd::GeneratorType::FLOAT_NEON, "float NEON" },
+    { mnd::GeneratorType::DOUBLE_FLOAT, "double float" },
     { mnd::GeneratorType::DOUBLE, "double" },
     { mnd::GeneratorType::DOUBLE_SSE2, "double SSE2" },
     { mnd::GeneratorType::DOUBLE_AVX, "double AVX" },
@@ -243,6 +244,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             //printf("    using opencl device: %s\n", md.name.c_str());
             try {
                 md.generators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(device) });
+                md.generators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(device) });
             }
             catch (const std::string& err) {
                 printf("err: %s", err.c_str());

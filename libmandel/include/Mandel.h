@@ -33,6 +33,7 @@ enum class mnd::GeneratorType
     FLOAT_AVX,
     FLOAT_AVX512,
     FLOAT_NEON,
+    DOUBLE_FLOAT,
     DOUBLE,
     DOUBLE_SSE2,
     DOUBLE_AVX,

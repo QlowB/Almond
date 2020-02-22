@@ -1,16 +1,19 @@
 #include "ClGenerators.h"
 #include "doubledouble.h"
+#include "doublefloat.h"
 
 #ifdef WITH_OPENCL
 
 #include <iostream>
 #include <iterator>
+#include <utility>
 
 
 using namespace cl;
 
 using mnd::ClGenerator;
 using mnd::ClGeneratorFloat;
+using mnd::ClGeneratorDoubleFloat;
 using mnd::ClGeneratorDouble;
 using mnd::ClGeneratorDoubleDouble;
 using mnd::ClGeneratorQuadDouble;
@@ -164,6 +167,70 @@ std::string ClGeneratorFloat::getKernelCode(bool smooth) const
         "           A[index] = ((float)n);\n"
         "   }"
         "}";
+}
+
+
+ClGeneratorDoubleFloat::ClGeneratorDoubleFloat(cl::Device device) :
+    ClGenerator{ device }
+{
+    context = Context{ device };
+    Program::Sources sources;
+
+    std::string kcode = this->getKernelCode(false);
+
+    sources.push_back({ kcode.c_str(), kcode.length() });
+
+    program = Program{ context, sources };
+    if (program.build({ device }) != CL_SUCCESS) {
+        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
+    }
+
+    queue = CommandQueue(context, device);
+}
+
+
+void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    auto splitDouble = [] (double x) {
+        float hi = float(x);
+        float lo = float(x - double(hi));
+        return std::pair{ hi, lo };
+    };
+
+    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+    double pixelScaleX = double(info.view.width / info.bWidth);
+    double pixelScaleY = double(info.view.height / info.bHeight);
+
+    auto[x1, x2] = splitDouble(double(info.view.x));
+    auto[y1, y2] = splitDouble(double(info.view.y));
+    auto[w1, w2] = splitDouble(pixelScaleX);
+    auto[h1, h2] = splitDouble(pixelScaleY);
+
+
+    Kernel iterate = Kernel(program, "iterate");
+    iterate.setArg(0, buffer_A);
+    iterate.setArg(1, int(info.bWidth));
+    iterate.setArg(2, x1);
+    iterate.setArg(3, x2);
+    iterate.setArg(4, y1);
+    iterate.setArg(5, y2);
+    iterate.setArg(6, w1);
+    iterate.setArg(7, w2);
+    iterate.setArg(8, h1);
+    iterate.setArg(9, h2);
+    iterate.setArg(10, int(info.maxIter));
+    iterate.setArg(11, int(info.smooth ? 1 : 0));
+
+    cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+
+std::string ClGeneratorDoubleFloat::getKernelCode(bool smooth) const
+{
+    return (char*) doublefloat_cl;
 }
 
 

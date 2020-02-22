@@ -94,6 +94,53 @@ void CpuGenerator<T, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info,
     }
 }
 
+
+/*
+template<bool parallel>
+void CpuGenerator<double, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info, float* data)
+{
+    const MandelViewport& view = info.view;
+
+    T viewx = mnd::convert<T>(view.x);
+    T viewy = mnd::convert<T>(view.y);
+    T wpp = mnd::convert<T>(view.width / info.bWidth);
+    T hpp = mnd::convert<T>(view.height / info.bHeight);
+
+    if constexpr (parallel)
+        omp_set_num_threads(omp_get_num_procs());
+#pragma omp parallel for schedule(static, 1) if (parallel)
+    for (long j = 0; j < info.bHeight; j++) {
+        T y = viewy + T(double(j)) * hpp;
+        long i = 0;
+        for (i; i < info.bWidth; i++) {
+            T x = viewx + T(double(i)) * wpp;
+
+            T a = x;
+            T b = y;
+
+            int k = 0;
+            for (k = 0; k < info.maxIter; k++) {
+                T aa = a * a;
+                T bb = b * b;
+                T ab = a * b;
+                a = aa - bb + x;
+                b = ab + ab + y;
+                if (aa + bb > T(16.0)) {
+                    break;
+                }
+            }
+            if (info.smooth) {
+                if (k >= info.maxIter)
+                    data[i + j * info.bWidth] = float(info.maxIter);
+                else
+                    data[i + j * info.bWidth] = ((float) k) + 1 - ::logf(::logf(mnd::convert<float>(a * a + b * b)) / 2) / ::logf(2.0f);
+            }
+            else
+                data[i + j * info.bWidth] = k;
+        }
+    }
+}*/
+
 /*
 #if defined(WITH_BOOST) || 1
 template<bool parallel>

@@ -123,9 +123,8 @@ CpuInfo::CpuInfo(void) :
     arch = Arch::ARM64;
 #else
     arch = Arch::ARM;
-
-    // TODO implement check
-    neon = false;
 #endif
+    // TODO implement check
+    neon = (arch == Arch::ARM64);
 }
 #endif

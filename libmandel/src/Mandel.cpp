@@ -28,7 +28,7 @@ static const std::map<mnd::GeneratorType, std::string> typeNames =
     { mnd::GeneratorType::FLOAT_SSE2, "float SSE2" },
     { mnd::GeneratorType::FLOAT_AVX, "float AVX" },
     { mnd::GeneratorType::FLOAT_AVX512, "float AVX512" },
-    { mnd::GeneratorType::FLOAT_NEON, "float Neon" },
+    { mnd::GeneratorType::FLOAT_NEON, "float NEON" },
     { mnd::GeneratorType::DOUBLE, "double" },
     { mnd::GeneratorType::DOUBLE_SSE2, "double SSE2" },
     { mnd::GeneratorType::DOUBLE_AVX, "double AVX" },
@@ -118,15 +118,13 @@ MandelContext::MandelContext(void)
         cpuGenerators.insert({ GeneratorType::FLOAT_SSE2, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_SSE2, std::move(db) });
     }
-#elif defined(__aarch64__)
-    /*
+#elif defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) 
     if (cpuInfo.hasNeon()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::ARM_NEON, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::ARM_NEON, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_NEON, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_NEON, std::move(db) });
     }
-    */
 #endif
     {
         auto fl = std::make_unique<CpuGenerator<float, mnd::NONE, true>>();
@@ -174,6 +172,11 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
     }
     if (cpuInfo.hasAvx() && cpuInfo.hasFma()) {
         doubleDoubleGen = getCpuGenerator(GeneratorType::DOUBLE_DOUBLE_AVX_FMA);
+    }
+
+    if (cpuInfo.hasNeon()) {
+        floatGen = getCpuGenerator(GeneratorType::FLOAT_NEON);
+        doubleGen = getCpuGenerator(GeneratorType::DOUBLE_NEON);
     }
 
     if (!devices.empty()) {

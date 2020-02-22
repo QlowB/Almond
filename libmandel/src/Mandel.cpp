@@ -119,12 +119,14 @@ MandelContext::MandelContext(void)
         cpuGenerators.insert({ GeneratorType::DOUBLE_SSE2, std::move(db) });
     }
 #elif defined(__aarch64__)
+    /*
     if (cpuInfo.hasNeon()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::ARM_NEON, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::ARM_NEON, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_NEON, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_NEON, std::move(db) });
     }
+    */
 #endif
     {
         auto fl = std::make_unique<CpuGenerator<float, mnd::NONE, true>>();

@@ -4,11 +4,20 @@
 #include <arm_neon.h>
 #include <memory>
 
-using mnd::CpuGeneratorNeonFloat;
-using mnd::CpuGeneratorNeonDouble;
+using mnd::CpuGenerator;
+
+namespace mnd
+{
+    template class CpuGenerator<float, mnd::ARM_NEON, false>;
+    template class CpuGenerator<float, mnd::ARM_NEON, true>;
+
+    template class CpuGenerator<double, mnd::ARM_NEON, false>;
+    template class CpuGenerator<double, mnd::ARM_NEON, true>;
+}
 
 
-void CpuGeneratorNeonFloat::generate(const mnd::MandelInfo& info, float* data)
+template<bool parallel>
+void CpuGenerator<float, mnd::ARM_NEON, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
     using T = float;
     const MandelViewport& view = info.view;
@@ -71,7 +80,8 @@ void CpuGeneratorNeonFloat::generate(const mnd::MandelInfo& info, float* data)
 }
 
 
-void CpuGeneratorNeonDouble::generate(const mnd::MandelInfo& info, float* data)
+template<bool parallel>
+void CpuGenerator<double, mnd::ARM_NEON, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
     using T = double;
     const MandelViewport& view = info.view;
@@ -82,8 +92,8 @@ void CpuGeneratorNeonDouble::generate(const mnd::MandelInfo& info, float* data)
         long i = 0;
         for (i; i < info.bWidth; i += 2) {
             double xsvals[] = {
-                (view.x + double(i) * view.width / info.bWidth),
-                (view.x + double(i + 1) * view.width / info.bWidth),
+                double(view.x + double(i) * view.width / info.bWidth),
+                double(view.x + double(i + 1) * view.width / info.bWidth),
             };
 
             float64x2_t xs = vld1q_f64(xsvals);

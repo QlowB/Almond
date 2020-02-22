@@ -33,7 +33,7 @@ static const std::map<mnd::GeneratorType, std::string> typeNames =
     { mnd::GeneratorType::DOUBLE_SSE2, "double SSE2" },
     { mnd::GeneratorType::DOUBLE_AVX, "double AVX" },
     { mnd::GeneratorType::DOUBLE_AVX512, "double AVX512" },
-    { mnd::GeneratorType::DOUBLE_NEON, "double Neon" },
+    { mnd::GeneratorType::DOUBLE_NEON, "double NEON" },
     { mnd::GeneratorType::DOUBLE_DOUBLE, "double double" },
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX, "double double AVX" },
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX_FMA, "double double AVX+FMA" },

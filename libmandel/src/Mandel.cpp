@@ -42,6 +42,7 @@ static const std::map<mnd::GeneratorType, std::string> typeNames =
     { mnd::GeneratorType::FLOAT128, "float128" },
     { mnd::GeneratorType::FLOAT256, "float256" },
     { mnd::GeneratorType::FIXED64, "fixed64" },
+    { mnd::GeneratorType::FIXED128, "fixed128" },
     { mnd::GeneratorType::FIXED512, "fixed512" },
 };
 
@@ -133,6 +134,11 @@ MandelContext::MandelContext(void)
         auto db = std::make_unique<CpuGenerator<double, mnd::NONE, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE, std::move(db) });
+
+        auto fx64 = std::make_unique<CpuGenerator<Fixed64, mnd::NONE, true>>();
+        auto fx128 = std::make_unique<CpuGenerator<Fixed128, mnd::NONE, true>>();
+        cpuGenerators.insert({ GeneratorType::FIXED64, std::move(fx64) });
+        cpuGenerators.insert({ GeneratorType::FIXED128, std::move(fx128) });
     }
 
 #ifdef WITH_BOOST

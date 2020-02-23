@@ -32,7 +32,7 @@ protected:
     cl::Program program;
     cl::CommandQueue queue;
 public:
-    ClGenerator(cl::Device device);
+    ClGenerator(cl::Device device, const mnd::Real& precision);
     virtual ~ClGenerator(void);
 
     virtual void generate(const MandelInfo& info, float* data);

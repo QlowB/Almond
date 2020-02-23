@@ -17,6 +17,12 @@ mnd::MandelViewport Benchmarker::benchViewport(void)
 
 
 const std::vector<mnd::MandelInfo> Benchmarker::benches {
+    mnd::MandelInfo{ benchViewport(), 25, 25, 15, false },
+    mnd::MandelInfo{ benchViewport(), 25, 25, 25, false },
+    mnd::MandelInfo{ benchViewport(), 25, 25, 75, false },
+    mnd::MandelInfo{ benchViewport(), 25, 25, 125, false },
+    mnd::MandelInfo{ benchViewport(), 25, 25, 250, false },
+    mnd::MandelInfo{ benchViewport(), 50, 25, 250, false },
     mnd::MandelInfo{ benchViewport(), 50, 50, 250, false },
     mnd::MandelInfo{ benchViewport(), 50, 50, 500, false },
     mnd::MandelInfo{ benchViewport(), 50, 100, 500, false },
@@ -89,6 +95,9 @@ double Benchmarker::benchmarkResult(mnd::Generator& mg) const
             //printf("testing index %d\n", testIndex);
             fflush(stdout);
             break;
+        }
+        else if (time < std::chrono::milliseconds(10)) {
+            i += 3;
         }
     }
 

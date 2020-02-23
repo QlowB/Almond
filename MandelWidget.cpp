@@ -787,6 +787,10 @@ void MandelWidget::drawInfo(void)
         dis << factor << "e" << int(::floor(log10));
     }
 
+    if (maxWidth > 400) {
+        dis << "; per pixel: " << distPerPixel;
+    }
+
     float lineY = this->height() - DIST_FROM_BORDER;
     float lineXEnd = DIST_FROM_BORDER + pixels;
 

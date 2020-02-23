@@ -1,8 +1,7 @@
 #include "ClGenerators.h"
 #include "doubledouble.h"
 #include "doublefloat.h"
-#include "opencl/fixed512.h"
-#include "opencl/fixed64.h"
+#include "OpenClCode.h"
 
 #ifdef WITH_OPENCL
 
@@ -62,7 +61,8 @@ Device getDevice(Platform& platform, int i, bool display = false) {
 }
 
 
-ClGenerator::ClGenerator(cl::Device device) :
+ClGenerator::ClGenerator(cl::Device device, const mnd::Real& precision) :
+    Generator{ precision },
     device{ device }
 {
     /*Platform p = getPlatform();
@@ -120,7 +120,7 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
 
 
 ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
-    ClGenerator{ device }
+    ClGenerator{ device, mnd::getPrecision(mnd::Precision::FLOAT) }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -174,7 +174,7 @@ std::string ClGeneratorFloat::getKernelCode(bool smooth) const
 
 
 ClGeneratorDoubleFloat::ClGeneratorDoubleFloat(cl::Device device) :
-    ClGenerator{ device }
+    ClGenerator{ device, mnd::getPrecision(mnd::Precision::DOUBLE_FLOAT)  }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -344,7 +344,7 @@ std::string ClGeneratorDoubleFloat::getKernelCode(bool smooth) const
 
 
 ClGeneratorDouble::ClGeneratorDouble(cl::Device device) :
-    ClGenerator{ device }
+    ClGenerator{ device, mnd::getPrecision(mnd::Precision::DOUBLE) }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -422,7 +422,7 @@ std::string ClGeneratorDouble::getKernelCode(bool smooth) const
 
 
 ClGeneratorDoubleDouble::ClGeneratorDoubleDouble(cl::Device device) :
-    ClGenerator{ device }
+    ClGenerator{ device, mnd::getPrecision(mnd::Precision::DOUBLE_DOUBLE) }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -478,7 +478,7 @@ std::string ClGeneratorDoubleDouble::getKernelCode(bool smooth) const
 
 
 ClGeneratorQuadDouble::ClGeneratorQuadDouble(cl::Device device) :
-    ClGenerator{ device }
+    ClGenerator{ device, mnd::getPrecision(mnd::Precision::QUAD_DOUBLE) }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -535,7 +535,7 @@ std::string ClGeneratorQuadDouble::getKernelCode(bool smooth) const
 
 
 ClGenerator128::ClGenerator128(cl::Device device) :
-    ClGenerator{ device }
+    ClGenerator{ device, mnd::getPrecision(mnd::Precision::FIXED128) }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -603,7 +603,7 @@ std::string ClGenerator128::getKernelCode(bool smooth) const
 
 
 ClGenerator64::ClGenerator64(cl::Device device) :
-    ClGenerator{ device }
+    ClGenerator{ device, mnd::getPrecision(mnd::Precision::FIXED64) }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -637,7 +637,6 @@ void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
     ull h = ull(::round(double(pixelScaleY) * (1LL << 48)));
     //x = 0;
     //y = 0;
-
     
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);

@@ -10,7 +10,20 @@ Generator::~Generator(void)
 }
 
 
-AdaptiveGenerator::AdaptiveGenerator(Generator* floatGen, Generator* doubleGen)
+mnd::Real Generator::getPrecision(void) const
+{
+    return precision;
+}
+
+
+AdaptiveGenerator::AdaptiveGenerator(void) :
+    Generator{ 0.0 }
+{
+}
+
+
+AdaptiveGenerator::AdaptiveGenerator(Generator* floatGen, Generator* doubleGen) :
+    AdaptiveGenerator{}
 {
     generators.insert({ 0.0000001, floatGen });
     generators.insert({ 0.0, doubleGen });
@@ -33,7 +46,7 @@ void AdaptiveGenerator::addGenerator(const mnd::Real& precision, mnd::Generator&
 
 void AdaptiveGenerator::addGenerator(mnd::Precision p, Generator& generator)
 {
-    generators.insert({ getPrecision(p), &generator });
+    generators.insert({ mnd::getPrecision(p), &generator });
 }
 
 
@@ -76,21 +89,48 @@ void AdaptiveGenerator::generate(const mnd::MandelInfo& info, float* data)
     }*/
 }
 
+
 namespace mnd
 {
     Real getPrecision(Precision p)
     {
         static const std::map<Precision, Real> precs {
-            { Precision::FLOAT, Real("1.0e-7") },
-            { Precision::DOUBLE, Real("1.0e-15") },
+            { Precision::FLOAT, getPrecision<float>() },
+            { Precision::DOUBLE, getPrecision<double>() },
             { Precision::DOUBLE_DOUBLE, Real("1.0e-29") },
             { Precision::QUAD_DOUBLE, Real("1.0e-56") },
+            { Precision::FIXED128, Real("1.317e-29") },
             { Precision::FLOAT256, Real("1.0e-58") },
             { Precision::INF_PREC, Real(0.0) },
         };
 
         return precs.at(p);
     }
+
+
+    template<>
+    Real getPrecision<float>() {
+        return Real("1.0e-7");
+    }
+    template<>
+    Real getPrecision<double>() {
+        return Real("1.0e-15");
+    }
+    template<>
+    Real getPrecision<DoubleDouble>() {
+        return Real("1.0e-29");
+    }
+    template<>
+    Real getPrecision<QuadDouble>() {
+        return Real("1.0e-56");
+    }
+    template<>
+    Real getPrecision<Fixed128>() {
+        return Real("1.5e-29");
+    }
+
+
+
 }
 
 

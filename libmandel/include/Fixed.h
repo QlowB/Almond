@@ -1,6 +1,12 @@
 #ifndef MANDEL_FIXED128_H
 #define MANDEL_FIXED128_H
 
+#ifdef _MSC_VER
+#   include <intrin.h>
+#endif
+
+
+
 #include <cinttypes>
 #include <cmath>
 #include <utility>
@@ -9,6 +15,61 @@
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
+
+
+namespace mnd
+{
+#ifdef _MSC_VER
+    static inline std::pair<int64_t, uint64_t> mul64(int64_t a, int64_t b) {
+        int64_t higher;
+        int64_t lower = _mul128(a, b, &higher);
+        return { higher, lower };
+    }
+
+    static inline std::pair<uint64_t, uint64_t> mulu64(uint64_t a, uint64_t b) {
+        uint64_t higher;
+        uint64_t lower = _umul128(a, b, &higher);
+        return { higher, lower };
+    }
+#else
+    static inline std::pair<int64_t, uint64_t> mul64(int64_t a, int64_t b) {
+        uint32_t aa[2] = { uint32_t(a >> 32), uint32_t(a & 0xFFFFFFFF) };
+        uint32_t bb[2] = { uint32_t(b >> 32), uint32_t(b & 0xFFFFFFFF) };
+
+        uint32_t res[4];
+        int64_t temp = uint64_t(aa[1]) * uint64_t(bb[1]);
+        res[3] = temp & 0xFFFFFFFF;
+        temp >>= 32;
+        temp += int64_t(int32_t(aa[0])) * int64_t(bb[1]) + int64_t(aa[1]) * int64_t(int32_t(bb[0]));
+        res[2] = temp & 0xFFFFFFFF;
+        temp >>= 32;
+        temp += int64_t(int32_t(aa[0])) * int64_t(int32_t(bb[0]));
+        res[1] = temp & 0xFFFFFFFF;
+        res[0] = temp >> 32;
+
+        return std::make_pair((int64_t(res[0]) << 32) | res[1], uint64_t((int64_t(res[2]) << 32) | res[3]));
+    }
+
+    static inline std::pair<uint64_t, uint64_t> mulu64(uint64_t a, uint64_t b) {
+        uint32_t aa[2] = { uint32_t(a >> 32), uint32_t(a & 0xFFFFFFFF) };
+        uint32_t bb[2] = { uint32_t(b >> 32), uint32_t(b & 0xFFFFFFFF) };
+
+        uint32_t res[4];
+        uint64_t temp = uint64_t(aa[1]) * bb[1];
+        res[3] = temp & 0xFFFFFFFF;
+        uint32_t carry = temp >> 32;
+        temp = uint64_t(aa[0]) * bb[1] + uint64_t(aa[1]) * bb[0] + carry;
+        res[2] = temp & 0xFFFFFFFF;
+        carry = temp >> 32;
+        temp = uint64_t(aa[0]) * bb[0] + carry;
+        res[1] = temp & 0xFFFFFFFF;
+        res[0] = temp >> 32;
+
+        return std::make_pair((uint64_t(res[0]) << 32) | res[1], (uint64_t(res[2]) << 32) | res[3] );
+    }
+#endif
+}
+
 
 
 struct Fixed512
@@ -115,11 +176,6 @@ struct Fixed128
         upper = uint64_t(int64_t(x * twoToThe32));
         double remainder = x - double(upper) / twoToThe32;
         lower = uint64_t(int64_t(remainder * twoToThe32 * twoToThe32 * twoToThe32));
-        /*int integerPart = ::floor(x);
-        double fractionalPart = x - integerPart;
-        upper = int64_t(integerPart) << 32;
-        upper |= uint64_t(fractionalPart * (1ULL << 32)) & 0xFFFFFFFFULL;
-        lower = 0;// uint64_t(fractionalPart * (1ULL << 32) * (1ULL << 63) * 2);*/
     }
 
     inline Fixed128 operator + (const Fixed128& other) const {
@@ -145,6 +201,7 @@ struct Fixed128
         return this->operator~() + Fixed128{ 0, 0, 0, 1 };
     }
 
+    /*
 //private:
     static inline std::pair<uint64_t, uint64_t> mul64(int64_t a, int64_t b) {
         int32_t aa[2] = { int32_t(a >> 32), int32_t(a & 0xFFFFFFFF) };
@@ -181,6 +238,7 @@ struct Fixed128
 
         return std::make_pair((uint64_t(res[0]) << 32) | res[1], (uint64_t(res[2]) << 32) | res[3] );
     }
+    */
 
 public:
     inline Fixed128 operator * (const Fixed128& other) const {
@@ -190,10 +248,10 @@ public:
         if (other.isNegative()) {
             return -((-other) * (*this));
         }
-        auto [uuc, uu] = mulu64(upper, other.upper);
-        auto [ulc, ul] = mulu64(upper, other.lower);
-        auto [luc, lu] = mulu64(lower, other.upper);
-        auto [llc, ll] = mulu64(lower, other.lower);
+        auto [uuc, uu] = mnd::mulu64(upper, other.upper);
+        auto [ulc, ul] = mnd::mulu64(upper, other.lower);
+        auto [luc, lu] = mnd::mulu64(lower, other.upper);
+        auto [llc, ll] = mnd::mulu64(lower, other.lower);
 
         uint64_t res[4] = { 0, 0, 0, 0 };
         res[3] = ll;
@@ -214,7 +272,6 @@ public:
         if (res[1] < luc)
             res[0]++;
         res[0] += uuc;
-
 
         return Fixed128{ uint32_t(res[0] & 0xFFFFFFFF), uint32_t(int64_t(res[1]) >> 32), uint32_t(res[1] & 0xFFFFFFFF), uint32_t(int64_t(res[2]) >> 32) };
 
@@ -267,95 +324,6 @@ public:
         return std::make_pair(Fixed128{ newQ[0], newQ[1], newQ[2], newQ[3] }, carry);
     }
 
-    /*
-    inline void arshift(int fac32) {
-        uint32_t temp = 0;
-        switch (fac32) {
-        case 0:
-            return;
-        case 1:
-            temp = upper & 0xFFFFFFFF;
-            upper = uint64_t(int64_t(upper) >> 32);
-            lower >>= 32;
-            lower |= uint64_t(temp) << 32;
-        case 2:
-            lower = upper;
-            upper = uint64_t(int64_t(upper) >> 63);
-        case 3:
-            lower = uint64_t(int64_t(upper) >> 32);
-            upper = uint64_t(int64_t(upper) >> 63);
-        default:
-            lower = uint64_t(int64_t(upper) >> 63);
-            upper = uint64_t(int64_t(upper) >> 63);
-        }
-    }*/
-    /*
-    inline Fixed128 operator * (const Fixed128& other) const {
-        int32_t quarters[4] = {
-            (upper >> 32) & 0xFFFFFFFF,
-            upper & 0xFFFFFFFF,
-            (lower >> 32) & 0xFFFFFFFF,
-            lower & 0xFFFFFFFF
-        };
-
-        int32_t otherQuarters[4] = {
-            (other.upper >> 32) & 0xFFFFFFFF,
-            other.upper & 0xFFFFFFFF,
-            (other.lower >> 32) & 0xFFFFFFFF,
-            other.lower & 0xFFFFFFFF
-        };
-
-        int64_t prods[4][4];
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4 && j + i < 5; j++) {
-                if (i == 0 || j == 0)
-                    prods[i][j] = int64_t(quarters[i]) * int64_t(otherQuarters[j]);
-                else
-                    prods[i][j] = uint64_t(uint32_t(quarters[i])) * uint64_t(uint32_t(otherQuarters[j]));
-            }
-        }
-
-        Fixed128 ret = { 0, 0 };
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4 && j + i < 5; j++) {
-                if (i == 0 || j == 0)
-                    ret.addSigned(prods[i][j], i + j);
-                else
-                    ret.add(prods[i][j], i + j);
-            }
-        }
-        return ret;
-        
-        /*
-        int64_t x00 = int64_t(quarters[0]) * int64_t(otherQuarters[0]);
-        int64_t x01 = int64_t(quarters[0]) * int64_t(otherQuarters[1]);
-        int64_t x02 = int64_t(quarters[0]) * int64_t(otherQuarters[2]);
-        int64_t x03 = int64_t(quarters[0]) * int64_t(otherQuarters[3]);
-        int64_t x10 = int64_t(quarters[1]) * int64_t(otherQuarters[0]);
-        int64_t x11 = int64_t(quarters[1]) * int64_t(otherQuarters[1]);
-        int64_t x12 = int64_t(quarters[1]) * int64_t(otherQuarters[2]);
-        int64_t x13 = int64_t(quarters[1]) * int64_t(otherQuarters[3]);
-        int64_t x20 = int64_t(quarters[2]) * int64_t(otherQuarters[0]);
-        int64_t x21 = int64_t(quarters[2]) * int64_t(otherQuarters[1]);
-        int64_t x22 = int64_t(quarters[2]) * int64_t(otherQuarters[2]);
-        int64_t x30 = int64_t(quarters[3]) * int64_t(otherQuarters[0]);
-        int64_t x31 = int64_t(quarters[3]) * int64_t(otherQuarters[1]);
-
-        Fixed128 ret = { 0, 0 };
-        /*uint32_t newQuarters[4] = {
-            x00,
-            x01 + x10,
-            x02 + x11 + x20,
-            x03 + x12 + x21 + x30,
-        };*//*
-        ret.add(x00, 0);
-        ret.add(x01 + x10, 1);
-        ret.add(x02 + x11 + x20, 2);
-        ret.add(x03 + x12 + x21 + x30, 3);
-        ret.add(x13 + x22 + x31, 4);
-
-        return ret;*/
-    /*}*/
 
 private:
     inline void add(uint64_t val, int b32offset) {
@@ -532,6 +500,7 @@ public:
     }
 };
 
+
 struct Fixed64
 {
     int64_t bits;
@@ -540,26 +509,21 @@ struct Fixed64
     ~Fixed64() = default;
 
 
-    inline Fixed64(int64_t bits, bool /* dummy */) :
+    explicit inline Fixed64(int64_t bits, bool /* dummy */) :
         bits{ bits }
     {
     }
 
     inline Fixed64(double x)
     {
-        /*int integerPart = int(x);
-        double fractionalPart = x - integerPart;
-        bits = uint64_t(integerPart) << 32;
-        bits |= uint64_t(fractionalPart * (1ULL << 32)) & 0xFFFFFFFF;
-        */
-        bits = x * (1LL << 32);
+        bits = x * (1LL << 48);
     }
 
     inline operator float(void) const {
-        return bits * (1.0f / (1ULL << 32));
+        return bits * (1.0f / (1ULL << 48));
     }
     inline operator double(void) const {
-        return bits * (1.0 / (1ULL << 32));
+        return bits * (1.0 / (1ULL << 48));
     }
 
     inline Fixed64 operator + (const Fixed64& other) const {
@@ -574,45 +538,10 @@ struct Fixed64
     inline Fixed64 operator - (const Fixed64& other) const {
         return Fixed64{ bits - other.bits, true };
     }
+
     inline Fixed64& operator -= (const Fixed64& other) {
         bits -= other.bits;
         return *this;
-    }
-
-    static inline std::pair<int64_t, uint64_t> mul64(int64_t a, int64_t b) {
-        uint32_t aa[2] = { uint32_t(a >> 32), uint32_t(a & 0xFFFFFFFF) };
-        uint32_t bb[2] = { uint32_t(b >> 32), uint32_t(b & 0xFFFFFFFF) };
-
-        uint32_t res[4];
-        int64_t temp = uint64_t(aa[1]) * uint64_t(bb[1]);
-        res[3] = temp & 0xFFFFFFFF;
-        temp >>= 32;
-        temp += int64_t(int32_t(aa[0])) * int64_t(bb[1]) + int64_t(aa[1]) * int64_t(int32_t(bb[0]));
-        res[2] = temp & 0xFFFFFFFF;
-        temp >>= 32;
-        temp += int64_t(int32_t(aa[0])) * int64_t(int32_t(bb[0]));
-        res[1] = temp & 0xFFFFFFFF;
-        res[0] = temp >> 32;
-
-        return std::make_pair((int64_t(res[0]) << 32) | res[1], uint64_t((int64_t(res[2]) << 32) | res[3]));
-    }
-
-    static inline std::pair<uint64_t, uint64_t> mulu64(uint64_t a, uint64_t b) {
-        uint32_t aa[2] = { uint32_t(a >> 32), uint32_t(a & 0xFFFFFFFF) };
-        uint32_t bb[2] = { uint32_t(b >> 32), uint32_t(b & 0xFFFFFFFF) };
-
-        uint32_t res[4];
-        uint64_t temp = uint64_t(aa[1]) * bb[1];
-        res[3] = temp & 0xFFFFFFFF;
-        uint32_t carry = temp >> 32;
-        temp = uint64_t(aa[0]) * bb[1] + uint64_t(aa[1]) * bb[0] + carry;
-        res[2] = temp & 0xFFFFFFFF;
-        carry = temp >> 32;
-        temp = uint64_t(aa[0]) * bb[0] + carry;
-        res[1] = temp & 0xFFFFFFFF;
-        res[0] = temp >> 32;
-
-        return std::make_pair((uint64_t(res[0]) << 32) | res[1], (uint64_t(res[2]) << 32) | res[3] );
     }
 
     inline Fixed64 operator * (const Fixed64& other) {
@@ -628,10 +557,10 @@ struct Fixed64
         double od = int32_t(other.bits >> 32) + double(uint32_t(other.bits)) / (1ULL << 32);
         return d * od;*/
 
-        /*auto[hi, lo] = mul64(bits, other.bits);
-        return Fixed64{ int64_t((hi << 32) | (lo >> 32)), true };*/
+        auto[hi, lo] = mnd::mul64(bits, other.bits);
+        return Fixed64{ int64_t((hi << 16) | (lo >> 48)), true };
 
-        uint32_t a[2] = { uint32_t(uint64_t(bits) >> 32), uint32_t(bits & 0xFFFFFFFF) };
+        /*uint32_t a[2] = { uint32_t(uint64_t(bits) >> 32), uint32_t(bits & 0xFFFFFFFF) };
         uint32_t b[2] = { uint32_t(uint64_t(other.bits) >> 32), uint32_t(other.bits & 0xFFFFFFFF) };
 
         uint64_t a1b1 = uint64_t(a[1]) * b[1];
@@ -642,7 +571,7 @@ struct Fixed64
         int64_t res = a1b1 >> 32;
         res += a0b1 + a1b0;
         res += a0b0 << 32;
-        return Fixed64{ res, true };
+        return Fixed64{ res, true };*/
 
         /*
         uint32_t aa[2] = { uint32_t(uint64_t(bits) >> 32), uint32_t(bits & 0xFFFFFFFF) };

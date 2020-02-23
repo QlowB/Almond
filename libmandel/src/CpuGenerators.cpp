@@ -22,12 +22,15 @@ namespace mnd
 
     template class CpuGenerator<Fixed64, mnd::NONE, false>;
     template class CpuGenerator<Fixed64, mnd::NONE, true>;
-    
+
+    template class CpuGenerator<Fixed128, mnd::NONE, false>;
+    template class CpuGenerator<Fixed128, mnd::NONE, true>;
+
     //template class CpuGenerator<Fixed128, mnd::NONE, false>;
     //template class CpuGenerator<Fixed128, mnd::NONE, false, true>;
     //template class CpuGenerator<Fixed128, mnd::NONE, true>;
     //template class CpuGenerator<Fixed128, mnd::NONE, true, true>;
-    
+
 
 #ifdef WITH_BOOST
 #include <boost/multiprecision/cpp_bin_float.hpp>
@@ -87,8 +90,11 @@ void CpuGenerator<T, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info,
             if (info.smooth) {
                 if (k >= info.maxIter)
                     data[i + j * info.bWidth] = float(info.maxIter);
-                else
-                    data[i + j * info.bWidth] = ((float) k) + 1 - ::logf(::logf(mnd::convert<float>(a * a + b * b)) / 2) / ::logf(2.0f);
+                else {
+                    float aapp = mnd::convert<float>(a);
+                    float bapp = mnd::convert<float>(b);
+                    data[i + j * info.bWidth] = ((float) k) + 1 - ::logf(::logf(aapp * aapp + bapp * bapp) / 2) / ::logf(2.0f);
+                }
             }
             else
                 data[i + j * info.bWidth] = k;

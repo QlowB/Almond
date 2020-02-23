@@ -34,6 +34,7 @@ SET(MandelSources
     src/Hardware.cpp
     src/MandelUtil.cpp
     src/Types.cpp
+    src/OpenClCode.cpp
 )
 FILE(GLOB MandelHeaders include/*.h)
 
@@ -63,12 +64,6 @@ if (LTO_SUPPORTED AND WITH_LTO)
     message("Enabling link-time optimization.")
     set_property(TARGET mandel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
     set_property(TARGET qd PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()
-
-
-if(MPFR_INCLUDES AND MPFR_LIBRARIES)
-    set(MPFR_FOUND TRUE)
-    #target_compile_definitions(mandel PUBLIC WITH_MPFR)
 endif()
 
 if(OPENCL_FOUND)

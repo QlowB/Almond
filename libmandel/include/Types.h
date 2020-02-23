@@ -139,9 +139,18 @@ namespace mnd
     }
 
     template<>
-    inline Fixed64 convert<Fixed64, Float512>(const Float512& x)
+    inline Fixed64 convert<Fixed64, Real>(const Real& x)
     {
-        return Fixed64(double(Real(x)));
+        return Fixed64(double(x));
+    }
+
+    template<>
+    inline Fixed128 convert<Fixed128, Real>(const Real& x)
+    {
+        mnd::Integer i = mnd::Integer(x * mnd::pow(Real(1LL << 32), 3));
+        uint64_t lo = uint64_t(i & 0xFFFFFFFFFFFFFFFFULL);
+        uint64_t hi = uint64_t((i >> 64) & 0xFFFFFFFFFFFFFFFFULL);
+        return Fixed128(hi, lo);
     }
 #endif
 

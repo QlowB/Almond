@@ -18,22 +18,40 @@ namespace mnd
     enum class Precision : int
     {
         FLOAT,
+        DOUBLE_FLOAT,
         DOUBLE,
         DOUBLE_DOUBLE,
         FLOAT128,
+        FIXED64,
+        FIXED128,
         QUAD_DOUBLE,
         FLOAT256,
         INF_PREC,
     };
 
     Real getPrecision(Precision p);
+    
+    template<typename T>
+    Real getPrecision(void);
+
+    template<> Real getPrecision<float>();
+    template<> Real getPrecision<double>();
+    template<> Real getPrecision<DoubleDouble>();
+    template<> Real getPrecision<QuadDouble>();
+    template<> Real getPrecision<Fixed128>();
 }
 
 
 class mnd::Generator
 {
+protected:
+    Real precision;
 public:
-    Generator(void) = default;
+    inline Generator(const Real& precision) :
+        precision{ precision }
+    {
+    }
+
     virtual ~Generator(void);
 
 
@@ -44,6 +62,7 @@ public:
     Generator& operator=(Generator&&) = default;
 
     virtual void generate(const MandelInfo& info, float* data) = 0;
+    virtual Real getPrecision(void) const;
 };
 
 
@@ -51,7 +70,7 @@ class mnd::AdaptiveGenerator : public Generator
 {
     std::map<Real, Generator*, std::greater<Real>> generators;
 public:
-    AdaptiveGenerator(void) = default;
+    AdaptiveGenerator(void);
     AdaptiveGenerator(Generator* floatGen, Generator* doubleGen);
     virtual ~AdaptiveGenerator(void) = default;
 
@@ -61,7 +80,7 @@ public:
     const std::map<Real, Generator*, std::greater<Real>>& getGenerators(void) const { return generators; }
     inline void clear(void) { generators.clear(); }
 
-    virtual void generate(const MandelInfo& info, float* data);
+    virtual void generate(const MandelInfo& info, float* data) override;
 };
 
 

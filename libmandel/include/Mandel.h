@@ -46,6 +46,7 @@ enum class mnd::GeneratorType
     FLOAT128,
     FLOAT256,
     FIXED64,
+    FIXED128,
     FIXED512
 };
 

@@ -38,7 +38,12 @@ namespace mnd
     template<> Real getPrecision<double>();
     template<> Real getPrecision<DoubleDouble>();
     template<> Real getPrecision<QuadDouble>();
+    template<> Real getPrecision<Fixed64>();
     template<> Real getPrecision<Fixed128>();
+    template<> Real getPrecision<Fixed512>();
+    template<> Real getPrecision<Float128>();
+    template<> Real getPrecision<Float256>();
+    template<> Real getPrecision<Float512>();
 }
 
 

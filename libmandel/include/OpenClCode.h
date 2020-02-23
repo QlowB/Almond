@@ -3,9 +3,9 @@
 
 namespace mnd
 {
-    unsigned char fixed64_cl[];
-    unsigned char fixed128_cl[];
-    unsigned char fixed512_cl[];
+    unsigned char* fixed64_cl;
+    unsigned char* fixed128_cl;
+    unsigned char* fixed512_cl;
 }
 
 #endif // MANDEL_OPENCLCODE_H

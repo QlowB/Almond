@@ -45,6 +45,7 @@ enum class mnd::GeneratorType
     QUAD_DOUBLE,
     FLOAT128,
     FLOAT256,
+    FIXED64,
     FIXED512
 };
 

@@ -3,15 +3,15 @@
 long mul(long a, long b) {
     long upper = mul_hi(a, b);
     long lower = a * b;
-    return (upper << 32) + ((lower >> 32) & 0xFFFFFFFF);
+    return (upper << 16) + ((lower >> 48) & 0xFFFF);
 }
 
 
 __kernel void iterate(__global float* A, const int width,
                       ulong x, ulong y, ulong pw, ulong ph, int max, int smooth) {
     int index = get_global_id(0);
-    long px = (index % width) ;
-    long py = (index / width) ;
+    long px = (index % width);
+    long py = (index / width);
 
     long xl = x;
     long yt = y;
@@ -28,7 +28,7 @@ __kernel void iterate(__global float* A, const int width,
         long aa = mul(a, a);
         long bb = mul(b, b);
         long ab = mul(a, b);
-        if (aa + bb > (16LL << 32)) break;
+        if (aa + bb > (16LL << 48)) break;
         a = aa - bb + ca;
         b = ab + ab + cb;
         n++;
@@ -39,8 +39,8 @@ __kernel void iterate(__global float* A, const int width,
         A[index] = max;
     else {
         if (smooth != 0) {
-            float aapprox = ((float) a) * (1.0f / (1LL << 32)); // 3.5527137e-15f;
-            float bapprox = ((float) b) * (1.0f / (1LL << 32)); // 3.5527137e-15f;
+            float aapprox = ((float) a) * (1.0f / (1LL << 48)); // 3.5527137e-15f;
+            float bapprox = ((float) b) * (1.0f / (1LL << 48)); // 3.5527137e-15f;
             A[index] = ((float) n) + 1 - log(log(aapprox * aapprox + bapprox * bapprox) / 2) / log(2.0f);
         }
         else

@@ -41,6 +41,7 @@ static const std::map<mnd::GeneratorType, std::string> typeNames =
     { mnd::GeneratorType::QUAD_DOUBLE, "quad double" },
     { mnd::GeneratorType::FLOAT128, "float128" },
     { mnd::GeneratorType::FLOAT256, "float256" },
+    { mnd::GeneratorType::FIXED64, "fixed64" },
     { mnd::GeneratorType::FIXED512, "fixed512" },
 };
 
@@ -245,7 +246,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             //printf("    using opencl device: %s\n", md.name.c_str());
             try {
                 md.generators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(device) });
-                md.generators.insert({ GeneratorType::FIXED512, std::make_unique<ClGenerator64>(device) });
+                md.generators.insert({ GeneratorType::FIXED64, std::make_unique<ClGenerator64>(device) });
                 //md.generators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(device) });
             }
             catch (const std::string& err) {

@@ -631,10 +631,10 @@ void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
     float pixelScaleY = float(info.view.height / info.bHeight);
 
     using ull = unsigned long long;
-    ull x = ull(::round(double(info.view.x) * (1LL << 32)));
-    ull y = ull(::round(double(info.view.y) * (1LL << 32)));
-    ull w = ull(::round(double(pixelScaleX) * (1LL << 32)));
-    ull h = ull(::round(double(pixelScaleY) * (1LL << 32)));
+    ull x = ull(::round(double(info.view.x) * (1LL << 48)));
+    ull y = ull(::round(double(info.view.y) * (1LL << 48)));
+    ull w = ull(::round(double(pixelScaleX) * (1LL << 48)));
+    ull h = ull(::round(double(pixelScaleY) * (1LL << 48)));
     //x = 0;
     //y = 0;
 

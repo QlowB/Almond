@@ -120,7 +120,7 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
 
 
 ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision(mnd::Precision::FLOAT) }
+    ClGenerator{ device, mnd::getPrecision<float>() }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -344,7 +344,7 @@ std::string ClGeneratorDoubleFloat::getKernelCode(bool smooth) const
 
 
 ClGeneratorDouble::ClGeneratorDouble(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision(mnd::Precision::DOUBLE) }
+    ClGenerator{ device, mnd::getPrecision<double>() }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -422,7 +422,7 @@ std::string ClGeneratorDouble::getKernelCode(bool smooth) const
 
 
 ClGeneratorDoubleDouble::ClGeneratorDoubleDouble(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision(mnd::Precision::DOUBLE_DOUBLE) }
+    ClGenerator{ device, mnd::getPrecision<DoubleDouble>() }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -478,7 +478,7 @@ std::string ClGeneratorDoubleDouble::getKernelCode(bool smooth) const
 
 
 ClGeneratorQuadDouble::ClGeneratorQuadDouble(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision(mnd::Precision::QUAD_DOUBLE) }
+    ClGenerator{ device, mnd::getPrecision<QuadDouble>() }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -535,7 +535,7 @@ std::string ClGeneratorQuadDouble::getKernelCode(bool smooth) const
 
 
 ClGenerator128::ClGenerator128(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision(mnd::Precision::FIXED128) }
+    ClGenerator{ device, mnd::getPrecision<Fixed128>() }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -598,12 +598,12 @@ std::string ClGenerator128::getKernelCode(bool smooth) const
         std::istreambuf_iterator<char>());
     //fprintf(stderr, "%s\n", str);
     return str;*/
-    return (char*) fixed512_cl;
+    return getFixed512_cl();
 }
 
 
 ClGenerator64::ClGenerator64(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision(mnd::Precision::FIXED64) }
+    ClGenerator{ device, mnd::getPrecision<Fixed64>() }
 {
     context = Context{ device };
     Program::Sources sources;
@@ -663,7 +663,7 @@ std::string ClGenerator64::getKernelCode(bool smooth) const
     std::istreambuf_iterator<char>());
     //fprintf(stderr, "%s\n", str);
     return str;*/
-    return (char*) fixed64_cl;
+    return getFixed64_cl();
 }
 
 #endif // WITH_OPENCL

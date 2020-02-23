@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>976</width>
-    <height>493</height>
+    <width>1167</width>
+    <height>663</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,10 +35,13 @@
             <bool>true</bool>
            </property>
            <attribute name="horizontalHeaderDefaultSectionSize">
-            <number>200</number>
+            <number>180</number>
            </attribute>
            <attribute name="horizontalHeaderMinimumSectionSize">
             <number>100</number>
+           </attribute>
+           <attribute name="horizontalHeaderStretchLastSection">
+            <bool>false</bool>
            </attribute>
            <attribute name="verticalHeaderVisible">
             <bool>false</bool>
@@ -46,6 +49,11 @@
            <column>
             <property name="text">
              <string>Generator Type</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Precision</string>
             </property>
            </column>
            <column>

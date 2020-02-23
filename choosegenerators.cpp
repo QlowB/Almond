@@ -199,7 +199,7 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, QWidget *parent)
                 comboBox->setCurrentText(n);
             }
         }
-        le->setText(QString::number(static_cast<double>(prec)));
+        le->setText(QString::fromStdString(mnd::toLegibleString(prec)));
         comboBox->adjustSize();
         le->adjustSize();
     }
@@ -210,8 +210,11 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, QWidget *parent)
         int rowCount = ui->generatorTable->rowCount();
         ui->generatorTable->insertRow(rowCount);
         ui->generatorTable->setItem(rowCount, 0, new QTableWidgetItem);
+        ui->generatorTable->setItem(rowCount, 1, new QTableWidgetItem);
         const std::string& genName = mnd::getGeneratorName(generatorTypes[i]);
+        const mnd::Real& prec = mndCtxt.getCpuGenerator(generatorTypes[i])->getPrecision();
         ui->generatorTable->item(rowCount, 0)->setText(QString::fromStdString(genName));
+        ui->generatorTable->item(rowCount, 1)->setText(QString::fromStdString(mnd::toLegibleString(prec)));
         actualGenerators.push_back(mndCtxt.getCpuGenerator(generatorTypes[i]));
     }
 
@@ -221,8 +224,11 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, QWidget *parent)
             int rowCount = ui->generatorTable->rowCount();
             ui->generatorTable->insertRow(rowCount);
             ui->generatorTable->setItem(rowCount, 0, new QTableWidgetItem);
+            ui->generatorTable->setItem(rowCount, 1, new QTableWidgetItem);
             const std::string& genName = mnd::getGeneratorName(generatorTypes[i]) + " [" + device.getName() + "]";
+            const mnd::Real& prec = device.getGenerator(generatorTypes[i])->getPrecision();
             ui->generatorTable->item(rowCount, 0)->setText(QString::fromStdString(genName));
+            ui->generatorTable->item(rowCount, 1)->setText(QString::fromStdString(mnd::toLegibleString(prec)));
             actualGenerators.push_back(device.getGenerator(generatorTypes[i]));
         }
     }
@@ -260,8 +266,8 @@ QLineEdit* ChooseGenerators::createFloatText(void)
 
 void ChooseGenerators::setBenchmarkResult(int row, float percentage, double result)
 {
-    this->ui->generatorTable->setItem(row, 1, new QTableWidgetItem);
-    this->ui->generatorTable->item(row, 1)->setText(QString::number(result));
+    this->ui->generatorTable->setItem(row, 2, new QTableWidgetItem);
+    this->ui->generatorTable->item(row, 2)->setText(QString::number(result));
     ui->progressBar->setValue(int(percentage * 10.0f));
 }
 
@@ -305,7 +311,7 @@ void ChooseGenerators::on_run_clicked()
 
 void ChooseGenerators::on_generatorTable_cellDoubleClicked(int row, int column)
 {
-    if (column == 1) {
+    if (column == 2) {
         QMessageBox msgBox{ this };
         msgBox.setText("Would you like to benchmark this generator?");
         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);

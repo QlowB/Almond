@@ -155,6 +155,7 @@ namespace mnd
 #endif
 
     std::string toString(const Real& num);
+    std::string toLegibleString(const Real& num);
 
 
 /*

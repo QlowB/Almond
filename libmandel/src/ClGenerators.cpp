@@ -621,6 +621,7 @@ ClGenerator64::ClGenerator64(cl::Device device) :
 }
 
 
+#include "CpuGenerators.h"
 void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
 {
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
@@ -630,11 +631,14 @@ void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
     float pixelScaleY = float(info.view.height / info.bHeight);
 
     using ull = unsigned long long;
-    ull x = ull(double(info.view.x) * 0x1000000000000ULL);
-    ull y = ull(double(info.view.y) * 0x1000000000000ULL);
-    ull w = ull(double(pixelScaleX) * 0x1000000000000ULL);
-    ull h = ull(double(pixelScaleY) * 0x1000000000000ULL);
+    ull x = ull(::round(double(info.view.x) * (1LL << 32)));
+    ull y = ull(::round(double(info.view.y) * (1LL << 32)));
+    ull w = ull(::round(double(pixelScaleX) * (1LL << 32)));
+    ull h = ull(::round(double(pixelScaleY) * (1LL << 32)));
+    //x = 0;
+    //y = 0;
 
+    
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);
     iterate.setArg(1, int(info.bWidth));
@@ -647,6 +651,8 @@ void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
 
     queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+    //CpuGenerator<Fixed64> fx;
+    //fx.generate(info, data);
 }
 
 

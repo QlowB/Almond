@@ -96,7 +96,7 @@ Gradient Gradient::readXml(const QString& xml)
 
 RGBColor Gradient::get(float x) const
 {
-    if (colors.empty() || ::isnan(x) || ::isinf(x))
+    if (colors.empty() || std::isnan(x) || std::isinf(x))
         return RGBColor();
     /*const auto [left, right, lerp] = getNeighbors(x);
     RGBColor lerped = lerpColors(left, right, lerp);

@@ -137,6 +137,12 @@ namespace mnd
     {
         return float(Real(x));
     }
+
+    template<>
+    inline Fixed64 convert<Fixed64, Float512>(const Float512& x)
+    {
+        return Fixed64(double(Real(x)));
+    }
 #endif
 
     std::string toString(const Real& num);

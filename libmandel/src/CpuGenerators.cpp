@@ -20,6 +20,8 @@ namespace mnd
     template class CpuGenerator<double, mnd::NONE, false>;
     template class CpuGenerator<double, mnd::NONE, true>;
 
+    template class CpuGenerator<Fixed64, mnd::NONE, false>;
+    template class CpuGenerator<Fixed64, mnd::NONE, true>;
     
     //template class CpuGenerator<Fixed128, mnd::NONE, false>;
     //template class CpuGenerator<Fixed128, mnd::NONE, false, true>;

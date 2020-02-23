@@ -52,8 +52,19 @@ namespace mnd
     inline Float256 log2(const Float256& x) { return boost::multiprecision::log2(x); }
     inline Float256 pow(const Float256& x, const Float256& y) { return boost::multiprecision::pow(x, y); }
 
-    using Real = Float256;
-    using Integer = boost::multiprecision::int256_t;
+    using Float512 = boost::multiprecision::number<
+        boost::multiprecision::backends::cpp_bin_float<
+            496, boost::multiprecision::backends::digit_base_2, void, boost::int16_t, -16382, 16383>,
+            boost::multiprecision::et_off>;
+
+    inline Float512 abs(const Float512& x) { return boost::multiprecision::abs(x); }
+    inline Float512 floor(const Float512& x) { return boost::multiprecision::floor(x); }
+    inline Float512 log(const Float512& x) { return boost::multiprecision::log(x); }
+    inline Float512 log2(const Float512& x) { return boost::multiprecision::log2(x); }
+    inline Float512 pow(const Float512& x, const Float512& y) { return boost::multiprecision::pow(x, y); }
+
+    using Real = Float512;
+    using Integer = boost::multiprecision::int512_t;
 #else
     using Real = double;
     using Integer = int64_t;

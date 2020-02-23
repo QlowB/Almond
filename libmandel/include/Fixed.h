@@ -27,9 +27,19 @@ struct Fixed512
             240, boost::multiprecision::backends::digit_base_2, void, boost::int16_t, -16382, 16383>,
             boost::multiprecision::et_off>;
 
+    using Float512 = boost::multiprecision::number<
+        boost::multiprecision::backends::cpp_bin_float<
+            496, boost::multiprecision::backends::digit_base_2, void, boost::int16_t, -16382, 16383>,
+            boost::multiprecision::et_off>;
+
     inline Fixed512(const Float256& val)
     {
         body = Once{ val * boost::multiprecision::pow(Float256{ 2 }, 512 - 32) };
+    }
+
+    inline Fixed512(const Float512& val)
+    {
+        body = Once{ val * boost::multiprecision::pow(Float512{ 2 }, 512 - 32) };
     }
 
     inline Fixed512(double val)
@@ -39,6 +49,10 @@ struct Fixed512
 
     inline operator Float256(void) const {
         return boost::multiprecision::pow(Float256{ 0.5 }, 512 - 32) * Float256{ body };
+    }
+
+    inline operator Float512(void) const {
+        return boost::multiprecision::pow(Float512{ 0.5 }, 512 - 32) * Float512{ body };
     }
 
     inline Fixed512& operator += (const Fixed512& other) {

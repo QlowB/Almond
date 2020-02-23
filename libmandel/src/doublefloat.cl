@@ -10,7 +10,7 @@ float2 twoSum(float a, float b) {
 }
 
 float2 split(float a) {
-    float c = (65536 + 1) * a;
+    float c = (4096 + 1) * a;
     float abig = c - a;
     float ahi = c - abig;
     float alo = a - ahi;
@@ -52,7 +52,7 @@ float2 mulFloat(float2 a, float b) {
     return twoSum(t.s0, t.s1);
 }
 
-__kernel void iterate(__global float* A, const int width,
+__kernel void iterate(__global __write_only float* A, const int width,
                       float x1, float x2, float y1, float y2,
                       float pw1, float pw2, float ph1, float ph2, int max, int smooth) {
     int index = get_global_id(0);
@@ -74,7 +74,7 @@ __kernel void iterate(__global float* A, const int width,
         float2 aa = mul(a, a);
         float2 bb = mul(b, b);
         float2 ab = mul(a, b);
-        if (aa.s0 + aa.s1 + bb.s0 + bb.s1 > 16) break;
+        if (aa.s0 + bb.s0 > 16) break;
         float2 minusbb = (float2)(-bb.s0, -bb.s1);
         a = add(add(aa, minusbb), ca);
         b = add(add(ab, ab), cb);
@@ -90,6 +90,4 @@ __kernel void iterate(__global float* A, const int width,
         else
             A[index] = ((float)n);
     }
-    //               A[index] = ((float)n) + 1 - (a * a + b * b - 16) / (256 - 16);
-    //           A[get_global_id(0)] = 5;
 }

@@ -6,6 +6,8 @@ using namespace mnd;
 
 #include <QPainter>
 
+#include <cstdio>
+
 
 Texture::Texture(const Bitmap<RGBColor>& bitmap, GLint param)
 {
@@ -226,11 +228,21 @@ void Job::run(void)
     mi->bWidth = mi->bHeight = MandelView::chunkSize;
     mi->maxIter = owner.getMaxIterations();
     mi->smooth = owner.getSmoothColoring();
-    generator->generate(*mi, f.pixels.get());
-    auto* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([&mi, this](float i) {
-        return i >= mi->maxIter ? RGBColor{ 0, 0, 0 } : gradient.get(i);
-    }));
-    emit done(level, i, j, calcState, rgb);
+    try {
+        generator->generate(*mi, f.pixels.get());
+        auto* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([&mi, this](float i) {
+            return i >= mi->maxIter ? RGBColor{ 0, 0, 0 } : gradient.get(i);
+        }));
+        emit done(level, i, j, calcState, rgb);
+    }
+    catch(std::exception& ex) {
+        printf("wat: %s?!\n", ex.what()); fflush(stdout);
+        exit(1);
+    }
+    catch(...) {
+        printf("wat?!\n"); fflush(stdout);
+        exit(1);
+    }
 }
 
 
@@ -531,7 +543,7 @@ void MandelView::paint(const mnd::MandelViewport& mvp)
                     t = under;
                 }
                 else {
-                    auto above = searchAbove(level, i, j, 2);
+                    auto above = searchAbove(level, i, j, 3);
                     if (above) {
                         t = above;
                     }

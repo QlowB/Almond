@@ -119,7 +119,7 @@ void Almond::on_exportImage_clicked()
         mi.bWidth = dialog.getWidth();
         mi.bHeight = dialog.getHeight();
         mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        mnd::Generator& g = mandelContext.getDefaultGenerator();
+        mnd::Generator& g = currentGenerator ? *currentGenerator : mandelContext.getDefaultGenerator();
         auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
         g.generate(mi, fmap.pixels.get());
         auto bitmap = fmap.map<RGBColor>([&mi, this] (float i) {

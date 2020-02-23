@@ -162,6 +162,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
     auto* doubleDoubleGen = getCpuGenerator(GeneratorType::DOUBLE_DOUBLE);
     auto* quadDoubleGen = getCpuGenerator(GeneratorType::QUAD_DOUBLE);
     auto* f256Gen = getCpuGenerator(GeneratorType::FLOAT256);
+    auto* fix512 = getCpuGenerator(GeneratorType::FIXED512);
 
     if (cpuInfo.hasAvx()) {
         floatGen = getCpuGenerator(GeneratorType::FLOAT_AVX);
@@ -200,7 +201,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
     ag->addGenerator(Precision::DOUBLE_DOUBLE, *doubleDoubleGen);
     ag->addGenerator(Precision::QUAD_DOUBLE, *quadDoubleGen);
     ag->addGenerator(Precision::FLOAT256, *f256Gen);
-    ag->addGenerator(Precision::INF_PREC, *f256Gen);
+    ag->addGenerator(Precision::INF_PREC, *fix512);
 
     return ag;
 }
@@ -244,7 +245,8 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             //printf("    using opencl device: %s\n", md.name.c_str());
             try {
                 md.generators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(device) });
-                md.generators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(device) });
+                md.generators.insert({ GeneratorType::FIXED512, std::make_unique<ClGenerator64>(device) });
+                //md.generators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(device) });
             }
             catch (const std::string& err) {
                 printf("err: %s", err.c_str());

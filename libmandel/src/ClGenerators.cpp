@@ -1,6 +1,8 @@
 #include "ClGenerators.h"
 #include "doubledouble.h"
 #include "doublefloat.h"
+#include "opencl/fixed512.h"
+#include "opencl/fixed64.h"
 
 #ifdef WITH_OPENCL
 
@@ -18,6 +20,7 @@ using mnd::ClGeneratorDouble;
 using mnd::ClGeneratorDoubleDouble;
 using mnd::ClGeneratorQuadDouble;
 using mnd::ClGenerator128;
+using mnd::ClGenerator64;
 
 Platform getPlatform() {
     /* Returns the first platform found. */
@@ -189,26 +192,132 @@ ClGeneratorDoubleFloat::ClGeneratorDoubleFloat(cl::Device device) :
 }
 
 
+std::pair<float, float> twoSum(float a, float b) {
+    float s = a + b;
+    float v = s - a;
+    float r = (a - (s - v)) + (b - v);
+    return { s, r };
+}
+
+std::pair<float, float> split(float a) {
+    float c = (4096 + 1) * a;
+    float abig = c - a;
+    float ahi = c - abig;
+    float alo = a - ahi;
+    return { ahi, alo };
+}
+
+std::pair<float, float> twoProd(float a, float b) {
+    float x = a * b;
+    auto aex = split(a);
+    auto bex = split(b);
+    float errx = x - (aex.first * bex.first);
+    float erry = errx - (aex.second * bex.first);
+    float errz = erry - (aex.first * bex.second);
+    float y = (aex.second * bex.second) - errz;
+    return { x, y };
+}
+
+std::pair<float, float> add(std::pair<float, float> a, std::pair<float, float> b) {
+    float r = a.first + b.first;
+    float s;
+    if (fabs(a.first) >= fabs(b.first)) {
+        s = (((a.first - r) + b.first) + b.second) + a.second;
+    }
+    else {
+        s = (((b.first - r) + a.first) + a.second) + b.second;
+    }
+    return twoSum(r, s);
+}
+
+std::pair<float, float> mul(std::pair<float, float> a, std::pair<float, float> b) {
+    auto t = twoProd(a.first, b.first);
+    float t3 = ((a.first * b.second) + (a.second * b.first)) + t.second;
+    return twoSum(t.first, t.second);
+}
+
+std::pair<float, float> mulFloat(std::pair<float, float> a, float b) {
+    std::pair<float, float> t = twoProd(a.first, b);
+    float t3 = (a.second * b) + t.second;
+    return twoSum(t.first, t.second);
+}
+
+
 void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
 {
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
 
+    auto add12 = [](float a, float b) {
+        float s = a + b;
+        float v = s - a;
+        float r = (a - (s - v)) + (b - v);
+        return std::pair{ s, r };
+    };
+
     auto splitDouble = [] (double x) {
+        /*uint64_t xl = *((uint64_t*)&x);
+        uint64_t mantissa = xl & 0x000FFFFFFFFFFFFFULL;
+        uint64_t exp = (xl & 0x7FF0000000000000ULL) >> 53;
+        bool sign = (xl & 0x1000000000000000ULL) != 0;
+
+        uint32_t floathi = exp << 23;*/
+
         float hi = float(x);
         float lo = float(x - double(hi));
-        return std::pair{ hi, lo };
+        if (abs(lo) >= 1.0e-10f) {
+            //printf("hi: %.10ef, lo: %.10ef\n", hi, lo);
+            //fflush(stdout);
+        }
+        return std::pair{ hi, 0.0f };
     };
 
     Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
-    double pixelScaleX = double(info.view.width / info.bWidth);
-    double pixelScaleY = double(info.view.height / info.bHeight);
+    double pixelScX = double(info.view.width / info.bWidth);
+    double pixelScY = double(info.view.height / info.bHeight);
 
     auto[x1, x2] = splitDouble(double(info.view.x));
     auto[y1, y2] = splitDouble(double(info.view.y));
-    auto[w1, w2] = splitDouble(pixelScaleX);
-    auto[h1, h2] = splitDouble(pixelScaleY);
+    auto[w1, w2] = splitDouble(pixelScX);
+    auto[h1, h2] = splitDouble(pixelScY);
 
+    for (int px = 0; px < info.bWidth; px++) {
+        for (int py = 0; py < info.bHeight; py++) {
+            std::pair<float, float> xl = { x1, x2 };
+            std::pair<float, float> yt = { y1, y2 };
+            std::pair<float, float> pixelScaleX = { w1, w2 };
+            std::pair<float, float> pixelScaleY = { h1, h2 };
 
+            std::pair<float, float> a = add(mulFloat(pixelScaleX, (float) px), xl); // pixelScaleX * px + xl
+            std::pair<float, float> b = add(mulFloat(pixelScaleY, (float) py), yt); // pixelScaleY * py + yt
+            std::pair<float, float> ca = a;
+            std::pair<float, float> cb = b;
+
+            int n = 0;
+            while (n < info.maxIter - 1) {
+                std::pair<float, float> aa = mul(a, a);
+                std::pair<float, float> bb = mul(b, b);
+                std::pair<float, float> ab = mul(a, b);
+                if (aa.first + bb.first > 16) break;
+                std::pair<float, float> minusbb = { -bb.first, -bb.second };
+                a = add(add(aa, minusbb), ca);
+                b = add(add(ab, ab), cb);
+                n++;
+            }
+
+            // N + 1 - log (log  |Z(N)|) / log 2
+            if (n >= info.maxIter - 1)
+                data[px + py * info.bWidth] = info.maxIter;
+            else {
+                if (info.smooth)
+                    data[px + py * info.bWidth] = ((float) n) + 1 - log(log(a.first * a.first + b.first * b.first ) / 2) / log(2.0f);
+                else
+                    data[px + py * info.bWidth] = ((float)n);
+            }
+        }
+    }
+    return;
+   
+    
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);
     iterate.setArg(1, int(info.bWidth));
@@ -415,6 +524,7 @@ void ClGeneratorQuadDouble::generate(const mnd::MandelInfo& info, float* data)
 
     cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+
 }
 
 
@@ -451,33 +561,105 @@ void ClGenerator128::generate(const mnd::MandelInfo& info, float* data)
     float pixelScaleX = float(info.view.width / info.bWidth);
     float pixelScaleY = float(info.view.height / info.bHeight);
 
+    using ull = unsigned long long;
+    ull x1 = ull(double(info.view.x) * 0x100000000ULL);
+    ull x2 = 0;
+    ull y1 = ull(double(info.view.y) * 0x100000000ULL);
+    ull y2 = 0;
+    ull w1 = ull(double(pixelScaleX) * 0x100000000ULL);
+    ull w2 = 0;
+    ull h1 = ull(double(pixelScaleY) * 0x100000000ULL);
+    ull h2 = 0;
+
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);
     iterate.setArg(1, int(info.bWidth));
-    iterate.setArg(2, double(info.view.x));
-    iterate.setArg(3, double(info.view.y));
-    iterate.setArg(4, double(pixelScaleX));
-    iterate.setArg(5, double(pixelScaleY));
-    iterate.setArg(6, int(info.maxIter));
+    iterate.setArg(2, ull(x1));
+    iterate.setArg(3, ull(x2));
+    iterate.setArg(4, ull(y1));
+    iterate.setArg(5, ull(y2));
+    iterate.setArg(6, ull(w1));
+    iterate.setArg(7, ull(w2));
+    iterate.setArg(8, ull(h1));
+    iterate.setArg(9, ull(h2));
+    iterate.setArg(10, int(info.maxIter));
+    iterate.setArg(11, int(info.smooth ? 1 : 0));
 
     queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
 }
 
-#include <string>
-#include <fstream>
-#include <streambuf>
 
 std::string ClGenerator128::getKernelCode(bool smooth) const
 {
-    //fprintf(stderr, "starting file read\n");
+    /*//fprintf(stderr, "starting file read\n");
     std::ifstream t("mandel128.cl");
     std::string str((std::istreambuf_iterator<char>(t)),
         std::istreambuf_iterator<char>());
     //fprintf(stderr, "%s\n", str);
-    return str;
+    return str;*/
+    return (char*) fixed512_cl;
 }
 
+
+ClGenerator64::ClGenerator64(cl::Device device) :
+    ClGenerator{ device }
+{
+    context = Context{ device };
+    Program::Sources sources;
+
+    std::string kcode = this->getKernelCode(false);
+
+    sources.push_back({ kcode.c_str(), kcode.length() });
+
+    program = Program{ context, sources };
+    if (program.build({ device }) != CL_SUCCESS) {
+        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
+    }
+
+    queue = CommandQueue(context, device);
+}
+
+
+void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+    float pixelScaleX = float(info.view.width / info.bWidth);
+    float pixelScaleY = float(info.view.height / info.bHeight);
+
+    using ull = unsigned long long;
+    ull x = ull(double(info.view.x) * 0x1000000000000ULL);
+    ull y = ull(double(info.view.y) * 0x1000000000000ULL);
+    ull w = ull(double(pixelScaleX) * 0x1000000000000ULL);
+    ull h = ull(double(pixelScaleY) * 0x1000000000000ULL);
+
+    Kernel iterate = Kernel(program, "iterate");
+    iterate.setArg(0, buffer_A);
+    iterate.setArg(1, int(info.bWidth));
+    iterate.setArg(2, ull(x));
+    iterate.setArg(3, ull(y));
+    iterate.setArg(4, ull(w));
+    iterate.setArg(5, ull(h));
+    iterate.setArg(6, int(info.maxIter));
+    iterate.setArg(7, int(info.smooth ? 1 : 0));
+
+    queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+
+std::string ClGenerator64::getKernelCode(bool smooth) const
+{
+    /*//fprintf(stderr, "starting file read\n");
+    std::ifstream t("mandel128.cl");
+    std::string str((std::istreambuf_iterator<char>(t)),
+    std::istreambuf_iterator<char>());
+    //fprintf(stderr, "%s\n", str);
+    return str;*/
+    return (char*) fixed64_cl;
+}
 
 #endif // WITH_OPENCL
 

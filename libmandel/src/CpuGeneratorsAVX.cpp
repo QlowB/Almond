@@ -26,6 +26,10 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
 {
     using T = float;
     const MandelViewport& view = info.view;
+    const float dppf = float(view.width / info.bWidth);
+    const float viewxf = float(view.x);
+    __m256 viewx = { viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf };
+    __m256 dpp = { dppf, dppf, dppf, dppf, dppf, dppf, dppf, dppf };
 
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
@@ -35,16 +39,9 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
         __m256 ys = {y, y, y, y, y, y, y, y};
         long i = 0;
         for (i; i < info.bWidth; i += 8) {
-            __m256 xs = {
-                float(view.x + float(i) * view.width / info.bWidth),
-                float(view.x + float(i + 1) * view.width / info.bWidth),
-                float(view.x + float(i + 2) * view.width / info.bWidth),
-                float(view.x + float(i + 3) * view.width / info.bWidth),
-                float(view.x + float(i + 4) * view.width / info.bWidth),
-                float(view.x + float(i + 5) * view.width / info.bWidth),
-                float(view.x + float(i + 6) * view.width / info.bWidth),
-                float(view.x + float(i + 7) * view.width / info.bWidth)
-            };
+            __m256 pixc = { float(i), float(i + 1), float(i + 2), float(i + 3), float(i + 4), float(i + 5), float(i + 6), float(i + 7) };
+
+            __m256 xs = _mm256_add_ps(_mm256_mul_ps(dpp, pixc), viewx);
 
             __m256 counter = { 0, 0, 0, 0, 0, 0, 0, 0 };
             __m256 adder = { 1, 1, 1, 1, 1, 1, 1, 1 };
@@ -108,6 +105,11 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
     using T = double;
     const MandelViewport& view = info.view;
 
+    const double dppf = double(view.width / info.bWidth);
+    const double viewxf = double(view.x);
+    __m256d viewx = { viewxf, viewxf, viewxf, viewxf };
+    __m256d dpp = { dppf, dppf, dppf, dppf };
+
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
 #pragma omp parallel for schedule(static, 1) if (parallel)
@@ -116,12 +118,8 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
         __m256d ys = { y, y, y, y };
         long i = 0;
         for (i; i < info.bWidth; i += 4) {
-            __m256d xs = {
-                double(view.x + double(i) * view.width / info.bWidth),
-                double(view.x + double(i + 1) * view.width / info.bWidth),
-                double(view.x + double(i + 2) * view.width / info.bWidth),
-                double(view.x + double(i + 3) * view.width / info.bWidth)
-            };
+            __m256d pixc = { double(i), double(i + 1), double(i + 2), double(i + 3) };
+            __m256d xs = _mm256_add_pd(_mm256_mul_pd(dpp, pixc), viewx);
 
             int itRes[4] = { 0, 0, 0, 0 };
 

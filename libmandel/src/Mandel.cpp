@@ -186,6 +186,8 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
         doubleGen = getCpuGenerator(GeneratorType::DOUBLE_SSE2);
     }
     if (cpuInfo.hasAvx() && cpuInfo.hasFma()) {
+        floatGen = getCpuGenerator(GeneratorType::FLOAT_AVX_FMA);
+        doubleGen = getCpuGenerator(GeneratorType::DOUBLE_AVX_FMA);
         doubleDoubleGen = getCpuGenerator(GeneratorType::DOUBLE_DOUBLE_AVX_FMA);
     }
 
@@ -259,7 +261,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             try {
                 md.generators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(device) });
                 md.generators.insert({ GeneratorType::FIXED64, std::make_unique<ClGenerator64>(device) });
-                //md.generators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(device) });
+                md.generators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(device) });
             }
             catch (const std::string& err) {
                 printf("err: %s", err.c_str());
@@ -269,7 +271,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
                 try {
                     md.generators.insert({ GeneratorType::DOUBLE, std::make_unique<ClGeneratorDouble>(device) });
                     md.generators.insert({ GeneratorType::DOUBLE_DOUBLE, std::make_unique<ClGeneratorDoubleDouble>(device) });
-                    md.generators.insert({ GeneratorType::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(device) });
+                    //md.generators.insert({ GeneratorType::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(device) });
                 }
                 catch (const std::string& err) {
                     printf("err: %s", err.c_str());

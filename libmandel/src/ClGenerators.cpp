@@ -1,6 +1,5 @@
 #include "ClGenerators.h"
 #include "doubledouble.h"
-#include "doublefloat.h"
 #include "OpenClCode.h"
 
 #ifdef WITH_OPENCL
@@ -99,7 +98,9 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
     float pixelScaleX = float(info.view.width / info.bWidth);
     float pixelScaleY = float(info.view.height / info.bHeight);
 
-    Kernel iterate = Kernel(program, "iterate");
+    bool useVec = device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() >= 4;
+
+    Kernel iterate = Kernel(program, useVec ? "iterate_vec4" : "iterate");
     iterate.setArg(0, buffer_A);
     iterate.setArg(1, int(info.bWidth));
     iterate.setArg(2, float(info.view.x));
@@ -109,8 +110,7 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
     iterate.setArg(6, int(info.maxIter));
     iterate.setArg(7, int(info.smooth ? 1 : 0));
 
-    // TODO check for overflow
-    if (true || device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() >= 4) {
+    if (useVec) {
         queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight / 4));
     } else {
         queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
@@ -140,7 +140,8 @@ ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
 
 std::string ClGeneratorFloat::getKernelCode(bool smooth) const
 {
-    return 
+    return mnd::getFloat_cl();
+        /*
 //        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable"
         "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth) {"
         "   int index = get_global_id(0) * 4;\n"
@@ -177,7 +178,7 @@ std::string ClGeneratorFloat::getKernelCode(bool smooth) const
         "      else\n"
         "          A[index + i] = ((float) count[i]);\n"
         "   }"
-        "}";
+        "}";*/
         /*
 //        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable"
         "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth) {"
@@ -271,7 +272,7 @@ std::pair<float, float> add(std::pair<float, float> a, std::pair<float, float> b
 
 std::pair<float, float> mul(std::pair<float, float> a, std::pair<float, float> b) {
     auto t = twoProd(a.first, b.first);
-    float t3 = ((a.first * b.second) + (a.second * b.first)) + t.second;
+    t.second += ((a.first * b.second) + (a.second * b.first));
     return twoSum(t.first, t.second);
 }
 
@@ -285,13 +286,6 @@ std::pair<float, float> mulFloat(std::pair<float, float> a, float b) {
 void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
 {
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
-
-    auto add12 = [](float a, float b) {
-        float s = a + b;
-        float v = s - a;
-        float r = (a - (s - v)) + (b - v);
-        return std::pair{ s, r };
-    };
 
     auto splitDouble = [] (double x) {
         /*uint64_t xl = *((uint64_t*)&x);
@@ -307,7 +301,7 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
             //printf("hi: %.10ef, lo: %.10ef\n", hi, lo);
             //fflush(stdout);
         }
-        return std::pair{ hi, 0.0f };
+        return std::pair{ hi, lo };
     };
 
     Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
@@ -319,6 +313,7 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
     auto[w1, w2] = splitDouble(pixelScX);
     auto[h1, h2] = splitDouble(pixelScY);
 
+    /*
     for (int px = 0; px < info.bWidth; px++) {
         for (int py = 0; py < info.bHeight; py++) {
             std::pair<float, float> xl = { x1, x2 };
@@ -355,7 +350,7 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
         }
     }
     return;
-   
+    */
     
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);
@@ -378,7 +373,7 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorDoubleFloat::getKernelCode(bool smooth) const
 {
-    return (char*) doublefloat_cl;
+    return getDoubleFloat_cl();
 }
 
 

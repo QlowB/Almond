@@ -97,7 +97,7 @@ double Benchmarker::benchmarkResult(mnd::Generator& mg) const
             break;
         }
         else if (time < std::chrono::milliseconds(10)) {
-            i += 3;
+            i += 7;
         }
     }
 
@@ -143,45 +143,6 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, QWidget *parent)
             generators.insert({ QString::fromStdString(typeName), device.getGenerator(genType) });
         }
     }
-
-    /*generators = std::map<QString, mnd::Generator*> {
-        { "float", mndCtxt.getCpuGenerator(mnd::GeneratorType::FLOAT) },
-        { "double", mndCtxt.getCpuGenerator(mnd::GeneratorType::DOUBLE) },
-        { "double double", mndCtxt.getCpuGenerator(mnd::GeneratorType::DOUBLE_DOUBLE) },
-        { "quad double", mndCtxt.getCpuGenerator(mnd::GeneratorType::QUAD_DOUBLE) },
-        { "float256", mndCtxt.getCpuGenerator(mnd::GeneratorType::FLOAT256) },
-        { "fixed512", mndCtxt.getCpuGenerator(mnd::GeneratorType::FIXED512) },
-    };
-
-    if (mndCtxt.getCpuInfo().hasSse2()) {
-        generators.insert({ "float SSE2", mndCtxt.getCpuGenerator(mnd::GeneratorType::FLOAT_SSE2) });
-        generators.insert({ "double SSE2", mndCtxt.getCpuGenerator(mnd::GeneratorType::DOUBLE_SSE2) });
-    }
-    if (mndCtxt.getCpuInfo().hasAvx()) {
-        generators.insert({ "float AVX", mndCtxt.getCpuGenerator(mnd::GeneratorType::FLOAT_AVX) });
-        generators.insert({ "double AVX", mndCtxt.getCpuGenerator(mnd::GeneratorType::DOUBLE_AVX) });
-        if (mndCtxt.getCpuInfo().hasFma()) {
-            generators.insert({ "double double AVX", mndCtxt.getCpuGenerator(mnd::GeneratorType::DOUBLE_DOUBLE_AVX) });
-        }
-    }
-    if (mndCtxt.getCpuInfo().hasNeon()) {
-        generators.insert({ "float Neon", mndCtxt.getCpuGenerator(mnd::GeneratorType::FLOAT_NEON) });
-        generators.insert({ "double Neon", mndCtxt.getCpuGenerator(mnd::GeneratorType::DOUBLE_NEON) });
-    }
-    for (auto& device : mndCtxt.getDevices()) {
-        if (mnd::Generator* gen; (gen = device.getGenerator(mnd::GeneratorType::FLOAT))) {
-            generators.insert({ QString("float ") + QString::fromStdString(device.getName()),
-                                gen });
-        }
-        if (mnd::Generator* gen; (gen = device.getGenerator(mnd::GeneratorType::DOUBLE))) {
-            generators.insert({ QString("double ") + QString::fromStdString(device.getName()),
-                                gen });
-        }
-        if (mnd::Generator* gen; (gen = device.getGenerator(mnd::GeneratorType::DOUBLE_DOUBLE))) {
-            generators.insert({ QString("double double ") + QString::fromStdString(device.getName()),
-                                gen });
-        }
-    }*/
 
     auto& defGen = mndCtxt.getDefaultGenerator();
     for (auto it = defGen.getGenerators().rbegin(); it != defGen.getGenerators().rend(); it++) {

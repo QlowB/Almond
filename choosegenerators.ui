@@ -34,14 +34,14 @@
            <property name="alternatingRowColors">
             <bool>true</bool>
            </property>
+           <attribute name="horizontalHeaderVisible">
+            <bool>true</bool>
+           </attribute>
            <attribute name="horizontalHeaderDefaultSectionSize">
             <number>180</number>
            </attribute>
            <attribute name="horizontalHeaderMinimumSectionSize">
             <number>100</number>
-           </attribute>
-           <attribute name="horizontalHeaderStretchLastSection">
-            <bool>false</bool>
            </attribute>
            <attribute name="verticalHeaderVisible">
             <bool>false</bool>

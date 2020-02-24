@@ -42,17 +42,17 @@ float2 add(float2 a, float2 b) {
 
 float2 mul(float2 a, float2 b) {
     float2 t = twoProd(a.s0, b.s0);
-    float t3 = ((a.s0 * b.s1) + (a.s1 * b.s0)) + t.s1;
+    t.s1 += ((a.s0 * b.s1) + (a.s1 * b.s0));
     return twoSum(t.s0, t.s1);
 }
 
 float2 mulFloat(float2 a, float b) {
     float2 t = twoProd(a.s0, b);
-    float t3 = (a.s1 * b) + t.s1;
+    t.s1 += (a.s1 * b);
     return twoSum(t.s0, t.s1);
 }
 
-__kernel void iterate(__global __write_only float* A, const int width,
+__kernel void iterate(__global float* A, const int width,
                       float x1, float x2, float y1, float y2,
                       float pw1, float pw2, float ph1, float ph2, int max, int smooth) {
     int index = get_global_id(0);

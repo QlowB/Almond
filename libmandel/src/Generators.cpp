@@ -127,7 +127,7 @@ namespace mnd
     }
     template<>
     Real getPrecision<Fixed64>() {
-        return Real("1.0e-12");
+        return Real("3.5e-15");
     }
     template<>
     Real getPrecision<Fixed128>() {

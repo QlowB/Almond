@@ -31,6 +31,17 @@ namespace mnd
         uint64_t lower = _umul128(a, b, &higher);
         return { higher, lower };
     }
+#elif defined(__SIZEOF_INT128__)
+    static inline std::pair<int64_t, uint64_t> mul64(int64_t a, int64_t b) {
+        __int128_t result = __int128_t(a) * __int128_t(b);
+        return { result >> 64, uint64_t(result & 0xFFFFFFFFFFFFFFFFULL) };
+    }
+
+    static inline std::pair<uint64_t, uint64_t> mulu64(uint64_t a, uint64_t b) {
+        __uint128_t result = __uint128_t(a) * __uint128_t(b);
+        return { result >> 64, uint64_t(result & 0xFFFFFFFFFFFFFFFFULL) };
+    }
+
 #else
     static inline std::pair<int64_t, uint64_t> mul64(int64_t a, int64_t b) {
         uint32_t aa[2] = { uint32_t(a >> 32), uint32_t(a & 0xFFFFFFFF) };
@@ -557,8 +568,13 @@ struct Fixed64
         double od = int32_t(other.bits >> 32) + double(uint32_t(other.bits)) / (1ULL << 32);
         return d * od;*/
 
+#if defined(__SIZEOF_INT128__)
+        __int128_t m = __int128_t(bits) * __int128_t(other.bits);
+        return Fixed64{ int64_t(m >> 48), true };
+#else
         auto[hi, lo] = mnd::mul64(bits, other.bits);
         return Fixed64{ int64_t((hi << 16) | (lo >> 48)), true };
+#endif
 
         /*uint32_t a[2] = { uint32_t(uint64_t(bits) >> 32), uint32_t(bits & 0xFFFFFFFF) };
         uint32_t b[2] = { uint32_t(uint64_t(other.bits) >> 32), uint32_t(other.bits & 0xFFFFFFFF) };

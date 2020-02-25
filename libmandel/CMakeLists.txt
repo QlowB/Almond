@@ -39,7 +39,7 @@ SET(MandelSources
 FILE(GLOB MandelHeaders include/*.h)
 
 if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
-    list(APPEND MandelSources src/CpuGeneratorsAVX.cpp src/CpuGeneratorsAVXFMA.cpp src/CpuGeneratorsSSE2.cpp)
+    list(APPEND MandelSources src/CpuGeneratorsAVX512.cpp  src/CpuGeneratorsAVX.cpp src/CpuGeneratorsAVXFMA.cpp src/CpuGeneratorsSSE2.cpp)
 elseif(ARCH STREQUAL "ARM")
     list(APPEND MandelSources src/CpuGeneratorsNeon.cpp)
 endif()
@@ -89,6 +89,12 @@ if(Boost_FOUND)
 endif(Boost_FOUND)
 
 if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
+    if (MSVC)
+        set_source_files_properties(src/CpuGeneratorsAVX512.cpp PROPERTIES COMPILE_FLAGS /arch:AVX512F)
+    else()
+        set_source_files_properties(src/CpuGeneratorsAVX512.cpp PROPERTIES COMPILE_FLAGS -mavx512f)
+    endif(MSVC)
+
     if (MSVC)
         set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS /arch:AVX)
         set_source_files_properties(src/CpuGeneratorsAVXFMA.cpp PROPERTIES COMPILE_FLAGS /arch:AVX)

@@ -42,20 +42,32 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
    int4 count = (int4)(0);
 
    int n = 0;
-   while (n < max) {
-       float4 ab = a * b;
-       float4 cmpVal = fma(a, a, b * b);
-       int4 cmp = isless(cmpVal, (float4)(16.0f));
-       if (!any(cmp)) break;
-       a = fma(a, a, -fma(b, b, -ca));
-       b = fma(2, ab, cb);
-       if (smooth) {
+   if (smooth) {
+       while (n < max) {
+           float4 ab = a * b;
+           float4 cmpVal = fma(a, a, b * b);
+           int4 cmp = isless(cmpVal, (float4)(16.0f));
+           if (!any(cmp)) break;
+           a = fma(a, a, -fma(b, b, -ca));
+           b = fma(2, ab, cb);
            resa = as_float4(as_int4(a) & cmp | (as_int4(resa) & ~cmp));
            resb = as_float4(as_int4(b) & cmp | (as_int4(resb) & ~cmp));
+           count += cmp & (int4)(1);
+           n++;
        }
-       count += cmp & (int4)(1);
-       n++;
    }
+    else {
+       while (n < max) {
+           float4 ab = a * b;
+           float4 cmpVal = fma(a, a, b * b);
+           int4 cmp = isless(cmpVal, (float4)(16.0f));
+           if (!any(cmp)) break;
+           a = fma(a, a, -fma(b, b, -ca));
+           b = fma(2, ab, cb);
+           count += cmp & (int4)(1);
+           n++;
+       }
+    }
    for (int i = 0; i < 4 && i + x < width; i++) {
        if (smooth != 0)
            A[index + i] = ((float) count[i]) + 1 - log(log(fma(resa[i], resa[i], resb[i] * resb[i])) / 2) / log(2.0f);

@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>763</width>
-    <height>524</height>
+    <width>950</width>
+    <height>665</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -146,6 +146,33 @@
         <widget class="QPushButton" name="resetZoom">
          <property name="text">
           <string>Reset Zoom</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="selectPoint">
+         <property name="text">
+          <string>View Julia Set</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="viewMandelbrot">
+         <property name="text">
+          <string>View Mandelbrot Set</string>
          </property>
         </widget>
        </item>

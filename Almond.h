@@ -13,6 +13,20 @@
 
 #include <memory>
 
+struct ViewState
+{
+    mnd::MandelViewport viewport;
+    mnd::MandelGenerator* generator;
+};
+
+
+enum ViewType
+{
+    MANDELBROT,
+    JULIA
+};
+
+
 class Almond : public QMainWindow
 {
     Q_OBJECT
@@ -21,8 +35,11 @@ private:
     std::unique_ptr<MandelWidget> mw;
     //std::unique_ptr<BenchmarkDialog> benchmarkDialog;
     std::unique_ptr<ChooseGenerators> generatorsDialog;
-    mnd::Generator* currentGenerator;
     GradientChooseDialog gcd;
+
+    ViewType currentView;
+    mnd::MandelViewport mandelViewSave;
+    mnd::MandelGenerator* mandelGeneratorSave;
 public:
     Almond(QWidget *parent = Q_NULLPTR);
     ~Almond(void);
@@ -44,6 +61,11 @@ private slots:
     void on_chooseGenerator_clicked();
 
     void backgroundTaskFinished();
+
+    void on_selectPoint_clicked();
+    void pointSelected(mnd::Real x, mnd::Real y);
+
+    void on_viewMandelbrot_clicked();
 
 private:
     Ui::AlmondClass ui;

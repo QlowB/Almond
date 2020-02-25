@@ -2,27 +2,34 @@
 
 #include <cstdio>
 
-using mnd::Generator;
+using mnd::MandelGenerator;
+using mnd::JuliaGenerator;
 using mnd::AdaptiveGenerator;
 
-Generator::~Generator(void)
+MandelGenerator::~MandelGenerator(void)
 {
 }
 
 
-mnd::Real Generator::getPrecision(void) const
+mnd::Real MandelGenerator::getPrecision(void) const
 {
     return precision;
 }
 
 
-AdaptiveGenerator::AdaptiveGenerator(void) :
-    Generator{ 0.0 }
+
+JuliaGenerator::~JuliaGenerator(void)
 {
 }
 
 
-AdaptiveGenerator::AdaptiveGenerator(Generator* floatGen, Generator* doubleGen) :
+AdaptiveGenerator::AdaptiveGenerator(void) :
+    MandelGenerator{ 0.0 }
+{
+}
+
+
+AdaptiveGenerator::AdaptiveGenerator(MandelGenerator* floatGen, MandelGenerator* doubleGen) :
     AdaptiveGenerator{}
 {
     generators.insert({ 0.0000001, floatGen });
@@ -38,13 +45,13 @@ AdaptiveGenerator::AdaptiveGenerator(Generator* floatGen, Generator* doubleGen, 
 }*/
 
 
-void AdaptiveGenerator::addGenerator(const mnd::Real& precision, mnd::Generator& generator)
+void AdaptiveGenerator::addGenerator(const mnd::Real& precision, mnd::MandelGenerator& generator)
 {
     generators.insert({ precision, &generator });
 }
 
 
-void AdaptiveGenerator::addGenerator(mnd::Precision p, Generator& generator)
+void AdaptiveGenerator::addGenerator(mnd::Precision p, MandelGenerator& generator)
 {
     generators.insert({ mnd::getPrecision(p), &generator });
 }

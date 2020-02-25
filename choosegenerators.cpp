@@ -79,7 +79,7 @@ std::pair<long long, std::chrono::nanoseconds> Benchmarker::measureMips(const st
     return std::make_pair(sum, duration_cast<nanoseconds>(after - before));
 }
 
-double Benchmarker::benchmarkResult(mnd::Generator& mg) const
+double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
 {
     size_t testIndex = 0;
 
@@ -244,7 +244,7 @@ void ChooseGenerators::on_buttonBox_accepted()
             QString genString = tableContent.at(i).second->currentText();
 
             mnd::Real precision = mnd::Real(precString.toStdString().c_str());
-            mnd::Generator* generator = generators.at(genString);
+            mnd::MandelGenerator* generator = generators.at(genString);
             if (generator)
                 createdGenerator->addGenerator(precision, *generator);
         }
@@ -260,7 +260,7 @@ void ChooseGenerators::on_run_clicked()
 {
     ui->progressBar->setValue(0);
     for (int i = 0; i < ui->generatorTable->rowCount(); i++) {
-        mnd::Generator* gen = actualGenerators.at(i);
+        mnd::MandelGenerator* gen = actualGenerators.at(i);
         if (gen != nullptr) {
             Benchmarker* bench = new Benchmarker(mndCtxt, *gen, i, 100.0f * (i + 1) / ui->generatorTable->rowCount());
             QObject::connect(bench, &Benchmarker::finished, this, &ChooseGenerators::setBenchmarkResult);
@@ -278,7 +278,7 @@ void ChooseGenerators::on_generatorTable_cellDoubleClicked(int row, int column)
         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
         int response = msgBox.exec();
         if (response == QMessageBox::Yes) {
-            mnd::Generator* gen = actualGenerators.at(row);
+            mnd::MandelGenerator* gen = actualGenerators.at(row);
             if (gen != nullptr) {
                 ui->progressBar->setValue(0);
                 Benchmarker* bench = new Benchmarker(mndCtxt, *gen, row, 100.0f);

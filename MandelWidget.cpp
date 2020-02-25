@@ -228,6 +228,8 @@ void Job::run(void)
     mi->bWidth = mi->bHeight = MandelView::chunkSize;
     mi->maxIter = owner.getMaxIterations();
     mi->smooth = owner.getSmoothColoring();
+    mi->juliaX = juliaX;
+    mi->juliaY = juliaY;
     try {
         generator->generate(*mi, f.pixels.get());
         auto* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([&mi, this](float i) {
@@ -246,11 +248,11 @@ void Job::run(void)
 }
 
 
-Calcer::Calcer(mnd::Generator* generator, MandelWidget& owner, int maxIter, bool smooth) :
+Calcer::Calcer(mnd::MandelGenerator* generator, MandelWidget& owner, int maxIter, bool smooth) :
     jobsMutex{ QMutex::Recursive },
     generator{ generator },
-    owner{ owner },
     threadPool{ std::make_unique<QThreadPool>() },
+    owner{ owner },
     gradient{ owner.getGradient() },
     maxIter{ maxIter },
     smooth{ smooth }
@@ -273,11 +275,19 @@ void Calcer::clearAll(void)
 }
 
 
+void Calcer::setJuliaPos(const mnd::Real& x, const mnd::Real& y)
+{
+    this->juliaX = x;
+    this->juliaY = y;
+    changeState();
+}
+
+
 void Calcer::calc(TexGrid& grid, int level, GridIndex i, GridIndex j, int priority)
 {
     jobsMutex.lock();
     if (jobs.find({ level, i, j }) == jobs.end()) {
-        Job* job = new Job(generator, gradient, owner, &grid, level, i, j, calcState);
+        Job* job = new Job(generator, gradient, owner, &grid, level, i, j, juliaX, juliaY, calcState);
         connect(job, &Job::done, this, &Calcer::redirect);
         connect(job, &QObject::destroyed, this, [this, level, i, j] () { this->notFinished(level, i, j); });
         jobs.emplace(std::tuple{level, i, j}, job);
@@ -333,7 +343,7 @@ void Calcer::redirect(int level, GridIndex i, GridIndex j, long calcState, Bitma
 
 const int MandelView::chunkSize = 256;
 
-MandelView::MandelView(mnd::Generator* generator, MandelWidget& owner, int maxIter) :
+MandelView::MandelView(mnd::MandelGenerator* generator, MandelWidget& owner, int maxIter) :
     generator{ generator },
     calcer{ generator, owner, maxIter, owner.getSmoothColoring() },
     owner{ owner },
@@ -390,7 +400,7 @@ void MandelView::setMaxIter(int maxIter)
 }
 
 
-void MandelView::setGenerator(mnd::Generator* generator)
+void MandelView::setGenerator(mnd::MandelGenerator* generator)
 {
     if (this->generator != generator) {
         this->generator = generator;
@@ -581,7 +591,7 @@ void MandelView::cellReady(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>
 }
 
 
-MandelWidget::MandelWidget(mnd::MandelContext& ctxt, mnd::Generator* generator, QWidget* parent) :
+MandelWidget::MandelWidget(mnd::MandelContext& ctxt, mnd::MandelGenerator* generator, QWidget* parent) :
     QOpenGLWidget{ parent },
     mndContext{ ctxt },
     generator{ generator },
@@ -650,7 +660,14 @@ void MandelWidget::setMaxIterations(int maxIter)
 }
 
 
-void MandelWidget::setGenerator(mnd::Generator* generator)
+void MandelWidget::setJuliaPos(const mnd::Real& x, const mnd::Real& y)
+{
+    if (mandelView)
+        mandelView->calcer.setJuliaPos(x, y);
+}
+
+
+void MandelWidget::setGenerator(mnd::MandelGenerator* generator)
 {
     if (this->generator != generator) {
         this->generator = generator;
@@ -710,6 +727,8 @@ void MandelWidget::paintGL(void)
         drawRubberband();
     if (displayInfo)
         drawInfo();
+    if (selectingPoint)
+        drawPoint();
 }
 
 
@@ -806,6 +825,19 @@ void MandelWidget::drawInfo(void)
 }
 
 
+void MandelWidget::drawPoint(void)
+{
+    glColor3ub(255, 255, 255);
+    glBegin(GL_LINES);
+    glVertex2f(0, pointY);
+    glVertex2f(width(), pointY);
+
+    glVertex2f(pointX, 0);
+    glVertex2f(pointX, height());
+    glEnd();
+}
+
+
 void MandelWidget::zoom(float scale, float x, float y)
 {
     targetViewport.zoom(scale, x, y);
@@ -823,6 +855,13 @@ void MandelWidget::setViewport(const mnd::MandelViewport& viewport)
     //lastAnimUpdate = std::chrono::high_resolution_clock::now();
     //currentViewport.zoom(scale, x, y);
     requestRecalc();
+}
+
+
+void MandelWidget::selectPoint(void)
+{
+    this->selectingPoint = true;
+    this->setMouseTracking(true);
 }
 
 
@@ -869,6 +908,7 @@ void MandelWidget::mousePressEvent(QMouseEvent* me)
 void MandelWidget::mouseMoveEvent(QMouseEvent* me)
 {
     QOpenGLWidget::mouseMoveEvent(me);
+
     if (rubberbanding) {
         QRectF& rect = rubberband;
         double aspect = double(geometry().width()) / geometry().height();
@@ -878,6 +918,11 @@ void MandelWidget::mouseMoveEvent(QMouseEvent* me)
         else
             rect.setWidth(rect.height() * aspect);
 
+        emit repaint();
+    }
+    else if (selectingPoint) {
+        pointX = me->x();
+        pointY = me->y();
         emit repaint();
     }
     else if (dragging) {
@@ -912,6 +957,14 @@ void MandelWidget::mouseReleaseEvent(QMouseEvent* me)
         }
         requestRecalc();
         rubberbanding = false;
+    }
+    else if (selectingPoint) {
+        selectingPoint = false;
+        this->setMouseTracking(false);
+        mnd::Real x = currentViewport.x + currentViewport.width * mnd::convert<mnd::Real>(float(me->x()) / width());
+        mnd::Real y = currentViewport.y + currentViewport.height * mnd::convert<mnd::Real>(float(me->y()) / height());
+        emit pointSelected(x, y);
+        emit repaint();
     }
     dragging = false;
 

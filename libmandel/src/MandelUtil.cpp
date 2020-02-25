@@ -1,6 +1,8 @@
 #include "MandelUtil.h"
 
 using mnd::MandelViewport;
+using mnd::MandelInfo;
+
 
 void MandelViewport::adjustAspectRatio(double nwidth, double nheight)
 {
@@ -44,6 +46,7 @@ void MandelViewport::zoom(float scale, float xz, float yz)
     height *= scale;
 }
 
+
 MandelViewport MandelViewport::standardView(void)
 {
     return MandelViewport{
@@ -53,3 +56,16 @@ MandelViewport MandelViewport::standardView(void)
         3
     };
 }
+
+
+MandelViewport MandelViewport::centerView(void)
+{
+    return MandelViewport{
+        -2,
+        -2,
+        4,
+        4
+    };
+}
+
+

@@ -61,7 +61,7 @@ private:
     std::string vendor;
     std::string name;
 
-    std::map<GeneratorType, std::unique_ptr<Generator>> generators;
+    std::map<GeneratorType, std::unique_ptr<MandelGenerator>> mandelGenerators;
 
     MandelDevice(void);
 public:
@@ -73,7 +73,7 @@ public:
     inline const std::string& getVendor(void) const { return vendor; }
     inline const std::string& getName(void) const { return name; }
 
-    Generator* getGenerator(GeneratorType type) const;
+    MandelGenerator* getGenerator(GeneratorType type) const;
 
     std::vector<GeneratorType> getSupportedTypes(void) const;
 };
@@ -86,9 +86,10 @@ private:
 
     CpuInfo cpuInfo;
 
-    std::map<GeneratorType, std::unique_ptr<Generator>> cpuGenerators;
+    std::map<GeneratorType, std::unique_ptr<MandelGenerator>> cpuGenerators;
 
     std::unique_ptr<AdaptiveGenerator> adaptiveGenerator;
+    std::unique_ptr<JuliaGenerator> juliaGenerator;
 
     std::vector<MandelDevice> devices;
 
@@ -105,10 +106,12 @@ public:
     AdaptiveGenerator& getDefaultGenerator(void);
     const std::vector<MandelDevice>& getDevices(void);
 
-    Generator* getCpuGenerator(mnd::GeneratorType type);
+    MandelGenerator* getCpuGenerator(mnd::GeneratorType type);
     std::vector<GeneratorType> getSupportedTypes(void) const;
 
     const CpuInfo& getCpuInfo(void) const { return cpuInfo; }
+
+    JuliaGenerator& getJuliaGenerator(void);
 };
 
 

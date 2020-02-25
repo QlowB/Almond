@@ -24,7 +24,7 @@ namespace mnd
 }
 
 
-class mnd::ClGenerator : public Generator
+class mnd::ClGenerator : public MandelGenerator
 {
 protected:
     cl::Device device;

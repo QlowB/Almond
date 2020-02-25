@@ -2,13 +2,14 @@
 #include "Fixed.h"
 
 #include "CpuGenerators.h"
+#include "JuliaGenerators.h"
 #include "ClGenerators.h"
 
 #include <map>
 
 using mnd::MandelDevice;
 using mnd::MandelContext;
-using mnd::Generator;
+using mnd::MandelGenerator;
 using mnd::AdaptiveGenerator;
 
 template<typename T, typename U>
@@ -81,10 +82,10 @@ MandelDevice::MandelDevice(void)
 }
 
 
-mnd::Generator* MandelDevice::getGenerator(mnd::GeneratorType type) const
+mnd::MandelGenerator* MandelDevice::getGenerator(mnd::GeneratorType type) const
 {
-    auto it = generators.find(type);
-    if (it != generators.end())
+    auto it = mandelGenerators.find(type);
+    if (it != mandelGenerators.end())
         return it->second.get();
     else
         return nullptr;
@@ -94,7 +95,7 @@ mnd::Generator* MandelDevice::getGenerator(mnd::GeneratorType type) const
 std::vector<mnd::GeneratorType> MandelDevice::getSupportedTypes(void) const
 {
     std::vector<GeneratorType> types;
-    for (auto& [type, gen] : generators) {
+    for (auto& [type, gen] : mandelGenerators) {
         types.push_back(type);
     }
     return types;
@@ -272,9 +273,9 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             md.vendor = device.getInfo<CL_DEVICE_VENDOR>();
             //printf("    using opencl device: %s\n", md.name.c_str());
             try {
-                md.generators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(device) });
-                md.generators.insert({ GeneratorType::FIXED64, std::make_unique<ClGenerator64>(device) });
-                md.generators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(device) });
+                md.mandelGenerators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(device) });
+                md.mandelGenerators.insert({ GeneratorType::FIXED64, std::make_unique<ClGenerator64>(device) });
+                md.mandelGenerators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(device) });
             }
             catch (const std::string& err) {
                 printf("err: %s", err.c_str());
@@ -282,9 +283,9 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 
             if (supportsDouble) {
                 try {
-                    md.generators.insert({ GeneratorType::DOUBLE, std::make_unique<ClGeneratorDouble>(device) });
-                    md.generators.insert({ GeneratorType::DOUBLE_DOUBLE, std::make_unique<ClGeneratorDoubleDouble>(device) });
-                    md.generators.insert({ GeneratorType::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(device) });
+                    md.mandelGenerators.insert({ GeneratorType::DOUBLE, std::make_unique<ClGeneratorDouble>(device) });
+                    md.mandelGenerators.insert({ GeneratorType::DOUBLE_DOUBLE, std::make_unique<ClGeneratorDoubleDouble>(device) });
+                    md.mandelGenerators.insert({ GeneratorType::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(device) });
                 }
                 catch (const std::string& err) {
                     printf("err: %s", err.c_str());
@@ -320,7 +321,7 @@ const std::vector<MandelDevice>& MandelContext::getDevices(void)
 }
 
 
-Generator* MandelContext::getCpuGenerator(mnd::GeneratorType type)
+MandelGenerator* MandelContext::getCpuGenerator(mnd::GeneratorType type)
 {
     auto it = cpuGenerators.find(type);
     if (it != cpuGenerators.end())
@@ -338,3 +339,12 @@ std::vector<mnd::GeneratorType> MandelContext::getSupportedTypes(void) const
     }
     return types;
 }
+
+
+mnd::JuliaGenerator& MandelContext::getJuliaGenerator()
+{
+    juliaGenerator = std::make_unique<JuliaGeneratorFloat>(getPrecision<double>());
+    return *juliaGenerator;
+}
+
+

@@ -11,7 +11,8 @@
 
 namespace mnd
 {
-    class Generator;
+    class MandelGenerator;
+    class JuliaGenerator;
 
     class AdaptiveGenerator;
 
@@ -47,42 +48,64 @@ namespace mnd
 }
 
 
-class mnd::Generator
+class mnd::MandelGenerator
 {
 protected:
     Real precision;
 public:
-    inline Generator(const Real& precision) :
+    inline MandelGenerator(const Real& precision) :
         precision{ precision }
     {
     }
 
-    virtual ~Generator(void);
+    virtual ~MandelGenerator(void);
 
 
-    Generator(const Generator&) = delete;
-    Generator& operator=(const Generator&) = delete;
+    MandelGenerator(const MandelGenerator&) = delete;
+    MandelGenerator& operator=(const MandelGenerator&) = delete;
 
-    Generator(Generator&&) = default;
-    Generator& operator=(Generator&&) = default;
+    MandelGenerator(MandelGenerator&&) = default;
+    MandelGenerator& operator=(MandelGenerator&&) = default;
 
     virtual void generate(const MandelInfo& info, float* data) = 0;
     virtual Real getPrecision(void) const;
 };
 
 
-class mnd::AdaptiveGenerator : public Generator
+class mnd::JuliaGenerator : public MandelGenerator
 {
-    std::map<Real, Generator*, std::greater<Real>> generators;
+public:
+    inline JuliaGenerator(const Real& precision) :
+        MandelGenerator{ precision }
+    {
+    }
+
+    virtual ~JuliaGenerator(void);
+
+
+    JuliaGenerator(const JuliaGenerator&) = delete;
+    JuliaGenerator& operator=(const JuliaGenerator&) = delete;
+
+    JuliaGenerator(JuliaGenerator&&) = default;
+    JuliaGenerator& operator=(JuliaGenerator&&) = default;
+
+    virtual void generate(const MandelInfo& info, float* data) = 0;
+};
+
+
+
+class mnd::AdaptiveGenerator : public MandelGenerator
+{
+    std::map<Real, MandelGenerator*, std::greater<Real>> generators;
 public:
     AdaptiveGenerator(void);
-    AdaptiveGenerator(Generator* floatGen, Generator* doubleGen);
+    AdaptiveGenerator(MandelGenerator* floatGen, MandelGenerator* doubleGen);
     virtual ~AdaptiveGenerator(void) = default;
 
-    void addGenerator(const Real& precision, Generator& generator);
-    void addGenerator(Precision p, Generator& generator);
+    void addGenerator(const Real& precision, MandelGenerator& generator);
+    void addGenerator(Precision p, MandelGenerator& generator);
     
-    const std::map<Real, Generator*, std::greater<Real>>& getGenerators(void) const { return generators; }
+    const std::map<Real, MandelGenerator*, std::greater<Real>>& getGenerators(void) const { return generators; }
     inline void clear(void) { generators.clear(); }
 
     virtual void generate(const MandelInfo& info, float* data) override;

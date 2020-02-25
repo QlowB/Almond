@@ -27,12 +27,12 @@ class Benchmarker : public QObject, public QRunnable
     Q_OBJECT
 private:
     mnd::MandelContext& mndContext;
-    mnd::Generator& generator;
+    mnd::MandelGenerator& generator;
     int row;
     float percentage;
     static const std::vector<mnd::MandelInfo> benches;
 public:
-    inline Benchmarker(mnd::MandelContext& mndContext, mnd::Generator& generator, int row, float percentage) :
+    inline Benchmarker(mnd::MandelContext& mndContext, mnd::MandelGenerator& generator, int row, float percentage) :
         mndContext{ mndContext },
         generator{ generator },
         row{ row },
@@ -45,7 +45,7 @@ public:
     static mnd::MandelViewport benchViewport(void);
 
     std::pair<long long, std::chrono::nanoseconds> measureMips(const std::function<Bitmap<float>*()>& bench) const;
-    double benchmarkResult(mnd::Generator& mg) const;
+    double benchmarkResult(mnd::MandelGenerator& mg) const;
 
     void run(void) override;
 
@@ -61,11 +61,11 @@ private:
     Ui::ChooseGenerators* sadfgsdfg;
     std::unique_ptr<Ui::ChooseGenerators> ui;
     mnd::MandelContext& mndCtxt;
-    std::map<QString, mnd::Generator*> generators;
+    std::map<QString, mnd::MandelGenerator*> generators;
     std::vector<std::pair<QLineEdit*, QComboBox*>> tableContent;
     std::unique_ptr<QValidator> floatValidator;
     std::unique_ptr<mnd::AdaptiveGenerator> createdGenerator;
-    std::vector<mnd::Generator*> actualGenerators;
+    std::vector<mnd::MandelGenerator*> actualGenerators;
     QThreadPool benchmarker;
 public:
     ChooseGenerators(mnd::MandelContext& mndCtxt, QWidget* parent = nullptr);

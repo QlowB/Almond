@@ -52,9 +52,15 @@ struct mnd::MandelViewport
      */
     static MandelViewport standardView(void);
 
+    /*!
+     * \brief returns a viewport with (0, 0) in the center
+     */
+    static MandelViewport centerView(void);
+
     inline Real right() const { return x + width; }
     inline Real bottom() const { return y + height; }
 };
+
 
 struct mnd::MandelInfo
 {
@@ -66,12 +72,16 @@ struct mnd::MandelInfo
 
     /// height of the bitmap to be generated
     long bHeight;
-    
+
     /// maximum iterations
     long maxIter;
 
     /// smooth coloring
     bool smooth;
+
+    Real juliaX;
+    Real juliaY;
 };
+
 
 #endif // MANDEL_MANDELUTIL_H

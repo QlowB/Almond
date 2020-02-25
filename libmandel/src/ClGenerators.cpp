@@ -60,7 +60,7 @@ Device getDevice(Platform& platform, int i, bool display = false) {
 
 
 ClGenerator::ClGenerator(cl::Device device, const mnd::Real& precision) :
-    Generator{ precision },
+    MandelGenerator{ precision },
     device{ device }
 {
     /*Platform p = getPlatform();

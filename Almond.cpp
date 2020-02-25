@@ -12,8 +12,17 @@ Almond::Almond(QWidget* parent) :
     mandelContext{ mnd::initializeContext() }
 {
     ui.setupUi(this);
-    currentGenerator = &mandelContext.getDefaultGenerator();
-    mw = std::make_unique<MandelWidget>(mandelContext, currentGenerator, ui.centralWidget);
+
+
+    mw = std::make_unique<MandelWidget>(mandelContext,
+                                        &mandelContext.getDefaultGenerator(),
+                                        ui.centralWidget);
+
+    currentView = MANDELBROT;
+    mandelGeneratorSave = &mandelContext.getDefaultGenerator();
+    mandelViewSave = mw->getViewport();
+
+    QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
     ui.mainContainer->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
     ui.backgroundProgress->setVisible(false);
@@ -119,7 +128,13 @@ void Almond::on_exportImage_clicked()
         mi.bWidth = dialog.getWidth();
         mi.bHeight = dialog.getHeight();
         mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        mnd::Generator& g = currentGenerator ? *currentGenerator : mandelContext.getDefaultGenerator();
+        mi.smooth = mw->getSmoothColoring();
+        if (currentView == JULIA) {
+            mi.juliaX = mw->getJuliaX();
+            mi.juliaY = mw->getJuliaY();
+        }
+        mnd::MandelGenerator* currentGenerator = mw->getGenerator();
+        mnd::MandelGenerator& g = currentGenerator ? *currentGenerator : mandelContext.getDefaultGenerator();
         auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
         g.generate(mi, fmap.pixels.get());
         auto bitmap = fmap.map<RGBColor>([&mi, this] (float i) {
@@ -150,11 +165,41 @@ void Almond::on_chooseGenerator_clicked()
     generatorsDialog->exec();
 
     if (generatorsDialog->getChosenGenerator()) {
-        this->currentGenerator = generatorsDialog->getChosenGenerator();
+        mandelGeneratorSave = generatorsDialog->getChosenGenerator();
     }
     else {
-        this->currentGenerator = &mandelContext.getDefaultGenerator();
+        mandelGeneratorSave = &mandelContext.getDefaultGenerator();
     }
-    this->mw->setGenerator(currentGenerator);
+    this->currentView = MANDELBROT;
+    this->mw->setGenerator(mandelGeneratorSave);
     printf("dialog executed\n"); fflush(stdout);
+}
+
+void Almond::on_selectPoint_clicked()
+{
+    if (currentView == MANDELBROT) {
+        emit this->mw->selectPoint();
+    }
+}
+
+
+void Almond::pointSelected(mnd::Real x, mnd::Real y)
+{
+    if (currentView != JULIA) {
+        auto& gen = mandelContext.getJuliaGenerator();
+        mandelViewSave = mw->getViewport();
+        this->mw->setGenerator(&gen);
+        this->mw->setViewport(mnd::MandelViewport::centerView());
+        this->mw->setJuliaPos(x, y);
+    }
+    currentView = JULIA;
+}
+
+void Almond::on_viewMandelbrot_clicked()
+{
+    if (currentView != MANDELBROT) {
+        this->mw->setGenerator(mandelGeneratorSave);
+        this->mw->setViewport(mandelViewSave);
+        currentView = MANDELBROT;
+    }
 }

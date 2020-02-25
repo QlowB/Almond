@@ -105,6 +105,12 @@ MandelContext::MandelContext(void)
 {
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
+    if (cpuInfo.hasAvx512()) {
+        auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX_512, true>>();
+        auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX_512, true>>();
+        cpuGenerators.insert({ GeneratorType::FLOAT_AVX512, std::move(fl) });
+        cpuGenerators.insert({ GeneratorType::DOUBLE_AVX512, std::move(db) });
+    }
     if (cpuInfo.hasAvx()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX, true>>();
@@ -189,6 +195,10 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
         floatGen = getCpuGenerator(GeneratorType::FLOAT_AVX_FMA);
         doubleGen = getCpuGenerator(GeneratorType::DOUBLE_AVX_FMA);
         doubleDoubleGen = getCpuGenerator(GeneratorType::DOUBLE_DOUBLE_AVX_FMA);
+    }
+    if (cpuInfo.hasAvx512()) {
+        floatGen = getCpuGenerator(GeneratorType::FLOAT_AVX512);
+        doubleGen = getCpuGenerator(GeneratorType::DOUBLE_AVX512);
     }
 
     if (cpuInfo.hasNeon()) {

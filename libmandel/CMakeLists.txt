@@ -39,7 +39,7 @@ SET(MandelSources
 FILE(GLOB MandelHeaders include/*.h)
 
 if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
-    list(APPEND MandelSources src/CpuGeneratorsAVX512.cpp  src/CpuGeneratorsAVX.cpp src/CpuGeneratorsAVXFMA.cpp src/CpuGeneratorsSSE2.cpp)
+    list(APPEND MandelSources src/CpuGeneratorsAVX.cpp src/CpuGeneratorsAVXFMA.cpp src/CpuGeneratorsSSE2.cpp src/CpuGeneratorsAVX512.cpp)
 elseif(ARCH STREQUAL "ARM")
     list(APPEND MandelSources src/CpuGeneratorsNeon.cpp)
 endif()

@@ -1,5 +1,4 @@
 #include "ClGenerators.h"
-#include "doubledouble.h"
 #include "OpenClCode.h"
 
 #ifdef WITH_OPENCL
@@ -507,7 +506,7 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorDoubleDouble::getKernelCode(bool smooth) const
 {
-    return (char*) doubledouble_cl;
+    return getDoubleDouble_cl();
 }
 
 
@@ -536,25 +535,33 @@ void ClGeneratorQuadDouble::generate(const mnd::MandelInfo& info, float* data)
 
     Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
 
-    mnd::DoubleDouble x = mnd::convert<mnd::DoubleDouble>(info.view.x);
-    mnd::DoubleDouble y = mnd::convert<mnd::DoubleDouble>(info.view.y);
+    mnd::QuadDouble x = mnd::convert<mnd::QuadDouble>(info.view.x);
+    mnd::QuadDouble y = mnd::convert<mnd::QuadDouble>(info.view.y);
 
-    mnd::DoubleDouble psx = mnd::convert<mnd::DoubleDouble>(info.view.width / info.bWidth);
-    mnd::DoubleDouble psy = mnd::convert<mnd::DoubleDouble>(info.view.height / info.bHeight);
+    mnd::QuadDouble psx = mnd::convert<mnd::QuadDouble>(info.view.width / info.bWidth);
+    mnd::QuadDouble psy = mnd::convert<mnd::QuadDouble>(info.view.height / info.bHeight);
 
     Kernel iterate = Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);
     iterate.setArg(1, int(info.bWidth));
     iterate.setArg(2, x.x[0]);
     iterate.setArg(3, x.x[1]);
-    iterate.setArg(4, y.x[0]);
-    iterate.setArg(5, y.x[1]);
-    iterate.setArg(6, psx.x[0]);
-    iterate.setArg(7, psx.x[1]);
-    iterate.setArg(8, psy.x[0]);
-    iterate.setArg(9, psy.x[1]);
-    iterate.setArg(10, int(info.maxIter));
-    iterate.setArg(11, int(info.smooth ? 1 : 0));
+    iterate.setArg(4, x.x[2]);
+    iterate.setArg(5, x.x[3]);
+    iterate.setArg(6, y.x[0]);
+    iterate.setArg(7, y.x[1]);
+    iterate.setArg(8, y.x[2]);
+    iterate.setArg(9, y.x[3]);
+    iterate.setArg(10, psx.x[0]);
+    iterate.setArg(11, psx.x[1]);
+    iterate.setArg(12, psx.x[2]);
+    iterate.setArg(13, psx.x[3]);
+    iterate.setArg(14, psy.x[0]);
+    iterate.setArg(15, psy.x[1]);
+    iterate.setArg(16, psy.x[2]);
+    iterate.setArg(17, psy.x[3]);
+    iterate.setArg(18, int(info.maxIter));
+    iterate.setArg(19, int(info.smooth ? 1 : 0));
 
     cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
@@ -564,7 +571,7 @@ void ClGeneratorQuadDouble::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorQuadDouble::getKernelCode(bool smooth) const
 {
-    return (char*) doubledouble_cl;
+    return getQuadDouble_cl();
 }
 
 

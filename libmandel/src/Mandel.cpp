@@ -211,6 +211,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
         auto* fGen = device.getGenerator(GeneratorType::FLOAT);
         auto* dGen = device.getGenerator(GeneratorType::DOUBLE);
         auto* ddGen = device.getGenerator(GeneratorType::DOUBLE_DOUBLE);
+        auto* qdGen = device.getGenerator(GeneratorType::QUAD_DOUBLE);
 
         if (fGen)
             floatGen = fGen;
@@ -218,14 +219,16 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
             doubleGen = dGen;
         if (ddGen)
             doubleDoubleGen = ddGen;
+        if (qdGen)
+            quadDoubleGen = qdGen;
     }
 
     auto ag = std::make_unique<AdaptiveGenerator>();
-    ag->addGenerator(Precision::FLOAT, *floatGen);
-    ag->addGenerator(Precision::DOUBLE, *doubleGen);
-    ag->addGenerator(Precision::DOUBLE_DOUBLE, *doubleDoubleGen);
-    ag->addGenerator(Precision::QUAD_DOUBLE, *quadDoubleGen);
-    ag->addGenerator(Precision::FLOAT256, *f256Gen);
+    ag->addGenerator(getPrecision<float>(), *floatGen);
+    ag->addGenerator(getPrecision<double>(), *doubleGen);
+    ag->addGenerator(getPrecision<DoubleDouble>(), *doubleDoubleGen);
+    ag->addGenerator(getPrecision<QuadDouble>(), *quadDoubleGen);
+    ag->addGenerator(getPrecision<Float256>(), *f256Gen);
     ag->addGenerator(Precision::INF_PREC, *fix512);
 
     return ag;
@@ -281,7 +284,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
                 try {
                     md.generators.insert({ GeneratorType::DOUBLE, std::make_unique<ClGeneratorDouble>(device) });
                     md.generators.insert({ GeneratorType::DOUBLE_DOUBLE, std::make_unique<ClGeneratorDoubleDouble>(device) });
-                    //md.generators.insert({ GeneratorType::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(device) });
+                    md.generators.insert({ GeneratorType::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(device) });
                 }
                 catch (const std::string& err) {
                     printf("err: %s", err.c_str());

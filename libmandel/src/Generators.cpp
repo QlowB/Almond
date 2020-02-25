@@ -123,7 +123,7 @@ namespace mnd
     }
     template<>
     Real getPrecision<QuadDouble>() {
-        return Real("1.0e-56");
+        return Real("3.0e-64");
     }
     template<>
     Real getPrecision<Fixed64>() {
@@ -135,7 +135,7 @@ namespace mnd
     }
     template<>
     Real getPrecision<Fixed512>() {
-        return Real("1.5e-29");
+        return Real("1.5e-130");
     }
     template<>
     Real getPrecision<Float128>() {
@@ -143,11 +143,11 @@ namespace mnd
     }
     template<>
     Real getPrecision<Float256>() {
-        return Real("1.5e-29");
+        return Real("1.4e-72");
     }
     template<>
     Real getPrecision<Float512>() {
-        return Real("1.5e-29");
+        return Real("1.0e-145");
     }
 
 }

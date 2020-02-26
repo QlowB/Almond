@@ -20,9 +20,7 @@ Almond::Almond(QWidget* parent) :
 
     on_maxIterations_editingFinished();
     mw->setSmoothColoring(ui.smooth->isChecked());
-    mw->getMandelInfo().julia = true;
-    mw->getMandelInfo().juliaX = 0.2;
-    mw->getMandelInfo().juliaY = -0.4;
+
 
     currentView = MANDELBROT;
     mandelGeneratorSave = &mandelContext.getDefaultGenerator();
@@ -180,7 +178,7 @@ void Almond::on_chooseGenerator_clicked()
     //this->currentView = MANDELBROT;
     this->mw->setGenerator(mandelGeneratorSave);
     //this->mw->getMandelInfo().julia = false;
-    printf("dialog executed\n"); fflush(stdout);
+    //printf("dialog executed\n"); fflush(stdout);
 }
 
 void Almond::on_selectPoint_clicked()

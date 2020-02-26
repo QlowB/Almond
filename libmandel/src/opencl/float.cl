@@ -1,11 +1,11 @@
-__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth) {
+__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth, int julia, float juliaX, float juliaY) {
    int index = get_global_id(0);
    int x = index % width;
    int y = index / width;
    float a = x * pixelScaleX + xl;
    float b = y * pixelScaleY + yt;
-   float ca = a;
-   float cb = b;
+   float ca = julia != 0 ? juliaX : a;
+   float cb = julia != 0 ? juliaY : b;
 
    int n = 0;
    while (n < max - 1) {
@@ -29,14 +29,14 @@ __kernel void iterate(__global float* A, const int width, float xl, float yt, fl
 }
 
 
-__kernel void iterate_vec4(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth) {
+__kernel void iterate_vec4(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth, int julia, float juliaX, float juliaY) {
    int index = get_global_id(0) * 4;
    int x = index % width;
    int y = index / width;
    float4 a = (float4) (x * pixelScaleX + xl, (x + 1) * pixelScaleX + xl, (x + 2) * pixelScaleX + xl, (x + 3) * pixelScaleX + xl);
    float4 b = (float4) (y * pixelScaleY + yt);
-   float4 ca = a;
-   float4 cb = b;
+   float4 ca = julia != 0 ? ((float4)(juliaX)) : a;
+   float4 cb = julia != 0 ? ((float4)(juliaX)) : a;
    float4 resa = a;
    float4 resb = b;
    int4 count = (int4)(0);

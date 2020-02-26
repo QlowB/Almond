@@ -32,6 +32,11 @@ void CpuGenerator<float, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mandel
     __m256 viewx = { viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf };
     __m256 dpp = { dppf, dppf, dppf, dppf, dppf, dppf, dppf, dppf };
 
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+    __m256 juliaX = { jX, jX, jX, jX, jX, jX, jX, jX };
+    __m256 juliaY = { jY, jY, jY, jY, jY, jY, jY, jY };
+
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
 #pragma omp parallel for schedule(static, 1) if (parallel)
@@ -54,12 +59,15 @@ void CpuGenerator<float, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mandel
             __m256 a = xs;
             __m256 b = ys;
 
+            __m256 cx = info.julia ? juliaX : xs;
+            __m256 cy = info.julia ? juliaY : ys;
+
             for (int k = 0; k < info.maxIter; k++) {
                 if ((k & 0xF) == 0) {
                     __m256 bb = _mm256_mul_ps(b, b);
                     __m256 abab = _mm256_mul_ps(a, b); //abab = _mm256_add_ps(abab, abab);
-                    a = _mm256_fmsub_ps(a, a, _mm256_fmsub_ps(b, b, xs));
-                    b = _mm256_fmadd_ps(two, abab, ys);
+                    a = _mm256_fmsub_ps(a, a, _mm256_fmsub_ps(b, b, cx));
+                    b = _mm256_fmadd_ps(two, abab, cy);
                     __m256 cmp = _mm256_cmp_ps(_mm256_fmadd_ps(a, a, _mm256_mul_ps(b, b)), threshold, _CMP_LE_OQ);
                     if (info.smooth) {
                         resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
@@ -75,8 +83,8 @@ void CpuGenerator<float, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mandel
                     //__m256 aa = _mm256_mul_ps(a, a);
                     __m256 bb = _mm256_mul_ps(b, b);
                     __m256 abab = _mm256_mul_ps(a, b); //abab = _mm256_add_ps(abab, abab);
-                    a = _mm256_fmsub_ps(a, a, _mm256_fmsub_ps(b, b, xs));
-                    b = _mm256_fmadd_ps(two, abab, ys);
+                    a = _mm256_fmsub_ps(a, a, _mm256_fmsub_ps(b, b, cx));
+                    b = _mm256_fmadd_ps(two, abab, cy);
                     __m256 cmp = _mm256_cmp_ps(_mm256_fmadd_ps(a, a, _mm256_mul_ps(b, b)), threshold, _CMP_LE_OQ);
                     if (info.smooth) {
                         resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
@@ -126,6 +134,11 @@ void CpuGenerator<double, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mande
     __m256d viewx = { viewxf, viewxf, viewxf, viewxf };
     __m256d dpp = { dppf, dppf, dppf, dppf };
 
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+    __m256d juliaX = { jX, jX, jX, jX };
+    __m256d juliaY = { jY, jY, jY, jY };
+
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
 #pragma omp parallel for schedule(static, 1) if (parallel)
@@ -150,10 +163,13 @@ void CpuGenerator<double, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mande
             __m256d a = xs;
             __m256d b = ys;
 
+            __m256d cx = info.julia ? juliaX : xs;
+            __m256d cy = info.julia ? juliaY : ys;
+
             for (int k = 0; k < info.maxIter; k++) {
                 __m256d ab = _mm256_mul_pd(a, b);
-                a = _mm256_fmsub_pd(a, a, _mm256_fmsub_pd(b, b, xs));
-                b = _mm256_fmadd_pd(two, ab, ys);
+                a = _mm256_fmsub_pd(a, a, _mm256_fmsub_pd(b, b, cx));
+                b = _mm256_fmadd_pd(two, ab, cy);
                 __m256d cmp = _mm256_cmp_pd(_mm256_fmadd_pd(a, a, _mm256_mul_pd(b, b)), threshold, _CMP_LE_OQ);
                 if (info.smooth) {
                     resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a));
@@ -304,6 +320,12 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
     T wpp = mnd::convert<T>(view.width / info.bWidth);
     T hpp = mnd::convert<T>(view.height / info.bHeight);
 
+
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+    AvxDoubleDouble juliaX = { __m256d{ jX.x[0], jX.x[0], jX.x[0], jX.x[0] }, __m256d{ jX.x[1], jX.x[1], jX.x[1], jX.x[1] } };
+    AvxDoubleDouble juliaY = { __m256d{ jY.x[0], jY.x[0], jY.x[0], jY.x[0] }, __m256d{ jY.x[1], jY.x[1], jY.x[1], jY.x[1] } };
+
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
 #pragma omp parallel for schedule(static, 1) if (parallel)
@@ -329,6 +351,9 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
 
             AvxDoubleDouble xs{ x0s, x1s };
 
+            AvxDoubleDouble cx = info.julia ? juliaX : xs;
+            AvxDoubleDouble cy = info.julia ? juliaY : ys;
+
             int itRes[4] = { 0, 0, 0, 0 };
 
             __m256d threshold = { 16.0, 16.0, 16.0, 16.0 };
@@ -345,8 +370,8 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
                 AvxDoubleDouble aa = a * a;
                 AvxDoubleDouble bb = b * b;
                 AvxDoubleDouble abab = a * b; abab = abab + abab;
-                a = aa - bb + xs;
-                b = abab + ys;
+                a = aa - bb + cx;
+                b = abab + cx;
                 __m256d cmp = _mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ);
                 if (info.smooth) {
                     resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a.x[0]));

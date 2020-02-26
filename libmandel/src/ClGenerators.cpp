@@ -108,6 +108,9 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
     iterate.setArg(5, float(pixelScaleY));
     iterate.setArg(6, int(info.maxIter));
     iterate.setArg(7, int(info.smooth ? 1 : 0));
+    iterate.setArg(8, int(info.julia ? 1 : 0));
+    iterate.setArg(9, float(info.juliaX));
+    iterate.setArg(10, float(info.juliaY));
 
     if (useVec) {
         queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight / 4));

@@ -18,6 +18,12 @@ Almond::Almond(QWidget* parent) :
                                         &mandelContext.getDefaultGenerator(),
                                         ui.centralWidget);
 
+    on_maxIterations_editingFinished();
+    mw->setSmoothColoring(ui.smooth->isChecked());
+    mw->getMandelInfo().julia = true;
+    mw->getMandelInfo().juliaX = 0.2;
+    mw->getMandelInfo().juliaY = -0.4;
+
     currentView = MANDELBROT;
     mandelGeneratorSave = &mandelContext.getDefaultGenerator();
     mandelViewSave = mw->getViewport();
@@ -130,6 +136,7 @@ void Almond::on_exportImage_clicked()
         mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
         mi.smooth = mw->getSmoothColoring();
         if (currentView == JULIA) {
+            mi.julia = mw->getMandelInfo().julia;
             mi.juliaX = mw->getJuliaX();
             mi.juliaY = mw->getJuliaY();
         }
@@ -170,8 +177,9 @@ void Almond::on_chooseGenerator_clicked()
     else {
         mandelGeneratorSave = &mandelContext.getDefaultGenerator();
     }
-    this->currentView = MANDELBROT;
+    //this->currentView = MANDELBROT;
     this->mw->setGenerator(mandelGeneratorSave);
+    //this->mw->getMandelInfo().julia = false;
     printf("dialog executed\n"); fflush(stdout);
 }
 
@@ -186,11 +194,13 @@ void Almond::on_selectPoint_clicked()
 void Almond::pointSelected(mnd::Real x, mnd::Real y)
 {
     if (currentView != JULIA) {
-        auto& gen = mandelContext.getJuliaGenerator();
+        //auto& gen = mandelContext.getJuliaGenerator();
         mandelViewSave = mw->getViewport();
-        this->mw->setGenerator(&gen);
+        //this->mw->setGenerator(&gen);
         this->mw->setViewport(mnd::MandelViewport::centerView());
         this->mw->setJuliaPos(x, y);
+        this->mw->getMandelInfo().julia = true;
+        this->mw->clearAll();
     }
     currentView = JULIA;
 }
@@ -198,8 +208,10 @@ void Almond::pointSelected(mnd::Real x, mnd::Real y)
 void Almond::on_viewMandelbrot_clicked()
 {
     if (currentView != MANDELBROT) {
-        this->mw->setGenerator(mandelGeneratorSave);
+        //this->mw->setGenerator(mandelGeneratorSave);
         this->mw->setViewport(mandelViewSave);
+        this->mw->getMandelInfo().julia = false;
+        this->mw->clearAll();
         currentView = MANDELBROT;
     }
 }

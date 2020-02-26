@@ -181,8 +181,6 @@ public:
     TexGrid* grid;
     int level;
     GridIndex i, j;
-    mnd::Real juliaX;
-    mnd::Real juliaY;
     long calcState = 0;
 
     inline Job(mnd::MandelGenerator* generator,
@@ -190,7 +188,6 @@ public:
                MandelWidget& owner,
                TexGrid* grid,
                int level, GridIndex i, GridIndex j,
-               const mnd::Real& juliaX, const mnd::Real& juliaY,
                long calcState) :
         generator{ generator },
         gradient{ gradient },
@@ -198,7 +195,6 @@ public:
         grid{ grid },
         level{ level },
         i{ i }, j{ j },
-        juliaX{ juliaX }, juliaY{ juliaY },
         calcState{ calcState }
     {}
 
@@ -215,24 +211,16 @@ class Calcer : public QObject
     std::unordered_map<std::tuple<int, GridIndex, GridIndex>, Job*, TripleHash> jobs;
     QMutex jobsMutex;
     mnd::MandelGenerator* generator;
-public:
-    mnd::Real juliaX;
-    mnd::Real juliaY;
-private:
     std::unique_ptr<QThreadPool> threadPool;
     MandelWidget& owner;
     const Gradient& gradient;
-    int maxIter;
-    bool smooth;
     int currentLevel;
 
-    volatile long calcState = 0;
+    volatile unsigned int calcState = 0;
 public:
-    Calcer(mnd::MandelGenerator* generator, MandelWidget& owner, int maxIter, bool smooth);
-    void setMaxIter(int maxIter);
+    Calcer(mnd::MandelGenerator* generator, MandelWidget& owner);
     void clearAll(void);
     void setGenerator(mnd::MandelGenerator* generator) { this->generator = generator; changeState(); }
-    void setJuliaPos(const mnd::Real& x, const mnd::Real& y);
 
     inline void changeState(void) { calcState++; }
 
@@ -258,19 +246,15 @@ public:
     mnd::MandelGenerator* generator;
     Calcer calcer;
     MandelWidget& owner;
-    int maxIter;
     int width;
     int height;
 public:
     static const int chunkSize;
-    MandelView(mnd::MandelGenerator* generator, MandelWidget& owner, int maxIter);
+    MandelView(mnd::MandelGenerator* generator, MandelWidget& owner);
     int getLevel(mnd::Real dpp);
     mnd::Real getDpp(int level);
 
     TexGrid& getGrid(int level);
-
-    inline int getMaxIter(void) const { return this->maxIter; }
-    void setMaxIter(int maxIter);
 
     void setGenerator(mnd::MandelGenerator* generator);
 
@@ -293,13 +277,11 @@ class MandelWidget : public QOpenGLWidget
 private:
     mnd::MandelContext& mndContext;
     mnd::MandelGenerator* generator;
-
-    bool smoothColoring = true;
-
-    Gradient gradient;
+    mnd::MandelInfo mandelInfo;
 
     bool initialized = false;
-    int maxIterations = 2000;
+
+    Gradient gradient;
 
     volatile bool selectingPoint = false;
     float pointX;
@@ -324,21 +306,25 @@ public:
     inline const Gradient& getGradient(void) const { return gradient; }
     void setGradient(Gradient g);
 
-    inline bool getSmoothColoring(void) const { return smoothColoring; }
+    inline bool getSmoothColoring(void) const { return mandelInfo.smooth; }
     void setSmoothColoring(bool sc);
 
     inline bool doesDisplayInfo(void) const { return displayInfo; }
     void setDisplayInfo(bool di);
 
-    inline int getMaxIterations(void) const { return maxIterations; }
+    inline int getMaxIterations(void) const { return mandelInfo.maxIter; }
     void setMaxIterations(int maxIter);
 
+    inline const mnd::MandelInfo& getMandelInfo(void) const { return mandelInfo; }
+    inline mnd::MandelInfo& getMandelInfo(void) { return mandelInfo; }
+
     void setJuliaPos(const mnd::Real& x, const mnd::Real& y);
-    const mnd::Real& getJuliaX(void) { return mandelView->calcer.juliaX; }
-    const mnd::Real& getJuliaY(void) { return mandelView->calcer.juliaY; }
+    const mnd::Real& getJuliaX(void) { return mandelInfo.juliaX; }
+    const mnd::Real& getJuliaY(void) { return mandelInfo.juliaY; }
 
     inline mnd::MandelGenerator* getGenerator(void) const { return generator; }
     void setGenerator(mnd::MandelGenerator* generator);
+    void clearAll(void);
 
     void initializeGL(void) override;
     void paintGL() override;

@@ -221,19 +221,15 @@ void Job::run(void)
     mnd::Real gw = grid->dpp * MandelView::chunkSize;
 
     Bitmap<float> f(MandelView::chunkSize, MandelView::chunkSize);
-    std::unique_ptr<mnd::MandelInfo> mi = std::make_unique<mnd::MandelInfo>();
-    mi->view.x = absX;
-    mi->view.y = absY;
-    mi->view.width = mi->view.height = gw;
-    mi->bWidth = mi->bHeight = MandelView::chunkSize;
-    mi->maxIter = owner.getMaxIterations();
-    mi->smooth = owner.getSmoothColoring();
-    mi->juliaX = juliaX;
-    mi->juliaY = juliaY;
+    mnd::MandelInfo mi = owner.getMandelInfo();
+    mi.view.x = absX;
+    mi.view.y = absY;
+    mi.view.width = mi.view.height = gw;
+    mi.bWidth = mi.bHeight = MandelView::chunkSize;
     try {
-        generator->generate(*mi, f.pixels.get());
-        auto* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([&mi, this](float i) {
-            return i >= mi->maxIter ? RGBColor{ 0, 0, 0 } : gradient.get(i);
+        generator->generate(mi, f.pixels.get());
+        auto* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([&mi, this] (float i) {
+            return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : gradient.get(i);
         }));
         emit done(level, i, j, calcState, rgb);
     }
@@ -248,24 +244,14 @@ void Job::run(void)
 }
 
 
-Calcer::Calcer(mnd::MandelGenerator* generator, MandelWidget& owner, int maxIter, bool smooth) :
+Calcer::Calcer(mnd::MandelGenerator* generator, MandelWidget& owner) :
     jobsMutex{ QMutex::Recursive },
     generator{ generator },
     threadPool{ std::make_unique<QThreadPool>() },
     owner{ owner },
-    gradient{ owner.getGradient() },
-    maxIter{ maxIter },
-    smooth{ smooth }
+    gradient{ owner.getGradient() }
 {
     threadPool->setMaxThreadCount(1);
-}
-
-
-void Calcer::setMaxIter(int maxIter)
-{
-    this->maxIter = maxIter;
-    clearAll();
-    changeState();
 }
 
 
@@ -275,19 +261,11 @@ void Calcer::clearAll(void)
 }
 
 
-void Calcer::setJuliaPos(const mnd::Real& x, const mnd::Real& y)
-{
-    this->juliaX = x;
-    this->juliaY = y;
-    changeState();
-}
-
-
 void Calcer::calc(TexGrid& grid, int level, GridIndex i, GridIndex j, int priority)
 {
     jobsMutex.lock();
     if (jobs.find({ level, i, j }) == jobs.end()) {
-        Job* job = new Job(generator, gradient, owner, &grid, level, i, j, juliaX, juliaY, calcState);
+        Job* job = new Job(generator, gradient, owner, &grid, level, i, j, calcState);
         connect(job, &Job::done, this, &Calcer::redirect);
         connect(job, &QObject::destroyed, this, [this, level, i, j] () { this->notFinished(level, i, j); });
         jobs.emplace(std::tuple{level, i, j}, job);
@@ -343,11 +321,10 @@ void Calcer::redirect(int level, GridIndex i, GridIndex j, long calcState, Bitma
 
 const int MandelView::chunkSize = 256;
 
-MandelView::MandelView(mnd::MandelGenerator* generator, MandelWidget& owner, int maxIter) :
+MandelView::MandelView(mnd::MandelGenerator* generator, MandelWidget& owner) :
     generator{ generator },
-    calcer{ generator, owner, maxIter, owner.getSmoothColoring() },
-    owner{ owner },
-    maxIter{ maxIter }
+    calcer{ generator, owner },
+    owner{ owner }
 {
     Bitmap<RGBColor> emp(8, 8);
     for(auto i = 0; i < emp.width; i++) {
@@ -385,17 +362,6 @@ TexGrid& MandelView::getGrid(int level)
     else {
         levels.insert(std::pair<int, TexGrid>{ level, TexGrid{ *this, level } });
         return levels.at(level);
-    }
-}
-
-
-void MandelView::setMaxIter(int maxIter)
-{
-    if (this->maxIter != maxIter) {
-        this->maxIter = maxIter;
-        calcer.setMaxIter(maxIter);
-        clearCells();
-        emit redrawRequested();
     }
 }
 
@@ -633,8 +599,8 @@ void MandelWidget::setGradient(Gradient g)
 
 void MandelWidget::setSmoothColoring(bool sc)
 {
-    if (sc != this->smoothColoring) {
-        this->smoothColoring = sc;
+    if (sc != mandelInfo.smooth) {
+        mandelInfo.smooth = sc;
         if (mandelView) {
             mandelView->clearCells();
             emit update();
@@ -654,16 +620,25 @@ void MandelWidget::setDisplayInfo(bool di)
 
 void MandelWidget::setMaxIterations(int maxIter)
 {
-    this->maxIterations = maxIter;
-    if (mandelView)
-        mandelView->setMaxIter(maxIter);
+    if (mandelInfo.maxIter != maxIter) {
+        mandelInfo.maxIter = maxIter;
+        if (mandelView) {
+            mandelView->clearCells();
+            mandelView->calcer.clearAll();
+            mandelView->calcer.changeState();
+        }
+        emit update();
+    }
 }
 
 
 void MandelWidget::setJuliaPos(const mnd::Real& x, const mnd::Real& y)
 {
+    mandelInfo.juliaX = x;
+    mandelInfo.juliaY = y;
     if (mandelView)
-        mandelView->calcer.setJuliaPos(x, y);
+        mandelView->calcer.changeState();
+    emit update();
 }
 
 
@@ -674,6 +649,13 @@ void MandelWidget::setGenerator(mnd::MandelGenerator* generator)
         if (mandelView)
             mandelView->setGenerator(generator);
     }
+}
+
+
+void MandelWidget::clearAll(void)
+{
+    mandelView->clearCells();
+    mandelView->calcer.clearAll();
 }
 
 
@@ -697,7 +679,7 @@ void MandelWidget::initializeGL(void)
 void MandelWidget::paintGL(void)
 {
     if (mandelView == nullptr) {
-        mandelView = std::make_unique<MandelView>(generator, *this, maxIterations);
+        mandelView = std::make_unique<MandelView>(generator, *this);
         QObject::connect(mandelView.get(), &MandelView::redrawRequested, this, static_cast<void(QOpenGLWidget::*)(void)>(&QOpenGLWidget::update));
     }
 

@@ -101,6 +101,7 @@ if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
         set_source_files_properties(src/CpuGeneratorsAVXFMA.cpp PROPERTIES COMPILE_FLAGS /arch:AVX)
     else()
         set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS -mavx)
+        set_source_files_properties(src/JuliaGenerators.cpp PROPERTIES COMPILE_FLAGS -mavx)
         set_source_files_properties(src/CpuGeneratorsAVXFMA.cpp PROPERTIES COMPILE_FLAGS -mavx)
     endif(MSVC)
 

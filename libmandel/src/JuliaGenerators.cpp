@@ -1,6 +1,7 @@
 #include "Generators.h"
 #include "JuliaGenerators.h"
 
+#include <immintrin.h>
 #include <omp.h>
 
 mnd::JuliaGeneratorFloat::JuliaGeneratorFloat(const mnd::Real& precision) :

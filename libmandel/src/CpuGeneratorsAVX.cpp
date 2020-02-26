@@ -31,6 +31,11 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
     __m256 viewx = { viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf };
     __m256 dpp = { dppf, dppf, dppf, dppf, dppf, dppf, dppf, dppf };
 
+    T jX = info.juliaX;
+    T jY = info.juliaY;
+    __m256 juliaX = { jX, jX, jX, jX, jX, jX, jX, jX };
+    __m256 juliaY = { jY, jY, jY, jY, jY, jY, jY, jY };
+
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
 #pragma omp parallel for schedule(static, 1) if (parallel)
@@ -52,13 +57,17 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
 
             __m256 a = xs;
             __m256 b = ys;
+
+            __m256 cx = info.julia ? juliaX : xs;
+            __m256 cy = info.julia ? juliaY : ys;
+
             if (info.smooth) {
                 for (int k = 0; k < info.maxIter; k++) {
                     __m256 aa = _mm256_mul_ps(a, a);
                     __m256 bb = _mm256_mul_ps(b, b);
                     __m256 abab = _mm256_mul_ps(a, b); abab = _mm256_add_ps(abab, abab);
-                    a = _mm256_add_ps(_mm256_sub_ps(aa, bb), xs);
-                    b = _mm256_add_ps(abab, ys);
+                    a = _mm256_add_ps(_mm256_sub_ps(aa, bb), cx);
+                    b = _mm256_add_ps(abab, cy);
                     __m256 cmp = _mm256_cmp_ps(_mm256_add_ps(aa, bb), threshold, _CMP_LE_OQ);
                     resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
                     resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
@@ -74,8 +83,8 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
                     __m256 aa = _mm256_mul_ps(a, a);
                     __m256 bb = _mm256_mul_ps(b, b);
                     __m256 abab = _mm256_mul_ps(a, b); abab = _mm256_add_ps(abab, abab);
-                    a = _mm256_add_ps(_mm256_sub_ps(aa, bb), xs);
-                    b = _mm256_add_ps(abab, ys);
+                    a = _mm256_add_ps(_mm256_sub_ps(aa, bb), cx);
+                    b = _mm256_add_ps(abab, cy);
                     __m256 cmp = _mm256_cmp_ps(_mm256_add_ps(aa, bb), threshold, _CMP_LE_OQ);
                     adder = _mm256_and_ps(adder, cmp);
                     counter = _mm256_add_ps(counter, adder);

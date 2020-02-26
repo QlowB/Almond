@@ -79,6 +79,7 @@ struct mnd::MandelInfo
     /// smooth coloring
     bool smooth;
 
+    bool julia = false;
     Real juliaX;
     Real juliaY;
 };

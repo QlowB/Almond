@@ -2,6 +2,7 @@
 #define MANDEL_ITERATIONGENERATOR_H
 
 #include "Generators.h"
+#include "IterationFormula.h"
 
 
 namespace mnd

@@ -1,5 +1,3 @@
-
-
 long mul(long a, long b) {
     long upper = mul_hi(a, b);
     long lower = a * b;
@@ -8,7 +6,7 @@ long mul(long a, long b) {
 
 
 __kernel void iterate(__global float* A, const int width,
-                      ulong x, ulong y, ulong pw, ulong ph, int max, int smooth) {
+                      ulong x, ulong y, ulong pw, ulong ph, int max, int smooth, int julia, ulong juliaX, ulong juliaY) {
     int index = get_global_id(0);
     long px = (index % width);
     long py = (index / width);
@@ -20,8 +18,8 @@ __kernel void iterate(__global float* A, const int width,
 
     long a = xl + pixelScaleX * px; // pixelScaleX * px + xl
     long b = yt + pixelScaleY * py; // pixelScaleY * py + yt
-    long ca = a;
-    long cb = b;
+    long ca = julia ? juliaX : a;
+    long cb = julia ? juliaY : b;
 
     int n = 0;
     while (n < max - 1) {

@@ -6,6 +6,11 @@ namespace mnd
 {
     struct IterationFormula;
 
+    struct Expression;
+    struct Constant;
+    struct Variable;
+    struct UnaryOperation;
+    struct BinaryOperation;
     struct Addition;
     struct Multiplication;
     struct Division;
@@ -15,26 +20,57 @@ namespace mnd
 
 struct mnd::IterationFormula
 {
+    std::unique_ptr<Expression> expr;
 };
 
 
-struct mnd::Addition : IterationFormula
+struct mnd::Expression
+{
+};
+
+
+struct mnd::Constant : mnd::Expression
+{
+    double value;
+};
+
+
+struct mnd::Variable : mnd::Expression
+{
+    std::string name;
+};
+
+
+struct mnd::UnaryOperation : mnd::Expression
+{
+    std::unique_ptr<Expression> operand;
+};
+
+
+struct mnd::BinaryOperation : mnd::Expression
+{
+    std::unique_ptr<Expression> left;
+    std::unique_ptr<Expression> right;
+};
+
+
+struct mnd::Addition : mnd::BinaryOperation
 {
     bool subtraction = false;
 };
 
 
-struct mnd::Multiplication : IterationFormula
+struct mnd::Multiplication : mnd::BinaryOperation 
 {
 };
 
 
-struct mnd::Division : IterationFormula
+struct mnd::Division : mnd::BinaryOperation 
 {
 };
 
 
-struct mnd::Pow : IterationFormula
+struct mnd::Pow : mnd::BinaryOperation 
 {
 };
 

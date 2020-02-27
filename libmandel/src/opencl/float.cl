@@ -35,8 +35,8 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
    int y = index / width;
    float4 a = (float4) (x * pixelScaleX + xl, (x + 1) * pixelScaleX + xl, (x + 2) * pixelScaleX + xl, (x + 3) * pixelScaleX + xl);
    float4 b = (float4) (y * pixelScaleY + yt);
-   float4 ca = julia != 0 ? ((float4)(juliaX)) : a;
-   float4 cb = julia != 0 ? ((float4)(juliaX)) : a;
+   float4 ca = julia ? ((float4)(juliaX)) : a;
+   float4 cb = julia ? ((float4)(juliaY)) : b;
    float4 resa = a;
    float4 resb = b;
    int4 count = (int4)(0);
@@ -50,8 +50,8 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
            if (!any(cmp)) break;
            a = fma(a, a, -fma(b, b, -ca));
            b = fma(2, ab, cb);
-           resa = as_float4(as_int4(a) & cmp | (as_int4(resa) & ~cmp));
-           resb = as_float4(as_int4(b) & cmp | (as_int4(resb) & ~cmp));
+           resa = as_float4((as_int4(a) & cmp) | (as_int4(resa) & ~cmp));
+           resb = as_float4((as_int4(b) & cmp) | (as_int4(resb) & ~cmp));
            count += cmp & (int4)(1);
            n++;
        }

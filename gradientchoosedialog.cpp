@@ -16,6 +16,7 @@ GradientChooseDialog::GradientChooseDialog()
     gcd.presets->addItem("clouds");
     gcd.presets->addItem("rainbow");
     gcd.presets->addItem("grayscale");
+    gcd.presets->addItem("peach");
 }
 
 

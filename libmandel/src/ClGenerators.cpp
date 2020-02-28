@@ -143,75 +143,6 @@ ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
 std::string ClGeneratorFloat::getKernelCode(bool smooth) const
 {
     return mnd::getFloat_cl();
-        /*
-//        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable"
-        "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth) {"
-        "   int index = get_global_id(0) * 4;\n"
-        "   int x = index % width;"
-        "   int y = index / width;"
-        "   float4 a = (float4) (x * pixelScaleX + xl, (x + 1) * pixelScaleX + xl, (x + 2) * pixelScaleX + xl, (x + 3) * pixelScaleX + xl);"
-        "   float4 b = (float4) (y * pixelScaleY + yt);"
-        "   float4 ca = a;"
-        "   float4 cb = b;"
-        "   float4 resa = a;"
-        "   float4 resb = b;"
-        "   int4 count = (int4)(0);"
-        ""
-        "   int n = 0;"
-        "   while (n < max) {"
-//        "       float aa = a * a;"
-//        "       float bb = b * b;"
-        "       float4 ab = a * b;\n"
-        "       float4 cmpVal = fma(a, a, b * b);\n"
-        "       int4 cmp = isless(cmpVal, (float4)(16.0f));\n"
-        "       if (!any(cmp)) break;\n"
-        "       a = fma(a, a, -fma(b, b, -ca));\n"
-        "       b = fma(2, ab, cb);\n"
-        "       if (smooth) {\n"
-        "           resa = as_float4(as_int4(a) & cmp | (as_int4(resa) & ~cmp));"
-        "           resb = as_float4(as_int4(b) & cmp | (as_int4(resb) & ~cmp));"
-        "       }\n"
-        "       count += cmp & (int4)(1);\n"
-        "       n++;"
-        "   }\n"
-        "   for (int i = 0; i < 4 && i + x < width; i++) {"
-        "       if (smooth != 0)\n"
-        "           A[index + i] = ((float) count[i]) + 1 - log(log(fma(resa[i], resa[i], resb[i] * resb[i])) / 2) / log(2.0f);\n"
-        "      else\n"
-        "          A[index + i] = ((float) count[i]);\n"
-        "   }"
-        "}";*/
-        /*
-//        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable"
-        "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth) {"
-        "   int index = get_global_id(0);\n"
-        "   int x = index % width;"
-        "   int y = index / width;"
-        "   float a = x * pixelScaleX + xl;"
-        "   float b = y * pixelScaleY + yt;"
-        "   float ca = a;"
-        "   float cb = b;"
-        ""
-        "   int n = 0;"
-        "   while (n < max - 1) {"
-//        "       float aa = a * a;"
-//        "       float bb = b * b;"
-        "       float ab = a * b;"
-        "       if (fma(a, a, b * b) > 16) break;"
-        "       a = fma(a, a, -fma(b, b, -ca));"
-        "       b = fma(2, ab, cb);"
-        "       n++;"
-        "   }\n"
-        "   if (n >= max - 1)\n"
-        "       A[index] = max;\n"
-        "   else {"
-        "       if (smooth != 0)\n"
-        "           A[index] = ((float)n) + 1 - log(log(a * a + b * b) / 2) / log(2.0f);\n"
-        "       else\n"
-        "           A[index] = ((float)n);\n"
-        "   }"
-        "}";
-        */
 }
 
 
@@ -385,7 +316,7 @@ ClGeneratorDouble::ClGeneratorDouble(cl::Device device) :
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode = this->getKernelCode(false);
+    std::string kcode = getDouble_cl();
 
     sources.push_back({ kcode.c_str(), kcode.length() });
 

@@ -5,10 +5,10 @@ using mnd::IterationGenerator;
 using mnd::IterationFormula;
 
 
-IterationGenerator::IterationGenerator(const IterationFormula& itf,
+IterationGenerator::IterationGenerator(IterationFormula itf,
                                        const mnd::Real& prec) :
-    mnd::MandelGenrator{ prec },
-    itf{ itf }
+    mnd::MandelGenerator{ prec },
+    itf{ std::move(itf) }
 {
 }
 

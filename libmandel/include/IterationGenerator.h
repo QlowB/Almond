@@ -15,7 +15,7 @@ class mnd::IterationGenerator : public mnd::MandelGenerator
 {
     IterationFormula itf;
 public:
-    IterationGenerator(const IterationFormula& itf, const mnd::Real& prec);
+    IterationGenerator(IterationFormula itf, const mnd::Real& prec);
 };
 
 

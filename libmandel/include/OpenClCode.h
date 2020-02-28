@@ -4,6 +4,7 @@
 namespace mnd
 {
     const char* getFloat_cl();
+    const char* getDouble_cl();
     const char* getDoubleFloat_cl();
     const char* getDoubleDouble_cl();
     const char* getQuadDouble_cl();

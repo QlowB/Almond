@@ -1,6 +1,7 @@
 #include "OpenClCode.h"
 
 #include "opencl/float.h"
+#include "opencl/double.h"
 #include "opencl/doublefloat.h"
 #include "opencl/doubledouble.h"
 #include "opencl/quaddouble.h"
@@ -12,6 +13,10 @@
 namespace mnd
 {
     const char* getFloat_cl() {
+        return (char*) float_cl;
+    }
+
+    const char* getDouble_cl() {
         return (char*) float_cl;
     }
 

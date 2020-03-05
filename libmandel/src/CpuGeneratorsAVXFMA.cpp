@@ -178,13 +178,17 @@ void CpuGenerator<double, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mande
 
             for (int k = 0; k < info.maxIter; k++) {
                 __m256d ab = _mm256_mul_pd(a, b);
+                __m256d bb = _mm256_mul_pd(b, b);
                 __m256d ab2 = _mm256_mul_pd(a2, b2);
-                a = _mm256_fmsub_pd(a, a, _mm256_fmsub_pd(b, b, cx));
-                a2 = _mm256_fmsub_pd(a2, a2, _mm256_fmsub_pd(b2, b2, cx2));
+                __m256d bb2 = _mm256_mul_pd(b2, b2);
+                a = _mm256_fmsub_pd(a, a, bb);
+                a = _mm256_add_pd(a, cx);
+                a2 = _mm256_fmsub_pd(a2, a2, bb2);
+                a2 = _mm256_add_pd(a2, cx2);
                 b = _mm256_fmadd_pd(two, ab, cy);
                 b2 = _mm256_fmadd_pd(two, ab2, cy);
-                __m256d cmp = _mm256_cmp_pd(_mm256_fmadd_pd(a, a, _mm256_mul_pd(b, b)), threshold, _CMP_LE_OQ);
-                __m256d cmp2 = _mm256_cmp_pd(_mm256_fmadd_pd(a2, a2, _mm256_mul_pd(b2, b2)), threshold, _CMP_LE_OQ);
+                __m256d cmp = _mm256_cmp_pd(_mm256_fmadd_pd(a, a, bb), threshold, _CMP_LE_OQ);
+                __m256d cmp2 = _mm256_cmp_pd(_mm256_fmadd_pd(a2, a2, bb2), threshold, _CMP_LE_OQ);
                 if (info.smooth) {
                     resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a));
                     resultsb = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsb), _mm256_and_pd(cmp, b));

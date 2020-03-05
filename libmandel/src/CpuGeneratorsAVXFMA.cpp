@@ -146,38 +146,57 @@ void CpuGenerator<double, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mande
         T y = T(view.y + T(j) * view.height / info.bHeight);
         __m256d ys = { y, y, y, y };
         long i = 0;
-        for (i; i < info.bWidth; i += 4) {
+        for (i; i < info.bWidth; i += 8) {
             __m256d pixc = { double(i), double(i + 1), double(i + 2), double(i + 3) };
+            __m256d pixc2 = { double(i + 4), double(i + 5), double(i + 6), double(i + 7) };
             __m256d xs = _mm256_fmadd_pd(dpp, pixc, viewx);
+            __m256d xs2 = _mm256_fmadd_pd(dpp, pixc2, viewx);
 
             int itRes[4] = { 0, 0, 0, 0 };
 
             __m256d threshold = { 16.0, 16.0, 16.0, 16.0 };
             __m256d counter = { 0, 0, 0, 0 };
             __m256d adder = { 1, 1, 1, 1 };
+            __m256d counter2 = { 0, 0, 0, 0 };
+            __m256d adder2 = { 1, 1, 1, 1 };
             __m256d two = { 2, 2, 2, 2 };
 
             __m256d resultsa = { 0, 0, 0, 0 };
             __m256d resultsb = { 0, 0, 0, 0 };
+            __m256d resultsa2 = { 0, 0, 0, 0 };
+            __m256d resultsb2 = { 0, 0, 0, 0 };
 
             __m256d a = xs;
             __m256d b = ys;
+            __m256d a2 = xs2;
+            __m256d b2 = ys;
 
             __m256d cx = info.julia ? juliaX : xs;
             __m256d cy = info.julia ? juliaY : ys;
+            __m256d cx2 = info.julia ? juliaX : xs2;
+            //__m256d cy2 = info.julia ? juliaY : ys;
 
             for (int k = 0; k < info.maxIter; k++) {
                 __m256d ab = _mm256_mul_pd(a, b);
+                __m256d ab2 = _mm256_mul_pd(a2, b2);
                 a = _mm256_fmsub_pd(a, a, _mm256_fmsub_pd(b, b, cx));
+                a2 = _mm256_fmsub_pd(a2, a2, _mm256_fmsub_pd(b2, b2, cx2));
                 b = _mm256_fmadd_pd(two, ab, cy);
+                b2 = _mm256_fmadd_pd(two, ab2, cy);
                 __m256d cmp = _mm256_cmp_pd(_mm256_fmadd_pd(a, a, _mm256_mul_pd(b, b)), threshold, _CMP_LE_OQ);
+                __m256d cmp2 = _mm256_cmp_pd(_mm256_fmadd_pd(a2, a2, _mm256_mul_pd(b2, b2)), threshold, _CMP_LE_OQ);
                 if (info.smooth) {
                     resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a));
                     resultsb = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsb), _mm256_and_pd(cmp, b));
+                    resultsa2 = _mm256_or_pd(_mm256_andnot_pd(cmp2, resultsa2), _mm256_and_pd(cmp2, a2));
+                    resultsb2 = _mm256_or_pd(_mm256_andnot_pd(cmp2, resultsb2), _mm256_and_pd(cmp2, b2));
                 }
                 adder = _mm256_and_pd(adder, cmp);
+                adder2 = _mm256_and_pd(adder2, cmp2);
                 counter = _mm256_add_pd(counter, adder);
-                if ((k & 0x7) == 0 && _mm256_testz_si256(_mm256_castpd_si256(cmp), _mm256_castpd_si256(cmp)) != 0) {
+                counter2 = _mm256_add_pd(counter2, adder2);
+                if ((k & 0x7) == 0 && _mm256_testz_si256(_mm256_castpd_si256(cmp), _mm256_castpd_si256(cmp)) != 0 &&
+                        _mm256_testz_si256(_mm256_castpd_si256(cmp2), _mm256_castpd_si256(cmp2)) != 0) {
                     break;
                 }
             }
@@ -202,6 +221,20 @@ void CpuGenerator<double, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mande
                 else
                     data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
             }
+
+            resa = (double*) &resultsa2;
+            resb = (double*) &resultsb2;
+            _mm256_store_pd(ftRes, counter2);
+            i += 4;
+            for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
+                if (info.smooth)
+                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                        ftRes[k] >= info.maxIter ? info.maxIter :
+                        ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
+                else
+                    data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+            }
+            i -= 4;
         }
     }
 }

@@ -1,0 +1,8 @@
+<gradient repeat="true">
+    <color r="255" g="200" b="180" p="0" />
+    <color r="240" g="115" b="50" p="30" />
+    <color r="235" g="85" b="10" p="50" />
+    <color r="170" g="90" b="10" p="70" />
+    <color r="255" g="150" b="100" p="90" />
+    <color r="255" g="200" b="180" p="120" />
+</gradient>

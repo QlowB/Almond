@@ -17,7 +17,7 @@ namespace mnd
     }
 
     const char* getDouble_cl() {
-        return (char*) float_cl;
+        return (char*) double_cl;
     }
 
     const char* getDoubleFloat_cl() {

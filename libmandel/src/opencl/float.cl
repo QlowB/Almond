@@ -76,4 +76,3 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
    }
 }
 
-

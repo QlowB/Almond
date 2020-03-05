@@ -44,56 +44,84 @@ void CpuGenerator<float, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mandel
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         __m256 ys = {y, y, y, y, y, y, y, y};
         long i = 0;
-        for (i; i < info.bWidth; i += 8) {
+        for (i; i < info.bWidth; i += 16) {
             __m256 pixc = { float(i), float(i + 1), float(i + 2), float(i + 3), float(i + 4), float(i + 5), float(i + 6), float(i + 7) };
-            __m256 xs = _mm256_fmadd_ps(dpp, pixc, viewx);
+            __m256 pixc2 = { float(i + 8), float(i + 9), float(i + 10), float(i + 11), float(i + 12), float(i + 13), float(i + 14), float(i + 15) };
+
+            __m256 xs = _mm256_add_ps(_mm256_mul_ps(dpp, pixc), viewx);
+            __m256 xs2 = _mm256_add_ps(_mm256_mul_ps(dpp, pixc2), viewx);
 
             __m256 counter = { 0, 0, 0, 0, 0, 0, 0, 0 };
             __m256 adder = { 1, 1, 1, 1, 1, 1, 1, 1 };
-            __m256 two = { 2, 2, 2, 2, 2, 2, 2, 2 };
             __m256 resultsa = { 0, 0, 0, 0, 0, 0, 0, 0 };
             __m256 resultsb = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
+            __m256 counter2 = { 0, 0, 0, 0, 0, 0, 0, 0 };
+            __m256 adder2 = { 1, 1, 1, 1, 1, 1, 1, 1 };
+            __m256 resultsa2 = { 0, 0, 0, 0, 0, 0, 0, 0 };
+            __m256 resultsb2 = { 0, 0, 0, 0, 0, 0, 0, 0 };
+
             __m256 threshold = { 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f };
+            __m256 two = { 2, 2, 2, 2, 2, 2, 2, 2 };
 
             __m256 a = xs;
+            __m256 a2 = xs2;
             __m256 b = ys;
+            __m256 b2 = ys;
 
             __m256 cx = info.julia ? juliaX : xs;
+            __m256 cx2 = info.julia ? juliaX : xs2;
             __m256 cy = info.julia ? juliaY : ys;
 
-            for (int k = 0; k < info.maxIter; k++) {
-                if ((k & 0xF) == 0) {
+            if (info.smooth) {
+                for (int k = 0; k < info.maxIter; k++) {
                     __m256 bb = _mm256_mul_ps(b, b);
-                    __m256 ab = _mm256_mul_ps(a, b); //abab = _mm256_add_ps(abab, abab);
-                    a = _mm256_fmsub_ps(a, a, _mm256_fmsub_ps(b, b, cx));
+                    __m256 bb2 = _mm256_mul_ps(b2, b2);
+                    __m256 ab = _mm256_mul_ps(a, b);
+                    __m256 ab2 = _mm256_mul_ps(a2, b2);
+                    a = _mm256_add_ps(_mm256_fmsub_ps(a, a, bb), cx);
+                    a2 = _mm256_add_ps(_mm256_fmsub_ps(a2, a2, bb2), cx2);
                     b = _mm256_fmadd_ps(two, ab, cy);
-                    __m256 cmp = _mm256_cmp_ps(_mm256_fmadd_ps(a, a, _mm256_mul_ps(b, b)), threshold, _CMP_LE_OQ);
-                    if (info.smooth) {
-                        resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
-                        resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
-                    }
+                    b2 = _mm256_fmadd_ps(two, ab2, cy);
+                    __m256 cmp = _mm256_cmp_ps(_mm256_fmadd_ps(a, a, bb), threshold, _CMP_LE_OQ);
+                    __m256 cmp2 = _mm256_cmp_ps(_mm256_fmadd_ps(a2, a2, bb2), threshold, _CMP_LE_OQ);
+                    resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
+                    resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
+                    resultsa2 = _mm256_or_ps(_mm256_andnot_ps(cmp2, resultsa2), _mm256_and_ps(cmp2, a2));
+                    resultsb2 = _mm256_or_ps(_mm256_andnot_ps(cmp2, resultsb2), _mm256_and_ps(cmp2, b2));
                     adder = _mm256_and_ps(adder, cmp);
                     counter = _mm256_add_ps(counter, adder);
-                    if (_mm256_testz_ps(cmp, cmp) != 0) {
+                    adder2 = _mm256_and_ps(adder2, cmp2);
+                    counter2 = _mm256_add_ps(counter2, adder2);
+                    if ((k & 0x7) == 0 && _mm256_testz_ps(cmp, cmp) != 0 && _mm256_testz_ps(cmp2, cmp2) != 0) {
                         break;
                     }
                 }
-                else {
-                    //__m256 aa = _mm256_mul_ps(a, a);
+            }
+            else {
+                for (int k = 0; k < info.maxIter; k++) {
+                    __m256 aa = _mm256_mul_ps(a, a);
+                    __m256 aa2 = _mm256_mul_ps(a2, a2);
                     __m256 bb = _mm256_mul_ps(b, b);
-                    __m256 ab = _mm256_mul_ps(a, b); //abab = _mm256_add_ps(abab, abab);
-                    a = _mm256_fmsub_ps(a, a, _mm256_fmsub_ps(b, b, cx));
-                    b = _mm256_fmadd_ps(two, ab, cy);
-                    __m256 cmp = _mm256_cmp_ps(_mm256_fmadd_ps(a, a, _mm256_mul_ps(b, b)), threshold, _CMP_LE_OQ);
-                    if (info.smooth) {
-                        resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
-                        resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
-                    }
+                    __m256 bb2 = _mm256_mul_ps(b2, b2);
+                    __m256 abab = _mm256_mul_ps(a, b); abab = _mm256_add_ps(abab, abab);
+                    __m256 abab2 = _mm256_mul_ps(a2, b2); abab2 = _mm256_add_ps(abab2, abab2);
+                    a = _mm256_add_ps(_mm256_sub_ps(aa, bb), cx);
+                    a2 = _mm256_add_ps(_mm256_sub_ps(aa2, bb2), cx2);
+                    b = _mm256_add_ps(abab, cy);
+                    b2 = _mm256_add_ps(abab2, cy);
+                    __m256 cmp = _mm256_cmp_ps(_mm256_add_ps(aa, bb), threshold, _CMP_LE_OQ);
+                    __m256 cmp2 = _mm256_cmp_ps(_mm256_add_ps(aa2, bb2), threshold, _CMP_LE_OQ);
                     adder = _mm256_and_ps(adder, cmp);
                     counter = _mm256_add_ps(counter, adder);
+                    adder2 = _mm256_and_ps(adder2, cmp2);
+                    counter2 = _mm256_add_ps(counter2, adder2);
+                    if ((k & 0x7) == 0 && _mm256_testz_ps(cmp, cmp) != 0 && _mm256_testz_ps(cmp2, cmp2) != 0) {
+                        break;
+                    }
                 }
             }
+
 
             auto alignVec = [](float* data) -> float* {
                 void* aligned = data;
@@ -102,13 +130,18 @@ void CpuGenerator<float, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mandel
                 return static_cast<float*>(aligned);
             };
 
-            float resData[16];
+            float resData[64];
             float* ftRes = alignVec(resData);
-            float* resa = (float*) &resultsa;
-            float* resb = (float*) &resultsb;
+            float* resa = ftRes + 16;
+            float* resb = resa + 16;
 
             _mm256_store_ps(ftRes, counter);
-            for (int k = 0; k < 8 && i + k < info.bWidth; k++) {
+            _mm256_store_ps(ftRes + 8, counter2);
+            _mm256_store_ps(resa, resultsa);
+            _mm256_store_ps(resa + 8, resultsa2);
+            _mm256_store_ps(resb, resultsb);
+            _mm256_store_ps(resb + 8, resultsb2);
+            for (int k = 0; k < 16 && i + k < info.bWidth; k++) {
                 if (info.smooth) {
                     data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
                         ftRes[k] >= info.maxIter ? info.maxIter :

@@ -1,3 +1,4 @@
+
 __kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth, int julia, float juliaX, float juliaY) {
    int index = get_global_id(0);
    int x = index % width;

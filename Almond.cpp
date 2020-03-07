@@ -11,8 +11,9 @@ mnd::MandelGenerator* generateTest()
 {
     mnd::Variable z{ "z" };
     mnd::Variable c{ "c" };
-    mnd::Pow m{ std::make_unique<mnd::Expression>(z), std::make_unique<mnd::Expression>(mnd::Constant{ 2.01 }) };
-    //mnd::Multiplication m2{ std::make_unique<mnd::Expression>(std::move(m)), std::make_unique<mnd::Expression>(z) };
+    mnd::Pow m{ {std::make_unique<mnd::Expression>(z), std::make_unique<mnd::Expression>(z)} };
+    //mnd::Multiplication m{ std::make_unique<mnd::Expression>(z), std::make_unique<mnd::Expression>(z) };
+    //mnd::Addition a1{ std::make_unique<mnd::Expression>(std::move(m)), std::make_unique<mnd::Expression>(c) };
     mnd::Addition a{ std::make_unique<mnd::Expression>(std::move(m)), std::make_unique<mnd::Expression>(c) };
 
     mnd::IterationFormula itf{ std::make_unique<mnd::Expression>(std::move(a)) };
@@ -25,6 +26,8 @@ Almond::Almond(QWidget* parent) :
 {
     ui.setupUi(this);
 
+    auto form = mnd::parse("123");
+    ::exit(0);
 
     mw = std::make_unique<MandelWidget>(mandelContext,
                                         &mandelContext.getDefaultGenerator(),
@@ -39,6 +42,7 @@ Almond::Almond(QWidget* parent) :
     mandelViewSave = mw->getViewport();
 
     mw->setGenerator(generateTest());
+    mw->setMaxIterations(200);
 
     QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
     ui.mainContainer->addWidget(mw.get());

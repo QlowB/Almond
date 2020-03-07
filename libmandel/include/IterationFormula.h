@@ -3,6 +3,7 @@
 
 #include <variant>
 #include <memory>
+#include <string>
 
 namespace mnd
 {
@@ -27,7 +28,7 @@ namespace mnd
             Pow
     >;
 
-    class FormulaVisitor;
+    std::unique_ptr<Expression> parse(const std::string& formula);
 }
 
 
@@ -40,6 +41,9 @@ struct mnd::IterationFormula
 struct mnd::Constant
 {
     double value;
+    inline Constant(double value) :
+        value{ value }
+    {}
 };
 
 

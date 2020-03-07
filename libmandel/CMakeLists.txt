@@ -37,6 +37,7 @@ SET(MandelSources
     src/OpenClCode.cpp
     src/JuliaGenerators.cpp
     src/IterationGenerator.cpp
+    src/IterationFormula.cpp
 )
 FILE(GLOB MandelHeaders include/*.h)
 

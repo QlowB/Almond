@@ -1,12 +1,13 @@
 #ifndef MANDEL_ITERATIONFORMULA_H
 #define MANDEL_ITERATIONFORMULA_H
 
+#include <variant>
+#include <memory>
 
 namespace mnd
 {
     struct IterationFormula;
 
-    struct Expression;
     struct Constant;
     struct Variable;
     struct UnaryOperation;
@@ -15,6 +16,18 @@ namespace mnd
     struct Multiplication;
     struct Division;
     struct Pow;
+
+    using Expression = std::variant<
+            Constant,
+            Variable,
+            UnaryOperation,
+            Addition,
+            Multiplication,
+            Division,
+            Pow
+    >;
+
+    class FormulaVisitor;
 }
 
 
@@ -24,30 +37,25 @@ struct mnd::IterationFormula
 };
 
 
-struct mnd::Expression
-{
-};
-
-
-struct mnd::Constant : mnd::Expression
+struct mnd::Constant
 {
     double value;
 };
 
 
-struct mnd::Variable : mnd::Expression
+struct mnd::Variable
 {
     std::string name;
 };
 
 
-struct mnd::UnaryOperation : mnd::Expression
+struct mnd::UnaryOperation
 {
     std::unique_ptr<Expression> operand;
 };
 
 
-struct mnd::BinaryOperation : mnd::Expression
+struct mnd::BinaryOperation
 {
     std::unique_ptr<Expression> left;
     std::unique_ptr<Expression> right;

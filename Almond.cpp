@@ -7,6 +7,18 @@
 
 #include <cmath>
 
+mnd::MandelGenerator* generateTest()
+{
+    mnd::Variable z{ "z" };
+    mnd::Variable c{ "c" };
+    mnd::Pow m{ std::make_unique<mnd::Expression>(z), std::make_unique<mnd::Expression>(mnd::Constant{ 2.01 }) };
+    //mnd::Multiplication m2{ std::make_unique<mnd::Expression>(std::move(m)), std::make_unique<mnd::Expression>(z) };
+    mnd::Addition a{ std::make_unique<mnd::Expression>(std::move(m)), std::make_unique<mnd::Expression>(c) };
+
+    mnd::IterationFormula itf{ std::make_unique<mnd::Expression>(std::move(a)) };
+    return new mnd::NaiveGenerator(std::move(itf), 1.0e-10);
+}
+
 Almond::Almond(QWidget* parent) :
     QMainWindow{ parent },
     mandelContext{ mnd::initializeContext() }
@@ -25,6 +37,8 @@ Almond::Almond(QWidget* parent) :
     currentView = MANDELBROT;
     mandelGeneratorSave = &mandelContext.getDefaultGenerator();
     mandelViewSave = mw->getViewport();
+
+    mw->setGenerator(generateTest());
 
     QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
     ui.mainContainer->addWidget(mw.get());

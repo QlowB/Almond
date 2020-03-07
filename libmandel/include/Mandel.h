@@ -8,6 +8,7 @@
 
 #include "MandelUtil.h"
 #include "Generators.h"
+#include "IterationGenerator.h"
 #include "CpuGenerators.h"
 #include "Hardware.h"
 

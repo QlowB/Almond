@@ -346,6 +346,9 @@ void ClGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
     iterate.setArg(5, double(pixelScaleY));
     iterate.setArg(6, int(info.maxIter));
     iterate.setArg(7, int(info.smooth ? 1 : 0));
+    iterate.setArg(8, int(info.julia ? 1 : 0));
+    iterate.setArg(9, double(info.juliaX));
+    iterate.setArg(10, double(info.juliaY));
 
     cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);

@@ -29,6 +29,8 @@ namespace mnd
     >;
 
     std::unique_ptr<Expression> parse(const std::string& formula);
+
+    std::string toString(const mnd::Expression&);
 }
 
 
@@ -44,6 +46,9 @@ struct mnd::Constant
     inline Constant(double value) :
         value{ value }
     {}
+    inline Constant() :
+        value{ 1010 }
+    {}
 };
 
 
@@ -56,6 +61,9 @@ struct mnd::Variable
 struct mnd::UnaryOperation
 {
     std::unique_ptr<Expression> operand;
+    /*inline UnaryOperation(const UnaryOperation& other) :
+        operand{ std::make_unique<Expression>(*other.operand) }
+    {}*/
 };
 
 
@@ -63,6 +71,10 @@ struct mnd::BinaryOperation
 {
     std::unique_ptr<Expression> left;
     std::unique_ptr<Expression> right;
+    /*inline BinaryOperation(const BinaryOperation& other) :
+        left{ std::make_unique<Expression>(*other.left) },
+        right{ std::make_unique<Expression>(*other.right) }
+    {}*/
 };
 
 
@@ -86,6 +98,10 @@ struct mnd::Pow : mnd::BinaryOperation
 {
 };
 
+
+namespace mnd
+{
+}
 
 
 #endif // MANDEL_ITERATIONFORMULA_H

@@ -26,7 +26,7 @@ Almond::Almond(QWidget* parent) :
 {
     ui.setupUi(this);
 
-    auto form = mnd::parse("123");
+    auto form = mnd::parse("92 + 2");
     ::exit(0);
 
     mw = std::make_unique<MandelWidget>(mandelContext,

@@ -235,9 +235,9 @@ void ChooseGenerators::setBenchmarkResult(int row, float percentage, double resu
 
 void ChooseGenerators::on_buttonBox_accepted()
 {
-    if (!createdGenerator)
-        createdGenerator = std::make_unique<mnd::AdaptiveGenerator>();
-    createdGenerator->clear();
+    //if (!chosenGenerator)
+    /*auto adGen = std::make_unique<mnd::AdaptiveGenerator>();
+    //createdGenerator->clear();
     try {
         for (size_t i = 0; i < tableContent.size(); i++) {
             QString precString = tableContent.at(i).first->text();
@@ -246,13 +246,14 @@ void ChooseGenerators::on_buttonBox_accepted()
             mnd::Real precision = mnd::Real(precString.toStdString().c_str());
             mnd::MandelGenerator* generator = generators.at(genString);
             if (generator)
-                createdGenerator->addGenerator(precision, *generator);
+                adGen->addGenerator(precision, *generator);
         }
     }
     catch(...) {
         // TODO
-        createdGenerator = nullptr;
+        adGen = nullptr;
     }
+    chosenGenerator = std::move(adGen);*/
 }
 
 
@@ -287,4 +288,12 @@ void ChooseGenerators::on_generatorTable_cellDoubleClicked(int row, int column)
             }
         }
     }
+}
+
+
+void ChooseGenerators::on_compile_clicked()
+{
+    QString formula = this->ui->formula->text();
+    mnd::IterationFormula itf{ mnd::parse(formula.toStdString()) };
+    chosenGenerator = std::make_unique<mnd::NaiveGenerator>(std::move(itf), mnd::getPrecision<double>());
 }

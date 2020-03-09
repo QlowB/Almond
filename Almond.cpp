@@ -7,27 +7,21 @@
 
 #include <cmath>
 
-mnd::MandelGenerator* generateTest()
-{
-    mnd::Variable z{ "z" };
-    mnd::Variable c{ "c" };
-    mnd::Pow m{ {std::make_unique<mnd::Expression>(z), std::make_unique<mnd::Expression>(z)} };
-    //mnd::Multiplication m{ std::make_unique<mnd::Expression>(z), std::make_unique<mnd::Expression>(z) };
-    //mnd::Addition a1{ std::make_unique<mnd::Expression>(std::move(m)), std::make_unique<mnd::Expression>(c) };
-    mnd::Addition a{ std::make_unique<mnd::Expression>(std::move(m)), std::make_unique<mnd::Expression>(c) };
-
-    mnd::IterationFormula itf{ std::make_unique<mnd::Expression>(std::move(a)) };
-    return new mnd::NaiveGenerator(std::move(itf), 1.0e-10);
-}
-
 Almond::Almond(QWidget* parent) :
     QMainWindow{ parent },
     mandelContext{ mnd::initializeContext() }
 {
     ui.setupUi(this);
 
-    auto form = mnd::parse("92 + 2");
-    ::exit(0);
+    /*mnd::IterationFormula form;
+    try {
+        form = mnd::IterationFormula{
+            std::make_unique<mnd::Expression>(mnd::parse("z*z*z + c*z + c"))
+        };
+    }
+    catch (mnd::ParseError& pe) {
+        printf("parse error: %s\n", pe.what());
+    }*/
 
     mw = std::make_unique<MandelWidget>(mandelContext,
                                         &mandelContext.getDefaultGenerator(),
@@ -40,9 +34,6 @@ Almond::Almond(QWidget* parent) :
     currentView = MANDELBROT;
     mandelGeneratorSave = &mandelContext.getDefaultGenerator();
     mandelViewSave = mw->getViewport();
-
-    mw->setGenerator(generateTest());
-    mw->setMaxIterations(200);
 
     QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
     ui.mainContainer->addWidget(mw.get());

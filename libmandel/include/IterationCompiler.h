@@ -1,0 +1,13 @@
+#ifndef MANDEL_ITERATIONCOMPILER_H
+#define MANDEL_ITERATIONCOMPILER_H
+
+
+namespace mnd
+{
+
+}
+
+
+
+#endif // MANDEL_ITERATIONCOMPILER_H
+

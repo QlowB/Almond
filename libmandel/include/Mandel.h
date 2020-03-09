@@ -6,6 +6,8 @@
 #include <string>
 #include <memory>
 
+#include <asmjit/asmjit.h>
+
 #include "MandelUtil.h"
 #include "Generators.h"
 #include "IterationGenerator.h"
@@ -86,6 +88,7 @@ private:
     friend MandelContext mnd::initializeContext(void);
 
     CpuInfo cpuInfo;
+    asmjit::JitRuntime jitRuntime;
 
     std::map<GeneratorType, std::unique_ptr<MandelGenerator>> cpuGenerators;
 
@@ -106,6 +109,8 @@ public:
 
     AdaptiveGenerator& getDefaultGenerator(void);
     const std::vector<MandelDevice>& getDevices(void);
+
+    asmjit::JitRuntime& getJitRuntime(void);
 
     MandelGenerator* getCpuGenerator(mnd::GeneratorType type);
     std::vector<GeneratorType> getSupportedTypes(void) const;

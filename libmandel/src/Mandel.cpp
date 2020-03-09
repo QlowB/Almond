@@ -321,6 +321,12 @@ const std::vector<MandelDevice>& MandelContext::getDevices(void)
 }
 
 
+asmjit::JitRuntime& MandelContext::getJitRuntime(void)
+{
+    return jitRuntime;
+}
+
+
 MandelGenerator* MandelContext::getCpuGenerator(mnd::GeneratorType type)
 {
     auto it = cpuGenerators.find(type);

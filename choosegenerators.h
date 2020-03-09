@@ -64,14 +64,15 @@ private:
     std::map<QString, mnd::MandelGenerator*> generators;
     std::vector<std::pair<QLineEdit*, QComboBox*>> tableContent;
     std::unique_ptr<QValidator> floatValidator;
-    std::unique_ptr<mnd::AdaptiveGenerator> createdGenerator;
+    //std::unique_ptr<mnd::AdaptiveGenerator> createdGenerator;
+    std::unique_ptr<mnd::MandelGenerator> chosenGenerator;
     std::vector<mnd::MandelGenerator*> actualGenerators;
     QThreadPool benchmarker;
 public:
     ChooseGenerators(mnd::MandelContext& mndCtxt, QWidget* parent = nullptr);
     ~ChooseGenerators();
 
-    inline mnd::AdaptiveGenerator* getChosenGenerator(void) { return createdGenerator.get(); }
+    inline mnd::MandelGenerator* getChosenGenerator(void) { return chosenGenerator.get(); }
 
 private:
     QComboBox* createComboBox(void);
@@ -83,6 +84,7 @@ private slots:
     void on_buttonBox_accepted();
     void on_run_clicked();
     void on_generatorTable_cellDoubleClicked(int row, int column);
+    void on_compile_clicked();
 };
 
 #endif // CHOOSEGENERATORS_H

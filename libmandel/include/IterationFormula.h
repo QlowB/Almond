@@ -28,7 +28,14 @@ namespace mnd
             Pow
     >;
 
-    std::unique_ptr<Expression> parse(const std::string& formula);
+    struct ParseError : std::runtime_error
+    {
+        ParseError(const std::string& err) :
+            std::runtime_error(err.c_str())
+        {}
+    };
+
+    Expression parse(const std::string& formula);
 
     std::string toString(const mnd::Expression&);
 }
@@ -37,6 +44,7 @@ namespace mnd
 struct mnd::IterationFormula
 {
     std::unique_ptr<Expression> expr;
+    IterationFormula(Expression expr);
 };
 
 

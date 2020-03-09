@@ -12,15 +12,6 @@ find_package(OpenMP)
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.53)
 
-find_path(MPFR_INCLUDES
-  NAMES
-  mpfr.h
-  PATHS
-  $ENV{MPFR_DIR}
-  ${INCLUDE_INSTALL_DIR}
-)
-find_library(MPFR_LIBRARIES mpfr PATHS $ENV{MPFR_DIR} ${LIB_INSTALL_DIR})
-
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -38,6 +29,7 @@ SET(MandelSources
     src/JuliaGenerators.cpp
     src/IterationGenerator.cpp
     src/IterationFormula.cpp
+    src/IterationCompiler.cpp
 )
 FILE(GLOB MandelHeaders include/*.h)
 
@@ -57,8 +49,14 @@ target_compile_definitions(mandel PUBLIC WITH_QD)
 add_library(qd STATIC ${QdSources})
 target_include_directories(qd PUBLIC qd-2.3.22/include qd-2.3.22)
 
+FILE(GLOB AsmjitSources asmjit/src/asmjit/*/*.cpp)
+add_library(asmjit STATIC ${AsmjitSources})
+target_include_directories(asmjit PUBLIC asmjit/src)
+
+#target_include_directories(mandel PUBLI#C qd-2.3.22/include)
 #target_include_directories(mandel PUBLI#C qd-2.3.22/include)
 target_link_libraries(mandel PUBLIC qd)
+target_link_libraries(mandel PUBLIC asmjit)
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT LTO_SUPPORTED)

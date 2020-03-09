@@ -132,9 +132,11 @@ unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel -lqd
 
 INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include
 DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include
+INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/src
+DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/stc
 
 win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/mandel.lib  $$PWD/libmandel/qd.lib
-else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/libqd.a
+else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/libqd.a $$PWD/libmandel/libasmjit.a
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/' -lopencl

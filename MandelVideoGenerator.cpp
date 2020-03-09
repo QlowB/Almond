@@ -1,6 +1,8 @@
 #include "MandelVideoGenerator.h"
 #include "VideoStream.h"
 #include <thread>
+#include <omp.h>
+
 #include <cmath>
 
 MandelVideoGenerator::MandelVideoGenerator(const ExportVideoInfo& evi) :

@@ -5,6 +5,8 @@
 #include "JuliaGenerators.h"
 #include "ClGenerators.h"
 
+#include <asmjit/asmjit.h>
+
 #include <map>
 
 using mnd::MandelDevice;
@@ -72,8 +74,7 @@ namespace mnd
 
 MandelContext mnd::initializeContext(void)
 {
-    MandelContext context = MandelContext();
-    return context;
+    return MandelContext();
 }
 
 
@@ -309,6 +310,11 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 }
 
 
+MandelContext::~MandelContext(void)
+{
+}
+
+
 AdaptiveGenerator& MandelContext::getDefaultGenerator(void)
 {
     return *adaptiveGenerator;
@@ -323,7 +329,7 @@ const std::vector<MandelDevice>& MandelContext::getDevices(void)
 
 asmjit::JitRuntime& MandelContext::getJitRuntime(void)
 {
-    return jitRuntime;
+    return *jitRuntime;
 }
 
 

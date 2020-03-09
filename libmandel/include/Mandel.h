@@ -1,12 +1,15 @@
 #ifndef MANDEL_MANDEL_H
 #define MANDEL_MANDEL_H
 
+// don't expose this library interface as it clashes with qt
+//#include <asmjit/asmjit.h>
+namespace asmjit { class JitRuntime; }
+
 #include <vector>
 #include <map>
 #include <string>
 #include <memory>
 
-#include <asmjit/asmjit.h>
 
 #include "MandelUtil.h"
 #include "Generators.h"
@@ -88,7 +91,7 @@ private:
     friend MandelContext mnd::initializeContext(void);
 
     CpuInfo cpuInfo;
-    asmjit::JitRuntime jitRuntime;
+    std::unique_ptr<asmjit::JitRuntime> jitRuntime;
 
     std::map<GeneratorType, std::unique_ptr<MandelGenerator>> cpuGenerators;
 
@@ -102,6 +105,7 @@ private:
     std::unique_ptr<AdaptiveGenerator> createAdaptiveGenerator(void);
     std::vector<MandelDevice> createDevices(void);
 public:
+    ~MandelContext(void);
     MandelContext(const MandelContext&) = delete;
     MandelContext(MandelContext&&) = default;
     MandelContext& operator=(const MandelContext&) = delete;
@@ -122,3 +126,4 @@ public:
 
 
 #endif // MANDEL_MANDEL_H
+

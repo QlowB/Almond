@@ -10,10 +10,10 @@
 //#include <qopengl.h>
 //#include <qopenglfunctions.h>
 //#include <qopenglcontext.h>
+#include <Mandel.h>
 
 #include "Bitmap.h"
 #include "Gradient.h"
-#include <Mandel.h>
 
 #include <atomic>
 #include <tuple>

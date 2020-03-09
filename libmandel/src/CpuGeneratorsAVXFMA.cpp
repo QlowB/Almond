@@ -100,12 +100,18 @@ void CpuGenerator<float, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mandel
                     a = _mm256_add_ps(_mm256_fmsub_ps(a, a, bb), cx);
                     a2 = _mm256_add_ps(_mm256_fmsub_ps(a2, a2, bb2), cx2);
                     a3 = _mm256_add_ps(_mm256_fmsub_ps(a3, a3, bb3), cx3);
-                    resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
+                    /*resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
                     resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
                     resultsa2 = _mm256_or_ps(_mm256_andnot_ps(cmp2, resultsa2), _mm256_and_ps(cmp2, a2));
                     resultsb2 = _mm256_or_ps(_mm256_andnot_ps(cmp2, resultsb2), _mm256_and_ps(cmp2, b2));
                     resultsa3 = _mm256_or_ps(_mm256_andnot_ps(cmp3, resultsa3), _mm256_and_ps(cmp3, a3));
-                    resultsb3 = _mm256_or_ps(_mm256_andnot_ps(cmp3, resultsb3), _mm256_and_ps(cmp3, b3));
+                    resultsb3 = _mm256_or_ps(_mm256_andnot_ps(cmp3, resultsb3), _mm256_and_ps(cmp3, b3));*/
+                    resultsa = _mm256_blendv_ps(resultsa, a, cmp); 
+                    resultsb = _mm256_blendv_ps(resultsb, b, cmp); 
+                    resultsa2 = _mm256_blendv_ps(resultsa2, a2, cmp2); 
+                    resultsb2 = _mm256_blendv_ps(resultsb2, b2, cmp2); 
+                    resultsa3 = _mm256_blendv_ps(resultsa3, a3, cmp3); 
+                    resultsb3 = _mm256_blendv_ps(resultsb3, b3, cmp3); 
                     adder = _mm256_and_ps(adder, cmp);
                     counter = _mm256_add_ps(counter, adder);
                     adder2 = _mm256_and_ps(adder2, cmp2);
@@ -250,10 +256,15 @@ void CpuGenerator<double, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mande
                 b = _mm256_fmadd_pd(two, ab, cy);
                 b2 = _mm256_fmadd_pd(two, ab2, cy);
                 if (info.smooth) {
-                    resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a));
+                    /*resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a));
                     resultsb = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsb), _mm256_and_pd(cmp, b));
                     resultsa2 = _mm256_or_pd(_mm256_andnot_pd(cmp2, resultsa2), _mm256_and_pd(cmp2, a2));
-                    resultsb2 = _mm256_or_pd(_mm256_andnot_pd(cmp2, resultsb2), _mm256_and_pd(cmp2, b2));
+                    resultsb2 = _mm256_or_pd(_mm256_andnot_pd(cmp2, resultsb2), _mm256_and_pd(cmp2, b2));*/
+
+                    resultsa = _mm256_blendv_pd(resultsa, a, cmp);
+                    resultsb = _mm256_blendv_pd(resultsb, b, cmp);
+                    resultsa2 = _mm256_blendv_pd(resultsa2, a2, cmp2);
+                    resultsb2 = _mm256_blendv_pd(resultsb2, b2, cmp2);
                 }
                 adder = _mm256_and_pd(adder, cmp);
                 adder2 = _mm256_and_pd(adder2, cmp2);
@@ -452,8 +463,8 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
                 b = abab + cy;
                 __m256d cmp = _mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ);
                 if (info.smooth) {
-                    resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a.x[0]));
-                    resultsb = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsb), _mm256_and_pd(cmp, b.x[0]));
+                    resultsa = _mm256_blendv_pd(resultsa, a.x[0], cmp);
+                    resultsb = _mm256_blendv_pd(resultsb, b.x[0], cmp);
                 }
                 adder = _mm256_and_pd(adder, cmp);
                 counter = _mm256_add_pd(counter, adder);

@@ -236,7 +236,7 @@ void ChooseGenerators::setBenchmarkResult(int row, float percentage, double resu
 void ChooseGenerators::on_buttonBox_accepted()
 {
     //if (!chosenGenerator)
-    /*auto adGen = std::make_unique<mnd::AdaptiveGenerator>();
+    auto adGen = std::make_unique<mnd::AdaptiveGenerator>();
     //createdGenerator->clear();
     try {
         for (size_t i = 0; i < tableContent.size(); i++) {
@@ -253,7 +253,7 @@ void ChooseGenerators::on_buttonBox_accepted()
         // TODO
         adGen = nullptr;
     }
-    chosenGenerator = std::move(adGen);*/
+    chosenGenerator = std::move(adGen);
 }
 
 

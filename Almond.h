@@ -40,6 +40,8 @@ private:
     ViewType currentView;
     mnd::MandelViewport mandelViewSave;
     mnd::MandelGenerator* mandelGeneratorSave;
+
+    mnd::MandelGenerator* currentGenerator;
 public:
     Almond(QWidget *parent = Q_NULLPTR);
     ~Almond(void);

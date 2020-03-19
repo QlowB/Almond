@@ -253,7 +253,7 @@ void ChooseGenerators::on_buttonBox_accepted()
         // TODO
         adGen = nullptr;
     }
-    chosenGenerator = std::move(adGen);
+    //chosenGenerator = std::move(adGen);
 }
 
 
@@ -290,10 +290,12 @@ void ChooseGenerators::on_generatorTable_cellDoubleClicked(int row, int column)
     }
 }
 
+#include <IterationCompiler.h>
 
 void ChooseGenerators::on_compile_clicked()
 {
     QString formula = this->ui->formula->text();
     mnd::IterationFormula itf{ mnd::parse(formula.toStdString()) };
-    chosenGenerator = std::make_unique<mnd::NaiveGenerator>(std::move(itf), mnd::getPrecision<double>());
+    //chosenGenerator = std::make_unique<mnd::NaiveGenerator>(std::move(itf), mnd::getPrecision<double>());
+    chosenGenerator = std::make_unique<mnd::CompiledGenerator>(mndCtxt);
 }

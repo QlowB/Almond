@@ -103,7 +103,8 @@ std::vector<mnd::GeneratorType> MandelDevice::getSupportedTypes(void) const
 }
 
 
-MandelContext::MandelContext(void)
+MandelContext::MandelContext(void) :
+    jitRuntime{ std::make_unique<asmjit::JitRuntime>() }
 {
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 

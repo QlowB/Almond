@@ -3,6 +3,65 @@
 #include <asmjit/asmjit.h>
 #include "Mandel.h"
 
+namespace mnd
+{
+    struct ExecData
+    {
+        std::unique_ptr<asmjit::JitRuntime> jitRuntime;
+        std::unique_ptr<asmjit::CodeHolder> code;
+        std::unique_ptr<asmjit::x86::Compiler> compiler;
+        void* iterationFunc;
+
+        ExecData(void) :
+            jitRuntime{ std::make_unique<asmjit::JitRuntime>() },
+            code{ std::make_unique<asmjit::CodeHolder>() },
+            compiler{ nullptr },
+            iterationFunc{ nullptr }
+        {
+            code->init(jitRuntime->codeInfo());
+            compiler = std::make_unique<asmjit::x86::Compiler>(code.get());
+        }
+
+        ExecData(ExecData&&) = default;
+        ExecData(const ExecData&) = delete;
+        ExecData& operator=(ExecData&&) = default;
+        ExecData& operator=(const ExecData&) = delete;
+
+        ~ExecData(void) = default;
+    };
+}
+
+
+using mnd::CompiledGenerator;
+
+
+
+CompiledGenerator::CompiledGenerator(mnd::MandelContext& mndContext) :
+    MandelGenerator{ 1.0e-15 },
+    execData{ std::make_unique<ExecData>(compile(mndContext)) }
+{
+}
+
+
+CompiledGenerator::~CompiledGenerator(void)
+{
+}
+
+
+void CompiledGenerator::generate(const mnd::MandelInfo& info, float* data)
+{
+    using IterFunc = int (*)(double, double, int);
+    for (int i = 0; i < info.bHeight; i++) {
+        double y = mnd::convert<double>(info.view.y + info.view.height * i / info.bHeight);
+        for (int j = 0; j < info.bWidth; j++) {
+            double x = mnd::convert<double>(info.view.x + info.view.width * j / info.bWidth);
+            IterFunc iterFunc = asmjit::ptr_as_func<IterFunc>(this->execData->iterationFunc);
+            int k = iterFunc(x, y, info.maxIter);
+            data[i * info.bWidth + j] = k;
+        }
+    }
+}
+
 using namespace asmjit;
 
 struct Visitor
@@ -10,29 +69,80 @@ struct Visitor
 
 };
 
-void compile(mnd::MandelContext& mndCtxt)
+
+namespace mnd
 {
-    JitRuntime& jitRuntime = mndCtxt.getJitRuntime();
+    mnd::ExecData compile(mnd::MandelContext& mndCtxt)
+    {
 
-    CodeHolder code;
-    code.init(jitRuntime.codeInfo());
+        mnd::ExecData ed;
+        JitRuntime& jitRuntime = *ed.jitRuntime;
+        ed.code->init(jitRuntime.codeInfo());
 
-    x86::Compiler compiler;
-    x86::Gp maxIter;
-    x86::Gp k;
-    x86::Xmm x;
-    x86::Xmm y;
-    x86::Xmm a;
-    x86::Xmm b;
-    compiler.addFunc(FuncSignatureT<int, double, double, int>(CallConv::kIdHost));
-    compiler.setArg(0, x);
-    compiler.setArg(1, x);
-    compiler.setArg(2, maxIter);
+        x86::Compiler& comp = *ed.compiler;
 
-    auto err = compiler.finalize();
+        x86::Mem sixteen = comp.newDoubleConst(ConstPool::kScopeLocal, 16.0);
 
+        Label startLoop = comp.newLabel();
+        Label endLoop = comp.newLabel();
+
+        x86::Gp maxIter = comp.newInt32();
+        x86::Gp k = comp.newInt32();
+        x86::Xmm x = comp.newXmmSd();
+        x86::Xmm y = comp.newXmmSd();
+        x86::Xmm a = comp.newXmmSd();
+        x86::Xmm b = comp.newXmmSd();
+        x86::Xmm aa = comp.newXmmSd();
+        x86::Xmm bb = comp.newXmmSd();
+        x86::Xmm sumSq = comp.newXmmSd();
+
+        comp.addFunc(FuncSignatureT<int, double, double, int>(CallConv::kIdHost));
+        comp.setArg(0, x);
+        comp.setArg(1, y);
+        comp.setArg(2, maxIter);
+
+        comp.movapd(a, x);
+        comp.movapd(b, y);
+
+        comp.xor_(k, k);
+
+        comp.bind(startLoop);
+        comp.movapd(aa, a);
+        comp.mulsd(aa, a);
+        comp.movsd(bb, b);
+        comp.mulsd(bb, b);
+
+        comp.movapd(sumSq, aa);
+        comp.addsd(sumSq, bb);
+        comp.comisd(sumSq, sixteen);
+        comp.jle(endLoop);
+
+        comp.subsd(aa, bb);
+        comp.mulsd(b, a);
+        comp.addsd(b, b);
+
+        comp.addsd(aa, x);
+        comp.addsd(b, y);
+        comp.movapd(a, aa);
+
+        comp.inc(k);
+        comp.cmp(k, maxIter);
+        comp.jne(startLoop);
+        comp.bind(endLoop);
+        comp.ret(k);
+        comp.endFunc();
+        auto err = comp.finalize();
+        if (err == asmjit::kErrorOk) {
+            err = jitRuntime.add(&ed.iterationFunc, ed.code.get());
+            if (err != asmjit::kErrorOk)
+                throw "error adding function";
+        }
+        else {
+            throw "error compiling";
+        }
+        return ed;
+    }
 }
-
 
 
 

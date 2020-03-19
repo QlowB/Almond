@@ -128,7 +128,7 @@ unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 
 RESOURCES += Almond.qrc
 
-unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel -lqd
+unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel -lqd -lasmjit -lrt
 
 INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include
 DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include

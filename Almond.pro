@@ -128,14 +128,15 @@ unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 
 RESOURCES += Almond.qrc
 
-unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel -lqd -lasmjit -lrt
+unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel -lqd -lasmjit
+unix: LIBS += -lrt
 
 INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include
 DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include
 INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/src
 DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/stc
 
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/mandel.lib  $$PWD/libmandel/qd.lib
+win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/asmjit.lib $$PWD/libmandel/mandel.lib $$PWD/libmandel/qd.lib
 else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/libqd.a $$PWD/libmandel/libasmjit.a
 
 

@@ -21,6 +21,8 @@ public:
     CompiledGenerator(MandelContext& mndContext);
     virtual ~CompiledGenerator(void);
     virtual void generate(const MandelInfo& info, float* data);
+
+    std::string dump(void) const;
 };
 
 

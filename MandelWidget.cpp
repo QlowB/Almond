@@ -14,7 +14,7 @@ Texture::Texture(const Bitmap<RGBColor>& bitmap, GLint param)
     glGenTextures(1, &id);
     glBindTexture(GL_TEXTURE_2D, id);
 
-    int lineLength = (bitmap.width * 3 + 3) & ~3;
+    //int lineLength = (bitmap.width * 3 + 3) & ~3;
 
     /*std::unique_ptr<unsigned char[]> pixels = std::make_unique<unsigned char[]>(lineLength * bitmap.height);
     for (int i = 0; i < bitmap.width; i++) {

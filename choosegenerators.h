@@ -85,6 +85,7 @@ private slots:
     void on_run_clicked();
     void on_generatorTable_cellDoubleClicked(int row, int column);
     void on_compile_clicked();
+    void on_benchmark_clicked();
 };
 
 #endif // CHOOSEGENERATORS_H

@@ -51,7 +51,10 @@ target_include_directories(qd PUBLIC qd-2.3.22/include qd-2.3.22)
 
 FILE(GLOB AsmjitSources asmjit/src/asmjit/*/*.cpp)
 add_library(asmjit STATIC ${AsmjitSources})
+
 target_include_directories(asmjit PUBLIC asmjit/src)
+target_compile_definitions(asmjit PUBLIC NOMINMAX)
+target_compile_definitions(asmjit PUBLIC ASMJIT_STATIC)
 
 #target_include_directories(mandel PUBLI#C qd-2.3.22/include)
 #target_include_directories(mandel PUBLI#C qd-2.3.22/include)

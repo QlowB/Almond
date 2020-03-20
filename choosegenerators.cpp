@@ -297,5 +297,19 @@ void ChooseGenerators::on_compile_clicked()
     QString formula = this->ui->formula->text();
     mnd::IterationFormula itf{ mnd::parse(formula.toStdString()) };
     //chosenGenerator = std::make_unique<mnd::NaiveGenerator>(std::move(itf), mnd::getPrecision<double>());
-    chosenGenerator = std::make_unique<mnd::CompiledGenerator>(mndCtxt);
+    auto cg = std::make_unique<mnd::CompiledGenerator>(mndCtxt);
+    std::string asmCode = cg->dump();
+    printf("%s\n", asmCode.c_str()); fflush(stdout);
+    chosenGenerator = std::move(cg);
 }
+
+void ChooseGenerators::on_benchmark_clicked()
+{
+    if (!chosenGenerator)
+        return;
+    Benchmarker bm(mndCtxt, *chosenGenerator, 0, 0.0f);
+    double mips = bm.benchmarkResult(*chosenGenerator);
+    this->ui->compBenchResult->setText(QString::number(mips));
+}
+
+

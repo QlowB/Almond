@@ -4,6 +4,7 @@
 #include <variant>
 #include <memory>
 #include <string>
+#include <stdexcept>
 
 namespace mnd
 {

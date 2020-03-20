@@ -46,6 +46,27 @@ CompiledGenerator::CompiledGenerator(mnd::MandelContext& mndContext) :
 CompiledGenerator::~CompiledGenerator(void)
 {
 }
+__declspec(noinline)
+int iter(double x, double y, int maxIter)
+{
+    int k = 0;
+
+    double a = x;
+    double b = y;
+
+    for (k = 0; k < maxIter; k++) {
+        double aa = a * a;
+        double bb = b * b;
+        double abab = a * b + a * b;
+        a = aa - bb + x;
+        b = abab + y;
+        if (aa + bb >= 16)
+            break;
+    }
+
+    return k;
+}
+
 
 
 void CompiledGenerator::generate(const mnd::MandelInfo& info, float* data)
@@ -61,6 +82,17 @@ void CompiledGenerator::generate(const mnd::MandelInfo& info, float* data)
         }
     }
 }
+
+
+
+
+std::string CompiledGenerator::dump(void) const
+{
+    asmjit::String d;
+    execData->compiler->dump(d);
+    return d.data();
+}
+
 
 using namespace asmjit;
 
@@ -94,6 +126,7 @@ namespace mnd
         x86::Xmm b = comp.newXmmSd();
         x86::Xmm aa = comp.newXmmSd();
         x86::Xmm bb = comp.newXmmSd();
+        x86::Xmm t = comp.newXmmSd();
         x86::Xmm sumSq = comp.newXmmSd();
 
         comp.addFunc(FuncSignatureT<int, double, double, int>(CallConv::kIdHost));
@@ -108,21 +141,18 @@ namespace mnd
 
         comp.bind(startLoop);
         comp.movapd(aa, a);
+        comp.movapd(bb, b);
         comp.mulsd(aa, a);
-        comp.movsd(bb, b);
         comp.mulsd(bb, b);
-
+        comp.mulsd(b, a);
         comp.movapd(sumSq, aa);
         comp.addsd(sumSq, bb);
-        comp.comisd(sumSq, sixteen);
-        comp.jle(endLoop);
-
-        comp.subsd(aa, bb);
-        comp.mulsd(b, a);
         comp.addsd(b, b);
-
         comp.addsd(aa, x);
+        comp.comisd(sumSq, sixteen);
         comp.addsd(b, y);
+        comp.subsd(aa, bb);
+        comp.jle(endLoop);
         comp.movapd(a, aa);
 
         comp.inc(k);

@@ -19,7 +19,7 @@
 
 namespace mnd
 {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && defined(_WIN64)
     static inline std::pair<int64_t, uint64_t> mul64(int64_t a, int64_t b) {
         int64_t higher;
         int64_t lower = _mul128(a, b, &higher);
@@ -527,7 +527,7 @@ struct Fixed64
 
     inline Fixed64(double x)
     {
-        bits = x * (1LL << 48);
+        bits = int64_t(x * (1LL << 48));
     }
 
     inline operator float(void) const {
@@ -643,7 +643,7 @@ struct Fixed32
     ~Fixed32() = default;
 
 
-    inline Fixed32(int32_t bits, bool dummy) :
+    inline Fixed32(int32_t bits, bool) :
         bits{ bits }
     {
     }

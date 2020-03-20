@@ -2,6 +2,7 @@
 
 #include <asmjit/asmjit.h>
 #include "Mandel.h"
+#include <omp.h>
 
 namespace mnd
 {
@@ -46,7 +47,9 @@ CompiledGenerator::CompiledGenerator(mnd::MandelContext& mndContext) :
 CompiledGenerator::~CompiledGenerator(void)
 {
 }
-__declspec(noinline)
+
+    
+/*__declspec(noinline)
 int iter(double x, double y, int maxIter)
 {
     int k = 0;
@@ -65,13 +68,16 @@ int iter(double x, double y, int maxIter)
     }
 
     return k;
-}
+}*/
 
 
 
 void CompiledGenerator::generate(const mnd::MandelInfo& info, float* data)
 {
     using IterFunc = int (*)(double, double, int);
+
+    omp_set_num_threads(omp_get_num_procs());
+#pragma omp parallel for schedule(static, 1)
     for (int i = 0; i < info.bHeight; i++) {
         double y = mnd::convert<double>(info.view.y + info.view.height * i / info.bHeight);
         for (int j = 0; j < info.bWidth; j++) {

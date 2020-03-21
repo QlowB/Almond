@@ -30,6 +30,7 @@ SET(MandelSources
     src/IterationGenerator.cpp
     src/IterationFormula.cpp
     src/IterationCompiler.cpp
+    src/IterationIR.cpp
 )
 FILE(GLOB MandelHeaders include/*.h)
 

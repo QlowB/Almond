@@ -1,4 +1,5 @@
 #include "IterationCompiler.h"
+#include "IterationIR.h"
 
 #include <asmjit/asmjit.h>
 #include "Mandel.h"
@@ -160,6 +161,56 @@ namespace mnd
         comp.subsd(aa, bb);
         comp.jle(endLoop);
         comp.movapd(a, aa);
+
+        comp.inc(k);
+        comp.cmp(k, maxIter);
+        comp.jne(startLoop);
+        comp.bind(endLoop);
+        comp.ret(k);
+        comp.endFunc();
+        auto err = comp.finalize();
+        if (err == asmjit::kErrorOk) {
+            err = jitRuntime.add(&ed.iterationFunc, ed.code.get());
+            if (err != asmjit::kErrorOk)
+                throw "error adding function";
+        }
+        else {
+            throw "error compiling";
+        }
+        return ed;
+    }
+
+
+    mnd::ExecData compile(mnd::MandelContext& mndCtxt, const IterationFormula& formula)
+    {
+        mnd::ExecData ed;
+        JitRuntime& jitRuntime = *ed.jitRuntime;
+        ed.code->init(jitRuntime.codeInfo());
+
+        x86::Compiler& comp = *ed.compiler;
+
+        x86::Mem sixteen = comp.newDoubleConst(ConstPool::kScopeLocal, 16.0);
+
+        Label startLoop = comp.newLabel();
+        Label endLoop = comp.newLabel();
+        x86::Gp maxIter = comp.newInt32();
+        x86::Gp k = comp.newInt32();
+        x86::Xmm x = comp.newXmmSd();
+        x86::Xmm y = comp.newXmmSd();
+        x86::Xmm a = comp.newXmmSd();
+        x86::Xmm b = comp.newXmmSd();
+        comp.addFunc(FuncSignatureT<int, double, double, int>(CallConv::kIdHost));
+        comp.setArg(0, x);
+        comp.setArg(1, y);
+        comp.setArg(2, maxIter);
+        comp.movapd(a, x);
+        comp.movapd(b, y);
+
+        comp.xor_(k, k);
+
+        comp.bind(startLoop);
+
+        // loop body
 
         comp.inc(k);
         comp.cmp(k, maxIter);

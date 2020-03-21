@@ -33,6 +33,8 @@ namespace mnd
             Node* newB;
         };
     }
+
+    ir::Formula expand(const mnd::IterationFormula& fmla);
 }
 
 

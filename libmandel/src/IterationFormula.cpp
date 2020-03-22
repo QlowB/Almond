@@ -19,6 +19,7 @@ mnd::IterationFormula::IterationFormula(mnd::Expression expr) :
 
 static const std::string regexIdent = "[A-Za-z][A-Za-z0-9]*";
 static const std::string regexNum = "[1-9][0-9]*";
+static const std::string regexFloat = "(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][-+]\\d+)?";
 
 
 class Parser
@@ -26,6 +27,7 @@ class Parser
     static const std::regex tokenize;
     static const std::regex ident;
     static const std::regex num;
+    static const std::regex floatNum;
     std::string in;
     std::regex_iterator<std::string::iterator> rit;
 
@@ -44,6 +46,9 @@ public:
         std::string token;
         while (getToken(token)) {
             if (std::regex_match(token, num)) {
+                output.push_back(mnd::Constant{ std::atof(token.c_str()) });
+            }
+            else if (std::regex_match(token, floatNum)) {
                 output.push_back(mnd::Constant{ std::atof(token.c_str()) });
             }
             else if (std::regex_match(token, ident)) {
@@ -157,9 +162,10 @@ private:
     }
 };
 
-const std::regex Parser::tokenize = std::regex(regexIdent + "|" + regexNum + "|[\\+\\-\\*/\\^]|[\\(\\)]");
+const std::regex Parser::tokenize = std::regex(regexIdent + "|" + regexFloat + "|[\\+\\-\\*/\\^]|[\\(\\)]");
 const std::regex Parser::ident = std::regex(regexIdent);
 const std::regex Parser::num = std::regex(regexNum);
+const std::regex Parser::floatNum = std::regex(regexFloat);
 
 
 

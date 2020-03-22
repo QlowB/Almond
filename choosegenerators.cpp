@@ -297,9 +297,16 @@ void ChooseGenerators::on_compile_clicked()
     QString formula = this->ui->formula->text();
     mnd::IterationFormula itf{ mnd::parse(formula.toStdString()) };
     //chosenGenerator = std::make_unique<mnd::NaiveGenerator>(std::move(itf), mnd::getPrecision<double>());
-    auto cg = std::make_unique<mnd::CompiledGenerator>(mndCtxt);
+    mnd::ir::Formula irform = mnd::expand(itf);
+    auto cg = std::make_unique<mnd::CompiledGenerator>(mnd::compile(irform));
+    std::string expr = mnd::toString(*itf.expr);
     std::string asmCode = cg->dump();
+    printf("%s\n", expr.c_str()); fflush(stdout);
+    printf("%s\n", irform.toString().c_str()); fflush(stdout);
     printf("%s\n", asmCode.c_str()); fflush(stdout);
+    /*QMessageBox msgBox(nullptr);
+    msgBox.setText(QString::fromStdString(asmCode));
+    msgBox.exec();*/
     chosenGenerator = std::move(cg);
 }
 

@@ -1,10 +1,16 @@
 #include "IterationCompiler.h"
 
+#include "Mandel.h"
+#include "OpenClInternal.h"
+#include "OpenClCode.h"
+
 #include <asmjit/asmjit.h>
 #include <cmath>
-#include "Mandel.h"
 #include <omp.h>
+#include <any>
+#include <string>
 
+using namespace std::string_literals;
 namespace mnd
 {
     struct ExecData
@@ -43,6 +49,19 @@ namespace mnd
         Reg& x;
         Reg& y;
 
+        Reg visitNode(ir::Node& node)
+        {
+            auto& nodeData = std::visit([] (auto& n) -> std::any& { return n.nodeData; }, node);
+            if (Reg* regPtr = std::any_cast<Reg>(&nodeData)) {
+                return *regPtr;
+            }
+            else {
+                Reg reg = std::visit(*this, node);
+                nodeData = reg;
+                return reg;
+            }
+        }
+
         CompileVisitor(asmjit::x86::Compiler& cc, Reg& a, Reg& b, Reg& x, Reg& y) :
             cc{ cc },
             a{ a }, b{ b },
@@ -77,35 +96,35 @@ namespace mnd
         Reg operator()(const ir::Negation& n) {
             auto sub = cc.newXmmSd();
             cc.xorpd(sub, sub);
-            cc.subsd(sub, std::visit((*this), *n.value));
+            cc.subsd(sub, visitNode(*n.value));
             return sub;
         }
 
         Reg operator()(const ir::Addition& add) {
             auto res = cc.newXmmSd();
-            cc.movapd(res, std::visit((*this), *add.left));
-            cc.addsd(res, std::visit((*this), *add.right));
+            cc.movapd(res, visitNode(*add.left));
+            cc.addsd(res, visitNode(*add.right));
             return res;
         }
 
         Reg operator()(const ir::Subtraction& add) {
             auto res = cc.newXmmSd();
-            cc.movapd(res, std::visit((*this), *add.left));
-            cc.subsd(res, std::visit((*this), *add.right));
+            cc.movapd(res, visitNode(*add.left));
+            cc.subsd(res, visitNode(*add.right));
             return res;
         }
 
         Reg operator()(const ir::Multiplication& add) {
             auto res = cc.newXmmSd();
-            cc.movapd(res, std::visit((*this), *add.left));
-            cc.mulsd(res, std::visit((*this), *add.right));
+            cc.movapd(res, visitNode(*add.left));
+            cc.mulsd(res, visitNode(*add.right));
             return res;
         }
 
         Reg operator()(const ir::Atan2& at2) {
             using namespace asmjit;
-            auto y = std::visit((*this), *at2.left);
-            auto x = std::visit((*this), *at2.right);
+            auto y = visitNode(*at2.left);
+            auto x = visitNode(*at2.right);
 
             auto arg = cc.newXmmSd();
             double(*atanFunc)(double, double) = ::atan2;
@@ -118,8 +137,8 @@ namespace mnd
 
         Reg operator()(const ir::Pow& p) {
             using namespace asmjit;
-            auto a = std::visit((*this), *p.left);
-            auto b = std::visit((*this), *p.right);
+            auto a = visitNode(*p.left);
+            auto b = visitNode(*p.right);
 
             auto arg = cc.newXmmSd();
             double(*powFunc)(double, double) = ::pow;
@@ -132,7 +151,7 @@ namespace mnd
 
         Reg operator()(const ir::Cos& c) {
             using namespace asmjit;
-            auto a = std::visit((*this), *c.value);
+            auto a = visitNode(*c.value);
 
             auto arg = cc.newXmmSd();
             double(*cosFunc)(double) = ::cos;
@@ -144,7 +163,7 @@ namespace mnd
 
         Reg operator()(const ir::Sin& s) {
             using namespace asmjit;
-            auto a = std::visit((*this), *s.value);
+            auto a = visitNode(*s.value);
 
             auto arg = cc.newXmmSd();
             double(*sinFunc)(double) = ::sin;
@@ -220,10 +239,133 @@ namespace mnd
         }
         return CompiledGenerator{ std::move(ed) };
     }
+
+
+    struct OpenClVisitor
+    {
+        int varnameCounter = 0;
+        std::stringstream code;
+
+        std::string createVarname(void)
+        {
+            return "tmp"s + std::to_string(varnameCounter++);
+        }
+
+        std::string visitNode(ir::Node& node)
+        {
+            auto& nodeData = std::visit([] (auto& n) -> std::any& { return n.nodeData; }, node);
+            if (std::string* var = std::any_cast<std::string>(&nodeData)) {
+                return *var;
+            }
+            else {
+                std::string value = std::visit(*this, node);
+                std::string varname = createVarname();
+                code << "float " << varname << " = " << value << ";" << std::endl;
+                nodeData = varname;
+                return varname;
+            }
+        }
+
+        std::string operator()(const ir::Constant& c) {
+            return std::to_string(c.value);
+        }
+
+        std::string operator()(const ir::Variable& v) {
+            return v.name;
+        }
+
+        std::string operator()(const ir::Negation& n) {
+            return "-("s + visitNode(*n.value) + ")";
+        }
+
+        std::string operator()(const ir::Addition& a) {
+            return "("s + visitNode(*a.left) + ") + (" + visitNode(*a.right) + ")";
+        }
+
+        std::string operator()(const ir::Subtraction& a) {
+            return "("s + visitNode(*a.left) + ") - (" + visitNode(*a.right) + ")";
+        }
+
+        std::string operator()(const ir::Multiplication& a) {
+            return "("s + visitNode(*a.left) + ") * (" + visitNode(*a.right) + ")";
+        }
+
+        std::string operator()(const ir::Atan2& a) {
+            return "atan2("s + visitNode(*a.left) + ", " + visitNode(*a.right) + ")";
+        }
+
+        std::string operator()(const ir::Pow& a) {
+            return "pow("s + visitNode(*a.left) + ", " + visitNode(*a.right) + ")";
+        }
+
+        std::string operator()(const ir::Cos& a) {
+            return "cos("s + visitNode(*a.value) + ")";
+        }
+
+        std::string operator()(const ir::Sin& a) {
+            return "sin("s + visitNode(*a.value) + ")";
+        }
+    };
+
+    std::string compileToOpenCl(const ir::Formula& formula)
+    {
+        OpenClVisitor ocv;
+        std::string newA = ocv.visitNode(*formula.newA);
+        std::string newB = ocv.visitNode(*formula.newB);
+        std::string prelude = 
+"__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth, int julia, float juliaX, float juliaY) {\n"
+"   int index = get_global_id(0);\n"
+"   int ix = index % width;\n"
+"   int iy = index / width;\n"
+"   float a = ix * pixelScaleX + xl;\n"
+"   float b = iy * pixelScaleY + yt;\n"
+"   float x = a;\n"
+"   float y = b;\n"
+"\n"
+"   int n = 0;\n"
+"   while (n < max - 1) {\n";
+
+        std::string orig = 
+"       float aa = a * a;"
+"       float bb = b * b;"
+"       float ab = a * b;"
+"       a = aa - bb + x;"
+"       b = ab + ab + y;";
+
+    
+        std::string after = 
+"       if (a * a + b * b > 16) break;\n"
+"       n++;\n"
+"   }\n"
+"   if (n >= max - 1) {\n"
+"       A[index] = max;\n"
+"   }\n"
+"   else {\n"
+"       A[index] = ((float)n);\n"
+"   }\n"
+"}\n";
+
+
+        std::string code = prelude + ocv.code.str();
+        code += "a = " + newA + ";\n";
+        code += "b = " + newB + ";\n";
+        code += after;
+        //code = mnd::getFloat_cl();
+        printf("cl: %s\n", code.c_str());
+        return code;
+    }
+
+#ifdef WITH_OPENCL
+    std::unique_ptr<MandelGenerator> compileCl(const ir::Formula& formula, const MandelDevice& md)
+    {
+        return std::make_unique<CompiledClGenerator>(md, compileToOpenCl(formula));
+    }
+#endif
 }
 
 
 using mnd::CompiledGenerator;
+using mnd::CompiledClGenerator;
 
 
 
@@ -297,6 +439,45 @@ std::string CompiledGenerator::dump(void) const
     return d.data();
 }
 
+
+#ifdef WITH_OPENCL
+CompiledClGenerator::CompiledClGenerator(const MandelDevice& device, const std::string& code) :
+    ClGeneratorFloat{ device.getClDevice().device, code }
+{
+}
+
+
+std::string CompiledClGenerator::getKernelCode(bool smooth) const
+{
+    return "";
+}
+
+void CompiledClGenerator::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    cl::Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+    float pixelScaleX = float(info.view.width / info.bWidth);
+    float pixelScaleY = float(info.view.height / info.bHeight);
+
+    cl::Kernel iterate = cl::Kernel(program, "iterate");
+    iterate.setArg(0, buffer_A);
+    iterate.setArg(1, int(info.bWidth));
+    iterate.setArg(2, float(info.view.x));
+    iterate.setArg(3, float(info.view.y));
+    iterate.setArg(4, float(pixelScaleX));
+    iterate.setArg(5, float(pixelScaleY));
+    iterate.setArg(6, int(info.maxIter));
+    iterate.setArg(7, int(info.smooth ? 1 : 0));
+    iterate.setArg(8, int(info.julia ? 1 : 0));
+    iterate.setArg(9, float(info.juliaX));
+    iterate.setArg(10, float(info.juliaY));
+
+    queue.enqueueNDRangeKernel(iterate, 0, cl::NDRange(info.bWidth * info.bHeight / 4));
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+#endif // WITH_OPENCL
 
 using namespace asmjit;
 

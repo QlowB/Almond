@@ -121,15 +121,13 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
 }
 
 
-ClGeneratorFloat::ClGeneratorFloat(cl::Device device) :
+ClGeneratorFloat::ClGeneratorFloat(cl::Device device, const std::string& code) :
     ClGenerator{ device, mnd::getPrecision<float>() }
 {
     context = Context{ device };
     Program::Sources sources;
 
-    std::string kcode = this->getKernelCode(false);
-
-    sources.push_back({ kcode.c_str(), kcode.length() });
+    sources.push_back({ code.c_str(), code.length() });
 
     program = Program{ context, sources };
     if (program.build({ device }) != CL_SUCCESS) {

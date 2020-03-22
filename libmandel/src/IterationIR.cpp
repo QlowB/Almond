@@ -29,6 +29,7 @@ namespace mnd
 
         NodePair operator() (const Variable& v)
         {
+            //printf("var %s\n", v.name.c_str()); fflush(stdout);
             if (v.name == "z") {
                 Node* a = arena.allocate(ir::Variable{ "a" });
                 Node* b = arena.allocate(ir::Variable{ "b" });

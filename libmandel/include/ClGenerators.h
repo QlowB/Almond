@@ -44,7 +44,7 @@ protected:
 class mnd::ClGeneratorFloat : public ClGenerator
 {
 public:
-    ClGeneratorFloat(cl::Device device);
+    ClGeneratorFloat(cl::Device device, const std::string& code);
     virtual ~ClGeneratorFloat(void) = default;
 
 protected:

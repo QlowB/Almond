@@ -296,18 +296,27 @@ void ChooseGenerators::on_compile_clicked()
 {
     QString formula = this->ui->formula->text();
     mnd::IterationFormula itf{ mnd::parse(formula.toStdString()) };
+
+    std::string expr = mnd::toString(*itf.expr);
+    printf("%s\n", expr.c_str()); fflush(stdout);
     //chosenGenerator = std::make_unique<mnd::NaiveGenerator>(std::move(itf), mnd::getPrecision<double>());
     mnd::ir::Formula irform = mnd::expand(itf);
-    auto cg = std::make_unique<mnd::CompiledGenerator>(mnd::compile(irform));
-    std::string expr = mnd::toString(*itf.expr);
-    std::string asmCode = cg->dump();
-    printf("%s\n", expr.c_str()); fflush(stdout);
     printf("%s\n", irform.toString().c_str()); fflush(stdout);
+    auto cg = std::make_unique<mnd::CompiledGenerator>(mnd::compile(irform));
+    std::string asmCode = cg->dump();
     printf("%s\n", asmCode.c_str()); fflush(stdout);
     /*QMessageBox msgBox(nullptr);
     msgBox.setText(QString::fromStdString(asmCode));
     msgBox.exec();*/
     chosenGenerator = std::move(cg);
+
+    const mnd::MandelDevice& dev = mndCtxt.getDevices()[0];
+    try {
+        chosenGenerator = mnd::compileCl(irform, dev);
+    }
+    catch(const std::string& msg) {
+        printf("error compiling: %s", msg.c_str());
+    }
 }
 
 void ChooseGenerators::on_benchmark_clicked()

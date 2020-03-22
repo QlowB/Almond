@@ -25,6 +25,8 @@ namespace mnd
     class MandelContext;
     class MandelDevice;
 
+    struct ClDeviceWrapper;
+
     extern MandelContext initializeContext(void);
 
     const std::string& getGeneratorName(mnd::GeneratorType);
@@ -66,10 +68,11 @@ private:
 
     std::string vendor;
     std::string name;
+    std::unique_ptr<ClDeviceWrapper> clDevice;
 
     std::map<GeneratorType, std::unique_ptr<MandelGenerator>> mandelGenerators;
 
-    MandelDevice(void);
+    MandelDevice(ClDeviceWrapper);
 public:
     MandelDevice(const MandelDevice&) = delete;
     MandelDevice(MandelDevice&&) = default;
@@ -80,6 +83,7 @@ public:
     inline const std::string& getName(void) const { return name; }
 
     MandelGenerator* getGenerator(GeneratorType type) const;
+    inline const ClDeviceWrapper& getClDevice(void) const { return *clDevice; }
 
     std::vector<GeneratorType> getSupportedTypes(void) const;
 };

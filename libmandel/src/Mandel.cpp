@@ -4,6 +4,8 @@
 #include "CpuGenerators.h"
 #include "JuliaGenerators.h"
 #include "ClGenerators.h"
+#include "OpenClInternal.h"
+#include "OpenClCode.h"
 
 #include <asmjit/asmjit.h>
 
@@ -78,7 +80,8 @@ MandelContext mnd::initializeContext(void)
 }
 
 
-MandelDevice::MandelDevice(void)
+MandelDevice::MandelDevice(ClDeviceWrapper device) :
+    clDevice{ std::make_unique<ClDeviceWrapper>(std::move(device)) }
 {
 }
 
@@ -267,7 +270,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             auto supportsDouble = extensions.find("cl_khr_fp64") != std::string::npos;
 
             //printf("Device extensions: %s\n", ext.c_str());
-            MandelDevice md;
+            MandelDevice md{ ClDeviceWrapper{ device } };
 
             //printf("clock: %d", device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
 
@@ -275,7 +278,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             md.vendor = device.getInfo<CL_DEVICE_VENDOR>();
             //printf("    using opencl device: %s\n", md.name.c_str());
             try {
-                md.mandelGenerators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(device) });
+                md.mandelGenerators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(device, mnd::getFloat_cl()) });
                 md.mandelGenerators.insert({ GeneratorType::FIXED64, std::make_unique<ClGenerator64>(device) });
                 md.mandelGenerators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(device) });
             }

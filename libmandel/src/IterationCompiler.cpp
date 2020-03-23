@@ -172,6 +172,30 @@ namespace mnd
             call->setRet(0, arg);
             return arg;
         }
+
+        Reg operator()(const ir::Exp& ex) {
+            using namespace asmjit;
+            auto a = visitNode(*ex.value);
+
+            auto arg = cc.newXmmSd();
+            double(*expFunc)(double) = ::exp;
+            auto call = cc.call(imm(expFunc), FuncSignatureT<double, double>(CallConv::kIdHostCDecl));
+            call->setArg(0, a);
+            call->setRet(0, arg);
+            return arg;
+        }
+
+        Reg operator()(const ir::Ln& l) {
+            using namespace asmjit;
+            auto a = visitNode(*l.value);
+
+            auto arg = cc.newXmmSd();
+            double(*logFunc)(double) = ::log;
+            auto call = cc.call(imm(logFunc), FuncSignatureT<double, double>(CallConv::kIdHostCDecl));
+            call->setArg(0, a);
+            call->setRet(0, arg);
+            return arg;
+        }
     };
 
 
@@ -304,6 +328,14 @@ namespace mnd
 
         std::string operator()(const ir::Sin& a) {
             return "sin("s + visitNode(*a.value) + ")";
+        }
+
+        std::string operator()(const ir::Exp& a) {
+            return "exp("s + visitNode(*a.value) + ")";
+        }
+
+        std::string operator()(const ir::Ln& a) {
+            return "ln("s + visitNode(*a.value) + ")";
         }
     };
 

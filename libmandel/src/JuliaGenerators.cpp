@@ -26,32 +26,32 @@ void mnd::JuliaGeneratorFloat::generate(const MandelInfo& info, float * data)
 
     const float dppf = float(view.width / info.bWidth);
     const float viewxf = float(view.x);
-    __m256 viewx = { viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf };
-    __m256 dpp = { dppf, dppf, dppf, dppf, dppf, dppf, dppf, dppf };
+    __m256 viewx = _mm256_set1_ps(viewxf);
+    __m256 dpp = _mm256_set1_ps(dppf);
 
 
     T juliaa = mnd::convert<T>(info.juliaX);
     T juliab = mnd::convert<T>(info.juliaY);
-    __m256 constA = { juliaa, juliaa, juliaa, juliaa, juliaa, juliaa, juliaa,juliaa };
-    __m256 constB = { juliab, juliab, juliab, juliab, juliab, juliab, juliab, juliab};
+    __m256 constA = _mm256_set1_ps(juliaa);
+    __m256 constB = _mm256_set1_ps(juliab);
 
     omp_set_num_threads(omp_get_num_procs());
 #pragma omp parallel for schedule(static, 1)
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
-        __m256 ys = {y, y, y, y, y, y, y, y};
+        __m256 ys = _mm256_set1_ps(y);
         long i = 0;
         for (i; i < info.bWidth; i += 8) {
             __m256 pixc = { float(i), float(i + 1), float(i + 2), float(i + 3), float(i + 4), float(i + 5), float(i + 6), float(i + 7) };
 
             __m256 xs = _mm256_add_ps(_mm256_mul_ps(dpp, pixc), viewx);
 
-            __m256 counter = { 0, 0, 0, 0, 0, 0, 0, 0 };
-            __m256 adder = { 1, 1, 1, 1, 1, 1, 1, 1 };
-            __m256 resultsa = { 0, 0, 0, 0, 0, 0, 0, 0 };
-            __m256 resultsb = { 0, 0, 0, 0, 0, 0, 0, 0 };
+            __m256 counter = _mm256_setzero_ps();
+            __m256 adder = _mm256_set1_ps(1.0f);
+            __m256 resultsa = _mm256_setzero_ps();
+            __m256 resultsb = _mm256_setzero_ps();
 
-            __m256 threshold = { 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f };
+            __m256 threshold = _mm256_set1_ps(16.0f);
 
             __m256 a = xs;
             __m256 b = ys;

@@ -27,6 +27,8 @@ namespace mnd
         struct Pow;
         struct Cos;
         struct Sin;
+        struct Exp;
+        struct Ln;
 
         using Node = std::variant<
             Constant,
@@ -38,7 +40,9 @@ namespace mnd
             Atan2,
             Pow,
             Cos,
-            Sin
+            Sin,
+            Exp,
+            Ln
         >;
 
         struct Formula
@@ -141,6 +145,18 @@ struct mnd::ir::Cos : mnd::ir::UnaryOperation
 struct mnd::ir::Sin : mnd::ir::UnaryOperation
 {
     inline Sin(Node* value) : UnaryOperation{ value } {}
+};
+
+
+struct mnd::ir::Exp : mnd::ir::UnaryOperation
+{
+    inline Exp(Node* value) : UnaryOperation{ value } {}
+};
+
+
+struct mnd::ir::Ln : mnd::ir::UnaryOperation
+{
+    inline Ln(Node* value) : UnaryOperation{ value } {}
 };
 
 

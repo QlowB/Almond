@@ -10,7 +10,17 @@ namespace mnd
 {
     namespace util
     {
-        template <typename T, int chunkSize = 32>
+        //!
+        //! \brief Arena-allocator for a generic type
+        //!
+        //! The arena allocator provides an allocate function to allocate
+        //! and construct objects of type T. All allocated objects live as
+        //! long as the Arena lives and are destructed in the inverse order.
+        //! 
+        //! \tparam T the type for the Arena to allocate
+        //! \tparam chunkSize the Arena allocates objects in chunks of this size
+        //!
+        template <typename T, int chunkSize = 64>
         class Arena
         {
             struct Chunk
@@ -35,8 +45,9 @@ namespace mnd
             };
 
             std::vector<std::unique_ptr<Chunk>> chunks;
-        public:
 
+            Chunk& lastChunk(void) { return *chunks[chunks.size() - 1]; }
+        public:
             Arena(void) = default;
             Arena(const Arena&) = delete;
             Arena(Arena&&) = default;
@@ -50,8 +61,10 @@ namespace mnd
             Arena& operator=(const Arena&) = delete;
             Arena& operator=(Arena&&) = default;
 
-            Chunk& lastChunk(void) { return *chunks[chunks.size() - 1]; }
-
+            //!
+            //! \brief construct one object whose lifetime is managed by
+            //!        the arena.
+            //!
             template<typename... Args>
             T* allocate(Args&&... args)
             {

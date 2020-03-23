@@ -107,7 +107,7 @@ namespace mnd
         NodePair operator() (const Pow& p)
         {
             auto [a, b] = std::visit(*this, *p.left);
-            auto [c, unused] = std::visit(*this, *p.right);
+            auto [c, d] = std::visit(*this, *p.right);
 
             auto half = arena.allocate(ir::Constant{ 0.5 });
 
@@ -117,12 +117,23 @@ namespace mnd
             auto absSq = arena.allocate(ir::Addition{ aa, bb });
 
             auto halfc = arena.allocate(ir::Multiplication{ c, half });
+            auto darg = arena.allocate(ir::Multiplication{ d, arg });
+            auto minusdarg = arena.allocate(ir::Negation{ darg });
 
-            auto newAbs = arena.allocate(ir::Pow{ absSq, halfc });
-            auto newArg = arena.allocate(ir::Multiplication{ arg, c });
+            auto abspowc = arena.allocate(ir::Pow{ absSq, halfc });
+            auto expdarg = arena.allocate(ir::Exp{ minusdarg });
+
+            auto newAbs = arena.allocate(ir::Multiplication{ abspowc, expdarg });
+            auto carg = arena.allocate(ir::Multiplication{ arg, c });
+
+            auto halfd = arena.allocate(ir::Multiplication{ d, half });
+            auto lnabsSq = arena.allocate(ir::Ln{ absSq });
+            auto halfdlnabsSq = arena.allocate(ir::Multiplication{ halfd, absSq });
+            auto newArg = arena.allocate(ir::Addition{ halfdlnabsSq, carg });
 
             auto cosArg = arena.allocate(ir::Cos{ newArg });
             auto sinArg = arena.allocate(ir::Sin{ newArg });
+
             auto newA = arena.allocate(ir::Multiplication{ cosArg, newAbs });
             auto newB = arena.allocate(ir::Multiplication{ sinArg, newAbs });
 
@@ -182,6 +193,14 @@ std::string mnd::ir::Formula::toString(void) const
 
         std::string operator()(const ir::Sin& n) {
             return "sin(" + std::visit(*this, *n.value) + ")";
+        }
+
+        std::string operator()(const ir::Exp& n) {
+            return "exp(" + std::visit(*this, *n.value) + ")";
+        }
+
+        std::string operator()(const ir::Ln& n) {
+            return "ln(" + std::visit(*this, *n.value) + ")";
         }
     };
 

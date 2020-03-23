@@ -59,10 +59,22 @@ Device getDevice(Platform& platform, int i, bool display = false) {
 }
 
 
-ClGenerator::ClGenerator(cl::Device device, const mnd::Real& precision) :
+ClGenerator::ClGenerator(cl::Device device, const std::string& source, const mnd::Real& precision) :
     MandelGenerator{ precision },
     device{ device }
 {
+    context = Context{ device };
+    Program::Sources sources;
+
+    sources.push_back({ source.c_str(), source.length() });
+
+    program = Program{ context, sources };
+    if (program.build({ device }) != CL_SUCCESS) {
+        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
+    }
+
+    queue = CommandQueue(context, device);
+
     /*Platform p = getPlatform();
     device = getDevice(p, 0, true);
     context = Context{ device };
@@ -89,7 +101,15 @@ ClGenerator::~ClGenerator(void)
 }
 
 
-void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
+ClGeneratorFloat::ClGeneratorFloat(cl::Device device, const std::string& code) :
+    ClGenerator{ device, code, mnd::getPrecision<float>() }
+{
+    useVec = device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() >= 4;
+    kernel = Kernel(program, useVec ? "iterate_vec4" : "iterate");
+}
+
+
+void ClGeneratorFloat::generate(const mnd::MandelInfo& info, float* data)
 {
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
 
@@ -97,44 +117,26 @@ void ClGenerator::generate(const mnd::MandelInfo& info, float* data)
     float pixelScaleX = float(info.view.width / info.bWidth);
     float pixelScaleY = float(info.view.height / info.bHeight);
 
-    bool useVec = device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() >= 4;
-
-    Kernel iterate = Kernel(program, useVec ? "iterate_vec4" : "iterate");
-    iterate.setArg(0, buffer_A);
-    iterate.setArg(1, int(info.bWidth));
-    iterate.setArg(2, float(info.view.x));
-    iterate.setArg(3, float(info.view.y));
-    iterate.setArg(4, float(pixelScaleX));
-    iterate.setArg(5, float(pixelScaleY));
-    iterate.setArg(6, int(info.maxIter));
-    iterate.setArg(7, int(info.smooth ? 1 : 0));
-    iterate.setArg(8, int(info.julia ? 1 : 0));
-    iterate.setArg(9, float(info.juliaX));
-    iterate.setArg(10, float(info.juliaY));
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, float(info.view.x));
+    kernel.setArg(3, float(info.view.y));
+    kernel.setArg(4, float(pixelScaleX));
+    kernel.setArg(5, float(pixelScaleY));
+    kernel.setArg(6, int(info.maxIter));
+    kernel.setArg(7, int(info.smooth ? 1 : 0));
+    kernel.setArg(8, int(info.julia ? 1 : 0));
+    kernel.setArg(9, float(info.juliaX));
+    kernel.setArg(10, float(info.juliaY));
 
     if (useVec) {
-        queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight / 4));
+        queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight / 4));
     } else {
-        queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+        queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     }
+    queue.flush();
+    queue.finish();
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
-}
-
-
-ClGeneratorFloat::ClGeneratorFloat(cl::Device device, const std::string& code) :
-    ClGenerator{ device, mnd::getPrecision<float>() }
-{
-    context = Context{ device };
-    Program::Sources sources;
-
-    sources.push_back({ code.c_str(), code.length() });
-
-    program = Program{ context, sources };
-    if (program.build({ device }) != CL_SUCCESS) {
-        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
-    }
-
-    queue = CommandQueue(context, device);
 }
 
 
@@ -145,21 +147,9 @@ std::string ClGeneratorFloat::getKernelCode(bool smooth) const
 
 
 ClGeneratorDoubleFloat::ClGeneratorDoubleFloat(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision(mnd::Precision::DOUBLE_FLOAT)  }
+    ClGenerator{ device, this->getKernelCode(false), mnd::getPrecision(mnd::Precision::DOUBLE_FLOAT)  }
 {
-    context = Context{ device };
-    Program::Sources sources;
-
-    std::string kcode = this->getKernelCode(false);
-
-    sources.push_back({ kcode.c_str(), kcode.length() });
-
-    program = Program{ context, sources };
-    if (program.build({ device }) != CL_SUCCESS) {
-        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
-    }
-
-    queue = CommandQueue(context, device);
+    kernel = Kernel(program, "iterate");
 }
 
 
@@ -283,21 +273,20 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
     return;
     */
     
-    Kernel iterate = Kernel(program, "iterate");
-    iterate.setArg(0, buffer_A);
-    iterate.setArg(1, int(info.bWidth));
-    iterate.setArg(2, x1);
-    iterate.setArg(3, x2);
-    iterate.setArg(4, y1);
-    iterate.setArg(5, y2);
-    iterate.setArg(6, w1);
-    iterate.setArg(7, w2);
-    iterate.setArg(8, h1);
-    iterate.setArg(9, h2);
-    iterate.setArg(10, int(info.maxIter));
-    iterate.setArg(11, int(info.smooth ? 1 : 0));
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, x1);
+    kernel.setArg(3, x2);
+    kernel.setArg(4, y1);
+    kernel.setArg(5, y2);
+    kernel.setArg(6, w1);
+    kernel.setArg(7, w2);
+    kernel.setArg(8, h1);
+    kernel.setArg(9, h2);
+    kernel.setArg(10, int(info.maxIter));
+    kernel.setArg(11, int(info.smooth ? 1 : 0));
 
-    cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
 }
 
@@ -309,21 +298,9 @@ std::string ClGeneratorDoubleFloat::getKernelCode(bool smooth) const
 
 
 ClGeneratorDouble::ClGeneratorDouble(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision<double>() }
+    ClGenerator{ device, getDouble_cl(), mnd::getPrecision<double>() }
 {
-    context = Context{ device };
-    Program::Sources sources;
-
-    std::string kcode = getDouble_cl();
-
-    sources.push_back({ kcode.c_str(), kcode.length() });
-
-    program = Program{ context, sources };
-    if (program.build({ device }) != CL_SUCCESS) {
-        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
-    }
-
-    queue = CommandQueue(context, device);
+    kernel = Kernel(program, "iterate");
 }
 
 
@@ -335,20 +312,19 @@ void ClGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
     double pixelScaleX = double(info.view.width / info.bWidth);
     double pixelScaleY = double(info.view.height / info.bHeight);
 
-    Kernel iterate = Kernel(program, "iterate");
-    iterate.setArg(0, buffer_A);
-    iterate.setArg(1, int(info.bWidth));
-    iterate.setArg(2, double(info.view.x));
-    iterate.setArg(3, double(info.view.y));
-    iterate.setArg(4, double(pixelScaleX));
-    iterate.setArg(5, double(pixelScaleY));
-    iterate.setArg(6, int(info.maxIter));
-    iterate.setArg(7, int(info.smooth ? 1 : 0));
-    iterate.setArg(8, int(info.julia ? 1 : 0));
-    iterate.setArg(9, double(info.juliaX));
-    iterate.setArg(10, double(info.juliaY));
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, double(info.view.x));
+    kernel.setArg(3, double(info.view.y));
+    kernel.setArg(4, double(pixelScaleX));
+    kernel.setArg(5, double(pixelScaleY));
+    kernel.setArg(6, int(info.maxIter));
+    kernel.setArg(7, int(info.smooth ? 1 : 0));
+    kernel.setArg(8, int(info.julia ? 1 : 0));
+    kernel.setArg(9, double(info.juliaX));
+    kernel.setArg(10, double(info.juliaY));
 
-    cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
 }
 
@@ -390,21 +366,9 @@ std::string ClGeneratorDouble::getKernelCode(bool smooth) const
 
 
 ClGeneratorDoubleDouble::ClGeneratorDoubleDouble(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision<DoubleDouble>() }
+    ClGenerator{ device, getDoubleDouble_cl(), mnd::getPrecision<DoubleDouble>() }
 {
-    context = Context{ device };
-    Program::Sources sources;
-
-    std::string kcode = this->getKernelCode(false);
-
-    sources.push_back({ kcode.c_str(), kcode.length() });
-
-    program = Program{ context, sources };
-    if (program.build({ device }) != CL_SUCCESS) {
-        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
-    }
-
-    queue = CommandQueue(context, device);
+    kernel = Kernel(program, "iterate");
 }
 
 
@@ -420,21 +384,20 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
     mnd::DoubleDouble psx = mnd::convert<mnd::DoubleDouble>(info.view.width / info.bWidth);
     mnd::DoubleDouble psy = mnd::convert<mnd::DoubleDouble>(info.view.height / info.bHeight);
 
-    Kernel iterate = Kernel(program, "iterate");
-    iterate.setArg(0, buffer_A);
-    iterate.setArg(1, int(info.bWidth));
-    iterate.setArg(2, x.x[0]);
-    iterate.setArg(3, x.x[1]);
-    iterate.setArg(4, y.x[0]);
-    iterate.setArg(5, y.x[1]);
-    iterate.setArg(6, psx.x[0]);
-    iterate.setArg(7, psx.x[1]);
-    iterate.setArg(8, psy.x[0]);
-    iterate.setArg(9, psy.x[1]);
-    iterate.setArg(10, int(info.maxIter));
-    iterate.setArg(11, int(info.smooth ? 1 : 0));
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, x.x[0]);
+    kernel.setArg(3, x.x[1]);
+    kernel.setArg(4, y.x[0]);
+    kernel.setArg(5, y.x[1]);
+    kernel.setArg(6, psx.x[0]);
+    kernel.setArg(7, psx.x[1]);
+    kernel.setArg(8, psy.x[0]);
+    kernel.setArg(9, psy.x[1]);
+    kernel.setArg(10, int(info.maxIter));
+    kernel.setArg(11, int(info.smooth ? 1 : 0));
 
-    cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
 }
 
@@ -446,21 +409,9 @@ std::string ClGeneratorDoubleDouble::getKernelCode(bool smooth) const
 
 
 ClGeneratorQuadDouble::ClGeneratorQuadDouble(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision<QuadDouble>() }
+    ClGenerator{ device, getQuadDouble_cl(), mnd::getPrecision<QuadDouble>() }
 {
-    context = Context{ device };
-    Program::Sources sources;
-
-    std::string kcode = this->getKernelCode(false);
-
-    sources.push_back({ kcode.c_str(), kcode.length() });
-
-    program = Program{ context, sources };
-    if (program.build({ device }) != CL_SUCCESS) {
-        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
-    }
-
-    queue = CommandQueue(context, device);
+    kernel = Kernel(program, "iterate");
 }
 
 
@@ -476,29 +427,28 @@ void ClGeneratorQuadDouble::generate(const mnd::MandelInfo& info, float* data)
     mnd::QuadDouble psx = mnd::convert<mnd::QuadDouble>(info.view.width / info.bWidth);
     mnd::QuadDouble psy = mnd::convert<mnd::QuadDouble>(info.view.height / info.bHeight);
 
-    Kernel iterate = Kernel(program, "iterate");
-    iterate.setArg(0, buffer_A);
-    iterate.setArg(1, int(info.bWidth));
-    iterate.setArg(2, x.x[0]);
-    iterate.setArg(3, x.x[1]);
-    iterate.setArg(4, x.x[2]);
-    iterate.setArg(5, x.x[3]);
-    iterate.setArg(6, y.x[0]);
-    iterate.setArg(7, y.x[1]);
-    iterate.setArg(8, y.x[2]);
-    iterate.setArg(9, y.x[3]);
-    iterate.setArg(10, psx.x[0]);
-    iterate.setArg(11, psx.x[1]);
-    iterate.setArg(12, psx.x[2]);
-    iterate.setArg(13, psx.x[3]);
-    iterate.setArg(14, psy.x[0]);
-    iterate.setArg(15, psy.x[1]);
-    iterate.setArg(16, psy.x[2]);
-    iterate.setArg(17, psy.x[3]);
-    iterate.setArg(18, int(info.maxIter));
-    iterate.setArg(19, int(info.smooth ? 1 : 0));
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, x.x[0]);
+    kernel.setArg(3, x.x[1]);
+    kernel.setArg(4, x.x[2]);
+    kernel.setArg(5, x.x[3]);
+    kernel.setArg(6, y.x[0]);
+    kernel.setArg(7, y.x[1]);
+    kernel.setArg(8, y.x[2]);
+    kernel.setArg(9, y.x[3]);
+    kernel.setArg(10, psx.x[0]);
+    kernel.setArg(11, psx.x[1]);
+    kernel.setArg(12, psx.x[2]);
+    kernel.setArg(13, psx.x[3]);
+    kernel.setArg(14, psy.x[0]);
+    kernel.setArg(15, psy.x[1]);
+    kernel.setArg(16, psy.x[2]);
+    kernel.setArg(17, psy.x[3]);
+    kernel.setArg(18, int(info.maxIter));
+    kernel.setArg(19, int(info.smooth ? 1 : 0));
 
-    cl_int result = queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
 
 }
@@ -511,21 +461,9 @@ std::string ClGeneratorQuadDouble::getKernelCode(bool smooth) const
 
 
 ClGenerator128::ClGenerator128(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision<Fixed128>() }
+    ClGenerator{ device, getFixed512_cl(), mnd::getPrecision<Fixed128>() }
 {
-    context = Context{ device };
-    Program::Sources sources;
-
-    std::string kcode = this->getKernelCode(false);
-
-    sources.push_back({ kcode.c_str(), kcode.length() });
-
-    program = Program{ context, sources };
-    if (program.build({ device }) != CL_SUCCESS) {
-        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
-    }
-
-    queue = CommandQueue(context, device);
+    kernel = Kernel(program, "iterate");
 }
 
 
@@ -547,21 +485,20 @@ void ClGenerator128::generate(const mnd::MandelInfo& info, float* data)
     ull h1 = ull(double(pixelScaleY) * 0x100000000ULL);
     ull h2 = 0;
 
-    Kernel iterate = Kernel(program, "iterate");
-    iterate.setArg(0, buffer_A);
-    iterate.setArg(1, int(info.bWidth));
-    iterate.setArg(2, ull(x1));
-    iterate.setArg(3, ull(x2));
-    iterate.setArg(4, ull(y1));
-    iterate.setArg(5, ull(y2));
-    iterate.setArg(6, ull(w1));
-    iterate.setArg(7, ull(w2));
-    iterate.setArg(8, ull(h1));
-    iterate.setArg(9, ull(h2));
-    iterate.setArg(10, int(info.maxIter));
-    iterate.setArg(11, int(info.smooth ? 1 : 0));
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, ull(x1));
+    kernel.setArg(3, ull(x2));
+    kernel.setArg(4, ull(y1));
+    kernel.setArg(5, ull(y2));
+    kernel.setArg(6, ull(w1));
+    kernel.setArg(7, ull(w2));
+    kernel.setArg(8, ull(h1));
+    kernel.setArg(9, ull(h2));
+    kernel.setArg(10, int(info.maxIter));
+    kernel.setArg(11, int(info.smooth ? 1 : 0));
 
-    queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
 }
 
@@ -579,21 +516,9 @@ std::string ClGenerator128::getKernelCode(bool smooth) const
 
 
 ClGenerator64::ClGenerator64(cl::Device device) :
-    ClGenerator{ device, mnd::getPrecision<Fixed64>() }
+    ClGenerator{ device, getFixed64_cl(), mnd::getPrecision<Fixed64>() }
 {
-    context = Context{ device };
-    Program::Sources sources;
-
-    std::string kcode = this->getKernelCode(false);
-
-    sources.push_back({ kcode.c_str(), kcode.length() });
-
-    program = Program{ context, sources };
-    if (program.build({ device }) != CL_SUCCESS) {
-        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
-    }
-
-    queue = CommandQueue(context, device);
+    kernel = Kernel(program, "iterate");
 }
 
 
@@ -606,7 +531,7 @@ void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
     float pixelScaleX = float(info.view.width / info.bWidth);
     float pixelScaleY = float(info.view.height / info.bHeight);
 
-    using ull = unsigned long long;
+    using ull = uint64_t;
     ull x = ull(::round(double(info.view.x) * (1LL << 48)));
     ull y = ull(::round(double(info.view.y) * (1LL << 48)));
     ull w = ull(::round(double(pixelScaleX) * (1LL << 48)));
@@ -614,17 +539,16 @@ void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
     //x = 0;
     //y = 0;
     
-    Kernel iterate = Kernel(program, "iterate");
-    iterate.setArg(0, buffer_A);
-    iterate.setArg(1, int(info.bWidth));
-    iterate.setArg(2, ull(x));
-    iterate.setArg(3, ull(y));
-    iterate.setArg(4, ull(w));
-    iterate.setArg(5, ull(h));
-    iterate.setArg(6, int(info.maxIter));
-    iterate.setArg(7, int(info.smooth ? 1 : 0));
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, ull(x));
+    kernel.setArg(3, ull(y));
+    kernel.setArg(4, ull(w));
+    kernel.setArg(5, ull(h));
+    kernel.setArg(6, int(info.maxIter));
+    kernel.setArg(7, int(info.smooth ? 1 : 0));
 
-    queue.enqueueNDRangeKernel(iterate, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
     //CpuGenerator<Fixed64> fx;
     //fx.generate(info, data);

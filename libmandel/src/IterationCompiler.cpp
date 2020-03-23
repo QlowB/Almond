@@ -441,7 +441,7 @@ std::string CompiledGenerator::dump(void) const
 
 
 #ifdef WITH_OPENCL
-CompiledClGenerator::CompiledClGenerator(const MandelDevice& device, const std::string& code) :
+CompiledClGenerator::CompiledClGenerator(const mnd::MandelDevice& device, const std::string& code) :
     ClGeneratorFloat{ device.getClDevice().device, code }
 {
 }
@@ -460,7 +460,7 @@ void CompiledClGenerator::generate(const mnd::MandelInfo& info, float* data)
     float pixelScaleX = float(info.view.width / info.bWidth);
     float pixelScaleY = float(info.view.height / info.bHeight);
 
-    cl::Kernel iterate = cl::Kernel(program, "iterate");
+    static cl::Kernel iterate = cl::Kernel(program, "iterate");
     iterate.setArg(0, buffer_A);
     iterate.setArg(1, int(info.bWidth));
     iterate.setArg(2, float(info.view.x));
@@ -473,7 +473,8 @@ void CompiledClGenerator::generate(const mnd::MandelInfo& info, float* data)
     iterate.setArg(9, float(info.juliaX));
     iterate.setArg(10, float(info.juliaY));
 
-    queue.enqueueNDRangeKernel(iterate, 0, cl::NDRange(info.bWidth * info.bHeight / 4));
+    queue.enqueueNDRangeKernel(iterate, 0, cl::NDRange(info.bWidth * info.bHeight));
+
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
 }
 

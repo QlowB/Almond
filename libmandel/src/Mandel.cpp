@@ -80,7 +80,7 @@ MandelContext mnd::initializeContext(void)
 }
 
 
-MandelDevice::MandelDevice(ClDeviceWrapper device) :
+MandelDevice::MandelDevice(mnd::ClDeviceWrapper device) :
     clDevice{ std::make_unique<ClDeviceWrapper>(std::move(device)) }
 {
 }

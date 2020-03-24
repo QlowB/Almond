@@ -149,6 +149,8 @@ namespace mnd
         std::tie(formula.newA, formula.newB) = std::visit(cv, *fmla.expr);
         return formula;
     }
+
+    
 }
 
 
@@ -208,3 +210,12 @@ std::string mnd::ir::Formula::toString(void) const
     return std::string("a = ") + std::visit(ToStringVisitor{}, *this->newA) + 
         "\nb = " + std::visit(ToStringVisitor{}, *this->newB);
 }
+
+
+void mnd::ir::Formula::constantPropagation(void)
+{
+
+}
+
+
+

@@ -53,6 +53,8 @@ namespace mnd
             Node* newB;
 
             std::string toString(void) const;
+
+            void constantPropagation(void);
         };
     }
 

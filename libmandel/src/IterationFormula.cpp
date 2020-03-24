@@ -14,9 +14,6 @@ mnd::IterationFormula::IterationFormula(mnd::Expression expr) :
 }
 
 
-
-
-
 static const std::string regexIdent = "[A-Za-z][A-Za-z0-9]*";
 static const std::string regexNum = "[1-9][0-9]*";
 static const std::string regexFloat = "(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][-+]\\d+)?";

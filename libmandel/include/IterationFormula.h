@@ -46,6 +46,8 @@ struct mnd::IterationFormula
 {
     std::unique_ptr<Expression> expr;
     IterationFormula(Expression expr);
+
+    void constantPropagation
 };
 
 
@@ -54,9 +56,6 @@ struct mnd::Constant
     double value;
     inline Constant(double value) :
         value{ value }
-    {}
-    inline Constant() :
-        value{ 1010 }
     {}
 };
 

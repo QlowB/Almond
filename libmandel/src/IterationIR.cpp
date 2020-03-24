@@ -127,8 +127,9 @@ namespace mnd
             auto carg = arena.allocate(ir::Multiplication{ arg, c });
 
             auto halfd = arena.allocate(ir::Multiplication{ d, half });
+                //absSq = arena.allocate(ir::Addition{ absSq, half });
             auto lnabsSq = arena.allocate(ir::Ln{ absSq });
-            auto halfdlnabsSq = arena.allocate(ir::Multiplication{ halfd, absSq });
+            auto halfdlnabsSq = arena.allocate(ir::Multiplication{ halfd, lnabsSq });
             auto newArg = arena.allocate(ir::Addition{ halfdlnabsSq, carg });
 
             auto cosArg = arena.allocate(ir::Cos{ newArg });
@@ -156,7 +157,7 @@ std::string mnd::ir::Formula::toString(void) const
     struct ToStringVisitor
     {
         std::string operator()(const ir::Constant& c) {
-            return std::to_string(c.value);
+            return mnd::toString(c.value);
         }
 
         std::string operator()(const ir::Variable& v) {

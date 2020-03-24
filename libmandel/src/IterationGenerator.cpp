@@ -49,6 +49,9 @@ void NaiveGenerator::generate(const mnd::MandelInfo& info, float* data)
             T cx = info.julia ? juliaX : x;
             T cy = info.julia ? juliaY : y;
             std::complex<double> z{ x, y };
+            if (!info.julia) {
+                z = 0;
+            }
             std::complex<double> c{ cx, cy };
 
             int k = 0;
@@ -94,6 +97,8 @@ std::complex<double> NaiveGenerator::calc(mnd::Expression& expr, std::complex<do
                 result = z;
             else if (ex.name == "c")
                 result = c;
+            else if (ex.name == "i")
+                result = std::complex{ 0.0, 1.0 };
         }
         else if constexpr (std::is_same<T, mnd::UnaryOperation>::value) {
             result = -calc(*ex.operand, z, c);

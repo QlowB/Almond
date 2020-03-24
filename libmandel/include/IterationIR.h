@@ -7,6 +7,7 @@
 #include <any>
 
 #include "IterationFormula.h"
+#include "Types.h"
 #include "Arena.h"
 
 namespace mnd
@@ -67,7 +68,7 @@ struct mnd::ir::NodeBase
 
 struct mnd::ir::Constant : NodeBase
 {
-    double value;
+    mnd::Real value;
     inline Constant(double val) : value{ val } {}
 };
 

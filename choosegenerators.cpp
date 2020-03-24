@@ -313,7 +313,7 @@ void ChooseGenerators::on_compile_clicked()
 
     const mnd::MandelDevice& dev = mndCtxt.getDevices()[0];
     try {
-        chosenGenerator = mnd::compileCl(irform, dev);
+        //chosenGenerator = mnd::compileCl(irform, dev);
     }
     catch(const std::string& msg) {
         printf("error compiling: %s", msg.c_str());

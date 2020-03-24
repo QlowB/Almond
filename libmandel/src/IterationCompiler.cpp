@@ -70,7 +70,7 @@ namespace mnd
         }
 
         Reg operator()(const ir::Constant& c) {
-            auto constant = cc.newDoubleConst(asmjit::ConstPool::kScopeLocal, c.value);
+            auto constant = cc.newDoubleConst(asmjit::ConstPool::kScopeLocal, mnd::convert<double>(c.value));
             auto reg = cc.newXmmSd();
             cc.movsd(reg, constant);
             return reg;
@@ -222,8 +222,11 @@ namespace mnd
         comp.setArg(0, x);
         comp.setArg(1, y);
         comp.setArg(2, maxIter);
-        comp.movapd(a, x);
-        comp.movapd(b, y);
+        //comp.movapd(a, x);
+        //comp.movapd(b, y);
+
+        comp.xorpd(a, a);
+        comp.movapd(b, b);
 
         comp.xor_(k, k);
 
@@ -291,7 +294,7 @@ namespace mnd
         }
 
         std::string operator()(const ir::Constant& c) {
-            return std::to_string(c.value);
+            return std::to_string(mnd::convert<double>(c.value));
         }
 
         std::string operator()(const ir::Variable& v) {
@@ -335,7 +338,7 @@ namespace mnd
         }
 
         std::string operator()(const ir::Ln& a) {
-            return "ln("s + visitNode(*a.value) + ")";
+            return "log("s + visitNode(*a.value) + ")";
         }
     };
 
@@ -349,10 +352,10 @@ namespace mnd
 "   int index = get_global_id(0);\n"
 "   int ix = index % width;\n"
 "   int iy = index / width;\n"
-"   float a = ix * pixelScaleX + xl;\n"
-"   float b = iy * pixelScaleY + yt;\n"
-"   float x = a;\n"
-"   float y = b;\n"
+"   float a = 0;\n"
+"   float b = 0;\n"
+"   float x = ix * pixelScaleX + xl;\n"
+"   float y = iy * pixelScaleY + yt;\n"
 "\n"
 "   int n = 0;\n"
 "   while (n < max - 1) {\n";
@@ -552,8 +555,8 @@ namespace mnd
         comp.setArg(1, y);
         comp.setArg(2, maxIter);
 
-        comp.movapd(a, x);
-        comp.movapd(b, y);
+        comp.xorpd(a, a);
+        comp.movapd(b, b);
 
         comp.xor_(k, k);
 

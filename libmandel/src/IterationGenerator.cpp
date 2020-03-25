@@ -20,6 +20,7 @@ NaiveGenerator::NaiveGenerator(IterationFormula itf,
                                    const mnd::Real& prec) :
     IterationGenerator{ std::move(itf), prec }
 {
+    this->itf.optimize();
 }
 
 
@@ -60,7 +61,7 @@ void NaiveGenerator::generate(const mnd::MandelInfo& info, float* data)
                 if (std::abs(z) >= 4)
                     break;
             }
-            data[i + j * info.bWidth] = k;
+            data[i + j * info.bWidth] = float(k);
             /*if (info.smooth) {
                 if (k >= info.maxIter)
                     data[i + j * info.bWidth] = float(info.maxIter);
@@ -90,7 +91,7 @@ std::complex<double> NaiveGenerator::calc(mnd::Expression& expr, std::complex<do
     std::visit([this, &result, z, c] (auto&& ex) {
         using T = std::decay_t<decltype(ex)>;
         if constexpr (std::is_same<T, mnd::Constant>::value) {
-            result = ex.value;
+            result = std::complex{ ex.re, ex.im };
         }
         else if constexpr (std::is_same<T, mnd::Variable>::value) {
             if (ex.name == "z")
@@ -100,7 +101,7 @@ std::complex<double> NaiveGenerator::calc(mnd::Expression& expr, std::complex<do
             else if (ex.name == "i")
                 result = std::complex{ 0.0, 1.0 };
         }
-        else if constexpr (std::is_same<T, mnd::UnaryOperation>::value) {
+        else if constexpr (std::is_same<T, mnd::Negation>::value) {
             result = -calc(*ex.operand, z, c);
         }
         else if constexpr (std::is_same<T, mnd::Addition>::value) {

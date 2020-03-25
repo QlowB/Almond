@@ -116,8 +116,16 @@ namespace mnd
 
         Reg operator()(const ir::Multiplication& add) {
             auto res = cc.newXmmSd();
+            cc.comment("multiply");
             cc.movapd(res, visitNode(*add.left));
             cc.mulsd(res, visitNode(*add.right));
+            return res;
+        }
+
+        Reg operator()(const ir::Division& add) {
+            auto res = cc.newXmmSd();
+            cc.movapd(res, visitNode(*add.left));
+            cc.divsd(res, visitNode(*add.right));
             return res;
         }
 
@@ -286,10 +294,13 @@ namespace mnd
             }
             else {
                 std::string value = std::visit(*this, node);
-                std::string varname = createVarname();
-                code << "float " << varname << " = " << value << ";" << std::endl;
-                nodeData = varname;
-                return varname;
+                if (!std::get_if<ir::Variable>(&node)) {
+                    std::string varname = createVarname();
+                    code << "float " << varname << " = " << value << ";" << std::endl;
+                    nodeData = varname;
+                    return varname;
+                }
+                return value;
             }
         }
 
@@ -315,6 +326,10 @@ namespace mnd
 
         std::string operator()(const ir::Multiplication& a) {
             return "("s + visitNode(*a.left) + ") * (" + visitNode(*a.right) + ")";
+        }
+
+        std::string operator()(const ir::Division& a) {
+            return "("s + visitNode(*a.left) + ") / (" + visitNode(*a.right) + ")";
         }
 
         std::string operator()(const ir::Atan2& a) {
@@ -347,6 +362,7 @@ namespace mnd
         OpenClVisitor ocv;
         std::string newA = ocv.visitNode(*formula.newA);
         std::string newB = ocv.visitNode(*formula.newB);
+
         std::string prelude = 
 "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth, int julia, float juliaX, float juliaY) {\n"
 "   int index = get_global_id(0);\n"
@@ -386,7 +402,7 @@ namespace mnd
         code += "b = " + newB + ";\n";
         code += after;
         //code = mnd::getFloat_cl();
-        printf("cl: %s\n", code.c_str());
+        printf("cl: %s\n", code.c_str()); fflush(stdout);
         return code;
     }
 

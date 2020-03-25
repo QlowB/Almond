@@ -296,11 +296,12 @@ void ChooseGenerators::on_compile_clicked()
 {
     QString formula = this->ui->formula->text();
     mnd::IterationFormula itf{ mnd::parse(formula.toStdString()) };
+    itf.optimize();
 
     std::string expr = mnd::toString(*itf.expr);
     printf("%s\n", expr.c_str()); fflush(stdout);
-    //chosenGenerator = std::make_unique<mnd::NaiveGenerator>(std::move(itf), mnd::getPrecision<double>());
-    //return;
+    chosenGenerator = std::make_unique<mnd::NaiveGenerator>(std::move(itf), mnd::getPrecision<double>());
+    return;
     mnd::ir::Formula irform = mnd::expand(itf);
     printf("%s\n", irform.toString().c_str()); fflush(stdout);
     auto cg = std::make_unique<mnd::CompiledGenerator>(mnd::compile(irform));

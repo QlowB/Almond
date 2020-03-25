@@ -14,15 +14,22 @@ namespace mnd
         using NodePair = std::pair<Node*, Node*>;
         util::Arena<Node>& arena;
 
+        Node* zero;
+        Node* half;
+        Node* one;
+
         ConvertVisitor(util::Arena<Node>& arena) :
             arena{ arena }
         {
+            zero = arena.allocate(ir::Constant{ 0.0 });
+            half = arena.allocate(ir::Constant{ 0.5 });
+            one = arena.allocate(ir::Constant{ 1.0 });
         }
 
         NodePair operator() (const Constant& c)
         {
-            Node* cnst = arena.allocate(ir::Constant{ c.value });
-            Node* zero = arena.allocate(ir::Constant{ 0.0 });
+            Node* cnst = arena.allocate(ir::Constant{ c.re });
+            Node* zero = arena.allocate(ir::Constant{ c.im });
 
             return { cnst, zero };
         }
@@ -43,16 +50,13 @@ namespace mnd
                 return { x, y };
             }
             else if (v.name == "i") {
-                Node* x = arena.allocate(ir::Constant{ 0.0 });
-                Node* y = arena.allocate(ir::Constant{ 1.0 });
-
-                return { x, y };
+                return { zero, one };
             }
             else
                 throw "unknown variable";
         }
 
-        NodePair operator() (const UnaryOperation& v)
+        NodePair operator() (const Negation& v)
         {
             auto [opa, opb] = std::visit(*this, *v.operand);
 
@@ -86,6 +90,11 @@ namespace mnd
             auto [a, b] = std::visit(*this, *mul.left);
             auto [c, d] = std::visit(*this, *mul.right);
 
+            return multiplication(a, b, c, d);
+        }
+
+        NodePair multiplication(Node* a, Node* b, Node* c, Node* d)
+        {
             Node* ac = arena.allocate(ir::Multiplication{ a, c });
             Node* bd = arena.allocate(ir::Multiplication{ b, d });
             Node* ad = arena.allocate(ir::Multiplication{ a, d });
@@ -93,6 +102,18 @@ namespace mnd
 
             Node* newa = arena.allocate(ir::Subtraction{ ac, bd });
             Node* newb = arena.allocate(ir::Addition{ ad, bc });
+
+            return { newa, newb };
+        }
+
+        NodePair sq(Node* a, Node* b)
+        {
+            Node* aa = arena.allocate(ir::Multiplication{ a, a });
+            Node* bb = arena.allocate(ir::Multiplication{ b, b });
+            Node* ab = arena.allocate(ir::Multiplication{ a, b });
+
+            Node* newa = arena.allocate(ir::Subtraction{ aa, bb });
+            Node* newb = arena.allocate(ir::Addition{ ab, ab });
 
             return { newa, newb };
         }
@@ -109,7 +130,14 @@ namespace mnd
             auto [a, b] = std::visit(*this, *p.left);
             auto [c, d] = std::visit(*this, *p.right);
 
-            auto half = arena.allocate(ir::Constant{ 0.5 });
+            if (p.integerExponent) {
+                if (auto* ex = std::get_if<ir::Constant>(c)) {
+                    return intPow({ a, b }, int(ex->value));
+                }
+            }
+            if (p.realExponent) {
+                return realPow({ a, b }, c);
+            }
 
             auto arg = arena.allocate(ir::Atan2{ b, a });
             auto aa = arena.allocate(ir::Multiplication{ a, a });
@@ -131,6 +159,60 @@ namespace mnd
             auto lnabsSq = arena.allocate(ir::Ln{ absSq });
             auto halfdlnabsSq = arena.allocate(ir::Multiplication{ halfd, lnabsSq });
             auto newArg = arena.allocate(ir::Addition{ halfdlnabsSq, carg });
+
+            auto cosArg = arena.allocate(ir::Cos{ newArg });
+            auto sinArg = arena.allocate(ir::Sin{ newArg });
+
+            auto newA = arena.allocate(ir::Multiplication{ cosArg, newAbs });
+            auto newB = arena.allocate(ir::Multiplication{ sinArg, newAbs });
+
+            return { newA, newB };
+        }
+
+        NodePair intPow(NodePair val, int exponent) {
+            auto [a, b] = val;
+
+            if (exponent < 0) {
+                // TODO implement
+                exponent = 0;
+                //return arena.allocate(ir::Division{ one });
+            }
+
+            if (exponent == 0)
+                return { one, zero };
+            else if (exponent == 1)
+                return val;
+            else if (exponent == 2)
+                return sq(a, b);
+            else {
+                bool isEven = (exponent % 2) == 0;
+                if (isEven) {
+                    NodePair square = sq(a, b);
+                    return intPow(square, exponent / 2);
+                }
+                else {
+                    int expm1 = exponent - 1;
+                    NodePair square = sq(a, b);
+                    auto[pa, pb] = intPow(square, expm1 / 2);
+                    return multiplication(pa, pb, a, b);
+                }
+            }
+        }
+
+        NodePair realPow(NodePair val, Node* exponent) {
+            auto [a, b] = val;
+
+            auto arg = arena.allocate(ir::Atan2{ b, a });
+            auto aa = arena.allocate(ir::Multiplication{ a, a });
+            auto bb = arena.allocate(ir::Multiplication{ b, b });
+            auto absSq = arena.allocate(ir::Addition{ aa, bb });
+
+            auto halfc = arena.allocate(ir::Multiplication{ exponent, half });
+
+            auto abspowc = arena.allocate(ir::Pow{ absSq, halfc });
+
+            auto newAbs = arena.allocate(ir::Multiplication{ abspowc, exponent });
+            auto newArg = arena.allocate(ir::Addition{ arg, exponent });
 
             auto cosArg = arena.allocate(ir::Cos{ newArg });
             auto sinArg = arena.allocate(ir::Sin{ newArg });
@@ -180,6 +262,10 @@ std::string mnd::ir::Formula::toString(void) const
 
         std::string operator()(const ir::Multiplication& n) {
             return "(" + std::visit(*this, *n.left) + ") * (" + std::visit(*this, *n.right) + ")";
+        }
+
+        std::string operator()(const ir::Division& n) {
+            return "(" + std::visit(*this, *n.left) + ") / (" + std::visit(*this, *n.right) + ")";
         }
 
         std::string operator()(const ir::Atan2& n) {

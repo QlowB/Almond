@@ -4,6 +4,7 @@
 #include <vector>
 #include <stack>
 #include <regex>
+#include <optional>
 
 using mnd::ParseError;
 
@@ -11,6 +12,122 @@ using mnd::ParseError;
 mnd::IterationFormula::IterationFormula(mnd::Expression expr) :
     expr{ std::make_unique<mnd::Expression>(std::move(expr)) }
 {
+}
+
+
+struct SimpleOptimizer
+{
+    using Ret = std::optional<mnd::Expression>;
+    void visitExpr(std::unique_ptr<mnd::Expression>& expr)
+    {
+        Ret replacement = std::visit(*this, *expr);
+        if (replacement.has_value()) {
+            expr = std::make_unique<mnd::Expression>(std::move(replacement.value()));
+        }
+    }
+
+    Ret operator() (mnd::Constant& c)
+    {
+        return std::nullopt;
+    }
+
+    Ret operator() (mnd::Variable& v)
+    {
+        if (v.name == "i") {
+            return mnd::Constant{ 0.0, 1.0 };
+        }
+        else {
+            return std::nullopt;
+        }
+    }
+
+    Ret operator() (mnd::Negation& n)
+    {
+        visitExpr(n.operand);
+        auto* valConst = std::get_if<mnd::Constant>(n.operand.get());
+
+        if (valConst) {
+            return mnd::Constant {
+                -valConst->re,
+                -valConst->im
+            };
+        }
+        return std::nullopt;
+    }
+
+    Ret operator() (mnd::Addition& a)
+    {
+        visitExpr(a.left);
+        visitExpr(a.right);
+        auto* leftConst = std::get_if<mnd::Constant>(a.left.get());
+        auto* rightConst = std::get_if<mnd::Constant>(a.right.get());
+
+        if (leftConst && rightConst) {
+            if (a.subtraction) {
+                return mnd::Constant {
+                    leftConst->re - rightConst->re,
+                    leftConst->im - rightConst->im
+                };
+            }
+            else {
+                return mnd::Constant{
+                    leftConst->re + rightConst->re,
+                    leftConst->im + rightConst->im
+                };
+            }
+        }
+        return std::nullopt;
+    }
+
+    Ret operator() (mnd::Multiplication& a)
+    {
+        visitExpr(a.left);
+        visitExpr(a.right);
+        auto* leftConst = std::get_if<mnd::Constant>(a.left.get());
+        auto* rightConst = std::get_if<mnd::Constant>(a.right.get());
+
+        if (leftConst && rightConst) {
+            return mnd::Constant {
+                leftConst->re * rightConst->re - leftConst->im * rightConst->im,
+                (leftConst->re * rightConst->im + leftConst->im * rightConst->re) * 2
+            };
+        }
+        return std::nullopt;
+    }
+
+    Ret operator() (mnd::Division& a)
+    {
+        visitExpr(a.left);
+        visitExpr(a.right);
+        // TODO implement
+        return std::nullopt;
+    }
+
+    Ret operator() (mnd::Pow& a)
+    {
+        visitExpr(a.left);
+        visitExpr(a.right);
+        auto* leftConst = std::get_if<mnd::Constant>(a.left.get());
+        auto* rightConst = std::get_if<mnd::Constant>(a.right.get());
+
+        if (rightConst) {
+            if (rightConst->im == 0) {
+                a.realExponent = true;
+                if (int(rightConst->re) == rightConst->re) {
+                    a.integerExponent = true;
+                }
+            }
+        }
+
+        return std::nullopt;
+    }
+};
+
+
+void mnd::IterationFormula::optimize(void)
+{
+    SimpleOptimizer so;
+    so.visitExpr(this->expr);
 }
 
 
@@ -183,13 +300,13 @@ namespace mnd
             std::stringstream ss;
             using T = std::decay_t<decltype(ex)>;
             if constexpr (std::is_same<T, mnd::Constant>::value) {
-                ss << "const[" << ex.value << "]";
+                ss << "const[" << ex.re << "+" << ex.im << "i" << "]";
                 return ss.str();
             }
             else if constexpr (std::is_same<T, mnd::Variable>::value) {
                 return std::string("var[") + ex.name + "]";
             }
-            else if constexpr (std::is_same<T, mnd::UnaryOperation>::value) {
+            else if constexpr (std::is_same<T, mnd::Negation>::value) {
                 return std::string("-(") + toString(*ex.operand) + ")";
             }
             else if constexpr (std::is_same<T, mnd::Addition>::value) {

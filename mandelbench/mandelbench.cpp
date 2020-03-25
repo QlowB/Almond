@@ -7,7 +7,7 @@
 
 #include "Fixed.h"
 
-constexpr mnd::MandelViewport benchViewport(void)
+mnd::MandelViewport benchViewport(void)
 {
     return mnd::MandelViewport{ -1.250000598933854152929, 0.0001879894057291665530, 0.0000003839916666666565, 0.0000003839916666666565 };
 }
@@ -72,7 +72,7 @@ std::pair<long long, std::chrono::nanoseconds> measureMips(const std::function<s
 }
 
 
-double benchmark(mnd::Generator& generator)
+double benchmark(mnd::MandelGenerator& generator)
 {
     /*mnd::MandelInfo mi;
     mi.bWidth = 250;
@@ -97,6 +97,7 @@ double benchmark(mnd::Generator& generator)
 
     const mnd::MandelInfo& mi = benches[(testIndex >= benches.size()) ? (benches.size() - 1) : testIndex];
     auto data = std::make_unique<float[]>(mi.bWidth * mi.bHeight);
+
     auto [iters, time] = measureMips([&generator, &mi, &data]() { generator.generate(mi, data.get()); return std::make_pair(data.get(), mi.bWidth * mi.bHeight);  });
     //printf("bench time %d ms\n", time.count() / 1000 / 1000);
     //fflush(stdout);
@@ -120,20 +121,20 @@ int main()
 
     std::cout << "Benchmarking CPU [" << mc.getCpuInfo().getBrand() << "]" << std::endl;
 
-    REPORT_PERFORMANCE("float [MIps]: ", benchmark(mc.getCpuGeneratorFloat()));
-    REPORT_PERFORMANCE("double [MIps]: ", benchmark(mc.getCpuGeneratorDouble()));
-    REPORT_PERFORMANCE("fixed-point 128 bit [MIps]: ", benchmark(mc.getCpuGenerator128()));
+    REPORT_PERFORMANCE("float [MIps]: ", benchmark(*mc.getCpuGenerator(mnd::GeneratorType::FLOAT)));
+    REPORT_PERFORMANCE("double [MIps]: ", benchmark(*mc.getCpuGenerator(mnd::GeneratorType::DOUBLE)));
+    REPORT_PERFORMANCE("fixed-point 128 bit [MIps]: ", benchmark(*mc.getCpuGenerator(mnd::GeneratorType::FIXED128)));
     
 
     for (auto& device : mc.getDevices()) {
         std::cout << "Benchmarking Device [" << device.getName() << "]" << std::endl;
-        if (mnd::Generator* gpuf; gpuf = device.getGeneratorFloat()) {
+        if (mnd::MandelGenerator* gpuf; gpuf = device.getGenerator(mnd::GeneratorType::FLOAT)) {
             REPORT_PERFORMANCE("float [MIps]: ", benchmark(*gpuf));
         }
-        if (mnd::Generator* gpud; gpud = device.getGeneratorDouble()) {
+        if (mnd::MandelGenerator* gpud; gpud = device.getGenerator(mnd::GeneratorType::DOUBLE)) {
             REPORT_PERFORMANCE("double [MIps]: ", benchmark(*gpud));
         }
-        if (mnd::Generator* gpu128; gpu128 = device.getGenerator128()) {
+        if (mnd::MandelGenerator* gpu128; gpu128 = device.getGenerator(mnd::GeneratorType::FIXED128)) {
             REPORT_PERFORMANCE("fixed-point 128 bit [MIps]: ", benchmark(*gpu128));
         }
     }

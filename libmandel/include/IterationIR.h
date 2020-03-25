@@ -24,6 +24,9 @@ namespace mnd
         struct Addition;
         struct Subtraction;
         struct Multiplication;
+        struct Division;
+//        struct CPow;
+//        struct RPow;
         struct Atan2;
         struct Pow;
         struct Cos;
@@ -38,6 +41,9 @@ namespace mnd
             Addition,
             Subtraction,
             Multiplication,
+            Division,
+//            CPow,
+//            RPow,
             Atan2,
             Pow,
             Cos,
@@ -71,7 +77,7 @@ struct mnd::ir::NodeBase
 struct mnd::ir::Constant : NodeBase
 {
     mnd::Real value;
-    inline Constant(double val) : value{ val } {}
+    inline Constant(const mnd::Real& val) : value{ val } {}
 };
 
 
@@ -123,6 +129,36 @@ struct mnd::ir::Multiplication : mnd::ir::BinaryOperation
     inline Multiplication(Node* left, Node* right) :
         BinaryOperation{ left, right } {}
 };
+
+
+struct mnd::ir::Division : mnd::ir::BinaryOperation
+{
+    inline Division(Node* left, Node* right) :
+        BinaryOperation{ left, right } {}
+};
+
+/*
+struct mnd::ir::CPow : mnd::ir::NodeBase
+{
+    Node* re;
+    Node* im;
+    Node* ere;
+    Node* eim;
+    inline CPow(Node* re, Node* im, Node* ere, Node* eim) :
+        re{ re }, im{ im }, ere{ ere }, eim{ eim }
+    {}
+};
+
+
+struct mnd::ir::RPow : mnd::ir::NodeBase
+{
+    Node* re;
+    Node* im;
+    Node* exponent;
+    inline RPow(Node* re, Node* im, Node* exponent) :
+        re{ re }, im{ im }, exponent{ exponent }
+    {}
+};*/
 
 
 struct mnd::ir::Atan2 : mnd::ir::BinaryOperation

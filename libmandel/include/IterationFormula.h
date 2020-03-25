@@ -6,13 +6,15 @@
 #include <string>
 #include <stdexcept>
 
+#include "Types.h"
+
 namespace mnd
 {
     struct IterationFormula;
 
     struct Constant;
     struct Variable;
-    struct UnaryOperation;
+    struct Negation;
     struct BinaryOperation;
     struct Addition;
     struct Multiplication;
@@ -22,7 +24,7 @@ namespace mnd
     using Expression = std::variant<
             Constant,
             Variable,
-            UnaryOperation,
+            Negation,
             Addition,
             Multiplication,
             Division,
@@ -47,15 +49,22 @@ struct mnd::IterationFormula
     std::unique_ptr<Expression> expr;
     IterationFormula(Expression expr);
 
-    void constantPropagation
+    void optimize(void);
 };
 
 
 struct mnd::Constant
 {
-    double value;
-    inline Constant(double value) :
-        value{ value }
+    mnd::Real re;
+    mnd::Real im;
+    inline Constant(const mnd::Real& value) :
+        re{ value },
+        im{ 0.0 }
+    {}
+
+    inline Constant(const mnd::Real& re, const mnd::Real& im) :
+        re{ re },
+        im{ im }
     {}
 };
 
@@ -66,7 +75,7 @@ struct mnd::Variable
 };
 
 
-struct mnd::UnaryOperation
+struct mnd::Negation
 {
     std::unique_ptr<Expression> operand;
     /*inline UnaryOperation(const UnaryOperation& other) :
@@ -104,6 +113,8 @@ struct mnd::Division : mnd::BinaryOperation
 
 struct mnd::Pow : mnd::BinaryOperation 
 {
+    bool realExponent;
+    bool integerExponent;
 };
 
 

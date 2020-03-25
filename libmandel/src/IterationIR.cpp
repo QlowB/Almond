@@ -297,10 +297,124 @@ std::string mnd::ir::Formula::toString(void) const
         "\nb = " + std::visit(ToStringVisitor{}, *this->newB);
 }
 
+struct ConstantPropagator
+{
+    mnd::ir::Formula& formula;
+    mnd::util::Arena<Node>& arena;
+
+    ConstantPropagator(mnd::ir::Formula& formula) :
+        formula{ formula },
+        arena{ formula.nodeArena }
+    {
+    }
+
+    void propagateConstants(void) {
+        visitNode(formula.newA);
+        visitNode(formula.newB);
+    }
+
+    void visitNode(Node* n) {
+        std::visit(*this, *n, n);
+    }
+
+    ir::Constant* getIfConstant(Node* n) {
+        return std::get_if<ir::Constant>(n);
+    }
+
+    void operator()(ir::Constant& x, Node* node) {
+        x.nodeDate = true;
+    }
+    void operator()(ir::Variable& x, Node* node) {
+        x.nodeDate = true;
+    }
+
+    void operator()(ir::Negation& n, Node* node) {
+        if (auto* c = getIfConstant(n.value)) {
+            *node = ir::Constant{ -c->value };
+        }
+    }
+
+    void operator()(ir::Addition& n, Node* node) {
+        auto* ca = getIfConstant(n.left);
+        auto* cb = getIfConstant(n.right);
+        if (ca && cb) {
+            *node = ir::Constant{ ca->value + cb->value };
+        }
+    }
+
+    void operator()(ir::Subtraction& n, Node* node) {
+        auto* ca = getIfConstant(n.left);
+        auto* cb = getIfConstant(n.right);
+        if (ca && cb) {
+            *node = ir::Constant{ ca->value - cb->value };
+        }
+    }
+
+    void operator()(ir::Multiplication& n, Node* node) {
+        auto* ca = getIfConstant(n.left);
+        auto* cb = getIfConstant(n.right);
+        if (ca && cb) {
+            *node = ir::Constant{ ca->value * cb->value };
+        }
+    }
+
+    void operator()(ir::Division& n, Node* node) {
+        auto* ca = getIfConstant(n.left);
+        auto* cb = getIfConstant(n.right);
+        if (ca && cb) {
+            *node = ir::Constant{ ca->value / cb->value };
+        }
+    }
+
+    void operator()(ir::Atan2& n, Node* node) {
+        auto* ca = getIfConstant(n.left);
+        auto* cb = getIfConstant(n.right);
+        if (ca && cb) {
+            *node = ir::Constant{ mnd::atan2(ca->value, cb->value) };
+        }
+    }
+
+    void operator()(ir::Pow& n, Node* node) {
+        auto* ca = getIfConstant(n.left);
+        auto* cb = getIfConstant(n.right);
+        if (ca && cb) {
+            *node = ir::Constant{ mnd::pow(ca->value, cb->value) };
+        }
+    }
+
+    void operator()(ir::Cos& n, Node* node) {
+        auto* ca = getIfConstant(n.value);
+        if (ca) {
+            *node = ir::Constant{ mnd::cos(ca->value) };
+        }
+    }
+
+    void operator()(ir::Sin& n, Node* node) {
+        auto* ca = getIfConstant(n.value);
+        if (ca) {
+            *node = ir::Constant{ mnd::sin(ca->value) };
+        }
+    }
+
+    void operator()(ir::Exp& n, Node* node) {
+        auto* ca = getIfConstant(n.value);
+        if (ca) {
+            *node = ir::Constant{ mnd::exp(ca->value) };
+        }
+    }
+
+    void operator()(ir::Ln& n, Node* node) {
+        auto* ca = getIfConstant(n.value);
+        if (ca) {
+            *node = ir::Constant{ mnd::log(ca->value) };
+        }
+    }
+};
 
 void mnd::ir::Formula::constantPropagation(void)
 {
-
+    ConstantPropagator cp { *this };
+    cp.propagateConstants();
 }
 
 

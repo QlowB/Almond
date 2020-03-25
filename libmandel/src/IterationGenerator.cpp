@@ -91,7 +91,7 @@ std::complex<double> NaiveGenerator::calc(mnd::Expression& expr, std::complex<do
     std::visit([this, &result, z, c] (auto&& ex) {
         using T = std::decay_t<decltype(ex)>;
         if constexpr (std::is_same<T, mnd::Constant>::value) {
-            result = std::complex{ ex.re, ex.im };
+            result = std::complex{ mnd::convert<double>(ex.re), mnd::convert<double>(ex.im) };
         }
         else if constexpr (std::is_same<T, mnd::Variable>::value) {
             if (ex.name == "z")

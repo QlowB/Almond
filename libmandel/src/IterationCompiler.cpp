@@ -116,7 +116,6 @@ namespace mnd
 
         Reg operator()(const ir::Multiplication& add) {
             auto res = cc.newXmmSd();
-            cc.comment("multiply");
             cc.movapd(res, visitNode(*add.left));
             cc.mulsd(res, visitNode(*add.right));
             return res;

@@ -2,6 +2,7 @@
 #define MANDEL_ITERATIONGENERATOR_H
 
 #include "Generators.h"
+#include "ClGenerators.h"
 #include "IterationFormula.h"
 
 #include <utility>
@@ -12,6 +13,12 @@ namespace mnd
     class IterationGenerator;
 
     class NaiveGenerator;
+    class CompiledGenerator;
+    class CompiledClGenerator;
+
+    // forward declaration
+    struct ExecData;
+    class MandelDevice;
 }
 
 
@@ -34,6 +41,36 @@ private:
     std::complex<double> iterate(std::complex<double> z, std::complex<double> c);
     std::complex<double> calc(mnd::Expression& expr, std::complex<double> z, std::complex<double> c);
 };
+
+
+class mnd::CompiledGenerator : public mnd::MandelGenerator
+{
+    std::unique_ptr<ExecData> execData;
+public:
+    CompiledGenerator(std::unique_ptr<ExecData> execData);
+    CompiledGenerator(CompiledGenerator&&);
+    virtual ~CompiledGenerator(void);
+    virtual void generate(const MandelInfo& info, float* data);
+
+    std::string dump(void) const;
+};
+
+
+#ifdef WITH_OPENCL
+class mnd::CompiledClGenerator : public mnd::ClGeneratorFloat
+{
+public:
+    CompiledClGenerator(const MandelDevice& device, const std::string& code);
+    //virtual ~CompiledGenerator(void);
+    //virtual void generate(const MandelInfo& info, float* data);
+    virtual std::string getKernelCode(bool smooth) const override;
+    virtual void generate(const MandelInfo& info, float* data);
+
+    //std::string dump(void) const;
+};
+#endif // WITH_OPENCL
+
+
 
 #endif // MANDEL_ITERATIONGENERATOR_H
 

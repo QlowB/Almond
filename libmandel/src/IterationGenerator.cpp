@@ -1,4 +1,9 @@
 #include "IterationGenerator.h"
+#include "ExecData.h"
+#include "Mandel.h"
+
+#include "OpenClInternal.h"
+
 
 #include <omp.h>
 
@@ -13,7 +18,6 @@ IterationGenerator::IterationGenerator(IterationFormula itf,
     itf{ std::move(itf) }
 {
 }
-
 
 
 NaiveGenerator::NaiveGenerator(IterationFormula itf,
@@ -122,5 +126,115 @@ std::complex<double> NaiveGenerator::calc(mnd::Expression& expr, std::complex<do
     }, expr);
     return result;
 }
+
+
+
+using mnd::CompiledGenerator;
+using mnd::CompiledClGenerator;
+
+
+CompiledGenerator::CompiledGenerator(std::unique_ptr<mnd::ExecData> execData) :
+    MandelGenerator{ 1.0e-15 },
+    execData{ std::move(execData) }
+{
+}
+
+
+CompiledGenerator::CompiledGenerator(CompiledGenerator&&) = default;
+
+
+CompiledGenerator::~CompiledGenerator(void)
+{
+}
+
+
+/*__declspec(noinline)
+int iter(double x, double y, int maxIter)
+{
+int k = 0;
+
+double a = x;
+double b = y;
+
+for (k = 0; k < maxIter; k++) {
+double aa = a * a;
+double bb = b * b;
+double abab = a * b + a * b;
+a = aa - bb + x;
+b = abab + y;
+if (aa + bb >= 16)
+break;
+}
+
+return k;
+}*/
+
+
+
+void CompiledGenerator::generate(const mnd::MandelInfo& info, float* data)
+{
+    using IterFunc = int (*)(double, double, int);
+
+    omp_set_num_threads(omp_get_num_procs());
+#pragma omp parallel for schedule(static, 1)
+    for (int i = 0; i < info.bHeight; i++) {
+        double y = mnd::convert<double>(info.view.y + info.view.height * i / info.bHeight);
+        for (int j = 0; j < info.bWidth; j++) {
+            double x = mnd::convert<double>(info.view.x + info.view.width * j / info.bWidth);
+            IterFunc iterFunc = asmjit::ptr_as_func<IterFunc>(this->execData->iterationFunc);
+            int k = iterFunc(x, y, info.maxIter);
+            data[i * info.bWidth + j] = k;
+        }
+    }
+}
+
+
+std::string CompiledGenerator::dump(void) const
+{
+    asmjit::String d;
+    execData->compiler->dump(d);
+    return d.data();
+}
+
+
+#ifdef WITH_OPENCL
+CompiledClGenerator::CompiledClGenerator(const mnd::MandelDevice& device, const std::string& code) :
+    ClGeneratorFloat{ device.getClDevice().device, code }
+{
+}
+
+
+std::string CompiledClGenerator::getKernelCode(bool smooth) const
+{
+    return "";
+}
+
+void CompiledClGenerator::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    cl::Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+    float pixelScaleX = float(info.view.width / info.bWidth);
+    float pixelScaleY = float(info.view.height / info.bHeight);
+
+    static cl::Kernel iterate = cl::Kernel(program, "iterate");
+    iterate.setArg(0, buffer_A);
+    iterate.setArg(1, int(info.bWidth));
+    iterate.setArg(2, float(info.view.x));
+    iterate.setArg(3, float(info.view.y));
+    iterate.setArg(4, float(pixelScaleX));
+    iterate.setArg(5, float(pixelScaleY));
+    iterate.setArg(6, int(info.maxIter));
+    iterate.setArg(7, int(info.smooth ? 1 : 0));
+    iterate.setArg(8, int(info.julia ? 1 : 0));
+    iterate.setArg(9, float(info.juliaX));
+    iterate.setArg(10, float(info.juliaY));
+
+    queue.enqueueNDRangeKernel(iterate, 0, cl::NDRange(info.bWidth * info.bHeight));
+
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+#endif // WITH_OPENCL
 
 

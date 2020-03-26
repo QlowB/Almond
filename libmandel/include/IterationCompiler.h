@@ -20,33 +20,6 @@ namespace mnd
 }
 void squareTest();
 
-class mnd::CompiledGenerator : public mnd::MandelGenerator
-{
-    std::unique_ptr<ExecData> execData;
-public:
-    CompiledGenerator(MandelContext& mndContext);
-    CompiledGenerator(std::unique_ptr<ExecData> execData);
-    CompiledGenerator(CompiledGenerator&&);
-    virtual ~CompiledGenerator(void);
-    virtual void generate(const MandelInfo& info, float* data);
-
-    std::string dump(void) const;
-};
-
-
-#ifdef WITH_OPENCL
-class mnd::CompiledClGenerator : public mnd::ClGeneratorFloat
-{
-public:
-    CompiledClGenerator(const MandelDevice& device, const std::string& code);
-    //virtual ~CompiledGenerator(void);
-    //virtual void generate(const MandelInfo& info, float* data);
-    virtual std::string getKernelCode(bool smooth) const override;
-    virtual void generate(const MandelInfo& info, float* data);
-
-    //std::string dump(void) const;
-};
-#endif // WITH_OPENCL
 
 
 namespace mnd

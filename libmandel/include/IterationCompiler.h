@@ -16,9 +16,19 @@ namespace mnd
     class MandelContext;
     class MandelDevice;
 
-    mnd::ExecData compile(mnd::MandelContext& mndCtxt);
+    enum class GeneratorType : int;
+
+    //mnd::ExecData compile(mnd::MandelContext& mndCtxt);
+
+    std::unique_ptr<mnd::MandelGenerator> compileCpu(mnd::MandelContext& mndCtxt,
+        const IterationFormula& z0,
+        const IterationFormula& z);
+
+    std::vector<std::pair<mnd::GeneratorType, std::unique_ptr<mnd::MandelGenerator>>> compileOpenCl(const mnd::MandelDevice& dev,
+        const IterationFormula& z0,
+        const IterationFormula& z);
 }
-void squareTest();
+//void squareTest();
 
 
 

@@ -25,16 +25,17 @@ namespace mnd
 class mnd::IterationGenerator : public mnd::MandelGenerator
 {
 protected:
-    IterationFormula itf;
+    IterationFormula z0;
+    IterationFormula zi;
 public:
-    IterationGenerator(IterationFormula itf, const mnd::Real& prec);
+    IterationGenerator(IterationFormula z0, IterationFormula zi, const mnd::Real& prec);
 };
 
 
 class mnd::NaiveGenerator : public mnd::IterationGenerator
 {
 public:
-    NaiveGenerator(IterationFormula itf, const mnd::Real& prec);
+    NaiveGenerator(IterationFormula z0, IterationFormula zi, const mnd::Real& prec);
 
     virtual void generate(const MandelInfo& info, float* data);
 private:
@@ -43,6 +44,7 @@ private:
 };
 
 
+#if defined(__x86_64__) || defined(_M_X64)
 class mnd::CompiledGenerator : public mnd::MandelGenerator
 {
     std::unique_ptr<ExecData> execData;
@@ -54,6 +56,7 @@ public:
 
     std::string dump(void) const;
 };
+#endif
 
 
 #ifdef WITH_OPENCL

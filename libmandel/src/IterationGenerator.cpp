@@ -12,19 +12,21 @@ using mnd::NaiveGenerator;
 using mnd::IterationFormula;
 
 
-IterationGenerator::IterationGenerator(IterationFormula itf,
+IterationGenerator::IterationGenerator(IterationFormula z0, IterationFormula zi,
                                    const mnd::Real& prec) :
     mnd::MandelGenerator{ prec },
-    itf{ std::move(itf) }
+    z0{ std::move(z0) },
+    zi{ std::move(zi) }
 {
 }
 
 
-NaiveGenerator::NaiveGenerator(IterationFormula itf,
+NaiveGenerator::NaiveGenerator(IterationFormula z0, IterationFormula zi,
                                    const mnd::Real& prec) :
-    IterationGenerator{ std::move(itf), prec }
+    IterationGenerator{ std::move(z0), std::move(zi), prec }
 {
-    this->itf.optimize();
+    this->z0.optimize();
+    this->zi.optimize();
 }
 
 
@@ -51,12 +53,9 @@ void NaiveGenerator::generate(const mnd::MandelInfo& info, float* data)
         for (i; i < info.bWidth; i++) {
             T x = viewx + T(double(i)) * wpp;
 
-            T cx = info.julia ? juliaX : x;
-            T cy = info.julia ? juliaY : y;
-            std::complex<double> z{ x, y };
-            if (!info.julia) {
-                z = 0;
-            }
+            T cx = x;
+            T cy = y;
+            std::complex<double> z = calc(*z0.expr, { 0, 0 }, { x, y });
             std::complex<double> c{ cx, cy };
 
             int k = 0;
@@ -84,7 +83,7 @@ void NaiveGenerator::generate(const mnd::MandelInfo& info, float* data)
 
 std::complex<double> NaiveGenerator::iterate(std::complex<double> z, std::complex<double> c)
 {
-    auto& expr = *itf.expr;
+    auto& expr = *zi.expr;
     return calc(expr, z, c);
 }
 
@@ -183,7 +182,7 @@ void CompiledGenerator::generate(const mnd::MandelInfo& info, float* data)
             double x = mnd::convert<double>(info.view.x + info.view.width * j / info.bWidth);
             IterFunc iterFunc = asmjit::ptr_as_func<IterFunc>(this->execData->iterationFunc);
             int k = iterFunc(x, y, info.maxIter);
-            data[i * info.bWidth + j] = k;
+            data[i * info.bWidth + j] = float(k);
         }
     }
 }

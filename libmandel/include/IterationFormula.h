@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 #include <stdexcept>
+#include <optional>
 
 #include "Types.h"
 
@@ -46,10 +47,16 @@ namespace mnd
 
 struct mnd::IterationFormula
 {
+    std::vector<std::string> variables;
     std::unique_ptr<Expression> expr;
-    IterationFormula(Expression expr);
+    IterationFormula(std::unique_ptr<Expression> expr, const std::vector<std::string>& variables = { "c", "z" });
+    IterationFormula(Expression expr, const std::vector<std::string>& variables = { "c", "z" });
 
+    std::optional<std::string> findUnknownVariables(const Expression& expr);
     void optimize(void);
+    bool containsVariable(const std::string& name) const;
+
+    IterationFormula clone(void) const;
 };
 
 
@@ -78,7 +85,7 @@ struct mnd::Variable
 struct mnd::Negation
 {
     std::unique_ptr<Expression> operand;
-    /*inline UnaryOperation(const UnaryOperation& other) :
+    /*inline Negation(const Negation& other) :
         operand{ std::make_unique<Expression>(*other.operand) }
     {}*/
 };

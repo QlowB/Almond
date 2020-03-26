@@ -14,13 +14,15 @@ namespace mnd
     {
         using NodePair = std::pair<Node*, Node*>;
         util::Arena<Node>& arena;
+        const mnd::IterationFormula& iterationFormula;
 
         Node* zero;
         Node* half;
         Node* one;
 
-        ConvertVisitor(util::Arena<Node>& arena) :
-            arena{ arena }
+        ConvertVisitor(util::Arena<Node>& arena, const mnd::IterationFormula& iterationFormula) :
+            arena{ arena },
+            iterationFormula{ iterationFormula }
         {
             zero = arena.allocate(ir::Constant{ 0.0 });
             half = arena.allocate(ir::Constant{ 0.5 });
@@ -38,17 +40,10 @@ namespace mnd
         NodePair operator() (const Variable& v)
         {
             //printf("var %s\n", v.name.c_str()); fflush(stdout);
-            if (v.name == "z") {
-                Node* a = arena.allocate(ir::Variable{ "a" });
-                Node* b = arena.allocate(ir::Variable{ "b" });
-
+            if (iterationFormula.containsVariable(v.name)) {
+                Node* a = arena.allocate(ir::Variable{ v.name + "_re" });
+                Node* b = arena.allocate(ir::Variable{ v.name + "_im" });
                 return { a, b };
-            }
-            else if (v.name == "c") {
-                Node* x = arena.allocate(ir::Variable{ "x" });
-                Node* y = arena.allocate(ir::Variable{ "y" });
-
-                return { x, y };
             }
             else if (v.name == "i") {
                 return { zero, one };
@@ -225,10 +220,11 @@ namespace mnd
         }
     };
 
-    ir::Formula expand(const mnd::IterationFormula& fmla)
+    ir::Formula expand(const mnd::IterationFormula& fmla, const mnd::IterationFormula& z0)
     {
         ir::Formula formula;
-        ConvertVisitor cv{ formula.nodeArena };
+        ConvertVisitor cv{ formula.nodeArena, fmla };
+        std::tie(formula.startA, formula.startB) = std::visit(cv, *z0.expr);
         std::tie(formula.newA, formula.newB) = std::visit(cv, *fmla.expr);
         return formula;
     }

@@ -52,16 +52,16 @@ namespace mnd
         }
 
         Reg operator()(const ir::Variable& v) {
-            if (v.name == "a") {
+            if (v.name == "z_re") {
                 return a;
             }
-            else if (v.name == "b") {
+            else if (v.name == "z_im") {
                 return b;
             }
-            else if (v.name == "x") {
+            else if (v.name == "c_re") {
                 return x;
             }
-            else if (v.name == "y") {
+            else if (v.name == "c_im") {
                 return y;
             }
             else
@@ -201,22 +201,29 @@ namespace mnd
         x86::Xmm a = comp.newXmmSd();
         x86::Xmm b = comp.newXmmSd();
         comp.addFunc(FuncSignatureT<int, double, double, int>(CallConv::kIdHost));
+
         comp.setArg(0, x);
         comp.setArg(1, y);
+
+        CompileVisitor formVisitor{ comp, a, b, x, y };
+        auto startA = std::visit(formVisitor, *formula.startA);
+        auto startB = std::visit(formVisitor, *formula.startB);
+        comp.movapd(a, startA);
+        comp.movapd(b, startB);
+
         comp.setArg(2, maxIter);
         //comp.movapd(a, x);
         //comp.movapd(b, y);
 
-        comp.xorpd(a, a);
-        comp.movapd(b, b);
+        //comp.xorpd(a, a);
+        //comp.movapd(b, b);
 
         comp.xor_(k, k);
 
         comp.bind(startLoop);
 
-        CompileVisitor cv{ comp, a, b, x, y };
-        auto newA = std::visit(cv, *formula.newA);
-        auto newB = std::visit(cv, *formula.newB);
+        auto newA = std::visit(formVisitor, *formula.newA);
+        auto newB = std::visit(formVisitor, *formula.newB);
         comp.movapd(a, newA);
         comp.movapd(b, newB);
 
@@ -233,7 +240,7 @@ namespace mnd
 
         comp.inc(k);
         comp.cmp(k, maxIter);
-        comp.jne(startLoop);
+        comp.jle(startLoop);
         comp.bind(endLoop);
         comp.ret(k);
         comp.endFunc();
@@ -254,6 +261,11 @@ namespace mnd
     {
         int varnameCounter = 0;
         std::stringstream code;
+
+        OpenClVisitor(int startVarname) :
+            varnameCounter{ startVarname }
+        {
+        }
 
         std::string createVarname(void)
         {
@@ -333,33 +345,38 @@ namespace mnd
 
     std::string compileToOpenCl(const ir::Formula& formula)
     {
-        OpenClVisitor ocv;
+        OpenClVisitor z0Visitor{ 0 };
+        std::string startA = z0Visitor.visitNode(*formula.startA);
+        std::string startB = z0Visitor.visitNode(*formula.startB);
+
+        OpenClVisitor ocv{ z0Visitor.varnameCounter };
         std::string newA = ocv.visitNode(*formula.newA);
         std::string newB = ocv.visitNode(*formula.newB);
 
-        std::string prelude = 
-"__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth, int julia, float juliaX, float juliaY) {\n"
-"   int index = get_global_id(0);\n"
-"   int ix = index % width;\n"
-"   int iy = index / width;\n"
-"   float a = 0;\n"
-"   float b = 0;\n"
-"   float x = ix * pixelScaleX + xl;\n"
-"   float y = iy * pixelScaleY + yt;\n"
-"\n"
-"   int n = 0;\n"
-"   while (n < max - 1) {\n";
-
+        std::string prelude =
+            "__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth, int julia, float juliaX, float juliaY) {\n"
+            "   int index = get_global_id(0);\n"
+            "   int ix = index % width;\n"
+            "   int iy = index / width;\n"
+            "   float c_re = ix * pixelScaleX + xl;\n"
+            "   float c_im = iy * pixelScaleY + yt;\n";
+        prelude += z0Visitor.code.str() +
+            "   float z_re = " + startA + ";\n" +
+            "   float z_im = " + startB + ";\n" +
+            "\n"
+            "   int n = 0;\n"
+            "   while (n < max - 1) {\n";
+        /*
         std::string orig = 
 "       float aa = a * a;"
 "       float bb = b * b;"
 "       float ab = a * b;"
 "       a = aa - bb + x;"
 "       b = ab + ab + y;";
-
+*/
     
         std::string after = 
-"       if (a * a + b * b > 16) break;\n"
+"       if (z_re * z_re + z_im * z_im > 16) break;\n"
 "       n++;\n"
 "   }\n"
 "   if (n >= max - 1) {\n"
@@ -372,8 +389,8 @@ namespace mnd
 
 
         std::string code = prelude + ocv.code.str();
-        code += "a = " + newA + ";\n";
-        code += "b = " + newB + ";\n";
+        code += "z_re = " + newA + ";\n";
+        code += "z_im = " + newB + ";\n";
         code += after;
         //code = mnd::getFloat_cl();
         printf("cl: %s\n", code.c_str()); fflush(stdout);
@@ -386,7 +403,30 @@ namespace mnd
         return std::make_unique<CompiledClGenerator>(md, compileToOpenCl(formula));
     }
 #endif
+
+    std::unique_ptr<mnd::MandelGenerator> compileCpu(mnd::MandelContext& mndCtxt,
+        const IterationFormula& z0,
+        const IterationFormula& zi)
+    {
+        auto ng = std::make_unique<NaiveGenerator>(z0.clone(), zi.clone(), mnd::getPrecision<double>());
+        
+        //ir::Formula irf = mnd::expand(zi, z0);
+        //auto dg = std::make_unique<CompiledGenerator>(compile(irf));
+
+        return ng;
+    }
+
+    std::vector<std::pair<mnd::GeneratorType, std::unique_ptr<mnd::MandelGenerator>>> compileOpenCl(const mnd::MandelDevice& dev,
+        const IterationFormula& z0,
+        const IterationFormula& zi)
+    {
+        ir::Formula irf = mnd::expand(zi, z0);
+        auto fl = compileCl(irf, dev);
+        return {};// { { mnd::GeneratorType::FLOAT, std::move(fl) } };
+    }
 }
+
+
 
 using namespace asmjit;
 
@@ -398,6 +438,7 @@ struct Visitor
 
 namespace mnd
 {
+    /*
     mnd::ExecData compile(mnd::MandelContext& mndCtxt)
     {
 
@@ -465,9 +506,10 @@ namespace mnd
             throw "error compiling";
         }
         return ed;
-    }
+    }*/
 
 
+    /*
     mnd::ExecData compile(mnd::MandelContext& mndCtxt, const IterationFormula& formula)
     {
         mnd::ExecData ed;
@@ -515,10 +557,10 @@ namespace mnd
             throw "error compiling";
         }
         return ed;
-    }
+    }*/
 }
 
-
+/*
 void squareTest()
 {
     mnd::Expression power = mnd::Pow{
@@ -563,6 +605,6 @@ void squareTest()
     double result = func(1.0, 3.0);
     printf("result: %f\n", result);
 }
-
+*/
 
 

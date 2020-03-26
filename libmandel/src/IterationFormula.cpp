@@ -9,8 +9,19 @@
 using mnd::ParseError;
 
 
-mnd::IterationFormula::IterationFormula(mnd::Expression expr) :
-    expr{ std::make_unique<mnd::Expression>(std::move(expr)) }
+mnd::IterationFormula::IterationFormula(std::unique_ptr<Expression> expr, const std::vector<std::string>& variables) :
+    expr{ std::move(expr) },
+    variables{ variables }
+{
+    auto maybeUnknown = findUnknownVariables(*this->expr);
+    if (maybeUnknown.has_value()) {
+        throw ParseError(std::string("unknown variable: ") + maybeUnknown.value());
+    }
+}
+
+
+mnd::IterationFormula::IterationFormula(mnd::Expression expr, const std::vector<std::string>& variables) :
+    IterationFormula{ std::make_unique<mnd::Expression>(std::move(expr)), variables }
 {
 }
 
@@ -124,10 +135,86 @@ struct SimpleOptimizer
 };
 
 
+std::optional<std::string> mnd::IterationFormula::findUnknownVariables(const Expression& expr)
+{
+    std::string unknownVariable;
+    std::function<bool(const Expression&)> isCorrect;
+    auto corrLambda = [this, &isCorrect, &unknownVariable](const auto& x) {
+        using T = std::decay_t<decltype(x)>;
+        if constexpr (std::is_same<T, mnd::Variable>::value) {
+            if (containsVariable(x.name)) {
+                return true;
+            }
+            else {
+                unknownVariable = x.name;
+                return false;
+            }
+        }
+        else if constexpr (std::is_same<T, mnd::Negation>::value) {
+            return isCorrect(*x.operand);
+        }
+        else if constexpr (std::is_same<T, mnd::Addition>::value ||
+            std::is_same<T, mnd::Multiplication>::value ||
+            std::is_same<T, mnd::Division>::value ||
+            std::is_same<T, mnd::Pow>::value) {
+            return isCorrect(*x.left) && isCorrect(*x.right);
+        }
+        return true;
+    };
+    isCorrect = [corrLambda](const mnd::Expression& x) {
+        return std::visit(corrLambda, x);
+    };
+    bool allCorrect = isCorrect(expr);
+    if (allCorrect) {
+        return std::nullopt;
+    }
+    else {
+        return unknownVariable;
+    }
+}
+
+
 void mnd::IterationFormula::optimize(void)
 {
     SimpleOptimizer so;
     so.visitExpr(this->expr);
+}
+
+
+bool mnd::IterationFormula::containsVariable(const std::string& name) const
+{
+    for (const auto& varname : variables) {
+        if (varname == name)
+            return true;
+    }
+    return false;
+}
+
+
+mnd::IterationFormula mnd::IterationFormula::clone(void) const
+{
+
+
+    std::function<std::unique_ptr<mnd::Expression>(const mnd::Expression&)> cloner;
+    cloner = [&cloner](const mnd::Expression& e) {
+        return std::make_unique<mnd::Expression>(std::visit([&cloner](const auto& x) -> mnd::Expression {
+            using T = std::decay_t<decltype(x)>;
+            if constexpr (std::is_same<T, mnd::Constant>::value) {
+                return mnd::Constant{ 0, 0 };
+            }
+            else if constexpr (std::is_same<T, mnd::Variable>::value) {
+                return mnd::Variable{ x.name };
+            }
+            else if constexpr (std::is_same<T, mnd::Negation>::value) {
+                return mnd::Negation{ cloner(*x.operand) };
+            }
+            else {
+                return T{ cloner(*x.left), cloner(*x.right) };
+            }
+        }, e));
+    };
+    IterationFormula cl{ cloner(*expr), this->variables };
+    return cl;
 }
 
 
@@ -158,6 +245,7 @@ public:
     void parse(void)
     {
         std::string token;
+        bool unary = true;
         while (getToken(token)) {
             if (std::regex_match(token, num)) {
                 output.push_back(mnd::Constant{ std::atof(token.c_str()) });

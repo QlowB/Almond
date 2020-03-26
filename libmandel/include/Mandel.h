@@ -21,7 +21,7 @@ namespace asmjit { class JitRuntime; }
 
 namespace mnd
 {
-    enum class GeneratorType;
+    enum class GeneratorType : int;
     class MandelContext;
     class MandelDevice;
 
@@ -34,7 +34,7 @@ namespace mnd
 }
 
 
-enum class mnd::GeneratorType
+enum class mnd::GeneratorType : int
 {
     FLOAT,
     FLOAT_SSE2,

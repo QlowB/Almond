@@ -55,6 +55,9 @@ namespace mnd
         struct Formula
         {
             util::Arena<Node> nodeArena;
+            Node* startA;
+            Node* startB;
+
             Node* newA;
             Node* newB;
 
@@ -64,7 +67,7 @@ namespace mnd
         };
     }
 
-    ir::Formula expand(const mnd::IterationFormula& fmla);
+    ir::Formula expand(const mnd::IterationFormula& fmla, const mnd::IterationFormula& z0);
 }
 
 

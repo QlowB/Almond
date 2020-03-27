@@ -40,13 +40,13 @@ namespace mnd
         NodePair operator() (const Variable& v)
         {
             //printf("var %s\n", v.name.c_str()); fflush(stdout);
-            if (iterationFormula.containsVariable(v.name)) {
+            if (v.name == "i") {
+                return { zero, one };
+            }
+            else if (iterationFormula.containsVariable(v.name)) {
                 Node* a = arena.allocate(ir::Variable{ v.name + "_re" });
                 Node* b = arena.allocate(ir::Variable{ v.name + "_im" });
                 return { a, b };
-            }
-            else if (v.name == "i") {
-                return { zero, one };
             }
             else
                 throw "unknown variable";
@@ -220,16 +220,15 @@ namespace mnd
         }
     };
 
-    ir::Formula expand(const mnd::IterationFormula& fmla, const mnd::IterationFormula& z0)
+    ir::Formula expand(const mnd::IterationFormula& z0, const mnd::IterationFormula& zi)
     {
         ir::Formula formula;
-        ConvertVisitor cv{ formula.nodeArena, fmla };
-        std::tie(formula.startA, formula.startB) = std::visit(cv, *z0.expr);
-        std::tie(formula.newA, formula.newB) = std::visit(cv, *fmla.expr);
+        ConvertVisitor cv0{ formula.nodeArena, z0 };
+        ConvertVisitor cvi{ formula.nodeArena, zi };
+        std::tie(formula.startA, formula.startB) = std::visit(cv0, *z0.expr);
+        std::tie(formula.newA, formula.newB) = std::visit(cvi, *zi.expr);
         return formula;
-    }
-
-    
+    }    
 }
 
 
@@ -291,7 +290,9 @@ std::string mnd::ir::Formula::toString(void) const
     };
 
     return std::string("a = ") + std::visit(ToStringVisitor{}, *this->newA) + 
-        "\nb = " + std::visit(ToStringVisitor{}, *this->newB);
+        "\nb = " + std::visit(ToStringVisitor{}, *this->newB) +
+        "\nx = " + std::visit(ToStringVisitor{}, *this->startA) +
+        "\ny = " + std::visit(ToStringVisitor{}, *this->startB);
 }
 
 struct ConstantPropagator
@@ -499,6 +500,12 @@ void mnd::ir::Formula::constantPropagation(void)
 {
     ConstantPropagator cp { *this };
     cp.propagateConstants();
+}
+
+
+void mnd::ir::Formula::optimize(void)
+{
+    constantPropagation();
 }
 
 

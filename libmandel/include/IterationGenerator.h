@@ -36,6 +36,7 @@ class mnd::NaiveGenerator : public mnd::IterationGenerator
 {
 public:
     NaiveGenerator(IterationFormula z0, IterationFormula zi, const mnd::Real& prec);
+    NaiveGenerator(NaiveGenerator&&) = default;
 
     virtual void generate(const MandelInfo& info, float* data);
 private:
@@ -64,6 +65,7 @@ class mnd::CompiledClGenerator : public mnd::ClGeneratorFloat
 {
 public:
     CompiledClGenerator(const MandelDevice& device, const std::string& code);
+    CompiledClGenerator(CompiledClGenerator&&) = default;
     //virtual ~CompiledGenerator(void);
     //virtual void generate(const MandelInfo& info, float* data);
     virtual std::string getKernelCode(bool smooth) const override;

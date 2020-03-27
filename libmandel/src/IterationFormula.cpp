@@ -193,14 +193,12 @@ bool mnd::IterationFormula::containsVariable(const std::string& name) const
 
 mnd::IterationFormula mnd::IterationFormula::clone(void) const
 {
-
-
     std::function<std::unique_ptr<mnd::Expression>(const mnd::Expression&)> cloner;
     cloner = [&cloner](const mnd::Expression& e) {
         return std::make_unique<mnd::Expression>(std::visit([&cloner](const auto& x) -> mnd::Expression {
             using T = std::decay_t<decltype(x)>;
             if constexpr (std::is_same<T, mnd::Constant>::value) {
-                return mnd::Constant{ 0, 0 };
+                return x;
             }
             else if constexpr (std::is_same<T, mnd::Variable>::value) {
                 return mnd::Variable{ x.name };

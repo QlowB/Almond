@@ -304,24 +304,38 @@ void ChooseGenerators::on_compile_clicked()
 {
     QString formula = this->ui->formula->text();
     QString z0formula = this->ui->initialFormula->text();
-    mnd::IterationFormula itf{ mnd::parse(formula.toStdString()) };
+    mnd::IterationFormula zi{ mnd::parse(formula.toStdString()) };
     mnd::IterationFormula z0{ mnd::parse(z0formula.toStdString()) };
-    itf.optimize();
-    z0.optimize();
+    //zi.optimize();
+    //z0.optimize();
 
+    //const mnd::MandelDevice& dev = mndCtxt.getDevices()[0];
+    //auto cls = mnd::compileOpenCl(dev, z0, itf);
+    std::vector<std::unique_ptr<mnd::MandelGenerator>> cpuGenerators;
+    try {
+        std::cout << mnd::toString(*z0.expr) << std::endl;
+        std::cout << mnd::toString(*zi.expr) << std::endl;
+        cpuGenerators = compileCpu(mndCtxt, z0, zi);
+    }
+    catch(const mnd::ParseError& pe) {
+        printf("Parse error: %s\n", pe.what());
+        return;
+    }
+    /*catch(const char* e) {
+        printf("error: %s\n", e);
+        return;
+    }*/
+    chosenGenerator = std::move(cpuGenerators[0]);
 
-    const mnd::MandelDevice& dev = mndCtxt.getDevices()[0];
-    auto cls = mnd::compileOpenCl(dev, z0, itf);
-    chosenGenerator = compileCpu(mndCtxt, z0, itf);
+    return;
 
-
-    std::string expr = mnd::toString(*itf.expr);
+    std::string expr = mnd::toString(*zi.expr);
     printf("zi := %s\n", expr.c_str()); fflush(stdout);
     expr = mnd::toString(*z0.expr);
     printf("z0 := %s\n", expr.c_str()); fflush(stdout);
     //chosenGenerator = std::make_unique<mnd::NaiveGenerator>(std::move(itf), std::move(z0), mnd::getPrecision<double>());
     //return;
-    mnd::ir::Formula irform = mnd::expand(itf, z0);
+    mnd::ir::Formula irform = mnd::expand(z0, zi);
     printf("%s\n", irform.toString().c_str()); fflush(stdout);
     irform.constantPropagation();
     printf("%s\n", irform.toString().c_str()); fflush(stdout);

@@ -64,10 +64,11 @@ namespace mnd
             std::string toString(void) const;
 
             void constantPropagation(void);
+            void optimize(void);
         };
     }
 
-    ir::Formula expand(const mnd::IterationFormula& fmla, const mnd::IterationFormula& z0);
+    ir::Formula expand(const mnd::IterationFormula& z0, const mnd::IterationFormula& zi);
 }
 
 

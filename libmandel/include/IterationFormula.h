@@ -49,8 +49,8 @@ struct mnd::IterationFormula
 {
     std::vector<std::string> variables;
     std::unique_ptr<Expression> expr;
-    IterationFormula(std::unique_ptr<Expression> expr, const std::vector<std::string>& variables = { "c", "z" });
-    IterationFormula(Expression expr, const std::vector<std::string>& variables = { "c", "z" });
+    IterationFormula(std::unique_ptr<Expression> expr, const std::vector<std::string>& variables = { "c", "z", "i" });
+    IterationFormula(Expression expr, const std::vector<std::string>& variables = { "c", "z", "i" });
 
     std::optional<std::string> findUnknownVariables(const Expression& expr);
     void optimize(void);

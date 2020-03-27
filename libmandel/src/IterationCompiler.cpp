@@ -13,7 +13,6 @@
 using namespace std::string_literals;
 namespace mnd
 {
-
     struct CompileVisitor
     {
         using Reg = asmjit::x86::Xmm;
@@ -65,7 +64,7 @@ namespace mnd
                 return y;
             }
             else
-                throw "unknown variable";
+                throw mnd::ParseError(std::string("unknown variable: ") + v.name);
         }
 
         Reg operator()(const ir::Negation& n) {
@@ -404,16 +403,21 @@ namespace mnd
     }
 #endif
 
-    std::unique_ptr<mnd::MandelGenerator> compileCpu(mnd::MandelContext& mndCtxt,
+    std::vector<std::unique_ptr<mnd::MandelGenerator>> compileCpu(mnd::MandelContext& mndCtxt,
         const IterationFormula& z0,
         const IterationFormula& zi)
     {
-        auto ng = std::make_unique<NaiveGenerator>(z0.clone(), zi.clone(), mnd::getPrecision<double>());
-        
-        //ir::Formula irf = mnd::expand(zi, z0);
-        //auto dg = std::make_unique<CompiledGenerator>(compile(irf));
+        //std::unique_ptr<mnd::MandelGenerator> ng = std::make_unique<NaiveGenerator>(z0.clone(), zi.clone(), mnd::getPrecision<double>());
 
-        return ng;
+        ir::Formula irf = mnd::expand(z0, zi);
+        irf.optimize();
+        printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
+        auto dg = std::make_unique<CompiledGenerator>(compile(irf));
+
+        std::vector<std::unique_ptr<mnd::MandelGenerator>> vec;
+        //vec.push_back(std::move(ng));
+        vec.push_back(std::move(dg));
+        return vec;
     }
 
     std::vector<std::pair<mnd::GeneratorType, std::unique_ptr<mnd::MandelGenerator>>> compileOpenCl(const mnd::MandelDevice& dev,

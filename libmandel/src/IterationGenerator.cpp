@@ -125,7 +125,7 @@ std::complex<double> NaiveGenerator::calc(mnd::Expression& expr, std::complex<do
 }
 
 
-NaiveIRGenerator::NaiveIRGenerator(const ir::Formula& irf,
+NaiveIRGenerator::NaiveIRGenerator(const mnd::ir::Formula& irf,
                                    const mnd::Real& prec) :
     mnd::MandelGenerator{ prec },
     form{ irf }
@@ -171,7 +171,7 @@ void NaiveIRGenerator::generate(const mnd::MandelInfo& info, float* data)
 }
 
 
-double NaiveIRGenerator::calc(ir::Node* expr, double a, double b, double x, double y)
+double NaiveIRGenerator::calc(mnd::ir::Node* expr, double a, double b, double x, double y)
 {
     struct DoubleVisitor
     {

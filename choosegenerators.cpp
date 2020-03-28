@@ -1,7 +1,8 @@
 #include "choosegenerators.h"
 #include "ui_choosegenerators.h"
 
-#include "Hardware.h"
+#include <Hardware.h>
+#include <IterationCompiler.h>
 
 #include <QComboBox>
 #include <QRegExp>
@@ -298,7 +299,6 @@ void ChooseGenerators::on_generatorTable_cellDoubleClicked(int row, int column)
     }
 }
 
-#include <IterationCompiler.h>
 
 void ChooseGenerators::on_compile_clicked()
 {

@@ -24,7 +24,7 @@ namespace mnd
         const IterationFormula& z0,
         const IterationFormula& zi);
 
-    std::vector<std::pair<mnd::GeneratorType, std::unique_ptr<mnd::MandelGenerator>>> compileOpenCl(const mnd::MandelDevice& dev,
+    std::vector<std::unique_ptr<mnd::MandelGenerator>> compileOpenCl(const mnd::MandelDevice& dev,
         const IterationFormula& z0,
         const IterationFormula& zi);
 }

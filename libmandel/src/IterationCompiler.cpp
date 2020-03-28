@@ -46,6 +46,10 @@ namespace mnd
         Reg operator()(const ir::Constant& c) {
             auto constant = cc.newDoubleConst(asmjit::ConstPool::kScopeLocal, mnd::convert<double>(c.value));
             auto reg = cc.newXmmSd();
+            std::string commentStr = "move constant [";
+            commentStr += std::to_string(mnd::convert<double>(c.value));
+            commentStr += "]";
+            cc.comment(commentStr.c_str());
             cc.movsd(reg, constant);
             return reg;
         }
@@ -109,6 +113,7 @@ namespace mnd
 
             auto arg = cc.newXmmSd();
             double(*atanFunc)(double, double) = ::atan2;
+            cc.comment("call atan2");
             auto call = cc.call(imm(atanFunc), FuncSignatureT<double, double, double>(CallConv::kIdHostCDecl));
             call->setArg(0, y);
             call->setArg(1, x);
@@ -123,6 +128,7 @@ namespace mnd
 
             auto arg = cc.newXmmSd();
             double(*powFunc)(double, double) = ::pow;
+            cc.comment("call pow");
             auto call = cc.call(imm(powFunc), FuncSignatureT<double, double, double>(CallConv::kIdHostCDecl));
             call->setArg(0, a);
             call->setArg(1, b);
@@ -136,6 +142,7 @@ namespace mnd
 
             auto arg = cc.newXmmSd();
             double(*cosFunc)(double) = ::cos;
+            cc.comment("call cos");
             auto call = cc.call(imm(cosFunc), FuncSignatureT<double, double>(CallConv::kIdHostCDecl));
             call->setArg(0, a);
             call->setRet(0, arg);
@@ -148,6 +155,7 @@ namespace mnd
 
             auto arg = cc.newXmmSd();
             double(*sinFunc)(double) = ::sin;
+            cc.comment("call sin");
             auto call = cc.call(imm(sinFunc), FuncSignatureT<double, double>(CallConv::kIdHostCDecl));
             call->setArg(0, a);
             call->setRet(0, arg);
@@ -160,6 +168,7 @@ namespace mnd
 
             auto arg = cc.newXmmSd();
             double(*expFunc)(double) = ::exp;
+            cc.comment("call exp");
             auto call = cc.call(imm(expFunc), FuncSignatureT<double, double>(CallConv::kIdHostCDecl));
             call->setArg(0, a);
             call->setRet(0, arg);
@@ -172,6 +181,7 @@ namespace mnd
 
             auto arg = cc.newXmmSd();
             double(*logFunc)(double) = ::log;
+            cc.comment("call log");
             auto call = cc.call(imm(logFunc), FuncSignatureT<double, double>(CallConv::kIdHostCDecl));
             call->setArg(0, a);
             call->setRet(0, arg);
@@ -279,7 +289,7 @@ namespace mnd
             }
             else {
                 std::string value = std::visit(*this, node);
-                if (!std::get_if<ir::Variable>(&node)) {
+                if (!std::get_if<ir::Variable>(&node) && !std::get_if<ir::Constant>(&node)) {
                     std::string varname = createVarname();
                     code << "float " << varname << " = " << value << ";" << std::endl;
                     nodeData = varname;
@@ -413,6 +423,7 @@ namespace mnd
         irf.optimize();
         printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
         auto dg = std::make_unique<CompiledGenerator>(compile(irf));
+        printf("asm: %s\n", dg->dump().c_str()); fflush(stdout);
 
         std::vector<std::unique_ptr<mnd::MandelGenerator>> vec;
         //vec.push_back(std::move(ng));
@@ -420,13 +431,17 @@ namespace mnd
         return vec;
     }
 
-    std::vector<std::pair<mnd::GeneratorType, std::unique_ptr<mnd::MandelGenerator>>> compileOpenCl(const mnd::MandelDevice& dev,
+    std::vector<std::unique_ptr<mnd::MandelGenerator>> compileOpenCl(const mnd::MandelDevice& dev,
         const IterationFormula& z0,
         const IterationFormula& zi)
     {
-        ir::Formula irf = mnd::expand(zi, z0);
+        ir::Formula irf = mnd::expand(z0, zi);
+        irf.optimize();
+        printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
         auto fl = compileCl(irf, dev);
-        return {};// { { mnd::GeneratorType::FLOAT, std::move(fl) } };
+        std::vector<std::unique_ptr<mnd::MandelGenerator>> vec;
+        vec.push_back(std::move(fl));
+        return vec;// { { mnd::GeneratorType::FLOAT, std::move(fl) } };
     }
 }
 

@@ -13,6 +13,7 @@ mnd::IterationFormula::IterationFormula(std::unique_ptr<Expression> expr, const 
     expr{ std::move(expr) },
     variables{ variables }
 {
+    this->variables.push_back("i");
     auto maybeUnknown = findUnknownVariables(*this->expr);
     if (maybeUnknown.has_value()) {
         throw ParseError(std::string("unknown variable: ") + maybeUnknown.value());

@@ -1,4 +1,6 @@
 #include "ClGenerators.h"
+#include "Mandel.h"
+#include "OpenClInternal.h"
 #include "OpenClCode.h"
 
 #ifdef WITH_OPENCL
@@ -59,11 +61,11 @@ Device getDevice(Platform& platform, int i, bool display = false) {
 }
 
 
-ClGenerator::ClGenerator(cl::Device device, const std::string& source, const mnd::Real& precision) :
+ClGenerator::ClGenerator(const MandelDevice& device, const std::string& source, const mnd::Real& precision) :
     MandelGenerator{ precision },
-    device{ device }
+    device{ device },
+    context{ device.getClDevice().context }
 {
-    context = Context{ device };
     Program::Sources sources;
 
     sources.push_back({ source.c_str(), source.length() });

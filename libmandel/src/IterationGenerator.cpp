@@ -13,6 +13,15 @@ using mnd::NaiveIRGenerator;
 using mnd::IterationFormula;
 
 
+namespace mnd
+{
+    template class NaiveIRGenerator<float>;
+    template class NaiveIRGenerator<double>;
+    template class NaiveIRGenerator<mnd::DoubleDouble>;
+    template class NaiveIRGenerator<mnd::QuadDouble>;
+}
+
+
 IterationGenerator::IterationGenerator(IterationFormula z0, IterationFormula zi,
                                    const mnd::Real& prec) :
     mnd::MandelGenerator{ prec },
@@ -125,7 +134,8 @@ std::complex<double> NaiveGenerator::calc(mnd::Expression& expr, std::complex<do
 }
 
 
-NaiveIRGenerator::NaiveIRGenerator(const mnd::ir::Formula& irf,
+template<typename T>
+NaiveIRGenerator<T>::NaiveIRGenerator(const mnd::ir::Formula& irf,
                                    const mnd::Real& prec) :
     mnd::MandelGenerator{ prec },
     form{ irf }
@@ -133,7 +143,8 @@ NaiveIRGenerator::NaiveIRGenerator(const mnd::ir::Formula& irf,
 }
 
 
-void NaiveIRGenerator::generate(const mnd::MandelInfo& info, float* data)
+template<typename T>
+void NaiveIRGenerator<T>::generate(const mnd::MandelInfo& info, float* data)
 {
     const MandelViewport& view = info.view;
 
@@ -171,7 +182,8 @@ void NaiveIRGenerator::generate(const mnd::MandelInfo& info, float* data)
 }
 
 
-double NaiveIRGenerator::calc(mnd::ir::Node* expr, double a, double b, double x, double y)
+template<typename T>
+double NaiveIRGenerator<T>::calc(mnd::ir::Node* expr, double a, double b, double x, double y)
 {
     struct DoubleVisitor
     {
@@ -321,11 +333,6 @@ CompiledClGenerator::CompiledClGenerator(const mnd::MandelDevice& device, const 
 {
 }
 
-
-std::string CompiledClGenerator::getKernelCode(bool smooth) const
-{
-    return "";
-}
 
 void CompiledClGenerator::generate(const mnd::MandelInfo& info, float* data)
 {

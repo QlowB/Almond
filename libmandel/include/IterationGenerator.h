@@ -14,6 +14,8 @@ namespace mnd
     class IterationGenerator;
 
     class NaiveGenerator;
+
+    template<typename T>
     class NaiveIRGenerator;
     class CompiledGenerator;
     class CompiledClGenerator;
@@ -47,6 +49,7 @@ private:
 };
 
 
+template<typename T>
 class mnd::NaiveIRGenerator : public mnd::MandelGenerator
 {
     const ir::Formula& form;
@@ -80,12 +83,15 @@ class mnd::CompiledClGenerator : public mnd::ClGeneratorFloat
 public:
     CompiledClGenerator(const MandelDevice& device, const std::string& code);
     CompiledClGenerator(CompiledClGenerator&&) = default;
-    //virtual ~CompiledGenerator(void);
-    //virtual void generate(const MandelInfo& info, float* data);
-    virtual std::string getKernelCode(bool smooth) const override;
     virtual void generate(const MandelInfo& info, float* data);
+};
 
-    //std::string dump(void) const;
+class mnd::CompiledClGeneratorDouble : public mnd::ClGeneratorDouble
+{
+public:
+    CompiledClGeneratorDouble(const MandelDevice& device, const std::string& code);
+    CompiledClGenerator(CompiledClGenerator&&) = default;
+    virtual void generate(const MandelInfo& info, float* data);
 };
 #endif // WITH_OPENCL
 

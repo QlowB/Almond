@@ -14,6 +14,7 @@ namespace mnd
     {
 #ifdef WITH_OPENCL
         cl::Device device;
+        cl::Context context;
 #endif
     };
 }

@@ -13,6 +13,8 @@
 
 namespace mnd
 {
+    class MandelDevice;
+
     class ClGenerator;
     class ClGeneratorFloat;
     class ClGeneratorDoubleFloat;
@@ -27,13 +29,13 @@ namespace mnd
 class mnd::ClGenerator : public MandelGenerator
 {
 protected:
-    cl::Device device;
-    cl::Context context;
+    const MandelDevice& device;
+    cl::Context& context;
     cl::Program program;
     cl::CommandQueue queue;
     cl::Kernel kernel;
 public:
-    ClGenerator(cl::Device device, const std::string& source, const mnd::Real& precision);
+    ClGenerator(const MandelDevice& device, const std::string& source, const mnd::Real& precision);
     virtual ~ClGenerator(void);
 
     virtual void generate(const MandelInfo& info, float* data) = 0;

@@ -4,6 +4,7 @@
 #include "Generators.h"
 #include "ClGenerators.h"
 #include "IterationFormula.h"
+#include "IterationIR.h"
 
 #include <utility>
 #include <complex>
@@ -13,6 +14,7 @@ namespace mnd
     class IterationGenerator;
 
     class NaiveGenerator;
+    class NaiveIRGenerator;
     class CompiledGenerator;
     class CompiledClGenerator;
 
@@ -42,6 +44,18 @@ public:
 private:
     std::complex<double> iterate(std::complex<double> z, std::complex<double> c);
     std::complex<double> calc(mnd::Expression& expr, std::complex<double> z, std::complex<double> c);
+};
+
+
+class mnd::NaiveIRGenerator : public mnd::MandelGenerator
+{
+    const ir::Formula& form;
+public:
+    NaiveIRGenerator(const ir::Formula& irf, const mnd::Real& prec);
+    NaiveIRGenerator(NaiveIRGenerator&&) = default;
+
+    virtual void generate(const MandelInfo& info, float* data);
+    double calc(ir::Node* expr, double a, double b, double x, double y);
 };
 
 

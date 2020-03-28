@@ -106,6 +106,13 @@ namespace mnd
             return res;
         }
 
+        static double myAtan2(double y, double x)
+        {
+            double result = ::atan2(y, x);
+            printf("atan2(%f, %f) = %f\n", y, x, result);
+            return result;
+        }
+
         Reg operator()(const ir::Atan2& at2) {
             using namespace asmjit;
             auto y = visitNode(*at2.left);
@@ -114,7 +121,7 @@ namespace mnd
             auto arg = cc.newXmmSd();
             double(*atanFunc)(double, double) = ::atan2;
             cc.comment("call atan2");
-            auto call = cc.call(imm(atanFunc), FuncSignatureT<double, double, double>(CallConv::kIdHostCDecl));
+            auto call = cc.call(imm(atanFunc), FuncSignatureT<double, double, double>(CallConv::kIdHost));
             call->setArg(0, y);
             call->setArg(1, x);
             call->setRet(0, arg);
@@ -129,7 +136,7 @@ namespace mnd
             auto arg = cc.newXmmSd();
             double(*powFunc)(double, double) = ::pow;
             cc.comment("call pow");
-            auto call = cc.call(imm(powFunc), FuncSignatureT<double, double, double>(CallConv::kIdHostCDecl));
+            auto call = cc.call(imm(powFunc), FuncSignatureT<double, double, double>(CallConv::kIdHost));
             call->setArg(0, a);
             call->setArg(1, b);
             call->setRet(0, arg);
@@ -143,7 +150,7 @@ namespace mnd
             auto arg = cc.newXmmSd();
             double(*cosFunc)(double) = ::cos;
             cc.comment("call cos");
-            auto call = cc.call(imm(cosFunc), FuncSignatureT<double, double>(CallConv::kIdHostCDecl));
+            auto call = cc.call(imm(cosFunc), FuncSignatureT<double, double>(CallConv::kIdHost));
             call->setArg(0, a);
             call->setRet(0, arg);
             return arg;
@@ -156,7 +163,7 @@ namespace mnd
             auto arg = cc.newXmmSd();
             double(*sinFunc)(double) = ::sin;
             cc.comment("call sin");
-            auto call = cc.call(imm(sinFunc), FuncSignatureT<double, double>(CallConv::kIdHostCDecl));
+            auto call = cc.call(imm(sinFunc), FuncSignatureT<double, double>(CallConv::kIdHost));
             call->setArg(0, a);
             call->setRet(0, arg);
             return arg;
@@ -169,7 +176,7 @@ namespace mnd
             auto arg = cc.newXmmSd();
             double(*expFunc)(double) = ::exp;
             cc.comment("call exp");
-            auto call = cc.call(imm(expFunc), FuncSignatureT<double, double>(CallConv::kIdHostCDecl));
+            auto call = cc.call(imm(expFunc), FuncSignatureT<double, double>(CallConv::kIdHost));
             call->setArg(0, a);
             call->setRet(0, arg);
             return arg;
@@ -182,13 +189,17 @@ namespace mnd
             auto arg = cc.newXmmSd();
             double(*logFunc)(double) = ::log;
             cc.comment("call log");
-            auto call = cc.call(imm(logFunc), FuncSignatureT<double, double>(CallConv::kIdHostCDecl));
+            auto call = cc.call(imm(logFunc), FuncSignatureT<double, double>(CallConv::kIdHost));
             call->setArg(0, a);
             call->setRet(0, arg);
             return arg;
         }
     };
 
+
+    static void printD(double d) {
+        printf("val: %f\n", d); fflush(stdout);
+    }
 
     CompiledGenerator compile(const ir::Formula& formula)
     {
@@ -243,9 +254,11 @@ namespace mnd
         comp.movapd(bb, b);
         comp.mulsd(bb, b);
         comp.addsd(bb, aa);
+        //auto call = comp.call(imm(printD), FuncSignatureT<void, double>(CallConv::kIdHost));
+        //call->setArg(0, bb);
 
         comp.comisd(bb, sixteen);
-        comp.jle(endLoop);
+        comp.jnb(endLoop);
 
         comp.inc(k);
         comp.cmp(k, maxIter);
@@ -417,13 +430,21 @@ namespace mnd
         const IterationFormula& z0,
         const IterationFormula& zi)
     {
-        //std::unique_ptr<mnd::MandelGenerator> ng = std::make_unique<NaiveGenerator>(z0.clone(), zi.clone(), mnd::getPrecision<double>());
 
-        ir::Formula irf = mnd::expand(z0, zi);
+        //std::unique_ptr<mnd::MandelGenerator> ng = std::make_unique<NaiveGenerator>(z0.clone(), zi.clone(), mnd::getPrecision<double>());
+        
+        IterationFormula z0o = z0.clone();
+        IterationFormula zio = zi.clone();
+        z0o.optimize();
+        zio.optimize();
+
+        ir::Formula irf = mnd::expand(z0o, zio);
         irf.optimize();
         printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
         auto dg = std::make_unique<CompiledGenerator>(compile(irf));
         printf("asm: %s\n", dg->dump().c_str()); fflush(stdout);
+        
+        //auto dg = std::make_unique<NaiveIRGenerator>(*irf, mnd::getPrecision<double>());
 
         std::vector<std::unique_ptr<mnd::MandelGenerator>> vec;
         //vec.push_back(std::move(ng));

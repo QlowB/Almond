@@ -35,8 +35,7 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y + double(j) * view.height / info.bHeight);
         __m512 ys = { y, y, y, y, y, y, y, y, y, y, y, y, y, y, y, y };
-        long i = 0;
-        for (i; i < info.bWidth; i += 16) {
+        for (long i = 0; i < info.bWidth; i += 16) {
             __m512 pixc = { float(i), float(i + 1), float(i + 2), float(i + 3), float(i + 4), float(i + 5), float(i + 6), float(i + 7),
                             float(i + 8), float(i + 9), float(i + 10), float(i + 11), float(i + 12), float(i + 13), float(i + 14), float(i + 15) };
             __m512 xs = _mm512_fmadd_ps(dpp, pixc, viewx);
@@ -131,8 +130,7 @@ void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::Mande
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y + double(j) * view.height / info.bHeight);
         __m512d ys = { y, y, y, y, y, y, y, y };
-        long i = 0;
-        for (i; i < info.bWidth; i += 8) {
+        for (long i = 0; i < info.bWidth; i += 8) {
             __m512d pixc = { double(i), double(i + 1), double(i + 2), double(i + 3), double(i + 4), double(i + 5), double(i + 6), double(i + 7) };
             __m512d xs = _mm512_fmadd_pd(dpp, pixc, viewx);
 

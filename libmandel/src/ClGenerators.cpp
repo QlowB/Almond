@@ -61,7 +61,7 @@ Device getDevice(Platform& platform, int i, bool display = false) {
 }
 
 
-ClGenerator::ClGenerator(MandelDevice& device, const std::string& source, const mnd::Real& precision) :
+ClGenerator::ClGenerator(mnd::MandelDevice& device, const std::string& source, const mnd::Real& precision) :
     MandelGenerator{ precision },
     device{ device },
     context{ device.getClDevice().context }

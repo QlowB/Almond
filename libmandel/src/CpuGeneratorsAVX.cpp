@@ -42,8 +42,7 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         __m256 ys = {y, y, y, y, y, y, y, y};
-        long i = 0;
-        for (i; i < info.bWidth; i += 16) {
+        for (long i = 0; i < info.bWidth; i += 16) {
             __m256 pixc = { float(i), float(i + 1), float(i + 2), float(i + 3), float(i + 4), float(i + 5), float(i + 6), float(i + 7) };
             __m256 pixc2 = { float(i + 8), float(i + 9), float(i + 10), float(i + 11), float(i + 12), float(i + 13), float(i + 14), float(i + 15) };
 
@@ -178,8 +177,7 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y + T(j) * view.height / info.bHeight);
         __m256d ys = { y, y, y, y };
-        long i = 0;
-        for (i; i < info.bWidth; i += 8) {
+        for (long i = 0; i < info.bWidth; i += 8) {
             __m256d pixc = { double(i), double(i + 1), double(i + 2), double(i + 3) };
             __m256d pixc2 = { double(i + 4), double(i + 5), double(i + 6), double(i + 7) };
             __m256d xs = _mm256_add_pd(_mm256_mul_pd(dpp, pixc), viewx);
@@ -435,8 +433,7 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd
         __m256d y0s = { y.x[0], y.x[0], y.x[0], y.x[0] };
         __m256d y1s = { y.x[1], y.x[1], y.x[1], y.x[1] };
         AvxDoubleDouble ys{ y0s, y1s };
-        long i = 0;
-        for (i; i < info.bWidth; i += 4) {
+        for (long i = 0; i < info.bWidth; i += 4) {
             T x1 = viewx + T(double(i)) * wpp;
             T x2 = x1 + wpp;
             T x3 = x2 + wpp;

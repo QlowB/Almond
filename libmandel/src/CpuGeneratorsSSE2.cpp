@@ -38,8 +38,7 @@ void CpuGenerator<float, mnd::X86_SSE2, parallel>::generate(const mnd::MandelInf
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         __m128 ys = {y, y, y, y};
-        long i = 0;
-        for (i; i < info.bWidth; i += 8) {
+        for (long i = 0; i < info.bWidth; i += 8) {
             __m128 pixc = { float(i), float(i + 1), float(i + 2), float(i + 3) };
             __m128 pixc2 = { float(i + 4), float(i + 5), float(i + 6), float(i + 7) };
             __m128 xs = _mm_add_ps(_mm_mul_ps(dpp, pixc), viewx);
@@ -144,8 +143,7 @@ void CpuGenerator<double, mnd::X86_SSE2, parallel>::generate(const mnd::MandelIn
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         __m128d ys = { y, y };
-        long i = 0;
-        for (i; i < info.bWidth; i += 4) {
+        for (long i = 0; i < info.bWidth; i += 4) {
             __m128d pixc = { double(i), double(i + 1) };
             __m128d pixc2 = { double(i + 2), double(i + 3) };
             __m128d xs = _mm_add_pd(_mm_mul_pd(dpp, pixc), viewx);

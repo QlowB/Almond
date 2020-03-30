@@ -19,6 +19,7 @@ namespace mnd
     class NaiveIRGenerator;
     class CompiledGenerator;
     class CompiledClGenerator;
+    class CompiledClGeneratorDouble;
 
     // forward declaration
     struct ExecData;
@@ -81,7 +82,7 @@ public:
 class mnd::CompiledClGenerator : public mnd::ClGeneratorFloat
 {
 public:
-    CompiledClGenerator(const MandelDevice& device, const std::string& code);
+    CompiledClGenerator(MandelDevice& device, const std::string& code);
     CompiledClGenerator(CompiledClGenerator&&) = default;
     virtual void generate(const MandelInfo& info, float* data);
 };
@@ -89,8 +90,8 @@ public:
 class mnd::CompiledClGeneratorDouble : public mnd::ClGeneratorDouble
 {
 public:
-    CompiledClGeneratorDouble(const MandelDevice& device, const std::string& code);
-    CompiledClGenerator(CompiledClGenerator&&) = default;
+    CompiledClGeneratorDouble(MandelDevice& device, const std::string& code);
+    CompiledClGeneratorDouble(CompiledClGeneratorDouble&&) = default;
     virtual void generate(const MandelInfo& info, float* data);
 };
 #endif // WITH_OPENCL

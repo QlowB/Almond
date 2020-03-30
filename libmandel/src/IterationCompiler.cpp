@@ -420,7 +420,7 @@ namespace mnd
     }
 
 #ifdef WITH_OPENCL
-    std::unique_ptr<MandelGenerator> compileCl(const ir::Formula& formula, const MandelDevice& md)
+    std::unique_ptr<MandelGenerator> compileCl(const ir::Formula& formula, MandelDevice& md)
     {
         return std::make_unique<CompiledClGenerator>(md, compileToOpenCl(formula));
     }
@@ -452,7 +452,7 @@ namespace mnd
         return vec;
     }
 
-    std::vector<std::unique_ptr<mnd::MandelGenerator>> compileOpenCl(const mnd::MandelDevice& dev,
+    std::vector<std::unique_ptr<mnd::MandelGenerator>> compileOpenCl(mnd::MandelDevice& dev,
         const IterationFormula& z0,
         const IterationFormula& zi)
     {

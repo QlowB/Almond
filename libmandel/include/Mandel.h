@@ -83,6 +83,7 @@ public:
     inline const std::string& getName(void) const { return name; }
 
     MandelGenerator* getGenerator(GeneratorType type) const;
+    inline ClDeviceWrapper& getClDevice(void) { return *clDevice; }
     inline const ClDeviceWrapper& getClDevice(void) const { return *clDevice; }
 
     std::vector<GeneratorType> getSupportedTypes(void) const;

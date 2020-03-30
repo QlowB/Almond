@@ -143,8 +143,8 @@ NaiveIRGenerator<T>::NaiveIRGenerator(const mnd::ir::Formula& irf,
 }
 
 
-template<typename T>
-void NaiveIRGenerator<T>::generate(const mnd::MandelInfo& info, float* data)
+template<typename U>
+void NaiveIRGenerator<U>::generate(const mnd::MandelInfo& info, float* data)
 {
     const MandelViewport& view = info.view;
 
@@ -261,6 +261,7 @@ double NaiveIRGenerator<T>::calc(mnd::ir::Node* expr, double a, double b, double
 
 using mnd::CompiledGenerator;
 using mnd::CompiledClGenerator;
+using mnd::CompiledClGeneratorDouble;
 
 
 CompiledGenerator::CompiledGenerator(std::unique_ptr<mnd::ExecData> execData) :
@@ -328,8 +329,8 @@ std::string CompiledGenerator::dump(void) const
 
 
 #ifdef WITH_OPENCL
-CompiledClGenerator::CompiledClGenerator(const mnd::MandelDevice& device, const std::string& code) :
-    ClGeneratorFloat{ device.getClDevice().device, code }
+CompiledClGenerator::CompiledClGenerator(mnd::MandelDevice& device, const std::string& code) :
+    ClGeneratorFloat{ device, code }
 {
 }
 
@@ -358,6 +359,12 @@ void CompiledClGenerator::generate(const mnd::MandelInfo& info, float* data)
     queue.enqueueNDRangeKernel(iterate, 0, cl::NDRange(info.bWidth * info.bHeight));
 
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+
+CompiledClGeneratorDouble::CompiledClGeneratorDouble(mnd::MandelDevice& device, const std::string& code) :
+    ClGeneratorDouble{ device }
+{
 }
 
 #endif // WITH_OPENCL

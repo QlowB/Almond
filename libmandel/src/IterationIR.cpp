@@ -368,6 +368,10 @@ struct ConstantPropagator
         else if (cb && cb->value == 0) {
             return *n.left;
         }
+        else if (cb) {
+            // move constants to the left
+            std::swap(n.left, n.right);
+        }
         else if (auto* nright = std::get_if<ir::Negation>(n.right)) {
             return ir::Subtraction{ n.left, nright->value };
         }

@@ -278,9 +278,9 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             md.vendor = device.getInfo<CL_DEVICE_VENDOR>();
             //printf("    using opencl device: %s\n", md.name.c_str());
             try {
-                md.mandelGenerators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(device, mnd::getFloat_cl()) });
-                md.mandelGenerators.insert({ GeneratorType::FIXED64, std::make_unique<ClGenerator64>(device) });
-                md.mandelGenerators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(device) });
+                md.mandelGenerators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(md, mnd::getFloat_cl()) });
+                md.mandelGenerators.insert({ GeneratorType::FIXED64, std::make_unique<ClGenerator64>(md) });
+                md.mandelGenerators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(md) });
             }
             catch (const std::string& err) {
                 printf("err: %s", err.c_str());
@@ -288,9 +288,9 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
 
             if (supportsDouble) {
                 try {
-                    md.mandelGenerators.insert({ GeneratorType::DOUBLE, std::make_unique<ClGeneratorDouble>(device) });
-                    md.mandelGenerators.insert({ GeneratorType::DOUBLE_DOUBLE, std::make_unique<ClGeneratorDoubleDouble>(device) });
-                    md.mandelGenerators.insert({ GeneratorType::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(device) });
+                    md.mandelGenerators.insert({ GeneratorType::DOUBLE, std::make_unique<ClGeneratorDouble>(md) });
+                    md.mandelGenerators.insert({ GeneratorType::DOUBLE_DOUBLE, std::make_unique<ClGeneratorDoubleDouble>(md) });
+                    md.mandelGenerators.insert({ GeneratorType::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(md) });
                 }
                 catch (const std::string& err) {
                     printf("err: %s", err.c_str());

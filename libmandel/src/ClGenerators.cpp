@@ -61,21 +61,22 @@ Device getDevice(Platform& platform, int i, bool display = false) {
 }
 
 
-ClGenerator::ClGenerator(const MandelDevice& device, const std::string& source, const mnd::Real& precision) :
+ClGenerator::ClGenerator(MandelDevice& device, const std::string& source, const mnd::Real& precision) :
     MandelGenerator{ precision },
     device{ device },
     context{ device.getClDevice().context }
 {
     Program::Sources sources;
+    const cl::Device& dev = device.getClDevice().device;
 
     sources.push_back({ source.c_str(), source.length() });
 
     program = Program{ context, sources };
-    if (program.build({ device }) != CL_SUCCESS) {
-        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(device));
+    if (program.build({ dev }) != CL_SUCCESS) {
+        throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(dev));
     }
 
-    queue = CommandQueue(context, device);
+    queue = CommandQueue(context, dev);
 
     /*Platform p = getPlatform();
     device = getDevice(p, 0, true);
@@ -103,10 +104,11 @@ ClGenerator::~ClGenerator(void)
 }
 
 
-ClGeneratorFloat::ClGeneratorFloat(cl::Device device, const std::string& code) :
+ClGeneratorFloat::ClGeneratorFloat(mnd::MandelDevice& device, const std::string& code) :
     ClGenerator{ device, code, mnd::getPrecision<float>() }
 {
-    useVec = device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() >= 4;
+    const cl::Device& dev = device.getClDevice().device;
+    useVec = dev.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() >= 4;
     kernel = Kernel(program, useVec ? "iterate_vec4" : "iterate");
 }
 
@@ -148,7 +150,7 @@ std::string ClGeneratorFloat::getKernelCode(bool smooth) const
 }
 
 
-ClGeneratorDoubleFloat::ClGeneratorDoubleFloat(cl::Device device) :
+ClGeneratorDoubleFloat::ClGeneratorDoubleFloat(mnd::MandelDevice& device) :
     ClGenerator{ device, this->getKernelCode(false), mnd::getPrecision(mnd::Precision::DOUBLE_FLOAT)  }
 {
     kernel = Kernel(program, "iterate");
@@ -299,7 +301,7 @@ std::string ClGeneratorDoubleFloat::getKernelCode(bool smooth) const
 }
 
 
-ClGeneratorDouble::ClGeneratorDouble(cl::Device device) :
+ClGeneratorDouble::ClGeneratorDouble(mnd::MandelDevice& device) :
     ClGenerator{ device, getDouble_cl(), mnd::getPrecision<double>() }
 {
     kernel = Kernel(program, "iterate");
@@ -367,7 +369,7 @@ std::string ClGeneratorDouble::getKernelCode(bool smooth) const
 }
 
 
-ClGeneratorDoubleDouble::ClGeneratorDoubleDouble(cl::Device device) :
+ClGeneratorDoubleDouble::ClGeneratorDoubleDouble(mnd::MandelDevice& device) :
     ClGenerator{ device, getDoubleDouble_cl(), mnd::getPrecision<DoubleDouble>() }
 {
     kernel = Kernel(program, "iterate");
@@ -410,7 +412,7 @@ std::string ClGeneratorDoubleDouble::getKernelCode(bool smooth) const
 }
 
 
-ClGeneratorQuadDouble::ClGeneratorQuadDouble(cl::Device device) :
+ClGeneratorQuadDouble::ClGeneratorQuadDouble(mnd::MandelDevice& device) :
     ClGenerator{ device, getQuadDouble_cl(), mnd::getPrecision<QuadDouble>() }
 {
     kernel = Kernel(program, "iterate");
@@ -462,7 +464,7 @@ std::string ClGeneratorQuadDouble::getKernelCode(bool smooth) const
 }
 
 
-ClGenerator128::ClGenerator128(cl::Device device) :
+ClGenerator128::ClGenerator128(mnd::MandelDevice& device) :
     ClGenerator{ device, getFixed512_cl(), mnd::getPrecision<Fixed128>() }
 {
     kernel = Kernel(program, "iterate");
@@ -517,7 +519,7 @@ std::string ClGenerator128::getKernelCode(bool smooth) const
 }
 
 
-ClGenerator64::ClGenerator64(cl::Device device) :
+ClGenerator64::ClGenerator64(mnd::MandelDevice& device) :
     ClGenerator{ device, getFixed64_cl(), mnd::getPrecision<Fixed64>() }
 {
     kernel = Kernel(program, "iterate");

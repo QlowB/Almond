@@ -84,7 +84,7 @@ class mnd::CompiledClGenerator : public mnd::ClGeneratorFloat
 public:
     CompiledClGenerator(MandelDevice& device, const std::string& code);
     CompiledClGenerator(CompiledClGenerator&&) = default;
-    virtual void generate(const MandelInfo& info, float* data);
+    virtual void generate(const MandelInfo& info, float* data) override;
 };
 
 class mnd::CompiledClGeneratorDouble : public mnd::ClGeneratorDouble
@@ -92,7 +92,6 @@ class mnd::CompiledClGeneratorDouble : public mnd::ClGeneratorDouble
 public:
     CompiledClGeneratorDouble(MandelDevice& device, const std::string& code);
     CompiledClGeneratorDouble(CompiledClGeneratorDouble&&) = default;
-    virtual void generate(const MandelInfo& info, float* data);
 };
 #endif // WITH_OPENCL
 

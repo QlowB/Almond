@@ -278,7 +278,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             md.vendor = device.getInfo<CL_DEVICE_VENDOR>();
             //printf("    using opencl device: %s\n", md.name.c_str());
             try {
-                md.mandelGenerators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(md, mnd::getFloat_cl()) });
+                md.mandelGenerators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(md) });
                 md.mandelGenerators.insert({ GeneratorType::FIXED64, std::make_unique<ClGenerator64>(md) });
                 md.mandelGenerators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(md) });
             }

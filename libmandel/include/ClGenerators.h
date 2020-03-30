@@ -4,6 +4,7 @@
 #ifdef WITH_OPENCL
 
 #include "Generators.h"
+#include "OpenClCode.h"
 
 #ifdef __APPLE__
 #include <OpenCL/cl.hpp>
@@ -46,7 +47,7 @@ class mnd::ClGeneratorFloat : public ClGenerator
 {
     bool useVec;
 public:
-    ClGeneratorFloat(MandelDevice& device, const std::string& code);
+    ClGeneratorFloat(MandelDevice& device, const std::string& code = getFloat_cl());
     virtual ~ClGeneratorFloat(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data) override;
@@ -70,7 +71,7 @@ protected:
 class mnd::ClGeneratorDouble : public ClGenerator
 {
 public:
-    ClGeneratorDouble(mnd::MandelDevice& device);
+    ClGeneratorDouble(mnd::MandelDevice& device, const std::string& source = getDouble_cl());
     virtual ~ClGeneratorDouble(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data) override;

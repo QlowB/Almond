@@ -49,17 +49,17 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
             __m256 xs = _mm256_add_ps(_mm256_mul_ps(dpp, pixc), viewx);
             __m256 xs2 = _mm256_add_ps(_mm256_mul_ps(dpp, pixc2), viewx);
 
-            __m256 counter = { 0, 0, 0, 0, 0, 0, 0, 0 };
-            __m256 adder = { 1, 1, 1, 1, 1, 1, 1, 1 };
-            __m256 resultsa = { 0, 0, 0, 0, 0, 0, 0, 0 };
-            __m256 resultsb = { 0, 0, 0, 0, 0, 0, 0, 0 };
+            __m256 counter = _mm256_setzero_ps();
+            __m256 adder = _mm256_set1_ps(1);
+            __m256 resultsa = _mm256_setzero_ps();
+            __m256 resultsb = _mm256_setzero_ps();
 
-            __m256 counter2 = { 0, 0, 0, 0, 0, 0, 0, 0 };
-            __m256 adder2 = { 1, 1, 1, 1, 1, 1, 1, 1 };
-            __m256 resultsa2 = { 0, 0, 0, 0, 0, 0, 0, 0 };
-            __m256 resultsb2 = { 0, 0, 0, 0, 0, 0, 0, 0 };
+            __m256 counter2 = _mm256_setzero_ps();
+            __m256 adder2 = _mm256_set1_ps(1);
+            __m256 resultsa2 = _mm256_setzero_ps();
+            __m256 resultsb2 = _mm256_setzero_ps();
 
-            __m256 threshold = { 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f };
+            __m256 threshold = _mm256_set1_ps(16);
 
             __m256 a = xs;
             __m256 a2 = xs2;

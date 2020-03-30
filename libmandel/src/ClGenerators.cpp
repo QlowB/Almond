@@ -301,8 +301,8 @@ std::string ClGeneratorDoubleFloat::getKernelCode(bool smooth) const
 }
 
 
-ClGeneratorDouble::ClGeneratorDouble(mnd::MandelDevice& device) :
-    ClGenerator{ device, getDouble_cl(), mnd::getPrecision<double>() }
+ClGeneratorDouble::ClGeneratorDouble(mnd::MandelDevice& device, const std::string& source) :
+    ClGenerator{ device, source, mnd::getPrecision<double>() }
 {
     kernel = Kernel(program, "iterate");
 }

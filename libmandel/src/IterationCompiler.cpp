@@ -313,7 +313,7 @@ namespace mnd
         }
 
         std::string operator()(const ir::Constant& c) {
-            return std::to_string(mnd::convert<double>(c.value));
+            return std::to_string(mnd::convert<double>(c.value)) + "f";
         }
 
         std::string operator()(const ir::Variable& v) {
@@ -456,7 +456,12 @@ namespace mnd
         const IterationFormula& z0,
         const IterationFormula& zi)
     {
-        ir::Formula irf = mnd::expand(z0, zi);
+        IterationFormula z0o = z0.clone();
+        IterationFormula zio = zi.clone();
+        z0o.optimize();
+        zio.optimize();
+
+        ir::Formula irf = mnd::expand(z0o, zio);
         irf.optimize();
         printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
         auto fl = compileCl(irf, dev);

@@ -117,7 +117,7 @@ public:
     MandelContext& operator=(MandelContext&&) = default;
 
     AdaptiveGenerator& getDefaultGenerator(void);
-    const std::vector<MandelDevice>& getDevices(void);
+    std::vector<MandelDevice>& getDevices(void);
 
     asmjit::JitRuntime& getJitRuntime(void);
 

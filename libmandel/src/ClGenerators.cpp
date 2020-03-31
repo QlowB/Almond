@@ -66,13 +66,14 @@ ClGenerator::ClGenerator(mnd::MandelDevice& device, const std::string& source, c
     device{ device },
     context{ device.getClDevice().context }
 {
-    Program::Sources sources;
     const cl::Device& dev = device.getClDevice().device;
 
+    Program::Sources sources;
     sources.push_back({ source.c_str(), source.length() });
 
     program = Program{ context, sources };
     if (program.build({ dev }) != CL_SUCCESS) {
+        printf("code -> %s\n", source.c_str());
         throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(dev));
     }
 

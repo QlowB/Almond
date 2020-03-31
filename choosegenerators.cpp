@@ -13,7 +13,8 @@
 
 mnd::MandelViewport Benchmarker::benchViewport(void)
 {
-    return mnd::MandelViewport{ -1.250000598933854152929, 0.0001879894057291665530, 0.0000003839916666666565, 0.0000003839916666666565 };
+    //return mnd::MandelViewport{ -1.250000598933854152929, 0.0001879894057291665530, 0.0000003839916666666565, 0.0000003839916666666565 };
+    return mnd::MandelViewport::centerView();
 }
 
 
@@ -309,16 +310,20 @@ void ChooseGenerators::on_compile_clicked()
     //zi.optimize();
     //z0.optimize();
 
-    const mnd::MandelDevice& dev = mndCtxt.getDevices()[0];
+    mnd::MandelDevice& dev = mndCtxt.getDevices()[0];
     //auto cls = mnd::compileOpenCl(dev, z0, itf);
     std::vector<std::unique_ptr<mnd::MandelGenerator>> cpuGenerators;
     try {
-        std::cout << mnd::toString(*z0.expr) << std::endl;
-        std::cout << mnd::toString(*zi.expr) << std::endl;
-        cpuGenerators = mnd::compileCpu(mndCtxt, z0, zi);
+        //std::cout << mnd::toString(*z0.expr) << std::endl;
+        //std::cout << mnd::toString(*zi.expr) << std::endl;
+        cpuGenerators = mnd::compileOpenCl(dev, z0, zi);
     }
     catch(const mnd::ParseError& pe) {
         printf("Parse error: %s\n", pe.what());
+        return;
+    }
+    catch(const std::string& e) {
+        printf("error: %s\n", e.c_str());
         return;
     }
     /*catch(const char* e) {

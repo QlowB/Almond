@@ -12,17 +12,6 @@ Almond::Almond(QWidget* parent) :
     mandelContext{ mnd::initializeContext() }
 {
     ui.setupUi(this);
-
-    /*mnd::IterationFormula form;
-    try {
-        form = mnd::IterationFormula{
-            std::make_unique<mnd::Expression>(mnd::parse("z*z*z + c*z + c"))
-        };
-    }
-    catch (mnd::ParseError& pe) {
-        printf("parse error: %s\n", pe.what());
-    }*/
-
     mw = std::make_unique<MandelWidget>(mandelContext,
                                         &mandelContext.getDefaultGenerator(),
                                         ui.centralWidget);

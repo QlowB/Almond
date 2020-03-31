@@ -270,7 +270,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             auto supportsDouble = extensions.find("cl_khr_fp64") != std::string::npos;
 
             //printf("Device extensions: %s\n", ext.c_str());
-            MandelDevice md{ ClDeviceWrapper{ device } };
+            MandelDevice md{ ClDeviceWrapper{ device, cl::Context{ device } } };
 
             //printf("clock: %d", device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
 
@@ -325,7 +325,7 @@ AdaptiveGenerator& MandelContext::getDefaultGenerator(void)
 }
 
 
-const std::vector<MandelDevice>& MandelContext::getDevices(void)
+std::vector<MandelDevice>& MandelContext::getDevices(void)
 {
     return devices;
 }

@@ -18,6 +18,8 @@ namespace mnd
 
     enum class GeneratorType : int;
 
+    struct GeneratorCollection;
+
     //mnd::ExecData compile(mnd::MandelContext& mndCtxt);
 
     std::vector<std::unique_ptr<mnd::MandelGenerator>> compileCpu(mnd::MandelContext& mndCtxt,
@@ -27,9 +29,19 @@ namespace mnd
     std::vector<std::unique_ptr<mnd::MandelGenerator>> compileOpenCl(mnd::MandelDevice& dev,
         const IterationFormula& z0,
         const IterationFormula& zi);
+
+    GeneratorCollection compileFormula(mnd::MandelContext& mndCtxt,
+        const IterationFormula& z0,
+        const IterationFormula& zi);
 }
 //void squareTest();
 
+
+struct mnd::GeneratorCollection
+{
+    std::vector<std::unique_ptr<mnd::MandelGenerator>> cpuGenerators;
+    std::vector<std::unique_ptr<mnd::MandelGenerator>> clGenerators;
+};
 
 
 namespace mnd

@@ -164,7 +164,7 @@ void Almond::on_displayInfo_stateChanged(int checked)
 void Almond::on_chooseGenerator_clicked()
 {
     if (!generatorsDialog)
-        generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, this);
+        generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, *this);
     generatorsDialog->exec();
 
     if (generatorsDialog->getChosenGenerator()) {

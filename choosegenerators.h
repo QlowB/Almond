@@ -3,6 +3,7 @@
 #include "ui_choosegenerators.h"
 
 #include <Mandel.h>
+#include <IterationCompiler.h>
 
 #include "Bitmap.h"
 
@@ -15,6 +16,8 @@
 #include <QThreadPool>
 #include <memory>
 #include <map>
+
+class Almond;
 
 namespace Ui
 {
@@ -54,10 +57,19 @@ signals:
 };
 
 
+struct FractalDef
+{
+    QString name;
+    QString z0;
+    QString zi;
+    mnd::GeneratorCollection gc;
+};
+
 class ChooseGenerators : public QDialog
 {
     Q_OBJECT
 private:
+    Almond& owner;
     Ui::ChooseGenerators* sadfgsdfg;
     std::unique_ptr<Ui::ChooseGenerators> ui;
     mnd::MandelContext& mndCtxt;
@@ -65,14 +77,17 @@ private:
     std::vector<std::pair<QLineEdit*, QComboBox*>> tableContent;
     std::unique_ptr<QValidator> floatValidator;
     //std::unique_ptr<mnd::AdaptiveGenerator> createdGenerator;
-    std::unique_ptr<mnd::MandelGenerator> chosenGenerator;
+    mnd::MandelGenerator* chosenGenerator;
     std::vector<mnd::MandelGenerator*> actualGenerators;
+
+    std::vector<FractalDef> fractalDefs;
+
     QThreadPool benchmarker;
 public:
-    ChooseGenerators(mnd::MandelContext& mndCtxt, QWidget* parent = nullptr);
+    ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner);
     ~ChooseGenerators();
 
-    inline mnd::MandelGenerator* getChosenGenerator(void) { return chosenGenerator.get(); }
+    inline mnd::MandelGenerator* getChosenGenerator(void) { return chosenGenerator; }
 
 private:
     QComboBox* createComboBox(void);

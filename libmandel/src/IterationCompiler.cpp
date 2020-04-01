@@ -469,6 +469,19 @@ namespace mnd
         vec.push_back(std::move(fl));
         return vec;// { { mnd::GeneratorType::FLOAT, std::move(fl) } };
     }
+
+    GeneratorCollection compileFormula(mnd::MandelContext& mndCtxt, const IterationFormula& z0,
+        const IterationFormula& zi)
+    {
+        GeneratorCollection cr;
+        cr.cpuGenerators = compileCpu(mndCtxt, z0, zi);
+        for (mnd::MandelDevice& dev : mndCtxt.getDevices()) {
+            auto gens = compileOpenCl(dev, z0, zi);
+            std::move(gens.begin(), gens.end(), std::back_inserter(cr.clGenerators));
+        }
+
+        return cr;
+    }
 }
 
 

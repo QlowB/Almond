@@ -37,6 +37,8 @@ private:
     std::unique_ptr<ChooseGenerators> generatorsDialog;
     GradientChooseDialog gcd;
 
+    std::vector<std::unique_ptr<mnd::MandelGenerator>> compiledGenerators;
+
     ViewType currentView;
     mnd::MandelViewport mandelViewSave;
     mnd::MandelGenerator* mandelGeneratorSave;

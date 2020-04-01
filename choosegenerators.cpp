@@ -1,6 +1,8 @@
 #include "choosegenerators.h"
 #include "ui_choosegenerators.h"
 
+#include "Almond.h"
+
 #include <Hardware.h>
 #include <IterationCompiler.h>
 
@@ -122,8 +124,9 @@ void Benchmarker::run(void)
 }
 
 
-ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, QWidget *parent) :
-    QDialog{ parent },
+ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner) :
+    QDialog{ &owner },
+    owner{ owner },
     ui{ std::make_unique<Ui::ChooseGenerators>() },
     mndCtxt{ mndCtxt },
     tableContent{}
@@ -310,13 +313,12 @@ void ChooseGenerators::on_compile_clicked()
     //zi.optimize();
     //z0.optimize();
 
-    mnd::MandelDevice& dev = mndCtxt.getDevices()[0];
-    //auto cls = mnd::compileOpenCl(dev, z0, itf);
-    std::vector<std::unique_ptr<mnd::MandelGenerator>> cpuGenerators;
+    mnd::GeneratorCollection cr;
+
     try {
         //std::cout << mnd::toString(*z0.expr) << std::endl;
         //std::cout << mnd::toString(*zi.expr) << std::endl;
-        cpuGenerators = mnd::compileOpenCl(dev, z0, zi);
+        cr = mnd::compileFormula(mndCtxt, z0, zi);
     }
     catch(const mnd::ParseError& pe) {
         printf("Parse error: %s\n", pe.what());
@@ -331,8 +333,14 @@ void ChooseGenerators::on_compile_clicked()
         return;
     }*/
     fflush(stdout);
-    chosenGenerator = std::move(cpuGenerators[0]);
-
+    fractalDefs.push_back(FractalDef {
+                "name",
+                z0formula,
+                formula,
+                std::move(cr)
+    });
+    //chosenGenerator = std::move(cpuGenerators[0]);
+    chosenGenerator = fractalDefs[fractalDefs.size() - 1].gc.clGenerators[0].get();
     return;
 
     std::string expr = mnd::toString(*zi.expr);
@@ -351,7 +359,7 @@ void ChooseGenerators::on_compile_clicked()
     /*QMessageBox msgBox(nullptr);
     msgBox.setText(QString::fromStdString(asmCode));
     msgBox.exec();*/
-    chosenGenerator = std::move(cg);
+    //chosenGenerator = std::move(cg);
     try {
         //chosenGenerator = mnd::compileCl(irform, dev);
     }

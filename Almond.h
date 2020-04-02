@@ -9,6 +9,7 @@
 #include "exportdialogs.h"
 #include "gradientchoosedialog.h"
 #include "choosegenerators.h"
+#include "customgenerator.h"
 //#include "benchmarkdialog.h"
 
 #include <memory>
@@ -23,7 +24,8 @@ struct ViewState
 enum ViewType
 {
     MANDELBROT,
-    JULIA
+    JULIA,
+    CUSTOM,
 };
 
 
@@ -35,14 +37,16 @@ private:
     std::unique_ptr<MandelWidget> mw;
     //std::unique_ptr<BenchmarkDialog> benchmarkDialog;
     std::unique_ptr<ChooseGenerators> generatorsDialog;
+    std::unique_ptr<CustomGenerator> customGeneratorDialog;
     GradientChooseDialog gcd;
 
     std::vector<std::unique_ptr<mnd::MandelGenerator>> compiledGenerators;
 
     ViewType currentView;
     mnd::MandelViewport mandelViewSave;
-    mnd::MandelGenerator* mandelGeneratorSave;
-
+    mnd::MandelViewport customViewSave;
+    mnd::MandelGenerator* mandelGenerator;
+    mnd::MandelGenerator* customGenerator;
     mnd::MandelGenerator* currentGenerator;
 public:
     Almond(QWidget *parent = Q_NULLPTR);
@@ -70,6 +74,18 @@ private slots:
     void pointSelected(mnd::Real x, mnd::Real y);
 
     void on_viewMandelbrot_clicked();
+
+    void on_wMandel_toggled(bool checked);
+
+    void on_groupBox_toggled(bool arg1);
+
+    void saveView(void);
+
+    void on_wMandel_clicked();
+
+    void on_radioButton_toggled(bool checked);
+
+    void on_radioButton_2_toggled(bool checked);
 
 private:
     Ui::AlmondClass ui;

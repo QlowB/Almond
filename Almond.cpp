@@ -15,13 +15,16 @@ Almond::Almond(QWidget* parent) :
     mw = std::make_unique<MandelWidget>(mandelContext,
                                         &mandelContext.getDefaultGenerator(),
                                         ui.centralWidget);
+    customGeneratorDialog = std::make_unique<CustomGenerator>(mandelContext);
+    customGenerator = nullptr;
+    customViewSave = mnd::MandelViewport::centerView();
 
     on_maxIterations_editingFinished();
     mw->setSmoothColoring(ui.smooth->isChecked());
 
 
     currentView = MANDELBROT;
-    mandelGeneratorSave = &mandelContext.getDefaultGenerator();
+    mandelGenerator = &mandelContext.getDefaultGenerator();
     mandelViewSave = mw->getViewport();
 
     QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
@@ -151,7 +154,12 @@ void Almond::on_exportImage_clicked()
 
 void Almond::on_resetZoom_clicked()
 {
-    mw->setViewport(mnd::MandelViewport::standardView());
+    if (currentView == MANDELBROT) {
+        mw->setViewport(mnd::MandelViewport::standardView());
+    }
+    else {
+        mw->setViewport(mnd::MandelViewport::centerView());
+    }
 }
 
 
@@ -168,16 +176,17 @@ void Almond::on_chooseGenerator_clicked()
     generatorsDialog->exec();
 
     if (generatorsDialog->getChosenGenerator()) {
-        mandelGeneratorSave = generatorsDialog->getChosenGenerator();
+        mandelGenerator = generatorsDialog->getChosenGenerator();
     }
     else {
-        mandelGeneratorSave = &mandelContext.getDefaultGenerator();
+        mandelGenerator = &mandelContext.getDefaultGenerator();
     }
     //this->currentView = MANDELBROT;
-    this->mw->setGenerator(mandelGeneratorSave);
+    this->mw->setGenerator(mandelGenerator);
     //this->mw->getMandelInfo().julia = false;
     //printf("dialog executed\n"); fflush(stdout);
 }
+
 
 void Almond::on_selectPoint_clicked()
 {
@@ -190,9 +199,7 @@ void Almond::on_selectPoint_clicked()
 void Almond::pointSelected(mnd::Real x, mnd::Real y)
 {
     if (currentView != JULIA) {
-        //auto& gen = mandelContext.getJuliaGenerator();
-        mandelViewSave = mw->getViewport();
-        //this->mw->setGenerator(&gen);
+        saveView();
         this->mw->setViewport(mnd::MandelViewport::centerView());
         this->mw->setJuliaPos(x, y);
         this->mw->getMandelInfo().julia = true;
@@ -209,5 +216,80 @@ void Almond::on_viewMandelbrot_clicked()
         this->mw->getMandelInfo().julia = false;
         this->mw->clearAll();
         currentView = MANDELBROT;
+    }
+}
+
+void Almond::on_groupBox_toggled(bool arg1)
+{
+    printf("arg1: %i\n", int(arg1)); fflush(stdout);
+}
+
+void Almond::on_wMandel_clicked()
+{
+
+}
+
+
+void Almond::saveView()
+{
+    if (currentView == MANDELBROT)
+        mandelViewSave = mw->getViewport();
+    else if (currentView == CUSTOM)
+        customViewSave = mw->getViewport();
+}
+
+
+void Almond::on_wMandel_toggled(bool checked)
+{
+    saveView();
+    if (checked) {
+        currentGenerator = mandelGenerator;
+        emit this->mw->stopSelectingPoint();
+        this->mw->setViewport(mandelViewSave);
+        this->mw->setGenerator(currentGenerator);
+        this->mw->getMandelInfo().julia = false;
+        this->mw->clearAll();
+        currentView = MANDELBROT;
+    }
+}
+
+void Almond::on_radioButton_toggled(bool checked)
+{
+    saveView();
+    if (checked) {
+        if (currentView == MANDELBROT) {
+            emit this->mw->selectPoint();
+        }
+        else {
+            currentView = MANDELBROT;
+            currentGenerator = mandelGenerator;
+            this->mw->setGenerator(currentGenerator);
+            this->mw->setViewport(mandelViewSave);
+            this->mw->getMandelInfo().julia = false;
+            this->mw->clearAll();
+            emit this->mw->selectPoint();
+        }
+    }
+}
+
+void Almond::on_radioButton_2_toggled(bool checked)
+{
+    saveView();
+    if (checked) {
+        if (customGenerator == nullptr) {
+            customGeneratorDialog->exec();
+            if (auto* frac = customGeneratorDialog->getLastCompiled()) {
+                customGenerator = frac->gc.cpuGenerators[0].get();
+            }
+        }
+        if (customGenerator != nullptr) {
+            currentGenerator = customGenerator;
+            this->mw->setGenerator(currentGenerator);
+            emit this->mw->stopSelectingPoint();
+            this->mw->setViewport(customViewSave);
+            this->mw->getMandelInfo().julia = false;
+            this->mw->clearAll();
+            currentView = CUSTOM;
+        }
     }
 }

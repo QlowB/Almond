@@ -57,14 +57,6 @@ signals:
 };
 
 
-struct FractalDef
-{
-    QString name;
-    QString z0;
-    QString zi;
-    mnd::GeneratorCollection gc;
-};
-
 class ChooseGenerators : public QDialog
 {
     Q_OBJECT
@@ -79,8 +71,6 @@ private:
     //std::unique_ptr<mnd::AdaptiveGenerator> createdGenerator;
     mnd::MandelGenerator* chosenGenerator;
     std::vector<mnd::MandelGenerator*> actualGenerators;
-
-    std::vector<FractalDef> fractalDefs;
 
     QThreadPool benchmarker;
 public:

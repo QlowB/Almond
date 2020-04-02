@@ -138,10 +138,6 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner) :
     QFont f("unexistent");
     f.setStyleHint(QFont::Monospace);
     f.setPointSize(12);
-    ui->formula->setFont(f);
-    ui->label_2->setFont(f);
-    ui->initialFormula->setFont(f);
-    ui->label_5->setFont(f);
 
     QRegExp floatingpoint{ "^[-+]?(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][-+]\\d+)?$" };
     floatValidator = std::make_unique<QRegExpValidator>(floatingpoint, this);
@@ -249,7 +245,7 @@ void ChooseGenerators::setBenchmarkResult(int row, float percentage, double resu
 void ChooseGenerators::on_buttonBox_accepted()
 {
     //if (!chosenGenerator)
-    auto adGen = std::make_unique<mnd::AdaptiveGenerator>();
+    static auto adGen = std::make_unique<mnd::AdaptiveGenerator>();
     //createdGenerator->clear();
     try {
         for (size_t i = 0; i < tableContent.size(); i++) {
@@ -266,7 +262,7 @@ void ChooseGenerators::on_buttonBox_accepted()
         // TODO
         adGen = nullptr;
     }
-    //chosenGenerator = std::move(adGen);
+    chosenGenerator = adGen.get();
 }
 
 
@@ -306,75 +302,11 @@ void ChooseGenerators::on_generatorTable_cellDoubleClicked(int row, int column)
 
 void ChooseGenerators::on_compile_clicked()
 {
-    QString formula = this->ui->formula->text();
-    QString z0formula = this->ui->initialFormula->text();
-    mnd::IterationFormula zi{ mnd::parse(formula.toStdString()), { "c", "z" } };
-    mnd::IterationFormula z0{ mnd::parse(z0formula.toStdString()), { "c" } };
-    //zi.optimize();
-    //z0.optimize();
-
-    mnd::GeneratorCollection cr;
-
-    try {
-        //std::cout << mnd::toString(*z0.expr) << std::endl;
-        //std::cout << mnd::toString(*zi.expr) << std::endl;
-        cr = mnd::compileFormula(mndCtxt, z0, zi);
-    }
-    catch(const mnd::ParseError& pe) {
-        printf("Parse error: %s\n", pe.what());
-        return;
-    }
-    catch(const std::string& e) {
-        printf("error: %s\n", e.c_str());
-        return;
-    }
-    /*catch(const char* e) {
-        printf("error: %s\n", e);
-        return;
-    }*/
-    fflush(stdout);
-    fractalDefs.push_back(FractalDef {
-                "name",
-                z0formula,
-                formula,
-                std::move(cr)
-    });
-    //chosenGenerator = std::move(cpuGenerators[0]);
-    chosenGenerator = fractalDefs[fractalDefs.size() - 1].gc.clGenerators[0].get();
-    return;
-
-    std::string expr = mnd::toString(*zi.expr);
-    printf("zi := %s\n", expr.c_str()); fflush(stdout);
-    expr = mnd::toString(*z0.expr);
-    printf("z0 := %s\n", expr.c_str()); fflush(stdout);
-    //chosenGenerator = std::make_unique<mnd::NaiveGenerator>(std::move(itf), std::move(z0), mnd::getPrecision<double>());
-    //return;
-    mnd::ir::Formula irform = mnd::expand(z0, zi);
-    printf("%s\n", irform.toString().c_str()); fflush(stdout);
-    irform.constantPropagation();
-    printf("%s\n", irform.toString().c_str()); fflush(stdout);
-    auto cg = std::make_unique<mnd::CompiledGenerator>(mnd::compile(irform));
-    std::string asmCode = cg->dump();
-    printf("%s\n", asmCode.c_str()); fflush(stdout);
-    /*QMessageBox msgBox(nullptr);
-    msgBox.setText(QString::fromStdString(asmCode));
-    msgBox.exec();*/
-    //chosenGenerator = std::move(cg);
-    try {
-        //chosenGenerator = mnd::compileCl(irform, dev);
-    }
-    catch(const std::string& msg) {
-        printf("error compiling: %s", msg.c_str());
-    }
 }
+
 
 void ChooseGenerators::on_benchmark_clicked()
 {
-    if (!chosenGenerator)
-        return;
-    Benchmarker bm(mndCtxt, *chosenGenerator, 0, 0.0f);
-    double mips = bm.benchmarkResult(*chosenGenerator);
-    this->ui->compBenchResult->setText(QString::number(mips));
 }
 
 

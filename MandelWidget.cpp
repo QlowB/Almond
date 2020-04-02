@@ -847,6 +847,13 @@ void MandelWidget::selectPoint(void)
 }
 
 
+void MandelWidget::stopSelectingPoint(void)
+{
+    this->selectingPoint = false;
+    this->setMouseTracking(false);
+}
+
+
 void MandelWidget::requestRecalc()
 {
     emit update();

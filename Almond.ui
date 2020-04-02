@@ -163,29 +163,18 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="selectPoint">
-         <property name="text">
-          <string>View Julia Set</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="viewMandelbrot">
-         <property name="text">
-          <string>View Mandelbrot Set</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <widget class="QGroupBox" name="groupBox">
          <property name="title">
-          <string>GroupBox</string>
+          <string>Fractal</string>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
            <widget class="QRadioButton" name="wMandel">
             <property name="text">
              <string>Mandelbrot Set</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -201,22 +190,15 @@
             <item>
              <widget class="QRadioButton" name="radioButton_2">
               <property name="text">
-               <string>RadioButton</string>
+               <string>Custom Formula</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="comboBox">
-              <item>
-               <property name="text">
-                <string>a</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>b</string>
-               </property>
-              </item>
+             <widget class="QPushButton" name="createCustom">
+              <property name="text">
+               <string>Create</string>
+              </property>
              </widget>
             </item>
            </layout>

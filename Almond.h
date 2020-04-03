@@ -41,6 +41,7 @@ private:
     GradientChooseDialog gcd;
 
     std::vector<std::unique_ptr<mnd::MandelGenerator>> compiledGenerators;
+    std::vector<std::unique_ptr<mnd::AdaptiveGenerator>> adjustedGenerators;
 
     ViewType currentView;
     mnd::MandelViewport mandelViewSave;

@@ -101,8 +101,12 @@ namespace mnd
             { Precision::DOUBLE, getPrecision<double>() },
             { Precision::DOUBLE_DOUBLE, Real("1.0e-29") },
             { Precision::QUAD_DOUBLE, Real("1.0e-56") },
+            { Precision::FIXED64, Real("3.5e-15") },
             { Precision::FIXED128, Real("1.317e-29") },
+            { Precision::FIXED512, Real("1.5e-130") },
+            { Precision::FLOAT128, Real("1.5e-29") },
             { Precision::FLOAT256, Real("1.0e-58") },
+            { Precision::FLOAT512, Real("1.0e-145") },
             { Precision::INF_PREC, Real(0.0) },
         };
 

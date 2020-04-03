@@ -124,15 +124,13 @@ void Benchmarker::run(void)
 }
 
 
-ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::AdaptiveGenerator& generator,
-                                   std::vector<mnd::MandelGenerator*> allGenerators, Almond& owner) :
+ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner) :
     QDialog{ &owner },
     owner{ owner },
     ui{ std::make_unique<Ui::ChooseGenerators>() },
     mndCtxt{ mndCtxt },
     tableContent{},
-    generator{ generator },
-    allGenerators{ allGenerators }
+    generator{ mndCtxt.getDefaultGenerator() }
 {
     ui->setupUi(this);
     ui->progressBar->setRange(0, 1000);
@@ -177,15 +175,7 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::AdaptiveGen
     }
     ui->table->resizeColumnsToContents();
 
-    std::vector<mnd::GeneratorType> generatorTypes;
-
-    for (auto* gen : allGenerators) {
-        if(gen->getPrecision()) {
-
-        }
-    }
-
-    //std::vector<mnd::GeneratorType> generatorTypes = mndCtxt.getSupportedTypes();
+    std::vector<mnd::GeneratorType> generatorTypes = mndCtxt.getSupportedTypes();
     for (size_t i = 0; i < generatorTypes.size(); i++) {
         int rowCount = ui->generatorTable->rowCount();
         ui->generatorTable->insertRow(rowCount);
@@ -219,6 +209,17 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::AdaptiveGen
 }
 
 
+ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::GeneratorCollection& gc, Almond& owner) :
+    QDialog{ &owner },
+    owner{ owner },
+    ui{ std::make_unique<Ui::ChooseGenerators>() },
+    mndCtxt{ mndCtxt },
+    tableContent{},
+    generator{ mndCtxt.getDefaultGenerator() }
+{
+}
+
+
 ChooseGenerators::~ChooseGenerators()
 {
 }
@@ -244,6 +245,23 @@ QLineEdit* ChooseGenerators::createFloatText(void)
 }
 
 
+void ChooseGenerators::addRowAt(int index)
+{
+    ui->table->insertRow(index);
+    QLineEdit* le = createFloatText();
+    QComboBox* comboBox = createComboBox();
+    le->setSizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Expanding);
+    comboBox->setSizePolicy(QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Expanding);
+    ui->table->setCellWidget(index, 0, le);
+    ui->table->setCellWidget(index, 1, comboBox);
+    tableContent.push_back({ le, comboBox });
+    comboBox->setCurrentIndex(0);
+    le->setText("0.0");
+    comboBox->adjustSize();
+    le->adjustSize();
+}
+
+
 void ChooseGenerators::setBenchmarkResult(int row, float percentage, double result)
 {
     this->ui->generatorTable->setItem(row, 2, new QTableWidgetItem);
@@ -255,24 +273,39 @@ void ChooseGenerators::setBenchmarkResult(int row, float percentage, double resu
 void ChooseGenerators::on_buttonBox_accepted()
 {
     //if (!chosenGenerator)
-    static auto adGen = std::make_unique<mnd::AdaptiveGenerator>();
+    chosenGenerator = std::make_unique<mnd::AdaptiveGenerator>();
     //createdGenerator->clear();
     try {
-        for (size_t i = 0; i < tableContent.size(); i++) {
+        /*for (size_t i = 0; i < tableContent.size(); i++) {
             QString precString = tableContent.at(i).first->text();
             QString genString = tableContent.at(i).second->currentText();
 
             mnd::Real precision = mnd::Real(precString.toStdString().c_str());
             mnd::MandelGenerator* generator = generators.at(genString);
             if (generator)
-                adGen->addGenerator(precision, *generator);
+                chosenGenerator->addGenerator(precision, *generator);
+        }*/
+        for (size_t i = 0; i < ui->table->rowCount(); i++) {
+            QLineEdit* precItem = dynamic_cast<QLineEdit*>(ui->table->cellWidget(0, i));
+            QWidget* genWidget = ui->table->cellWidget(1, i);
+            QComboBox* genItem = dynamic_cast<QComboBox*>(genWidget);
+            if (precItem && genItem) {
+                QString precString = precItem->text();
+                QString genString = genItem->currentText();
+
+                printf("%s, %s\n", precString.toStdString().c_str(), genString.toStdString().c_str()); fflush(stdout);
+
+                mnd::Real precision = mnd::Real(precString.toStdString().c_str());
+                mnd::MandelGenerator* generator = generators.at(genString);
+                if (generator)
+                    chosenGenerator->addGenerator(precision, *generator);
+            }
         }
     }
     catch(...) {
         // TODO
-        adGen = nullptr;
+        chosenGenerator = nullptr;
     }
-    chosenGenerator = adGen.get();
 }
 
 
@@ -320,3 +353,19 @@ void ChooseGenerators::on_benchmark_clicked()
 }
 
 
+
+void ChooseGenerators::on_addRow_clicked()
+{
+    int index = ui->table->rowCount();
+    auto selected = ui->table->selectedRanges();
+    if (!selected.empty())
+        index = selected.last().bottomRow() + 1;
+    addRowAt(index);
+}
+
+void ChooseGenerators::on_removeRow_clicked()
+{
+    auto selected = ui->table->selectedRanges();
+    if (!selected.empty())
+        ui->table->removeRow(selected.last().bottomRow());
+}

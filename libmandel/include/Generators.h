@@ -62,16 +62,16 @@ namespace mnd
 
     template<typename T>
     Precision getType(void);
-    template<> Precision getType<float>() { return Precision::FLOAT; }
-    template<> Precision getType<double>() { return Precision::DOUBLE; }
-    template<> Precision getType<DoubleDouble>() { return Precision::DOUBLE_DOUBLE; }
-    template<> Precision getType<QuadDouble>() { return Precision::QUAD_DOUBLE; }
-    template<> Precision getType<Fixed64>() { return Precision::FIXED64; }
-    template<> Precision getType<Fixed128>() { return Precision::FIXED128; }
-    template<> Precision getType<Fixed512>() { return Precision::FIXED512; }
-    template<> Precision getType<Float128>() { return Precision::FLOAT128; }
-    template<> Precision getType<Float256>() { return Precision::FLOAT256; }
-    template<> Precision getType<Float512>() { return Precision::FLOAT512; }
+    template<> inline Precision getType<float>() { return Precision::FLOAT; }
+    template<> inline Precision getType<double>() { return Precision::DOUBLE; }
+    template<> inline Precision getType<DoubleDouble>() { return Precision::DOUBLE_DOUBLE; }
+    template<> inline Precision getType<QuadDouble>() { return Precision::QUAD_DOUBLE; }
+    template<> inline Precision getType<Fixed64>() { return Precision::FIXED64; }
+    template<> inline Precision getType<Fixed128>() { return Precision::FIXED128; }
+    template<> inline Precision getType<Fixed512>() { return Precision::FIXED512; }
+    template<> inline Precision getType<Float128>() { return Precision::FLOAT128; }
+    template<> inline Precision getType<Float256>() { return Precision::FLOAT256; }
+    template<> inline Precision getType<Float512>() { return Precision::FLOAT512; }
 }
 
 

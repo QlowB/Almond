@@ -330,7 +330,7 @@ std::string CompiledGenerator::dump(void) const
 
 #ifdef WITH_OPENCL
 CompiledClGenerator::CompiledClGenerator(mnd::MandelDevice& device, const std::string& code) :
-    ClGeneratorFloat{ device, code, mnd::Precision::FLOAT }
+    ClGeneratorFloat{ device, code }
 {
 }
 

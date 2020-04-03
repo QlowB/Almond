@@ -172,17 +172,19 @@ void Almond::on_displayInfo_stateChanged(int checked)
 void Almond::on_chooseGenerator_clicked()
 {
     if (!generatorsDialog)
-        generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, mandelContext.getDefaultGenerator(), *this);
+        generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, *this);
     generatorsDialog->exec();
 
-    if (generatorsDialog->getChosenGenerator()) {
-        mandelGenerator = generatorsDialog->getChosenGenerator();
+    auto gen = generatorsDialog->extractChosenGenerator();
+    if (gen) {
+        currentGenerator = gen.get();
+        adjustedGenerators.push_back(std::move(gen));
     }
     else {
-        mandelGenerator = &mandelContext.getDefaultGenerator();
+        //mandelGenerator = &mandelContext.getDefaultGenerator();
     }
     //this->currentView = MANDELBROT;
-    this->mw->setGenerator(mandelGenerator);
+    this->mw->setGenerator(currentGenerator);
     //this->mw->getMandelInfo().julia = false;
     //printf("dialog executed\n"); fflush(stdout);
 }

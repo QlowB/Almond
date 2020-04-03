@@ -67,14 +67,16 @@ private:
     mnd::MandelContext& mndCtxt;
     std::map<QString, mnd::MandelGenerator*> generators;
     std::vector<std::pair<QLineEdit*, QComboBox*>> tableContent;
-    std::unique_ptr<QValidator> floatValidator;
-    //std::unique_ptr<mnd::AdaptiveGenerator> createdGenerator;
     mnd::MandelGenerator* chosenGenerator;
     std::vector<mnd::MandelGenerator*> actualGenerators;
 
+    mnd::AdaptiveGenerator& generator;
+    std::vector<mnd::MandelGenerator*> allGenerators;
+
+    std::unique_ptr<QValidator> floatValidator;
     QThreadPool benchmarker;
 public:
-    ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner);
+    ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::AdaptiveGenerator& generator, std::vector<mnd::MandelGenerator*> allGenerators, Almond& owner);
     ~ChooseGenerators();
 
     inline mnd::MandelGenerator* getChosenGenerator(void) { return chosenGenerator; }

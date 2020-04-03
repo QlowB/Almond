@@ -17,7 +17,8 @@ CustomGenerator::~CustomGenerator()
     delete ui;
 }
 
-void CustomGenerator::on_compile_clicked()
+
+void CustomGenerator::compile()
 {
     QString z0formula = this->ui->formula_z0->text();
     QString ziformula = this->ui->formula_zi->text();
@@ -53,10 +54,21 @@ void CustomGenerator::on_compile_clicked()
 }
 
 
+void CustomGenerator::on_compile_clicked()
+{
+    compile();
+}
+
+
 FractalDef* CustomGenerator::getLastCompiled(void)
 {
     if (!fractalDefs.empty())
         return &fractalDefs[fractalDefs.size() - 1];
     else
         return nullptr;
+}
+
+void CustomGenerator::on_buttonBox_accepted()
+{
+    compile();
 }

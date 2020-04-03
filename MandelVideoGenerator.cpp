@@ -138,7 +138,7 @@ Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
         }
     }
     auto after = std::chrono::high_resolution_clock::now();
-    printf("gradient applied in: %lld microseconds\n", std::chrono::duration_cast<std::chrono::microseconds>(after - before).count());
+    //printf("gradient applied in: %lld microseconds\n", std::chrono::duration_cast<std::chrono::microseconds>(after - before).count());
     fflush(stdout);
     /*for (int i = 0; i < ret.height * ret.width; i++) {
         ret.pixels[i] = outer.pixels[i];

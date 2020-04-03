@@ -23,8 +23,8 @@ namespace mnd
 
 
 IterationGenerator::IterationGenerator(IterationFormula z0, IterationFormula zi,
-                                   const mnd::Real& prec) :
-    mnd::MandelGenerator{ prec },
+            mnd::Precision prec, mnd::CpuExtension ex) :
+    mnd::MandelGenerator{ prec, ex },
     z0{ std::move(z0) },
     zi{ std::move(zi) }
 {
@@ -32,8 +32,8 @@ IterationGenerator::IterationGenerator(IterationFormula z0, IterationFormula zi,
 
 
 NaiveGenerator::NaiveGenerator(IterationFormula z0, IterationFormula zi,
-                                   const mnd::Real& prec) :
-    IterationGenerator{ std::move(z0), std::move(zi), prec }
+            mnd::Precision prec, mnd::CpuExtension ex) :
+    IterationGenerator{ std::move(z0), std::move(zi), prec, ex }
 {
     this->z0.optimize();
     this->zi.optimize();
@@ -136,7 +136,7 @@ std::complex<double> NaiveGenerator::calc(mnd::Expression& expr, std::complex<do
 
 template<typename T>
 NaiveIRGenerator<T>::NaiveIRGenerator(const mnd::ir::Formula& irf,
-                                   const mnd::Real& prec) :
+            mnd::Precision prec) :
     mnd::MandelGenerator{ prec },
     form{ irf }
 {
@@ -265,7 +265,7 @@ using mnd::CompiledClGeneratorDouble;
 
 
 CompiledGenerator::CompiledGenerator(std::unique_ptr<mnd::ExecData> execData) :
-    MandelGenerator{ 1.0e-15 },
+    MandelGenerator{ mnd::Precision::DOUBLE },
     execData{ std::move(execData) }
 {
 }
@@ -330,7 +330,7 @@ std::string CompiledGenerator::dump(void) const
 
 #ifdef WITH_OPENCL
 CompiledClGenerator::CompiledClGenerator(mnd::MandelDevice& device, const std::string& code) :
-    ClGeneratorFloat{ device, code }
+    ClGeneratorFloat{ device, code, mnd::Precision::FLOAT }
 {
 }
 

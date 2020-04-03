@@ -32,8 +32,12 @@ public:
 
     FractalDef* getLastCompiled(void);
 
+    void compile();
+
 private slots:
     void on_compile_clicked();
+
+    void on_buttonBox_accepted();
 
 private:
     Ui::CustomGenerator *ui;

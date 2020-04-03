@@ -21,7 +21,6 @@ namespace asmjit { class JitRuntime; }
 
 namespace mnd
 {
-    enum class GeneratorType : int;
     class MandelContext;
     class MandelDevice;
 
@@ -32,33 +31,6 @@ namespace mnd
     const std::string& getGeneratorName(mnd::GeneratorType);
     GeneratorType getTypeFromName(const std::string& name);
 }
-
-
-enum class mnd::GeneratorType : int
-{
-    FLOAT,
-    FLOAT_SSE2,
-    FLOAT_AVX,
-    FLOAT_AVX_FMA,
-    FLOAT_AVX512,
-    FLOAT_NEON,
-    DOUBLE_FLOAT,
-    DOUBLE,
-    DOUBLE_SSE2,
-    DOUBLE_AVX,
-    DOUBLE_AVX_FMA,
-    DOUBLE_AVX512,
-    DOUBLE_NEON,
-    DOUBLE_DOUBLE,
-    DOUBLE_DOUBLE_AVX,
-    DOUBLE_DOUBLE_AVX_FMA,
-    QUAD_DOUBLE,
-    FLOAT128,
-    FLOAT256,
-    FIXED64,
-    FIXED128,
-    FIXED512
-};
 
 
 class mnd::MandelDevice
@@ -101,7 +73,6 @@ private:
     std::map<GeneratorType, std::unique_ptr<MandelGenerator>> cpuGenerators;
 
     std::unique_ptr<AdaptiveGenerator> adaptiveGenerator;
-    std::unique_ptr<JuliaGenerator> juliaGenerator;
 
     std::vector<MandelDevice> devices;
 
@@ -125,8 +96,6 @@ public:
     std::vector<GeneratorType> getSupportedTypes(void) const;
 
     const CpuInfo& getCpuInfo(void) const { return cpuInfo; }
-
-    JuliaGenerator& getJuliaGenerator(void);
 };
 
 

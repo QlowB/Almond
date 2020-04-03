@@ -36,7 +36,7 @@ protected:
     cl::CommandQueue queue;
     cl::Kernel kernel;
 public:
-    ClGenerator(MandelDevice& device, const std::string& source, const mnd::Real& precision);
+    ClGenerator(MandelDevice& device, const std::string& source, mnd::Precision type);
     virtual ~ClGenerator(void);
 
     virtual void generate(const MandelInfo& info, float* data) = 0;

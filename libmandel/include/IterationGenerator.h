@@ -33,14 +33,18 @@ protected:
     IterationFormula z0;
     IterationFormula zi;
 public:
-    IterationGenerator(IterationFormula z0, IterationFormula zi, const mnd::Real& prec);
+    IterationGenerator(IterationFormula z0, IterationFormula zi,
+            mnd::Precision prec,
+            mnd::CpuExtension ex = mnd::CpuExtension::NONE);
 };
 
 
 class mnd::NaiveGenerator : public mnd::IterationGenerator
 {
 public:
-    NaiveGenerator(IterationFormula z0, IterationFormula zi, const mnd::Real& prec);
+    NaiveGenerator(IterationFormula z0, IterationFormula zi,
+            mnd::Precision prec,
+            mnd::CpuExtension ex = mnd::CpuExtension::NONE);
     NaiveGenerator(NaiveGenerator&&) = default;
 
     virtual void generate(const MandelInfo& info, float* data);
@@ -55,7 +59,7 @@ class mnd::NaiveIRGenerator : public mnd::MandelGenerator
 {
     const ir::Formula& form;
 public:
-    NaiveIRGenerator(const ir::Formula& irf, const mnd::Real& prec);
+    NaiveIRGenerator(const ir::Formula& irf, mnd::Precision prec);
     NaiveIRGenerator(NaiveIRGenerator&&) = default;
 
     virtual void generate(const MandelInfo& info, float* data);

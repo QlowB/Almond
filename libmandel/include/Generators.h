@@ -12,10 +12,10 @@
 namespace mnd
 {
     class MandelGenerator;
-    class JuliaGenerator;
 
     class AdaptiveGenerator;
 
+    enum class GeneratorType : int;
     enum class Precision : int
     {
         FLOAT,
@@ -23,14 +23,28 @@ namespace mnd
         DOUBLE,
         DOUBLE_DOUBLE,
         FLOAT128,
+        FLOAT256,
+        FLOAT512,
         FIXED64,
         FIXED128,
+        FIXED512,
         QUAD_DOUBLE,
-        FLOAT256,
         INF_PREC,
     };
 
+
+    enum CpuExtension : int
+    {
+        NONE,
+        X86_SSE2,
+        X86_AVX,
+        X86_AVX_FMA,
+        X86_AVX_512,
+        ARM_NEON,
+    };
+
     Real getPrecision(Precision p);
+    Real getPrecision(GeneratorType p);
     
     template<typename T>
     Real getPrecision(void);
@@ -45,16 +59,76 @@ namespace mnd
     template<> Real getPrecision<Float128>();
     template<> Real getPrecision<Float256>();
     template<> Real getPrecision<Float512>();
+
+    template<typename T>
+    Precision getType(void);
+    template<> Precision getType<float>() { return Precision::FLOAT; }
+    template<> Precision getType<double>() { return Precision::DOUBLE; }
+    template<> Precision getType<DoubleDouble>() { return Precision::DOUBLE_DOUBLE; }
+    template<> Precision getType<QuadDouble>() { return Precision::QUAD_DOUBLE; }
+    template<> Precision getType<Fixed64>() { return Precision::FIXED64; }
+    template<> Precision getType<Fixed128>() { return Precision::FIXED128; }
+    template<> Precision getType<Fixed512>() { return Precision::FIXED512; }
+    template<> Precision getType<Float128>() { return Precision::FLOAT128; }
+    template<> Precision getType<Float256>() { return Precision::FLOAT256; }
+    template<> Precision getType<Float512>() { return Precision::FLOAT512; }
 }
+
+
+enum class mnd::GeneratorType : int
+{
+    UNSPECIFIED,
+    FLOAT,
+    FLOAT_SSE2,
+    FLOAT_AVX,
+    FLOAT_AVX_FMA,
+    FLOAT_AVX512,
+    FLOAT_NEON,
+    DOUBLE_FLOAT,
+    DOUBLE,
+    DOUBLE_SSE2,
+    DOUBLE_AVX,
+    DOUBLE_AVX_FMA,
+    DOUBLE_AVX512,
+    DOUBLE_NEON,
+    DOUBLE_DOUBLE,
+    DOUBLE_DOUBLE_AVX,
+    DOUBLE_DOUBLE_AVX_FMA,
+    QUAD_DOUBLE,
+    FLOAT128,
+    FLOAT256,
+    FIXED64,
+    FIXED128,
+    FIXED512
+};
 
 
 class mnd::MandelGenerator
 {
 protected:
     Real precision;
+    Precision type;
+    CpuExtension extension;
 public:
-    inline MandelGenerator(const Real& precision) :
-        precision{ precision }
+    MandelGenerator();
+    inline MandelGenerator(Precision type) :
+        type{ type },
+        precision{ mnd::getPrecision(type) },
+        extension{ mnd::CpuExtension::NONE }
+    {
+    }
+
+    inline MandelGenerator(Precision type, CpuExtension extension) :
+        type{ type },
+        precision{ mnd::getPrecision(type) },
+        extension{ extension }
+    {
+    }
+
+    inline MandelGenerator(Precision type, CpuExtension extension, const Real& precision) :
+        type{ type },
+        precision{ precision },
+        extension{ extension }
     {
     }
 
@@ -70,28 +144,6 @@ public:
     virtual void generate(const MandelInfo& info, float* data) = 0;
     virtual Real getPrecision(void) const;
 };
-
-
-class mnd::JuliaGenerator : public MandelGenerator
-{
-public:
-    inline JuliaGenerator(const Real& precision) :
-        MandelGenerator{ precision }
-    {
-    }
-
-    virtual ~JuliaGenerator(void);
-
-
-    JuliaGenerator(const JuliaGenerator&) = delete;
-    JuliaGenerator& operator=(const JuliaGenerator&) = delete;
-
-    JuliaGenerator(JuliaGenerator&&) = default;
-    JuliaGenerator& operator=(JuliaGenerator&&) = default;
-
-    virtual void generate(const MandelInfo& info, float* data) = 0;
-};
-
 
 
 class mnd::AdaptiveGenerator : public MandelGenerator

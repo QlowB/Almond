@@ -172,7 +172,7 @@ void Almond::on_displayInfo_stateChanged(int checked)
 void Almond::on_chooseGenerator_clicked()
 {
     if (!generatorsDialog)
-        generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, *this);
+        generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, mandelContext.getDefaultGenerator(), *this);
     generatorsDialog->exec();
 
     if (generatorsDialog->getChosenGenerator()) {
@@ -239,10 +239,10 @@ void Almond::saveView()
 }
 
 
-void Almond::on_wMandel_toggled(bool checked)
+void Almond::setViewType(ViewType v)
 {
     saveView();
-    if (checked) {
+    if (v == MANDELBROT) {
         currentGenerator = mandelGenerator;
         emit this->mw->stopSelectingPoint();
         this->mw->setViewport(mandelViewSave);
@@ -251,12 +251,21 @@ void Almond::on_wMandel_toggled(bool checked)
         this->mw->clearAll();
         currentView = MANDELBROT;
     }
-}
-
-void Almond::on_radioButton_toggled(bool checked)
-{
-    saveView();
-    if (checked) {
+    else if (v == CUSTOM) {
+        if (customGenerator != nullptr) {
+            currentGenerator = customGenerator;
+            this->mw->setGenerator(currentGenerator);
+            emit this->mw->stopSelectingPoint();
+            this->mw->setViewport(customViewSave);
+            this->mw->getMandelInfo().julia = false;
+            this->mw->clearAll();
+            currentView = CUSTOM;
+        }
+        else {
+            setViewType(MANDELBROT);
+        }
+    }
+    else if (v == JULIA) {
         if (currentView == MANDELBROT) {
             emit this->mw->selectPoint();
         }
@@ -272,6 +281,21 @@ void Almond::on_radioButton_toggled(bool checked)
     }
 }
 
+
+void Almond::on_wMandel_toggled(bool checked)
+{
+    if (checked)
+        setViewType(MANDELBROT);
+}
+
+void Almond::on_radioButton_toggled(bool checked)
+{
+    saveView();
+    if (checked) {
+        setViewType(JULIA);
+    }
+}
+
 void Almond::on_radioButton_2_toggled(bool checked)
 {
     saveView();
@@ -282,14 +306,15 @@ void Almond::on_radioButton_2_toggled(bool checked)
                 customGenerator = frac->gc.cpuGenerators[0].get();
             }
         }
-        if (customGenerator != nullptr) {
-            currentGenerator = customGenerator;
-            this->mw->setGenerator(currentGenerator);
-            emit this->mw->stopSelectingPoint();
-            this->mw->setViewport(customViewSave);
-            this->mw->getMandelInfo().julia = false;
-            this->mw->clearAll();
-            currentView = CUSTOM;
-        }
+        setViewType(CUSTOM);
     }
+}
+
+void Almond::on_createCustom_clicked()
+{
+    customGeneratorDialog->exec();
+    if (auto* frac = customGeneratorDialog->getLastCompiled()) {
+        customGenerator = frac->gc.cpuGenerators[0].get();
+    }
+    setViewType(CUSTOM);
 }

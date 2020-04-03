@@ -2,7 +2,6 @@
 #include "Fixed.h"
 
 #include "CpuGenerators.h"
-#include "JuliaGenerators.h"
 #include "ClGenerators.h"
 #include "OpenClInternal.h"
 #include "OpenClCode.h"
@@ -354,13 +353,6 @@ std::vector<mnd::GeneratorType> MandelContext::getSupportedTypes(void) const
         types.push_back(type);
     }
     return types;
-}
-
-
-mnd::JuliaGenerator& MandelContext::getJuliaGenerator()
-{
-    juliaGenerator = std::make_unique<JuliaGeneratorFloat>(getPrecision<double>());
-    return *juliaGenerator;
 }
 
 

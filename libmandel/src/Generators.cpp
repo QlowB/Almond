@@ -3,8 +3,8 @@
 #include <cstdio>
 
 using mnd::MandelGenerator;
-using mnd::JuliaGenerator;
 using mnd::AdaptiveGenerator;
+
 
 MandelGenerator::~MandelGenerator(void)
 {
@@ -17,14 +17,8 @@ mnd::Real MandelGenerator::getPrecision(void) const
 }
 
 
-
-JuliaGenerator::~JuliaGenerator(void)
-{
-}
-
-
 AdaptiveGenerator::AdaptiveGenerator(void) :
-    MandelGenerator{ 0.0 }
+    MandelGenerator{ mnd::Precision::INF_PREC }
 {
 }
 
@@ -113,6 +107,48 @@ namespace mnd
         };
 
         return precs.at(p);
+    }
+
+    Real getPrecision(GeneratorType t)
+    {
+        switch(t) {
+        case GeneratorType::FLOAT:
+        case GeneratorType::FLOAT_SSE2:
+        case GeneratorType::FLOAT_AVX:
+        case GeneratorType::FLOAT_AVX_FMA:
+        case GeneratorType::FLOAT_AVX512:
+        case GeneratorType::FLOAT_NEON:
+            return getPrecision<float>();
+        case GeneratorType::DOUBLE_FLOAT:
+            return getPrecision(Precision::DOUBLE_FLOAT);
+        case GeneratorType::DOUBLE:
+        case GeneratorType::DOUBLE_SSE2:
+        case GeneratorType::DOUBLE_AVX:
+        case GeneratorType::DOUBLE_AVX_FMA:
+        case GeneratorType::DOUBLE_AVX512:
+        case GeneratorType::DOUBLE_NEON:
+            return getPrecision<double>();
+        case GeneratorType::DOUBLE_DOUBLE:
+        case GeneratorType::DOUBLE_DOUBLE_AVX:
+        case GeneratorType::DOUBLE_DOUBLE_AVX_FMA:
+            return getPrecision<DoubleDouble>();
+        case GeneratorType::QUAD_DOUBLE:
+            return getPrecision<QuadDouble>();
+        case GeneratorType::FLOAT128:
+            return getPrecision<Float128>();
+        case GeneratorType::FLOAT256:
+            return getPrecision<Float256>();
+        case GeneratorType::FIXED64:
+            return getPrecision<Fixed64>();
+        case GeneratorType::FIXED128:
+            return getPrecision<Fixed128>();
+        case GeneratorType::FIXED512:
+            return getPrecision<Fixed512>();
+
+        case GeneratorType::UNSPECIFIED:
+        default:
+            return Real(0);
+        }
     }
 
 

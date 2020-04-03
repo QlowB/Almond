@@ -80,12 +80,12 @@ private slots:
     void on_groupBox_toggled(bool arg1);
 
     void saveView(void);
+    void setViewType(ViewType v);
 
     void on_wMandel_clicked();
-
     void on_radioButton_toggled(bool checked);
-
     void on_radioButton_2_toggled(bool checked);
+    void on_createCustom_clicked();
 
 private:
     Ui::AlmondClass ui;

@@ -124,12 +124,15 @@ void Benchmarker::run(void)
 }
 
 
-ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner) :
+ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::AdaptiveGenerator& generator,
+                                   std::vector<mnd::MandelGenerator*> allGenerators, Almond& owner) :
     QDialog{ &owner },
     owner{ owner },
     ui{ std::make_unique<Ui::ChooseGenerators>() },
     mndCtxt{ mndCtxt },
-    tableContent{}
+    tableContent{},
+    generator{ generator },
+    allGenerators{ allGenerators }
 {
     ui->setupUi(this);
     ui->progressBar->setRange(0, 1000);
@@ -153,8 +156,7 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner) :
         }
     }
 
-    auto& defGen = mndCtxt.getDefaultGenerator();
-    for (auto it = defGen.getGenerators().rbegin(); it != defGen.getGenerators().rend(); it++) {
+    for (auto it = generator.getGenerators().rbegin(); it != generator.getGenerators().rend(); it++) {
         auto& [prec, gen] = *it;
         ui->table->insertRow(0);
         QLineEdit* le = createFloatText();
@@ -175,7 +177,15 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner) :
     }
     ui->table->resizeColumnsToContents();
 
-    std::vector<mnd::GeneratorType> generatorTypes = mndCtxt.getSupportedTypes();
+    std::vector<mnd::GeneratorType> generatorTypes;
+
+    for (auto* gen : allGenerators) {
+        if(gen->getPrecision()) {
+
+        }
+    }
+
+    //std::vector<mnd::GeneratorType> generatorTypes = mndCtxt.getSupportedTypes();
     for (size_t i = 0; i < generatorTypes.size(); i++) {
         int rowCount = ui->generatorTable->rowCount();
         ui->generatorTable->insertRow(rowCount);

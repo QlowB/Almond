@@ -26,7 +26,6 @@ SET(MandelSources
     src/MandelUtil.cpp
     src/Types.cpp
     src/OpenClCode.cpp
-    src/JuliaGenerators.cpp
     src/IterationGenerator.cpp
     src/IterationFormula.cpp
     src/IterationCompiler.cpp

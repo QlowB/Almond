@@ -43,6 +43,9 @@ namespace mnd
         ARM_NEON,
     };
 
+    std::string toString(Precision);
+    std::string toString(CpuExtension);
+
     Real getPrecision(Precision p);
     Real getPrecision(GeneratorType p);
     
@@ -72,6 +75,8 @@ namespace mnd
     template<> inline Precision getType<Float128>() { return Precision::FLOAT128; }
     template<> inline Precision getType<Float256>() { return Precision::FLOAT256; }
     template<> inline Precision getType<Float512>() { return Precision::FLOAT512; }
+
+    class MandelDevice;
 }
 
 
@@ -142,7 +147,12 @@ public:
     MandelGenerator& operator=(MandelGenerator&&) = default;
 
     virtual void generate(const MandelInfo& info, float* data) = 0;
+
+    virtual mnd::MandelDevice* getDevice(void);
+
     virtual Real getPrecision(void) const;
+    virtual Precision getType(void) const;
+    virtual CpuExtension getExtension(void) const;
 };
 
 
@@ -151,6 +161,8 @@ class mnd::AdaptiveGenerator : public MandelGenerator
     std::map<Real, MandelGenerator*, std::greater<Real>> generators;
 public:
     AdaptiveGenerator(void);
+    AdaptiveGenerator(AdaptiveGenerator&) = default;
+    AdaptiveGenerator(AdaptiveGenerator&&) = default;
     AdaptiveGenerator(MandelGenerator* floatGen, MandelGenerator* doubleGen);
     virtual ~AdaptiveGenerator(void) = default;
 

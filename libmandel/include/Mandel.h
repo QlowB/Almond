@@ -44,8 +44,8 @@ private:
 
     std::map<GeneratorType, std::unique_ptr<MandelGenerator>> mandelGenerators;
 
-    MandelDevice(ClDeviceWrapper);
 public:
+    MandelDevice(ClDeviceWrapper);
     MandelDevice(const MandelDevice&) = delete;
     MandelDevice(MandelDevice&&) = default;
     MandelDevice& operator=(const MandelDevice&) = delete;
@@ -74,12 +74,12 @@ private:
 
     std::unique_ptr<AdaptiveGenerator> adaptiveGenerator;
 
-    std::vector<MandelDevice> devices;
+    std::vector<std::unique_ptr<mnd::MandelDevice>> devices;
 
     MandelContext(void);
 
     std::unique_ptr<AdaptiveGenerator> createAdaptiveGenerator(void);
-    std::vector<MandelDevice> createDevices(void);
+    std::vector<std::unique_ptr<mnd::MandelDevice>> createDevices(void);
 public:
     ~MandelContext(void);
     MandelContext(const MandelContext&) = delete;
@@ -88,7 +88,7 @@ public:
     MandelContext& operator=(MandelContext&&) = default;
 
     AdaptiveGenerator& getDefaultGenerator(void);
-    std::vector<MandelDevice>& getDevices(void);
+    std::vector<std::unique_ptr<mnd::MandelDevice>>& getDevices(void);
 
     asmjit::JitRuntime& getJitRuntime(void);
 

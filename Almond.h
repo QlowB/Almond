@@ -36,18 +36,18 @@ private:
     mnd::MandelContext mandelContext;
     std::unique_ptr<MandelWidget> mw;
     //std::unique_ptr<BenchmarkDialog> benchmarkDialog;
-    std::unique_ptr<ChooseGenerators> generatorsDialog;
     std::unique_ptr<CustomGenerator> customGeneratorDialog;
     GradientChooseDialog gcd;
 
-    std::vector<std::unique_ptr<mnd::MandelGenerator>> compiledGenerators;
+    std::vector<std::unique_ptr<FractalDef>> customGenerators;
+    FractalDef* currentCustom;
+    mnd::AdaptiveGenerator* customGenerator;
     std::vector<std::unique_ptr<mnd::AdaptiveGenerator>> adjustedGenerators;
 
     ViewType currentView;
     mnd::MandelViewport mandelViewSave;
     mnd::MandelViewport customViewSave;
-    mnd::MandelGenerator* mandelGenerator;
-    mnd::MandelGenerator* customGenerator;
+    mnd::AdaptiveGenerator* mandelGenerator;
     mnd::MandelGenerator* currentGenerator;
 public:
     Almond(QWidget *parent = Q_NULLPTR);

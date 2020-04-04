@@ -105,6 +105,12 @@ ClGenerator::~ClGenerator(void)
 }
 
 
+mnd::MandelDevice* ClGenerator::getDevice(void)
+{
+    return &device;
+}
+
+
 ClGeneratorFloat::ClGeneratorFloat(mnd::MandelDevice& device, const std::string& code) :
     ClGenerator{ device, code, mnd::Precision::FLOAT }
 {

@@ -21,50 +21,13 @@
        <item>
         <widget class="QTabWidget" name="tabWidget">
          <property name="currentIndex">
-          <number>1</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="tab">
           <attribute name="title">
            <string>Measure Performance</string>
           </attribute>
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <item>
-            <widget class="QTableWidget" name="generatorTable">
-             <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
-             </property>
-             <property name="alternatingRowColors">
-              <bool>true</bool>
-             </property>
-             <attribute name="horizontalHeaderVisible">
-              <bool>false</bool>
-             </attribute>
-             <attribute name="horizontalHeaderDefaultSectionSize">
-              <number>180</number>
-             </attribute>
-             <attribute name="horizontalHeaderMinimumSectionSize">
-              <number>100</number>
-             </attribute>
-             <attribute name="verticalHeaderVisible">
-              <bool>false</bool>
-             </attribute>
-             <column>
-              <property name="text">
-               <string>Generator Type</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Precision</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
-               <string>Performance</string>
-              </property>
-             </column>
-            </widget>
-           </item>
+          <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,2">
            <item>
             <layout class="QVBoxLayout" name="verticalLayout_3">
              <item>
@@ -134,6 +97,43 @@
               </layout>
              </item>
             </layout>
+           </item>
+           <item>
+            <widget class="QTableWidget" name="generatorTable">
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
+             <property name="alternatingRowColors">
+              <bool>true</bool>
+             </property>
+             <attribute name="horizontalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
+             <attribute name="horizontalHeaderDefaultSectionSize">
+              <number>180</number>
+             </attribute>
+             <attribute name="horizontalHeaderMinimumSectionSize">
+              <number>100</number>
+             </attribute>
+             <attribute name="verticalHeaderVisible">
+              <bool>false</bool>
+             </attribute>
+             <column>
+              <property name="text">
+               <string>Generator Type</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Precision</string>
+              </property>
+             </column>
+             <column>
+              <property name="text">
+               <string>Performance</string>
+              </property>
+             </column>
+            </widget>
            </item>
           </layout>
          </widget>

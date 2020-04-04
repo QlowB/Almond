@@ -40,6 +40,7 @@ public:
     virtual ~ClGenerator(void);
 
     virtual void generate(const MandelInfo& info, float* data) = 0;
+    virtual mnd::MandelDevice* getDevice(void);
 };
 
 

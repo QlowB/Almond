@@ -213,10 +213,10 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
 
     if (!devices.empty()) {
         auto& device = devices[0];
-        auto* fGen = device.getGenerator(GeneratorType::FLOAT);
-        auto* dGen = device.getGenerator(GeneratorType::DOUBLE);
-        auto* ddGen = device.getGenerator(GeneratorType::DOUBLE_DOUBLE);
-        auto* qdGen = device.getGenerator(GeneratorType::QUAD_DOUBLE);
+        auto* fGen = device->getGenerator(GeneratorType::FLOAT);
+        auto* dGen = device->getGenerator(GeneratorType::DOUBLE);
+        auto* ddGen = device->getGenerator(GeneratorType::DOUBLE_DOUBLE);
+        auto* qdGen = device->getGenerator(GeneratorType::QUAD_DOUBLE);
 
         if (fGen)
             floatGen = fGen;
@@ -240,9 +240,9 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
 }
 
 
-std::vector<MandelDevice> MandelContext::createDevices(void)
+std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
 {
-    std::vector<MandelDevice> mandelDevices;
+    std::vector<std::unique_ptr<MandelDevice>> mandelDevices;
 #ifdef WITH_OPENCL
     std::vector<cl::Platform> platforms;
     cl::Platform::get(&platforms);
@@ -269,7 +269,9 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
             auto supportsDouble = extensions.find("cl_khr_fp64") != std::string::npos;
 
             //printf("Device extensions: %s\n", ext.c_str());
-            MandelDevice md{ ClDeviceWrapper{ device, cl::Context{ device } } };
+            auto mandelDevice = std::make_unique<mnd::MandelDevice>(
+                ClDeviceWrapper{ device, cl::Context{ device } });
+            MandelDevice& md = *mandelDevice;
 
             //printf("clock: %d", device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
 
@@ -304,7 +306,7 @@ std::vector<MandelDevice> MandelContext::createDevices(void)
                 //fprintf(stderr, "error creating 128bit cl generator: %s\n", err.c_str());
             }
 
-            mandelDevices.push_back(std::move(md));
+            mandelDevices.push_back(std::move(mandelDevice));
         }
     }
 #endif // WITH_OPENCL
@@ -324,7 +326,7 @@ AdaptiveGenerator& MandelContext::getDefaultGenerator(void)
 }
 
 
-std::vector<MandelDevice>& MandelContext::getDevices(void)
+std::vector<std::unique_ptr<mnd::MandelDevice>>& MandelContext::getDevices(void)
 {
     return devices;
 }

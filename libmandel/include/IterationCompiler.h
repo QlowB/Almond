@@ -41,6 +41,15 @@ struct mnd::GeneratorCollection
 {
     std::vector<std::unique_ptr<mnd::MandelGenerator>> cpuGenerators;
     std::vector<std::unique_ptr<mnd::MandelGenerator>> clGenerators;
+    std::unique_ptr<mnd::AdaptiveGenerator> adaptiveGenerator;
+
+    GeneratorCollection(void);
+    GeneratorCollection(const GeneratorCollection&) = delete;
+    GeneratorCollection(GeneratorCollection&&) = default;
+    ~GeneratorCollection(void) = default;
+
+    GeneratorCollection& operator=(GeneratorCollection&&) = default;
+    GeneratorCollection& operator=(const GeneratorCollection&) = delete;
 };
 
 

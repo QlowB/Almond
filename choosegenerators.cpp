@@ -20,7 +20,33 @@ mnd::MandelViewport Benchmarker::benchViewport(void)
 }
 
 
-const std::vector<mnd::MandelInfo> Benchmarker::benches {
+static std::vector<mnd::MandelInfo> createBenches()
+{
+    std::vector<mnd::MandelInfo> vec;
+    for (int i = 0; i < 50; i++) {
+        int expo = i + 14;
+        int whe = 5;
+
+        if (expo > 16)
+            whe = 6;
+        if (expo > 18)
+            whe = 7;
+        if (expo > 20)
+            whe = 8;
+        if (expo > 23)
+            whe = 9;
+        if (expo > 26)
+            whe = 10;
+
+        long wh = 1L << whe;
+        long iter = 1L << (expo - 2 * whe);
+        vec.push_back(mnd::MandelInfo{ mnd::MandelViewport::centerView(), wh, wh, iter, false, false, 0.0, 0.0 });
+    }
+    return vec;
+}
+
+
+const std::vector<mnd::MandelInfo> Benchmarker::benches = createBenches(); /*{
     mnd::MandelInfo{ benchViewport(), 32, 32, 15, false },
     mnd::MandelInfo{ benchViewport(), 32, 32, 25, false },
     mnd::MandelInfo{ benchViewport(), 32, 32, 75, false },
@@ -60,7 +86,7 @@ const std::vector<mnd::MandelInfo> Benchmarker::benches {
     mnd::MandelInfo{ benchViewport(), 2048, 2048, 524288000, false },
     mnd::MandelInfo{ benchViewport(), 2048, 2048, 1048576000, false },
     mnd::MandelInfo{ benchViewport(), 2048, 2048, 2097152000, false },
-};
+};*/
 
 
 Benchmarker::~Benchmarker(void)
@@ -124,13 +150,13 @@ void Benchmarker::run(void)
 }
 
 
-ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner) :
+ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::AdaptiveGenerator& generator, Almond& owner) :
     QDialog{ &owner },
     owner{ owner },
     ui{ std::make_unique<Ui::ChooseGenerators>() },
     mndCtxt{ mndCtxt },
     tableContent{},
-    generator{ mndCtxt.getDefaultGenerator() }
+    generator{ generator }
 {
     ui->setupUi(this);
     ui->progressBar->setRange(0, 1000);
@@ -148,12 +174,89 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner) :
         generators.insert({ QString::fromStdString(typeName), mndCtxt.getCpuGenerator(genType) });
     }
     for (auto& device : mndCtxt.getDevices()) {
-        for (auto genType : device.getSupportedTypes()) {
-            const std::string& typeName = mnd::getGeneratorName(genType) + " [" + device.getName() + "]";
-            generators.insert({ QString::fromStdString(typeName), device.getGenerator(genType) });
+        for (auto genType : device->getSupportedTypes()) {
+            const std::string& typeName = mnd::getGeneratorName(genType) + " [" + device->getName() + "]";
+            generators.insert({ QString::fromStdString(typeName), device->getGenerator(genType) });
         }
     }
 
+    std::vector<mnd::MandelGenerator*> allGenerators;
+
+    /*for (auto genType : mndCtxt.getSupportedTypes()) {
+        allGenerators.push_back(mndCtxt.getCpuGenerator(genType));
+    }
+    for (auto& device : mndCtxt.getDevices()) {
+        for (auto genType : device.getSupportedTypes()) {
+            allGenerators.push_back(device.getGenerator(genType));
+        }
+    }*/
+
+    initializeTables(allGenerators);
+
+    //ui->addRow->setIcon(ui->addRow->style()->standardIcon(QStyle::SP_));
+    //ui->moveRowUp->setIcon(ui->moveRowUp->style()->standardIcon(QStyle::SP_ArrowUp));
+    //ui->moveRowDown->setIcon(ui->moveRowDown->style()->standardIcon(QStyle::SP_ArrowDown));
+}
+
+
+ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::GeneratorCollection& gc,
+                                   mnd::AdaptiveGenerator& generator, Almond& owner) :
+    QDialog{ &owner },
+    owner{ owner },
+    ui{ std::make_unique<Ui::ChooseGenerators>() },
+    mndCtxt{ mndCtxt },
+    tableContent{},
+    generator{ generator }
+{
+    ui->setupUi(this);
+    ui->progressBar->setRange(0, 1000);
+    benchmarker.setMaxThreadCount(1);
+
+    QFont f("unexistent");
+    f.setStyleHint(QFont::Monospace);
+    f.setPointSize(12);
+
+    QRegExp floatingpoint{ "^[-+]?(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][-+]\\d+)?$" };
+    floatValidator = std::make_unique<QRegExpValidator>(floatingpoint, this);
+
+    for (auto& gen : gc.cpuGenerators) {
+        const mnd::Precision p = gen->getType();
+        const mnd::CpuExtension ce = gen->getExtension();
+        std::string typeName = mnd::toString(p) + " " + mnd::toString(ce);
+        generators.insert({ QString::fromStdString(typeName), gen.get() });
+    }
+
+
+    for (auto& gen : gc.clGenerators) {
+        const mnd::Precision p = gen->getType();
+        const mnd::CpuExtension ce = gen->getExtension();
+        mnd::MandelDevice* dev = gen->getDevice();
+        std::string devString = dev != nullptr ? dev->getName() : "";
+        std::string typeName = mnd::toString(p) + " " + mnd::toString(ce) + " [" + devString + "]";
+        generators.insert({ QString::fromStdString(typeName), gen.get() });
+    }
+
+    std::vector<mnd::MandelGenerator*> allGenerators;
+
+    /*for (auto& gen : gc.cpuGenerators) {
+        allGenerators.push_back(gen.get());
+    }
+    for (auto& gen : gc.clGenerators) {
+        allGenerators.push_back(gen.get());
+    }*/
+
+    initializeTables(allGenerators);
+}
+
+
+ChooseGenerators::~ChooseGenerators()
+{
+}
+
+
+
+void ChooseGenerators::initializeTables(const std::vector<mnd::MandelGenerator*>& allGenerators)
+{
     for (auto it = generator.getGenerators().rbegin(); it != generator.getGenerators().rend(); it++) {
         auto& [prec, gen] = *it;
         ui->table->insertRow(0);
@@ -175,7 +278,27 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner) :
     }
     ui->table->resizeColumnsToContents();
 
-    std::vector<mnd::GeneratorType> generatorTypes = mndCtxt.getSupportedTypes();
+    int i = 0;
+    for (auto it = generators.begin(); it != generators.end(); ++it, ++i) {
+        int rowCount = ui->generatorTable->rowCount();
+        ui->generatorTable->insertRow(rowCount);
+        ui->generatorTable->setItem(rowCount, 0, new QTableWidgetItem);
+        ui->generatorTable->setItem(rowCount, 1, new QTableWidgetItem);
+        mnd::MandelGenerator& gene = *it->second;
+        mnd::Precision p = gene.getType();
+        mnd::CpuExtension ex = gene.getExtension();
+        mnd::MandelDevice* dev = gene.getDevice();
+
+        std::string desc = mnd::toString(p) + " " + mnd::toString(ex);
+        if (dev)
+            desc += "[" + dev->getName() + "]";
+        const mnd::Real& prec = gene.getPrecision();
+        ui->generatorTable->item(rowCount, 0)->setText(QString::fromStdString(desc));
+        ui->generatorTable->item(rowCount, 1)->setText(QString::fromStdString(mnd::toLegibleString(prec)));
+        actualGenerators.push_back(&gene);
+    }
+
+    /*std::vector<mnd::GeneratorType> generatorTypes = mndCtxt.getSupportedTypes();
     for (size_t i = 0; i < generatorTypes.size(); i++) {
         int rowCount = ui->generatorTable->rowCount();
         ui->generatorTable->insertRow(rowCount);
@@ -201,27 +324,7 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner) :
             ui->generatorTable->item(rowCount, 1)->setText(QString::fromStdString(mnd::toLegibleString(prec)));
             actualGenerators.push_back(device.getGenerator(generatorTypes[i]));
         }
-    }
-
-    //ui->addRow->setIcon(ui->addRow->style()->standardIcon(QStyle::SP_));
-    //ui->moveRowUp->setIcon(ui->moveRowUp->style()->standardIcon(QStyle::SP_ArrowUp));
-    //ui->moveRowDown->setIcon(ui->moveRowDown->style()->standardIcon(QStyle::SP_ArrowDown));
-}
-
-
-ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::GeneratorCollection& gc, Almond& owner) :
-    QDialog{ &owner },
-    owner{ owner },
-    ui{ std::make_unique<Ui::ChooseGenerators>() },
-    mndCtxt{ mndCtxt },
-    tableContent{},
-    generator{ mndCtxt.getDefaultGenerator() }
-{
-}
-
-
-ChooseGenerators::~ChooseGenerators()
-{
+    }*/
 }
 
 
@@ -286,8 +389,8 @@ void ChooseGenerators::on_buttonBox_accepted()
                 chosenGenerator->addGenerator(precision, *generator);
         }*/
         for (size_t i = 0; i < ui->table->rowCount(); i++) {
-            QLineEdit* precItem = dynamic_cast<QLineEdit*>(ui->table->cellWidget(0, i));
-            QWidget* genWidget = ui->table->cellWidget(1, i);
+            QLineEdit* precItem = dynamic_cast<QLineEdit*>(ui->table->cellWidget(i, 0));
+            QWidget* genWidget = ui->table->cellWidget(i, 1);
             QComboBox* genItem = dynamic_cast<QComboBox*>(genWidget);
             if (precItem && genItem) {
                 QString precString = precItem->text();
@@ -340,16 +443,6 @@ void ChooseGenerators::on_generatorTable_cellDoubleClicked(int row, int column)
             }
         }
     }
-}
-
-
-void ChooseGenerators::on_compile_clicked()
-{
-}
-
-
-void ChooseGenerators::on_benchmark_clicked()
-{
 }
 
 

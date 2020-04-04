@@ -81,17 +81,21 @@ public:
     /*!
      * \brief create a dialog that lets choose from the default mandelbrot generators
      */
-    ChooseGenerators(mnd::MandelContext& mndCtxt, Almond& owner);
+    ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::AdaptiveGenerator& generator, Almond& owner);
 
     /*!
      * \brief create a dialog that lets choose from the default mandelbrot generators
      */
-    ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::GeneratorCollection& gc, Almond& owner);
+    ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::GeneratorCollection& gc,
+                     mnd::AdaptiveGenerator& generator, Almond& owner);
     ~ChooseGenerators();
 
     inline std::unique_ptr<mnd::AdaptiveGenerator> extractChosenGenerator(void) { return std::move(chosenGenerator); }
 
 private:
+
+    void initializeTables(const std::vector<mnd::MandelGenerator *> &allGenerators);
+
     QComboBox* createComboBox(void);
     QLineEdit* createFloatText(void);
 
@@ -103,8 +107,6 @@ private slots:
     void on_buttonBox_accepted();
     void on_run_clicked();
     void on_generatorTable_cellDoubleClicked(int row, int column);
-    void on_compile_clicked();
-    void on_benchmark_clicked();
     void on_addRow_clicked();
     void on_removeRow_clicked();
 };

@@ -11,14 +11,34 @@ MandelGenerator::~MandelGenerator(void)
 }
 
 
+
+mnd::MandelDevice* MandelGenerator::getDevice(void)
+{
+    return nullptr;
+}
+
+
 mnd::Real MandelGenerator::getPrecision(void) const
 {
     return precision;
 }
 
 
+mnd::Precision MandelGenerator::getType(void) const
+{
+    return type;
+}
+
+
+mnd::CpuExtension MandelGenerator::getExtension(void) const
+{
+    return extension;
+}
+
+
 AdaptiveGenerator::AdaptiveGenerator(void) :
-    MandelGenerator{ mnd::Precision::INF_PREC }
+    MandelGenerator{ mnd::Precision::INF_PREC },
+    generators{}
 {
 }
 
@@ -93,6 +113,56 @@ void AdaptiveGenerator::generate(const mnd::MandelInfo& info, float* data)
 
 namespace mnd
 {
+    std::string toString(Precision p)
+    {
+        switch (p) {
+        case Precision::FLOAT:
+            return "float";
+        case Precision::DOUBLE_FLOAT:
+            return "double-float";
+        case Precision::DOUBLE:
+            return "double";
+        case Precision::DOUBLE_DOUBLE:
+            return "double-double";
+        case Precision::FLOAT128:
+            return "float128";
+        case Precision::FLOAT256:
+            return "float256";
+        case Precision::FLOAT512:
+            return "float512";
+        case Precision::FIXED64:
+            return "fixed64";
+        case Precision::FIXED128:
+            return "fixed128";
+        case Precision::FIXED512:
+            return "fixed512";
+        case Precision::QUAD_DOUBLE:
+            return "quad-double";
+        case Precision::INF_PREC:
+            return "real";
+        }
+    }
+
+
+    std::string toString(CpuExtension ce)
+    {
+        switch (ce) {
+        case CpuExtension::NONE:
+            return "";
+        case CpuExtension::X86_SSE2:
+            return "SSE2";
+        case CpuExtension::X86_AVX:
+            return "AVX";
+        case CpuExtension::X86_AVX_FMA:
+            return "AVX2+FMA";
+        case CpuExtension::X86_AVX_512:
+            return "AVX512";
+        case CpuExtension::ARM_NEON:
+            return "NEON";
+        }
+    }
+
+
     Real getPrecision(Precision p)
     {
         static const std::map<Precision, Real> precs {

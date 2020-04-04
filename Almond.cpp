@@ -78,7 +78,7 @@ void Almond::on_maxIterations_editingFinished()
 
 void Almond::on_chooseGradient_clicked()
 {
-    auto response = gcd.exec();
+    gcd.exec();
     auto gradient = gcd.getGradient();
     if (gradient)
         mw->setGradient(std::move(*gradient));
@@ -171,20 +171,32 @@ void Almond::on_displayInfo_stateChanged(int checked)
 
 void Almond::on_chooseGenerator_clicked()
 {
-    if (!generatorsDialog)
-        generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, *this);
+    std::unique_ptr<ChooseGenerators> generatorsDialog;
+    if (currentView == MANDELBROT)
+        generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, *mandelGenerator, *this);
+    else if (currentView == CUSTOM)
+        generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, this->currentCustom->gc, *customGenerator, *this);
+    else
+        return;
+
     generatorsDialog->exec();
 
     auto gen = generatorsDialog->extractChosenGenerator();
     if (gen) {
+        if (currentView == MANDELBROT || currentView == JULIA) {
+            mandelGenerator = gen.get();
+        }
+        else if (currentView == CUSTOM) {
+            customGenerator = gen.get();
+        }
         currentGenerator = gen.get();
+        this->mw->setGenerator(currentGenerator);
         adjustedGenerators.push_back(std::move(gen));
     }
     else {
         //mandelGenerator = &mandelContext.getDefaultGenerator();
     }
     //this->currentView = MANDELBROT;
-    this->mw->setGenerator(currentGenerator);
     //this->mw->getMandelInfo().julia = false;
     //printf("dialog executed\n"); fflush(stdout);
 }
@@ -305,7 +317,9 @@ void Almond::on_radioButton_2_toggled(bool checked)
         if (customGenerator == nullptr) {
             customGeneratorDialog->exec();
             if (auto* frac = customGeneratorDialog->getLastCompiled()) {
-                customGenerator = frac->gc.cpuGenerators[0].get();
+                customGenerator = frac->gc.adaptiveGenerator.get();
+                customGenerators.push_back(std::make_unique<FractalDef>(std::move(*frac)));
+                currentCustom = customGenerators[customGenerators.size() - 1].get();
             }
         }
         setViewType(CUSTOM);
@@ -316,7 +330,10 @@ void Almond::on_createCustom_clicked()
 {
     customGeneratorDialog->exec();
     if (auto* frac = customGeneratorDialog->getLastCompiled()) {
-        customGenerator = frac->gc.cpuGenerators[0].get();
+        customGenerator = frac->gc.adaptiveGenerator.get();
+        customGenerators.push_back(std::make_unique<FractalDef>(std::move(*frac)));
+        currentCustom = customGenerators[customGenerators.size() - 1].get();
+        this->ui.radioButton_2->setChecked(true);
+        setViewType(CUSTOM);
     }
-    setViewType(CUSTOM);
 }

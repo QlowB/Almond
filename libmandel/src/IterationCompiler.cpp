@@ -475,15 +475,30 @@ namespace mnd
     {
         GeneratorCollection cr;
         cr.cpuGenerators = compileCpu(mndCtxt, z0, zi);
-        for (mnd::MandelDevice& dev : mndCtxt.getDevices()) {
-            auto gens = compileOpenCl(dev, z0, zi);
+        for (auto& dev : mndCtxt.getDevices()) {
+            auto gens = compileOpenCl(*dev, z0, zi);
             std::move(gens.begin(), gens.end(), std::back_inserter(cr.clGenerators));
+        }
+
+        cr.adaptiveGenerator = std::make_unique<mnd::AdaptiveGenerator>();
+        if (!cr.clGenerators.empty()) {
+            cr.adaptiveGenerator->addGenerator(mnd::getPrecision<float>(), *cr.clGenerators[0]);
+        }
+        if (!cr.cpuGenerators.empty()) {
+            cr.adaptiveGenerator->addGenerator(mnd::getPrecision<double>(), *cr.cpuGenerators[0]);
         }
 
         return cr;
     }
 }
 
+mnd::GeneratorCollection::GeneratorCollection(void) :
+    cpuGenerators{},
+    clGenerators{},
+    adaptiveGenerator{ nullptr }
+{
+
+}
 
 
 using namespace asmjit;

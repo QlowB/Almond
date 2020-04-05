@@ -302,7 +302,7 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
             try {
                 //md.generator128 = std::make_unique<ClGenerator128>(device);
             }
-            catch (const std::string& err) {
+            catch (const std::string& /*err*/) {
                 //fprintf(stderr, "error creating 128bit cl generator: %s\n", err.c_str());
             }
 

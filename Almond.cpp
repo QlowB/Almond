@@ -202,14 +202,6 @@ void Almond::on_chooseGenerator_clicked()
 }
 
 
-void Almond::on_selectPoint_clicked()
-{
-    if (currentView == MANDELBROT) {
-        emit this->mw->selectPoint();
-    }
-}
-
-
 void Almond::pointSelected(mnd::Real x, mnd::Real y)
 {
     if (currentView != JULIA) {
@@ -222,16 +214,6 @@ void Almond::pointSelected(mnd::Real x, mnd::Real y)
     currentView = JULIA;
 }
 
-void Almond::on_viewMandelbrot_clicked()
-{
-    if (currentView != MANDELBROT) {
-        //this->mw->setGenerator(mandelGeneratorSave);
-        this->mw->setViewport(mandelViewSave);
-        this->mw->getMandelInfo().julia = false;
-        this->mw->clearAll();
-        currentView = MANDELBROT;
-    }
-}
 
 void Almond::on_groupBox_toggled(bool arg1)
 {

@@ -71,10 +71,7 @@ private slots:
 
     void backgroundTaskFinished();
 
-    void on_selectPoint_clicked();
     void pointSelected(mnd::Real x, mnd::Real y);
-
-    void on_viewMandelbrot_clicked();
 
     void on_wMandel_toggled(bool checked);
 

@@ -38,7 +38,7 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
 
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1) if (parallel)
+#pragma omp parallel for schedule(static, 1) collapse(2) if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         __m256 ys = {y, y, y, y, y, y, y, y};
@@ -273,9 +273,9 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
             _mm256_store_pd(ftRes, counter);
             for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
                 if (info.smooth)
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
-                        ftRes[k] >= info.maxIter ? info.maxIter :
-                        ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
+                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? float(info.maxIter) :
+                        ftRes[k] >= info.maxIter ? float(info.maxIter) :
+                        float(((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::logf(2.0f));
                 else
                     data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
             }
@@ -286,9 +286,9 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
             i += 4;
             for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
                 if (info.smooth)
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
-                        ftRes[k] >= info.maxIter ? info.maxIter :
-                        ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
+                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? float(info.maxIter) :
+                        ftRes[k] >= info.maxIter ? float(info.maxIter) :
+                        float(((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::logf(2.0f));
                 else
                     data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
             }

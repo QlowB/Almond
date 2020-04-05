@@ -102,7 +102,7 @@ void CpuGenerator<T, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info,
                 }
             }
             else
-                data[i + j * info.bWidth] = k;
+                data[i + j * info.bWidth] = float(k);
         }
     }
 }

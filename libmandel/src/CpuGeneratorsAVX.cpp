@@ -28,8 +28,8 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
     const MandelViewport& view = info.view;
     const float dppf = float(view.width / info.bWidth);
     const float viewxf = float(view.x);
-    __m256 viewx = { viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf };
-    __m256 dpp = { dppf, dppf, dppf, dppf, dppf, dppf, dppf, dppf };
+    __m256 viewx = _mm256_set1_ps(viewxf);
+    __m256 dpp = _mm256_set1_ps(dppf);
 
     T jX = mnd::convert<T>(info.juliaX);
     T jY = mnd::convert<T>(info.juliaY);
@@ -38,10 +38,10 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
 
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1) collapse(2) if (parallel)
+#pragma omp parallel for schedule(static, 1) if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
-        __m256 ys = {y, y, y, y, y, y, y, y};
+        __m256 ys = _mm256_set1_ps(y);
         for (long i = 0; i < info.bWidth; i += 16) {
             __m256 pixc = { float(i), float(i + 1), float(i + 2), float(i + 3), float(i + 4), float(i + 5), float(i + 6), float(i + 7) };
             __m256 pixc2 = { float(i + 8), float(i + 9), float(i + 10), float(i + 11), float(i + 12), float(i + 13), float(i + 14), float(i + 15) };

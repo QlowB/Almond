@@ -35,8 +35,6 @@ public:
     void compile();
 
 private slots:
-    void on_compile_clicked();
-
     void on_buttonBox_accepted();
 
 private:

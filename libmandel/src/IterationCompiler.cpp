@@ -279,6 +279,287 @@ namespace mnd
     }
 
 
+    struct CompileVisitorAVXFloat
+    {
+        using Reg = asmjit::x86::Ymm;
+
+        asmjit::x86::Compiler& cc;
+        Reg& a;
+        Reg& b;
+        Reg& x;
+        Reg& y;
+
+        Reg visitNode(ir::Node& node)
+        {
+            auto& nodeData = std::visit([] (auto& n) -> std::any& { return n.nodeData; }, node);
+            if (Reg* regPtr = std::any_cast<Reg>(&nodeData)) {
+                return *regPtr;
+            }
+            else {
+                Reg reg = std::visit(*this, node);
+                nodeData = reg;
+                return reg;
+            }
+        }
+
+        CompileVisitorAVXFloat(asmjit::x86::Compiler& cc, Reg& a, Reg& b, Reg& x, Reg& y) :
+            cc{ cc },
+            a{ a }, b{ b },
+            x{ x }, y{ y }
+        {
+        }
+
+        Reg operator()(const ir::Constant& c) {
+            auto constant = cc.newFloatConst(asmjit::ConstPool::kScopeLocal, mnd::convert<float>(c.value));
+            auto reg = cc.newYmmPs();
+            std::string commentStr = "move constant [";
+            commentStr += std::to_string(mnd::convert<double>(c.value));
+            commentStr += "]";
+            cc.comment(commentStr.c_str());
+            cc.vbroadcastss(reg, constant);
+            return reg;
+        }
+
+        Reg operator()(const ir::Variable& v) {
+            if (v.name == "z_re") {
+                return a;
+            }
+            else if (v.name == "z_im") {
+                return b;
+            }
+            else if (v.name == "c_re") {
+                return x;
+            }
+            else if (v.name == "c_im") {
+                return y;
+            }
+            else
+                throw mnd::ParseError(std::string("unknown variable: ") + v.name);
+        }
+
+        Reg operator()(const ir::Negation& n) {
+            auto sub = cc.newYmmPs();
+            cc.vxorps(sub, sub, sub);
+            cc.vsubps(sub, sub, visitNode(*n.value));
+            return sub;
+        }
+
+        Reg operator()(const ir::Addition& add) {
+            auto res = cc.newYmmPs();
+            cc.vaddps(res, visitNode(*add.left), visitNode(*add.right));
+            return res;
+        }
+
+        Reg operator()(const ir::Subtraction& add) {
+            auto res = cc.newYmmPs();
+            cc.vsubps(res, visitNode(*add.left), visitNode(*add.right));
+            return res;
+        }
+
+        Reg operator()(const ir::Multiplication& add) {
+            auto res = cc.newYmmPs();
+            cc.vmulps(res, visitNode(*add.left), visitNode(*add.right));
+            return res;
+        }
+
+        Reg operator()(const ir::Division& add) {
+            auto res = cc.newYmmPs();
+            cc.vdivps(res, visitNode(*add.left), visitNode(*add.right));
+            return res;
+        }
+
+        static double myAtan2(double y, double x)
+        {
+            double result = ::atan2(y, x);
+            printf("atan2(%f, %f) = %f\n", y, x, result);
+            return result;
+        }
+
+        Reg operator()(const ir::Atan2& at2) {
+            using namespace asmjit;
+            auto y = visitNode(*at2.left);
+            auto x = visitNode(*at2.right);
+            auto arg = cc.newYmmPs();
+            /*
+            double(*atanFunc)(double, double) = ::atan2;
+            cc.comment("call atan2");
+            auto call = cc.call(imm(atanFunc), FuncSignatureT<double, double, double>(CallConv::kIdHost));
+            call->setArg(0, y);
+            call->setArg(1, x);
+            call->setRet(0, arg);*/
+            return arg;
+        }
+
+        Reg operator()(const ir::Pow& p) {
+            using namespace asmjit;
+            auto a = visitNode(*p.left);
+            auto b = visitNode(*p.right);
+
+            auto arg = cc.newYmmPs();
+            /*double(*powFunc)(double, double) = ::pow;
+            cc.comment("call pow");
+            auto call = cc.call(imm(powFunc), FuncSignatureT<double, double, double>(CallConv::kIdHost));
+            call->setArg(0, a);
+            call->setArg(1, b);
+            call->setRet(0, arg);*/
+            return arg;
+        }
+
+        Reg operator()(const ir::Cos& c) {
+            using namespace asmjit;
+            auto a = visitNode(*c.value);
+
+            auto arg = cc.newYmmPs();
+            /*double(*cosFunc)(double) = ::cos;
+            cc.comment("call cos");
+            auto call = cc.call(imm(cosFunc), FuncSignatureT<double, double>(CallConv::kIdHost));
+            call->setArg(0, a);
+            call->setRet(0, arg);*/
+            return arg;
+        }
+
+        Reg operator()(const ir::Sin& s) {
+            using namespace asmjit;
+            auto a = visitNode(*s.value);
+
+            auto arg = cc.newYmmPs();
+            /*double(*sinFunc)(double) = ::sin;
+            cc.comment("call sin");
+            auto call = cc.call(imm(sinFunc), FuncSignatureT<double, double>(CallConv::kIdHost));
+            call->setArg(0, a);
+            call->setRet(0, arg);*/
+            return arg;
+        }
+
+        Reg operator()(const ir::Exp& ex) {
+            using namespace asmjit;
+            auto a = visitNode(*ex.value);
+
+            auto arg = cc.newYmmPs();
+            /*double(*expFunc)(double) = ::exp;
+            cc.comment("call exp");
+            auto call = cc.call(imm(expFunc), FuncSignatureT<double, double>(CallConv::kIdHost));
+            call->setArg(0, a);
+            call->setRet(0, arg);*/
+            return arg;
+        }
+
+        Reg operator()(const ir::Ln& l) {
+            using namespace asmjit;
+            auto a = visitNode(*l.value);
+
+            auto arg = cc.newYmmPs();
+            /*double(*logFunc)(double) = ::log;
+            cc.comment("call log");
+            auto call = cc.call(imm(logFunc), FuncSignatureT<double, double>(CallConv::kIdHost));
+            call->setArg(0, a);
+            call->setRet(0, arg);*/
+            return arg;
+        }
+    };
+
+    CompiledGeneratorVec compileAVXFloat(const ir::Formula& formula)
+    {
+        using namespace asmjit;
+        std::unique_ptr<mnd::ExecData> ed = std::make_unique<mnd::ExecData>();
+        JitRuntime& jitRuntime = *ed->jitRuntime;
+        ed->code->init(jitRuntime.codeInfo());
+
+        x86::Compiler& comp = *ed->compiler;
+
+        x86::Mem sixteen = comp.newYmmConst(ConstPool::kScopeLocal, Data256::fromF32(16.0f));
+        x86::Mem one = comp.newYmmConst(ConstPool::kScopeLocal, Data256::fromF32(1.0f));
+        x86::Mem factors = comp.newYmmConst(ConstPool::kScopeLocal, Data256::fromF32(0, 1, 2, 3, 4, 5, 6, 7));
+
+        Label startLoop = comp.newLabel();
+        Label endLoop = comp.newLabel();
+        x86::Gp maxIter = comp.newInt32();
+        x86::Gp k = comp.newInt32();
+        x86::Gp resPtr = comp.newGpq();
+        x86::Ymm adder = comp.newYmmPs();
+        x86::Ymm counter = comp.newYmmPs();
+        x86::Xmm xorig = comp.newXmmSs();
+        x86::Xmm yorig = comp.newXmmSs();
+        x86::Ymm dx = comp.newYmmPs();
+        x86::Ymm x = comp.newYmmPs();
+        x86::Ymm y = comp.newYmmPs();
+        x86::Ymm a = comp.newYmmPs();
+        x86::Ymm b = comp.newYmmPs();
+        comp.addFunc(FuncSignatureT<int, float, float, float, int, float*>(CallConv::kIdHost));
+
+        comp.setArg(0, xorig);
+        comp.setArg(1, yorig);
+        comp.setArg(2, dx.xmm());
+        comp.setArg(3, maxIter);
+        comp.setArg(4, resPtr);
+
+        comp.vmovaps(adder, one);
+        comp.vxorps(counter, counter, counter);
+
+        comp.vshufps(xorig, xorig, xorig, 0);
+        comp.vshufps(yorig, yorig, yorig, 0);
+        comp.vshufps(dx.half(), dx.half(), dx.half(), 0);
+        comp.vinsertf128(x, xorig.ymm(), xorig, 1);
+        comp.vinsertf128(y, yorig.ymm(), yorig, 1);
+        comp.vinsertf128(dx, dx, dx.xmm(), 1);
+
+        comp.vmulps(dx, dx, factors);
+        comp.vaddps(x, x, dx);
+
+        CompileVisitorAVXFloat formVisitor{ comp, a, b, x, y };
+        auto startA = std::visit(formVisitor, *formula.startA);
+        auto startB = std::visit(formVisitor, *formula.startB);
+        comp.vmovaps(a, startA);
+        comp.vmovaps(b, startB);
+
+        comp.xor_(k, k);
+
+        comp.bind(startLoop);
+
+
+        auto newA = std::visit(formVisitor, *formula.newA);
+        auto newB = std::visit(formVisitor, *formula.newB);
+        comp.vmovaps(a, newA);
+        comp.vmovaps(b, newB);
+
+        x86::Ymm aa = comp.newYmmPs();
+        x86::Ymm bb = comp.newYmmPs();
+        x86::Ymm cmp = comp.newYmmPs();
+        comp.vmulps(aa, a, a);
+        comp.vmulps(bb, b, b);
+        comp.vaddps(bb, bb, aa);
+        comp.vcmpps(cmp, bb, sixteen, 18);
+        comp.vandps(adder, adder, cmp);
+        comp.vaddps(counter, counter, adder);
+
+        comp.cmp(k, maxIter);
+        comp.je(endLoop);
+        comp.add(k, 1);
+
+        comp.vtestps(cmp, cmp);
+        comp.jne(startLoop);
+
+        comp.bind(endLoop);
+
+        comp.vmovups(x86::xmmword_ptr(resPtr), counter.half());
+        comp.vextractf128(x86::xmmword_ptr(resPtr, 16), counter, 0x1);
+
+        comp.ret(k);
+        comp.endFunc();
+        auto err = comp.finalize();
+        if (err == asmjit::kErrorOk) {
+            err = jitRuntime.add(&ed->iterationFunc, ed->code.get());
+            if (err != asmjit::kErrorOk)
+                throw "error adding function";
+        }
+        else {
+            throw "error compiling";
+        }
+
+        return CompiledGeneratorVec{ std::move(ed) };
+    }
+
+
     struct OpenClVisitor
     {
         int varnameCounter = 0;
@@ -442,13 +723,16 @@ namespace mnd
         irf.optimize();
         printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
         auto dg = std::make_unique<CompiledGenerator>(compile(irf));
+        auto dgavx = std::make_unique<CompiledGeneratorVec>(compileAVXFloat(irf));
         printf("asm: %s\n", dg->dump().c_str()); fflush(stdout);
+        printf("asm avxvec: %s\n", dgavx->dump().c_str()); fflush(stdout);
         
         //auto dg = std::make_unique<NaiveIRGenerator>(*irf, mnd::getPrecision<double>());
 
         std::vector<std::unique_ptr<mnd::MandelGenerator>> vec;
         //vec.push_back(std::move(ng));
         vec.push_back(std::move(dg));
+        vec.push_back(std::move(dgavx));
         return vec;
     }
 

@@ -207,6 +207,9 @@ mnd::IterationFormula mnd::IterationFormula::clone(void) const
             else if constexpr (std::is_same<T, mnd::Negation>::value) {
                 return mnd::Negation{ cloner(*x.operand) };
             }
+            else if constexpr (std::is_same<T, mnd::Addition>::value) {
+                return mnd::Addition{ cloner(*x.left), cloner(*x.right), x.subtraction };
+            }
             else {
                 return T{ cloner(*x.left), cloner(*x.right) };
             }

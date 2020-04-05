@@ -54,12 +54,6 @@ void CustomGenerator::compile()
 }
 
 
-void CustomGenerator::on_compile_clicked()
-{
-    compile();
-}
-
-
 FractalDef* CustomGenerator::getLastCompiled(void)
 {
     if (!fractalDefs.empty())

@@ -260,12 +260,14 @@ double NaiveIRGenerator<T>::calc(mnd::ir::Node* expr, double a, double b, double
 
 
 using mnd::CompiledGenerator;
+using mnd::CompiledGeneratorVec;
 using mnd::CompiledClGenerator;
 using mnd::CompiledClGeneratorDouble;
 
 
-CompiledGenerator::CompiledGenerator(std::unique_ptr<mnd::ExecData> execData) :
-    MandelGenerator{ mnd::Precision::DOUBLE },
+CompiledGenerator::CompiledGenerator(std::unique_ptr<mnd::ExecData> execData,
+    mnd::Precision prec, mnd::CpuExtension ex) :
+    MandelGenerator{ prec, ex },
     execData{ std::move(execData) }
 {
 }
@@ -325,6 +327,43 @@ std::string CompiledGenerator::dump(void) const
     asmjit::String d;
     execData->compiler->dump(d);
     return d.data();
+}
+
+
+CompiledGeneratorVec::CompiledGeneratorVec(std::unique_ptr<mnd::ExecData> execData) :
+    CompiledGenerator{ std::move(execData), mnd::Precision::FLOAT, mnd::CpuExtension::X86_AVX }
+{
+}
+
+
+CompiledGeneratorVec::CompiledGeneratorVec(CompiledGeneratorVec&&) = default;
+
+
+CompiledGeneratorVec::~CompiledGeneratorVec(void)
+{
+}
+
+
+void CompiledGeneratorVec::generate(const mnd::MandelInfo& info, float* data)
+{
+    using IterFunc = int (*)(float, float, float, int, float*);
+
+    double dx = mnd::convert<double>(info.view.width / info.bWidth);
+
+    omp_set_num_threads(omp_get_num_procs());
+#pragma omp parallel for schedule(static, 1)
+    for (int i = 0; i < info.bHeight; i++) {
+        double y = mnd::convert<double>(info.view.y + info.view.height * i / info.bHeight);
+        for (int j = 0; j < info.bWidth; j += 8) {
+            double x = mnd::convert<double>(info.view.x + info.view.width * j / info.bWidth);
+            float result[8];
+            IterFunc iterFunc = asmjit::ptr_as_func<IterFunc>(this->execData->iterationFunc);
+            int k = iterFunc(x, y, dx, info.maxIter-1, result);
+
+            for (int k = 0; k < 8 && j + k < info.bWidth; k++)
+                data[i * info.bWidth + j + k] = result[k];
+        }
+    }
 }
 
 

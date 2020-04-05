@@ -172,14 +172,14 @@ void Almond::on_displayInfo_stateChanged(int checked)
 void Almond::on_chooseGenerator_clicked()
 {
     std::unique_ptr<ChooseGenerators> generatorsDialog;
-    if (currentView == MANDELBROT)
+    if (currentView == MANDELBROT || currentView == JULIA)
         generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, *mandelGenerator, *this);
     else if (currentView == CUSTOM)
         generatorsDialog = std::make_unique<ChooseGenerators>(mandelContext, this->currentCustom->gc, *customGenerator, *this);
     else
         return;
 
-    generatorsDialog->exec();
+    auto response = generatorsDialog->exec();
 
     auto gen = generatorsDialog->extractChosenGenerator();
     if (gen) {
@@ -310,7 +310,9 @@ void Almond::on_radioButton_2_toggled(bool checked)
 
 void Almond::on_createCustom_clicked()
 {
-    customGeneratorDialog->exec();
+    auto response = customGeneratorDialog->exec();
+    if (response != 1)
+        return;
     if (auto* frac = customGeneratorDialog->getLastCompiled()) {
         customGenerator = frac->gc.adaptiveGenerator.get();
         customGenerators.push_back(std::make_unique<FractalDef>(std::move(*frac)));

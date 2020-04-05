@@ -18,6 +18,7 @@ namespace mnd
     template<typename T>
     class NaiveIRGenerator;
     class CompiledGenerator;
+    class CompiledGeneratorVec;
     class CompiledClGenerator;
     class CompiledClGeneratorDouble;
 
@@ -70,14 +71,29 @@ public:
 #if defined(__x86_64__) || defined(_M_X64)
 class mnd::CompiledGenerator : public mnd::MandelGenerator
 {
+protected:
     std::unique_ptr<ExecData> execData;
 public:
-    CompiledGenerator(std::unique_ptr<ExecData> execData);
+    CompiledGenerator(std::unique_ptr<ExecData> execData,
+        mnd::Precision prec = mnd::Precision::DOUBLE,
+        mnd::CpuExtension ex = mnd::CpuExtension::NONE);
+    CompiledGenerator(const CompiledGenerator&) = delete;
     CompiledGenerator(CompiledGenerator&&);
     virtual ~CompiledGenerator(void);
-    virtual void generate(const MandelInfo& info, float* data);
+    virtual void generate(const MandelInfo& info, float* data) override;
 
     std::string dump(void) const;
+};
+
+
+class mnd::CompiledGeneratorVec : public mnd::CompiledGenerator
+{
+public:
+    CompiledGeneratorVec(std::unique_ptr<ExecData> execData);
+    CompiledGeneratorVec(const CompiledGeneratorVec&) = delete;
+    CompiledGeneratorVec(CompiledGeneratorVec&&);
+    virtual ~CompiledGeneratorVec(void);
+    virtual void generate(const MandelInfo& info, float* data) override;
 };
 #endif
 

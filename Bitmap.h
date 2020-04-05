@@ -35,6 +35,7 @@ public:
     template<typename T>
     Bitmap<T> map(std::function<T(Pixel)> f) const {
         Bitmap<T> b{ width, height };
+#pragma omp parallel for
         for (long i = 0; i < width * height; i++) {
             b.pixels[i] = f(pixels[i]);
         }

@@ -141,6 +141,7 @@ namespace mnd
         case Precision::INF_PREC:
             return "real";
         }
+        return "";
     }
 
 
@@ -160,6 +161,7 @@ namespace mnd
         case CpuExtension::ARM_NEON:
             return "NEON";
         }
+        return "";
     }
 
 

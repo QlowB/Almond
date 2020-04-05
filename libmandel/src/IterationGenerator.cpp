@@ -332,6 +332,7 @@ std::string CompiledGenerator::dump(void) const
 CompiledClGenerator::CompiledClGenerator(mnd::MandelDevice& device, const std::string& code) :
     ClGeneratorFloat{ device, code }
 {
+    kernel = cl::Kernel(program, "iterate");
 }
 
 
@@ -343,20 +344,20 @@ void CompiledClGenerator::generate(const mnd::MandelInfo& info, float* data)
     float pixelScaleX = float(info.view.width / info.bWidth);
     float pixelScaleY = float(info.view.height / info.bHeight);
 
-    static cl::Kernel iterate = cl::Kernel(program, "iterate");
-    iterate.setArg(0, buffer_A);
-    iterate.setArg(1, int(info.bWidth));
-    iterate.setArg(2, float(info.view.x));
-    iterate.setArg(3, float(info.view.y));
-    iterate.setArg(4, float(pixelScaleX));
-    iterate.setArg(5, float(pixelScaleY));
-    iterate.setArg(6, int(info.maxIter));
-    iterate.setArg(7, int(info.smooth ? 1 : 0));
-    iterate.setArg(8, int(info.julia ? 1 : 0));
-    iterate.setArg(9, float(info.juliaX));
-    iterate.setArg(10, float(info.juliaY));
+    //static cl::Kernel iterate = cl::Kernel(program, "iterate");
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, float(info.view.x));
+    kernel.setArg(3, float(info.view.y));
+    kernel.setArg(4, float(pixelScaleX));
+    kernel.setArg(5, float(pixelScaleY));
+    kernel.setArg(6, int(info.maxIter));
+    kernel.setArg(7, int(info.smooth ? 1 : 0));
+    kernel.setArg(8, int(info.julia ? 1 : 0));
+    kernel.setArg(9, float(info.juliaX));
+    kernel.setArg(10, float(info.juliaY));
 
-    queue.enqueueNDRangeKernel(iterate, 0, cl::NDRange(info.bWidth * info.bHeight));
+    queue.enqueueNDRangeKernel(kernel, 0, cl::NDRange(info.bWidth * info.bHeight));
 
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
 }

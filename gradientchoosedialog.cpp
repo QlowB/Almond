@@ -26,9 +26,8 @@ void GradientChooseDialog::on_buttonBox_accepted()
 }
 
 
-void GradientChooseDialog::on_buttonBox_clicked(QAbstractButton *button)
+void GradientChooseDialog::on_buttonBox_clicked(QAbstractButton*)
 {
-
 }
 
 void GradientChooseDialog::on_presets_currentIndexChanged(const QString& index)

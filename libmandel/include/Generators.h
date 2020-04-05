@@ -117,22 +117,22 @@ protected:
 public:
     MandelGenerator();
     inline MandelGenerator(Precision type) :
-        type{ type },
         precision{ mnd::getPrecision(type) },
+        type{ type },
         extension{ mnd::CpuExtension::NONE }
     {
     }
 
     inline MandelGenerator(Precision type, CpuExtension extension) :
-        type{ type },
         precision{ mnd::getPrecision(type) },
+        type{ type },
         extension{ extension }
     {
     }
 
     inline MandelGenerator(Precision type, CpuExtension extension, const Real& precision) :
-        type{ type },
         precision{ precision },
+        type{ type },
         extension{ extension }
     {
     }

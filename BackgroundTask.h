@@ -5,6 +5,7 @@
 
 class BackgroundTask
 {
+    QRunnable* task;
 public:
     BackgroundTask(QRunnable* task);
 

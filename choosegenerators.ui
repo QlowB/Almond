@@ -107,13 +107,13 @@
               <bool>true</bool>
              </property>
              <attribute name="horizontalHeaderVisible">
-              <bool>false</bool>
-             </attribute>
-             <attribute name="horizontalHeaderDefaultSectionSize">
-              <number>180</number>
+              <bool>true</bool>
              </attribute>
              <attribute name="horizontalHeaderMinimumSectionSize">
               <number>100</number>
+             </attribute>
+             <attribute name="horizontalHeaderDefaultSectionSize">
+              <number>180</number>
              </attribute>
              <attribute name="verticalHeaderVisible">
               <bool>false</bool>

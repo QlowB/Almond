@@ -1,8 +1,8 @@
 #include "BackgroundTask.h"
 
-BackgroundTask::BackgroundTask(QRunnable* q)
+BackgroundTask::BackgroundTask(QRunnable* q) :
+    task{ q }
 {
-
 }
 
 

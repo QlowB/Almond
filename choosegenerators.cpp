@@ -191,7 +191,7 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::AdaptiveGen
         }
     }*/
 
-    initializeTables(allGenerators);
+    initializeTables();
 
     //ui->addRow->setIcon(ui->addRow->style()->standardIcon(QStyle::SP_));
     //ui->moveRowUp->setIcon(ui->moveRowUp->style()->standardIcon(QStyle::SP_ArrowUp));
@@ -245,7 +245,7 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::GeneratorCo
         allGenerators.push_back(gen.get());
     }*/
 
-    initializeTables(allGenerators);
+    initializeTables();
 }
 
 
@@ -255,7 +255,7 @@ ChooseGenerators::~ChooseGenerators()
 
 
 
-void ChooseGenerators::initializeTables(const std::vector<mnd::MandelGenerator*>& allGenerators)
+void ChooseGenerators::initializeTables(void)
 {
     for (auto it = generator.getGenerators().rbegin(); it != generator.getGenerators().rend(); it++) {
         auto& [prec, gen] = *it;
@@ -388,7 +388,7 @@ void ChooseGenerators::on_buttonBox_accepted()
             if (generator)
                 chosenGenerator->addGenerator(precision, *generator);
         }*/
-        for (size_t i = 0; i < ui->table->rowCount(); i++) {
+        for (int i = 0; i < ui->table->rowCount(); i++) {
             QLineEdit* precItem = dynamic_cast<QLineEdit*>(ui->table->cellWidget(i, 0));
             QWidget* genWidget = ui->table->cellWidget(i, 1);
             QComboBox* genItem = dynamic_cast<QComboBox*>(genWidget);

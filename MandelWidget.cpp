@@ -385,7 +385,7 @@ void MandelView::clearCells(void)
 }
 
 
-void MandelView::garbageCollect(int level, GridIndex i, GridIndex j)
+void MandelView::garbageCollect(int level, GridIndex /*i*/, GridIndex /*j*/)
 {
     for(auto& [l, grid] : levels) {
         int dist = ::abs(l - level);

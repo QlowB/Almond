@@ -7,7 +7,7 @@
 #include "Mandel.h"
 #include "VideoStream.h"
 
-static bool exportVideo(const ExportVideoInfo& evi);
+//static bool exportVideo(const ExportVideoInfo& evi);
 
 ExportImageDialog::ExportImageDialog(QWidget* parent) :
     QDialog{ parent }

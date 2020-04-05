@@ -118,7 +118,7 @@ inline RGBColor nearest(const Bitmap<RGBColor>& img, double x, double y)
 
 
 Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
-                         const Bitmap<RGBColor>& inner, double scale)
+                         const Bitmap<RGBColor>& /* inner */, double scale)
 {
     printf("%lf\n", scale);
     Bitmap<RGBColor> ret{ outer.width / 2, outer.height / 2 };
@@ -127,7 +127,7 @@ Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
     double newX = outer.width * (1 - scale) / 2;
     double newY = outer.height * (1 - scale) / 2;
 
-    auto before = std::chrono::high_resolution_clock::now();
+    //auto before = std::chrono::high_resolution_clock::now();
 #pragma omp parallel for
     for (int i = 0; i < ret.height; i++) {
         for (int j = 0; j < ret.width; j++) {
@@ -137,7 +137,7 @@ Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
             ret.get(j, i) = a;
         }
     }
-    auto after = std::chrono::high_resolution_clock::now();
+    //auto after = std::chrono::high_resolution_clock::now();
     //printf("gradient applied in: %lld microseconds\n", std::chrono::duration_cast<std::chrono::microseconds>(after - before).count());
     fflush(stdout);
     /*for (int i = 0; i < ret.height * ret.width; i++) {

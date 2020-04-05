@@ -128,7 +128,7 @@ void VideoStream::encode(AVFrame* frame)
             exit(1);
         }
 
-        printf("encoded frame %3d\"PRId64\" (size=%5d)\n", pkt->pts, pkt->size);
+        printf("encoded frame %3ld\"PRId64\" (size=%5d)\n", long(pkt->pts), pkt->size);
         //fwrite(pkt->data, 1, pkt->size, outfile);
         //av_interleaved_write_frame(formatContext, pkt);
 

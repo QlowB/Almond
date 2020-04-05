@@ -94,7 +94,7 @@ public:
 
 private:
 
-    void initializeTables(const std::vector<mnd::MandelGenerator *> &allGenerators);
+    void initializeTables(void);
 
     QComboBox* createComboBox(void);
     QLineEdit* createFloatText(void);

@@ -403,7 +403,7 @@ void CompiledClGenerator::generate(const mnd::MandelInfo& info, float* data)
 
 
 CompiledClGeneratorDouble::CompiledClGeneratorDouble(mnd::MandelDevice& device, const std::string& code) :
-    ClGeneratorDouble{ device }
+    ClGeneratorDouble{ device, code }
 {
 }
 

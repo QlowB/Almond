@@ -27,15 +27,15 @@ static std::vector<mnd::MandelInfo> createBenches()
         int expo = i + 14;
         int whe = 5;
 
-        if (expo > 16)
-            whe = 6;
         if (expo > 18)
+            whe = 6;
+        if (expo > 19)
             whe = 7;
-        if (expo > 20)
+        if (expo > 21)
             whe = 8;
-        if (expo > 23)
+        if (expo > 24)
             whe = 9;
-        if (expo > 26)
+        if (expo > 25)
             whe = 10;
 
         long wh = 1L << whe;
@@ -416,7 +416,7 @@ void ChooseGenerators::on_run_clicked()
 {
     ui->progressBar->setValue(0);
     for (int i = 0; i < ui->generatorTable->rowCount(); i++) {
-        mnd::MandelGenerator* gen = actualGenerators.at(i);
+        mnd::MandelGenerator* gen = actualGenerators.at(unsigned(i));
         if (gen != nullptr) {
             Benchmarker* bench = new Benchmarker(mndCtxt, *gen, i, 100.0f * (i + 1) / ui->generatorTable->rowCount());
             QObject::connect(bench, &Benchmarker::finished, this, &ChooseGenerators::setBenchmarkResult);

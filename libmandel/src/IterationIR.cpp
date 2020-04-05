@@ -1,5 +1,6 @@
 #include "IterationIR.h"
 
+
 #include <utility>
 #include <optional>
 
@@ -205,10 +206,9 @@ namespace mnd
 
             auto halfc = arena.allocate(ir::Multiplication{ exponent, half });
 
-            auto abspowc = arena.allocate(ir::Pow{ absSq, halfc });
+            auto newAbs = arena.allocate(ir::Pow{ absSq, halfc });
 
-            auto newAbs = arena.allocate(ir::Multiplication{ abspowc, exponent });
-            auto newArg = arena.allocate(ir::Addition{ arg, exponent });
+            auto newArg = arena.allocate(ir::Multiplication{ arg, exponent });
 
             auto cosArg = arena.allocate(ir::Cos{ newArg });
             auto sinArg = arena.allocate(ir::Sin{ newArg });

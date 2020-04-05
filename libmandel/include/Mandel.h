@@ -40,6 +40,7 @@ private:
 
     std::string vendor;
     std::string name;
+    std::string extensions;
     std::unique_ptr<ClDeviceWrapper> clDevice;
 
     std::map<GeneratorType, std::unique_ptr<MandelGenerator>> mandelGenerators;
@@ -59,6 +60,7 @@ public:
     inline const ClDeviceWrapper& getClDevice(void) const { return *clDevice; }
 
     std::vector<GeneratorType> getSupportedTypes(void) const;
+    bool supportsDouble(void) const;
 };
 
 

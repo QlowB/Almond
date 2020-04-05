@@ -564,9 +564,11 @@ namespace mnd
     {
         int varnameCounter = 0;
         std::stringstream code;
+        std::string floatTypeName;
 
-        OpenClVisitor(int startVarname) :
-            varnameCounter{ startVarname }
+        OpenClVisitor(int startVarname, const std::string& floatTypeName) :
+            varnameCounter{ startVarname },
+            floatTypeName{ floatTypeName }
         {
         }
 
@@ -585,7 +587,7 @@ namespace mnd
                 std::string value = std::visit(*this, node);
                 if (!std::get_if<ir::Variable>(&node) && !std::get_if<ir::Constant>(&node)) {
                     std::string varname = createVarname();
-                    code << "float " << varname << " = " << value << ";" << std::endl;
+                    code << floatTypeName << " " << varname << " = " << value << ";" << std::endl;
                     nodeData = varname;
                     return varname;
                 }
@@ -594,7 +596,7 @@ namespace mnd
         }
 
         std::string operator()(const ir::Constant& c) {
-            return std::to_string(mnd::convert<double>(c.value)) + "f";
+            return std::to_string(mnd::convert<double>(c.value)) + ((floatTypeName == "float") ? "f" : "");
         }
 
         std::string operator()(const ir::Variable& v) {
@@ -648,11 +650,11 @@ namespace mnd
 
     std::string compileToOpenCl(const ir::Formula& formula)
     {
-        OpenClVisitor z0Visitor{ 0 };
+        OpenClVisitor z0Visitor{ 0, "float" };
         std::string startA = z0Visitor.visitNode(*formula.startA);
         std::string startB = z0Visitor.visitNode(*formula.startB);
 
-        OpenClVisitor ocv{ z0Visitor.varnameCounter };
+        OpenClVisitor ocv{ z0Visitor.varnameCounter, "float" };
         std::string newA = ocv.visitNode(*formula.newA);
         std::string newB = ocv.visitNode(*formula.newB);
 
@@ -700,10 +702,62 @@ namespace mnd
         return code;
     }
 
+    std::string compileToOpenClDouble(const ir::Formula& formula)
+    {
+        OpenClVisitor z0Visitor{ 0, "double" };
+        std::string startA = z0Visitor.visitNode(*formula.startA);
+        std::string startB = z0Visitor.visitNode(*formula.startB);
+
+        OpenClVisitor ocv{ z0Visitor.varnameCounter, "double" };
+        std::string newA = ocv.visitNode(*formula.newA);
+        std::string newB = ocv.visitNode(*formula.newB);
+
+        std::string prelude =
+            "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
+            "__kernel void iterate(__global float* A, const int width, double xl, double yt, double pixelScaleX, double pixelScaleY, int max, int smooth, int julia, double juliaX, double juliaY) {\n"
+            "   int index = get_global_id(0);\n"
+            "   int ix = index % width;\n"
+            "   int iy = index / width;\n"
+            "   double c_re = ix * pixelScaleX + xl;\n"
+            "   double c_im = iy * pixelScaleY + yt;\n";
+        prelude += z0Visitor.code.str() +
+            "   double z_re = " + startA + ";\n" +
+            "   double z_im = " + startB + ";\n" +
+            "\n"
+            "   int n = 0;\n"
+            "   while (n < max - 1) {\n";
+
+        std::string after = 
+            "       if (z_re * z_re + z_im * z_im > 16) break;\n"
+            "       n++;\n"
+            "   }\n"
+            "   if (n >= max - 1) {\n"
+            "       A[index] = max;\n"
+            "   }\n"
+            "   else {\n"
+            "       A[index] = ((float)n);\n"
+            "   }\n"
+            "}\n";
+
+
+        std::string code = prelude + ocv.code.str();
+        code += "z_re = " + newA + ";\n";
+        code += "z_im = " + newB + ";\n";
+        code += after;
+        //code = mnd::getFloat_cl();
+        printf("cld: %s\n", code.c_str()); fflush(stdout);
+        return code;
+    }
+
 #ifdef WITH_OPENCL
     std::unique_ptr<MandelGenerator> compileCl(const ir::Formula& formula, MandelDevice& md)
     {
         return std::make_unique<CompiledClGenerator>(md, compileToOpenCl(formula));
+    }
+
+    std::unique_ptr<MandelGenerator> compileClDouble(const ir::Formula& formula, MandelDevice& md)
+    {
+        return std::make_unique<CompiledClGeneratorDouble>(md, compileToOpenClDouble(formula));
     }
 #endif
 
@@ -711,9 +765,8 @@ namespace mnd
         const IterationFormula& z0,
         const IterationFormula& zi)
     {
+        std::vector<std::unique_ptr<mnd::MandelGenerator>> vec;
 
-        //std::unique_ptr<mnd::MandelGenerator> ng = std::make_unique<NaiveGenerator>(z0.clone(), zi.clone(), mnd::getPrecision<double>());
-        
         IterationFormula z0o = z0.clone();
         IterationFormula zio = zi.clone();
         z0o.optimize();
@@ -723,16 +776,17 @@ namespace mnd
         irf.optimize();
         printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
         auto dg = std::make_unique<CompiledGenerator>(compile(irf));
-        auto dgavx = std::make_unique<CompiledGeneratorVec>(compileAVXFloat(irf));
         printf("asm: %s\n", dg->dump().c_str()); fflush(stdout);
-        printf("asm avxvec: %s\n", dgavx->dump().c_str()); fflush(stdout);
+        vec.push_back(std::move(dg));
+        if (mndCtxt.getCpuInfo().hasAvx()) {
+            auto dgavx = std::make_unique<CompiledGeneratorVec>(compileAVXFloat(irf));
+            printf("asm avxvec: %s\n", dgavx->dump().c_str()); fflush(stdout);
+            vec.push_back(std::move(dgavx));
+        }
         
         //auto dg = std::make_unique<NaiveIRGenerator>(*irf, mnd::getPrecision<double>());
 
-        std::vector<std::unique_ptr<mnd::MandelGenerator>> vec;
         //vec.push_back(std::move(ng));
-        vec.push_back(std::move(dg));
-        vec.push_back(std::move(dgavx));
         return vec;
     }
 
@@ -740,17 +794,23 @@ namespace mnd
         const IterationFormula& z0,
         const IterationFormula& zi)
     {
+        std::vector<std::unique_ptr<mnd::MandelGenerator>> vec;
         IterationFormula z0o = z0.clone();
         IterationFormula zio = zi.clone();
         z0o.optimize();
         zio.optimize();
+        printf("if: %s\n", mnd::toString(*zio.expr).c_str()); fflush(stdout);
 
         ir::Formula irf = mnd::expand(z0o, zio);
         irf.optimize();
         printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
         auto fl = compileCl(irf, dev);
-        std::vector<std::unique_ptr<mnd::MandelGenerator>> vec;
         vec.push_back(std::move(fl));
+        if (dev.supportsDouble()) {
+            auto fld = compileClDouble(irf, dev);
+            vec.push_back(std::move(fld));
+        }
+
         return vec;// { { mnd::GeneratorType::FLOAT, std::move(fl) } };
     }
 
@@ -781,187 +841,4 @@ mnd::GeneratorCollection::GeneratorCollection(void) :
     clGenerators{},
     adaptiveGenerator{ nullptr }
 {
-
 }
-
-
-using namespace asmjit;
-
-struct Visitor
-{
-
-};
-
-
-namespace mnd
-{
-    /*
-    mnd::ExecData compile(mnd::MandelContext& mndCtxt)
-    {
-
-        mnd::ExecData ed;
-        JitRuntime& jitRuntime = *ed.jitRuntime;
-        ed.code->init(jitRuntime.codeInfo());
-
-        x86::Compiler& comp = *ed.compiler;
-
-        x86::Mem sixteen = comp.newDoubleConst(ConstPool::kScopeLocal, 16.0);
-
-        Label startLoop = comp.newLabel();
-        Label endLoop = comp.newLabel();
-
-        x86::Gp maxIter = comp.newInt32();
-        x86::Gp k = comp.newInt32();
-        x86::Xmm x = comp.newXmmSd();
-        x86::Xmm y = comp.newXmmSd();
-        x86::Xmm a = comp.newXmmSd();
-        x86::Xmm b = comp.newXmmSd();
-        x86::Xmm aa = comp.newXmmSd();
-        x86::Xmm bb = comp.newXmmSd();
-        x86::Xmm t = comp.newXmmSd();
-        x86::Xmm sumSq = comp.newXmmSd();
-
-        comp.addFunc(FuncSignatureT<int, double, double, int>(CallConv::kIdHost));
-        comp.setArg(0, x);
-        comp.setArg(1, y);
-        comp.setArg(2, maxIter);
-
-        comp.xorpd(a, a);
-        comp.movapd(b, b);
-
-        comp.xor_(k, k);
-
-        comp.bind(startLoop);
-        comp.movapd(aa, a);
-        comp.movapd(bb, b);
-        comp.mulsd(aa, a);
-        comp.mulsd(bb, b);
-        comp.mulsd(b, a);
-        comp.movapd(sumSq, aa);
-        comp.addsd(sumSq, bb);
-        comp.addsd(b, b);
-        comp.addsd(aa, x);
-        comp.comisd(sumSq, sixteen);
-        comp.addsd(b, y);
-        comp.subsd(aa, bb);
-        comp.jle(endLoop);
-        comp.movapd(a, aa);
-
-        comp.inc(k);
-        comp.cmp(k, maxIter);
-        comp.jne(startLoop);
-        comp.bind(endLoop);
-        comp.ret(k);
-        comp.endFunc();
-        auto err = comp.finalize();
-        if (err == asmjit::kErrorOk) {
-            err = jitRuntime.add(&ed.iterationFunc, ed.code.get());
-            if (err != asmjit::kErrorOk)
-                throw "error adding function";
-        }
-        else {
-            throw "error compiling";
-        }
-        return ed;
-    }*/
-
-
-    /*
-    mnd::ExecData compile(mnd::MandelContext& mndCtxt, const IterationFormula& formula)
-    {
-        mnd::ExecData ed;
-        JitRuntime& jitRuntime = *ed.jitRuntime;
-        ed.code->init(jitRuntime.codeInfo());
-
-        x86::Compiler& comp = *ed.compiler;
-
-        x86::Mem sixteen = comp.newDoubleConst(ConstPool::kScopeLocal, 16.0);
-
-        Label startLoop = comp.newLabel();
-        Label endLoop = comp.newLabel();
-        x86::Gp maxIter = comp.newInt32();
-        x86::Gp k = comp.newInt32();
-        x86::Xmm x = comp.newXmmSd();
-        x86::Xmm y = comp.newXmmSd();
-        x86::Xmm a = comp.newXmmSd();
-        x86::Xmm b = comp.newXmmSd();
-        comp.addFunc(FuncSignatureT<int, double, double, int>(CallConv::kIdHost));
-        comp.setArg(0, x);
-        comp.setArg(1, y);
-        comp.setArg(2, maxIter);
-        comp.movapd(a, x);
-        comp.movapd(b, y);
-
-        comp.xor_(k, k);
-
-        comp.bind(startLoop);
-
-        // loop body
-
-        comp.inc(k);
-        comp.cmp(k, maxIter);
-        comp.jne(startLoop);
-        comp.bind(endLoop);
-        comp.ret(k);
-        comp.endFunc();
-        auto err = comp.finalize();
-        if (err == asmjit::kErrorOk) {
-            err = jitRuntime.add(&ed.iterationFunc, ed.code.get());
-            if (err != asmjit::kErrorOk)
-                throw "error adding function";
-        }
-        else {
-            throw "error compiling";
-        }
-        return ed;
-    }*/
-}
-
-/*
-void squareTest()
-{
-    mnd::Expression power = mnd::Pow{
-        std::make_unique<mnd::Expression>(mnd::Variable{ "z" }),
-        std::make_unique<mnd::Expression>(mnd::Constant{ 2.3 })
-    };
-
-    mnd::IterationFormula fmla(std::move(power));
-
-    mnd::ir::Formula p = mnd::expand(fmla);
-
-    mnd::ExecData ed;
-    JitRuntime& jitRuntime = *ed.jitRuntime;
-    ed.code->init(jitRuntime.codeInfo());
-
-    x86::Compiler& comp = *ed.compiler;
-
-    comp.addFunc(FuncSignatureT<double, double, double>(CallConv::kIdHost));
-    x86::Xmm x = comp.newXmmSd();
-    x86::Xmm y = comp.newXmmSd();
-    x86::Xmm a = comp.newXmmSd();
-    x86::Xmm b = comp.newXmmSd();
-    comp.setArg(0, x);
-    comp.setArg(1, y);
-    comp.movapd(a, x);
-    comp.movapd(b, y);
-
-
-    mnd::CompileVisitor cv{ comp, a, b, x, y };
-    auto newA = std::visit(cv, *p.newA);
-    auto newB = std::visit(cv, *p.newB);
-    comp.movapd(a, newA);
-    comp.movapd(b, newB);
-    comp.ret(b);
-    comp.endFunc();
-    comp.finalize();
-
-    double (*func)(double, double);
-
-    jitRuntime.add(&func, ed.code.get());
-
-    double result = func(1.0, 3.0);
-    printf("result: %f\n", result);
-}
-*/
-
-

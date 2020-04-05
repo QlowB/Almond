@@ -82,6 +82,7 @@ MandelContext mnd::initializeContext(void)
 MandelDevice::MandelDevice(mnd::ClDeviceWrapper device) :
     clDevice{ std::make_unique<ClDeviceWrapper>(std::move(device)) }
 {
+    extensions = clDevice->device.getInfo<CL_DEVICE_EXTENSIONS>();
 }
 
 
@@ -102,6 +103,12 @@ std::vector<mnd::GeneratorType> MandelDevice::getSupportedTypes(void) const
         types.push_back(type);
     }
     return types;
+}
+
+
+bool MandelDevice::supportsDouble(void) const
+{
+    return extensions.find("cl_khr_fp64") != std::string::npos;
 }
 
 
@@ -265,14 +272,13 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
             //printf("preferred float width: %d\n", device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>());
             //printf("vendor: %s\n", device.getInfo<CL_DEVICE_VENDOR>().c_str());
 
-            std::string extensions = device.getInfo<CL_DEVICE_EXTENSIONS>();
-            auto supportsDouble = extensions.find("cl_khr_fp64") != std::string::npos;
 
             //printf("Device extensions: %s\n", ext.c_str());
             auto mandelDevice = std::make_unique<mnd::MandelDevice>(
                 ClDeviceWrapper{ device, cl::Context{ device } });
             MandelDevice& md = *mandelDevice;
 
+            auto supportsDouble = md.supportsDouble();
             //printf("clock: %d", device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
 
             md.name = device.getInfo<CL_DEVICE_NAME>();

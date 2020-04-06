@@ -1,6 +1,7 @@
 #include "customgenerator.h"
 #include "ui_customgenerator.h"
 
+#include <QMessageBox>
 
 #include <IterationCompiler.h>
 
@@ -22,8 +23,30 @@ void CustomGenerator::compile()
 {
     QString z0formula = this->ui->formula_z0->text();
     QString ziformula = this->ui->formula_zi->text();
-    mnd::IterationFormula zi{ mnd::parse(ziformula.toStdString()), { "c", "z" } };
-    mnd::IterationFormula z0{ mnd::parse(z0formula.toStdString()), { "c" } };
+
+    auto msgError = [this] (const std::string& msgText) {
+        QMessageBox msg("Compile Error", QString::fromStdString(msgText),
+                        QMessageBox::Icon::Critical, 0, 0, 0, this);
+        return msg.exec();
+    };
+
+    mnd::IterationFormula zi;
+    mnd::IterationFormula z0;
+
+    try {
+        zi = { mnd::parse(ziformula.toStdString()), { "c", "z" } };
+    } catch (const mnd::ParseError& pe) {
+        msgError(pe.what());
+        return;
+    }
+
+    try {
+        z0 = { mnd::parse(z0formula.toStdString()), { "c" } };
+    } catch (const mnd::ParseError& pe) {
+        msgError(pe.what());
+        return;
+    }
+
 
     mnd::GeneratorCollection cr;
 

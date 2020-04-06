@@ -5,6 +5,7 @@
 #include <array>
 #include <utility>
 #include <memory>
+#include <functional>
 
 namespace mnd
 {
@@ -34,6 +35,11 @@ namespace mnd
                 T* allocate(Args&&... args)
                 {
                     return new(reinterpret_cast<T*>(&data[(used++) * sizeof(T)])) T(std::forward<Args>(args)...);
+                }
+
+                T& at(int index)
+                {
+                    return *reinterpret_cast<T*>(&data[index * sizeof(T)]);
                 }
 
                 ~Chunk(void)
@@ -73,6 +79,16 @@ namespace mnd
                 }
 
                 return lastChunk().allocate(std::forward<Args>(args)...);
+            }
+
+
+            void forAll(std::function<void(T&)> f)
+            {
+                for (auto& chunk : chunks) {
+                    for (int i = 0; i < chunk->used; i++) {
+                        f(chunk->at(i));
+                    }
+                }
             }
         };
     }

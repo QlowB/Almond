@@ -513,4 +513,13 @@ void mnd::ir::Formula::optimize(void)
 }
 
 
+void mnd::ir::Formula::clearNodeData(void)
+{
+    nodeArena.forAll([] (Node& n) {
+        std::visit([] (auto& x) {
+                x.nodeData.reset();
+        }, n);
+    });
+}
+
 

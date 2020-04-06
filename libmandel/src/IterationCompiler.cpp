@@ -807,6 +807,7 @@ namespace mnd
         auto fl = compileCl(irf, dev);
         vec.push_back(std::move(fl));
         if (dev.supportsDouble()) {
+            irf.clearNodeData();
             auto fld = compileClDouble(irf, dev);
             vec.push_back(std::move(fld));
         }

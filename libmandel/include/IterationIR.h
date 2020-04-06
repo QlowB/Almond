@@ -65,6 +65,7 @@ namespace mnd
 
             void constantPropagation(void);
             void optimize(void);
+            void clearNodeData(void);
         };
     }
 

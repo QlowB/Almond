@@ -22,6 +22,8 @@
 #include <qd/dd_real.h>
 #include <qd/qd_real.h>
 
+#include "LightDoubleDouble.h"
+
 namespace mnd
 {
 
@@ -120,9 +122,23 @@ namespace mnd
     }
 
     template<>
+    inline LightDoubleDouble convert<LightDoubleDouble, Real>(const Real& x)
+    {
+        double upper = static_cast<double>(x);
+        double lower = static_cast<double>(x - upper);
+        return { upper, lower };
+    }
+
+    template<>
     inline float convert<float, DoubleDouble>(const DoubleDouble& x)
     {
         return float(x.x[0] + x.x[1]);
+    }
+
+    template<>
+    inline float convert<float, LightDoubleDouble>(const LightDoubleDouble& x)
+    {
+        return float(x[0] + x[1]);
     }
 
     template<>

@@ -15,7 +15,7 @@ namespace mnd
         if (num == Real(0.0)) {
             return "0";
         }
-        int exponent = std::floor(static_cast<float>(mnd::log(num)) / ::logf(10.000001));
+        int exponent = int(std::floor(static_cast<float>(mnd::log(num)) / ::logf(10.000001f)));
         float fac = static_cast<float>(num / mnd::pow(Real(10), Real(exponent)));
         std::stringstream ss;
         ss.precision(3);

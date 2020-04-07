@@ -366,6 +366,10 @@ struct AvxDoubleDouble
         x{ a, b }
     {}
 
+    inline AvxDoubleDouble(double a, double b) :
+        x{ _mm256_set1_pd(a), _mm256_set1_pd(b) }
+    {}
+
 
     inline AvxDoubleDouble operator + (const AvxDoubleDouble& sm) const
     {
@@ -400,7 +404,7 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
 {
     const MandelViewport& view = info.view;
 
-    using T = DoubleDouble;
+    using T = LightDoubleDouble;
 
     T viewx = mnd::convert<T>(view.x);
     T viewy = mnd::convert<T>(view.y);
@@ -410,8 +414,9 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
 
     T jX = mnd::convert<T>(info.juliaX);
     T jY = mnd::convert<T>(info.juliaY);
-    AvxDoubleDouble juliaX = { __m256d{ jX.x[0], jX.x[0], jX.x[0], jX.x[0] }, __m256d{ jX.x[1], jX.x[1], jX.x[1], jX.x[1] } };
-    AvxDoubleDouble juliaY = { __m256d{ jY.x[0], jY.x[0], jY.x[0], jY.x[0] }, __m256d{ jY.x[1], jY.x[1], jY.x[1], jY.x[1] } };
+
+    AvxDoubleDouble juliaX = { jX[0], jX[1] };
+    AvxDoubleDouble juliaY = { jY[0], jY[1] };
 
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
@@ -428,11 +433,11 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
             T x4 = x3 + wpp;
 
             __m256d x0s = {
-                x1.x[0], x2.x[0], x3.x[0], x4.x[0],
+                x1[0], x2[0], x3[0], x4[0],
             };
 
             __m256d x1s = {
-                x1.x[1], x2.x[1], x3.x[1], x4.x[1],
+                x1[1], x2[1], x3[1], x4[1],
             };
 
             AvxDoubleDouble xs{ x0s, x1s };

@@ -42,6 +42,7 @@ endif()
 #    message(${MandelSources})
 
 add_library(mandel STATIC ${MandelSources})
+set_source_files_properties(${MandelSources} PROPERTIES COMPILE_FLAGS -march=native)
 
 FILE(GLOB QdSources qd-2.3.22/src/*.cpp)
 
@@ -130,7 +131,3 @@ endif()
 if(OpenCL_FOUND)
     target_link_libraries(mandel PUBLIC OpenCL::OpenCL)
 endif()
-if(MPFR_FOUND)
-    target_link_libraries(mandel PUBLIC MPFR_LIBRARIES)
-endif()
-

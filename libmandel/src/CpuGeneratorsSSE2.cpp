@@ -112,7 +112,7 @@ void CpuGenerator<float, mnd::X86_SSE2, parallel>::generate(const mnd::MandelInf
                 if (info.smooth)
                     data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
                     ftRes[k] >= info.maxIter ? info.maxIter :
-                    ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
+                    ((float)ftRes[k]) + 1 - ::logf(::logf(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::logf(2.0f);
                 else
                     data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
             }
@@ -219,7 +219,7 @@ void CpuGenerator<double, mnd::X86_SSE2, parallel>::generate(const mnd::MandelIn
                 if (info.smooth)
                     data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
                     ftRes[k] >= info.maxIter ? info.maxIter :
-                    ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
+                    ((float)ftRes[k]) + 1 - ::logf(::logf(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::logf(2.0f);
                 else
                     data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
             }

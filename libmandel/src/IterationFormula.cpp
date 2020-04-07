@@ -111,7 +111,19 @@ struct SimpleOptimizer
     {
         visitExpr(a.left);
         visitExpr(a.right);
-        // TODO implement
+
+        auto* leftConst = std::get_if<mnd::Constant>(a.left.get());
+        auto* rightConst = std::get_if<mnd::Constant>(a.right.get());
+
+        if (leftConst && rightConst) {
+            return mnd::Constant {
+                (leftConst->re * rightConst->re + leftConst->im * rightConst->im) /
+                (rightConst->re * rightConst->re + rightConst->im * rightConst->im),
+                (leftConst->im * rightConst->re - leftConst->re * rightConst->im) /
+                (rightConst->re * rightConst->re + rightConst->im * rightConst->im)
+            };
+        }
+
         return std::nullopt;
     }
 
@@ -238,6 +250,8 @@ class Parser
     std::vector<std::string> tokens;
     std::stack<char> operators;
     std::vector<mnd::Expression> output;
+
+    bool expectingBinaryOperator;
 public:
     Parser(const std::string& s) :
         in{ s },
@@ -249,41 +263,53 @@ public:
         std::string token;
         bool unary = true;
         while (getToken(token)) {
-            if (std::regex_match(token, num)) {
+            if (std::regex_match(token, num) || std::regex_match(token, floatNum)) {
                 output.push_back(mnd::Constant{ std::atof(token.c_str()) });
-            }
-            else if (std::regex_match(token, floatNum)) {
-                output.push_back(mnd::Constant{ std::atof(token.c_str()) });
+                expectingBinaryOperator = true;
             }
             else if (std::regex_match(token, ident)) {
                 output.push_back(mnd::Variable{ token });
+                expectingBinaryOperator = true;
             }
             else if (token == "+" || token == "-") {
-                while (!operators.empty() && getTopPrecedence() >= 1) {
-                    popOperator();
+                if (expectingBinaryOperator) {
+                    while (!operators.empty() && getTopPrecedence() >= 1) {
+                        popOperator();
+                    }
+                    operators.push(token[0]);
+                    expectingBinaryOperator = false;
                 }
-                operators.push(token[0]);
+                else { // unary op
+                    if (token == "-")
+                        operators.push('m');
+                    else
+                        throw ParseError("unary '+' is not allowed");
+                }
             }
             else if (token == "*" || token == "/") {
                 while (!operators.empty() && getTopPrecedence() >= 2) {
                     popOperator();
                 }
                 operators.push(token[0]);
+                expectingBinaryOperator = false;
             }
             else if (token == "^") {
                 while (!operators.empty() && getTopPrecedence() > 3) {
                     popOperator();
                 }
                 operators.push(token[0]);
+                expectingBinaryOperator = false;
             }
             else if (token == "(") {
                 operators.push(token[0]);
+                expectingBinaryOperator = false;
             }
             else if (token == ")") {
                 while (operators.top() != '(') {
                     popOperator();
                 }
                 operators.pop();
+                expectingBinaryOperator = true;
             }
         }
         while (!operators.empty())
@@ -306,6 +332,15 @@ public:
         mnd::Expression& left = output.at(output.size() - 2);
         mnd::Expression& right = output.at(output.size() - 1);
         mnd::Expression newExpr = mnd::Constant{ 0.0 };
+
+        // handle unary minus separately
+        if (top == 'm') {
+            auto neg = mnd::Negation{ std::make_unique<mnd::Expression>(std::move(right)) };
+            output.pop_back();
+            output.push_back(std::move(neg));
+            return;
+        }
+
         if (top == '+' || top == '-') {
             newExpr = mnd::Addition {
                 std::make_unique<mnd::Expression>(std::move(left)),
@@ -345,7 +380,7 @@ public:
 
     int getPrecedence(char op) const {
         char t = op;
-        if (t == '+' || t == '-')
+        if (t == '+' || t == '-' || t == 'm') // 'm' == unary minus
             return 1;
         else if (t == '*' || t == '/')
             return 2;

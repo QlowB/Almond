@@ -802,6 +802,7 @@ namespace mnd
         printf("if: %s\n", mnd::toString(*zio.expr).c_str()); fflush(stdout);
 
         ir::Formula irf = mnd::expand(z0o, zio);
+        printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
         irf.optimize();
         printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
         auto fl = compileCl(irf, dev);

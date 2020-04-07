@@ -11,12 +11,14 @@
 #include <QRegExpValidator>
 #include <QMessageBox>
 
+#include <cstring>
 
 
 mnd::MandelViewport Benchmarker::benchViewport(void)
 {
     //return mnd::MandelViewport{ -1.250000598933854152929, 0.0001879894057291665530, 0.0000003839916666666565, 0.0000003839916666666565 };
-    return mnd::MandelViewport::centerView();
+    //return mnd::MandelViewport::centerView();
+    return mnd::MandelViewport{ 0, 0, 0.0000003839916666666565, 0.0000003839916666666565 };
 }
 
 
@@ -25,22 +27,19 @@ static std::vector<mnd::MandelInfo> createBenches()
     std::vector<mnd::MandelInfo> vec;
     for (int i = 0; i < 50; i++) {
         int expo = i + 14;
-        int whe = 5;
+        int w = 5;
+        int h = 5;
 
-        if (expo > 18)
-            whe = 6;
-        if (expo > 19)
-            whe = 7;
-        if (expo > 21)
-            whe = 8;
-        if (expo > 24)
-            whe = 9;
-        if (expo > 25)
-            whe = 10;
+        while (int(expo * 1) - w - h > 15 && w <= 10 && h <= 10) {
+            w++;
+            if (int(expo * 1) - w - h > 15)
+                h++;
+        }
 
-        long wh = 1L << whe;
-        long iter = 1L << (expo - 2 * whe);
-        vec.push_back(mnd::MandelInfo{ mnd::MandelViewport::centerView(), wh, wh, iter, false, false, 0.0, 0.0 });
+        long wi = 1L << w;
+        long he = 1L << h;
+        long iter = 1L << (expo - w - h);
+        vec.push_back(mnd::MandelInfo{ mnd::MandelViewport::centerView(), wi, he, iter, false, false, 0.0, 0.0 });
     }
     return vec;
 }
@@ -120,10 +119,11 @@ double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
             mg.generate(mi, bmp.pixels.get());
             return &bmp;
         });
-        if (time > std::chrono::milliseconds(500)) {
-            testIndex = i + 2;
-            //printf("testing index %d\n", testIndex);
-            fflush(stdout);
+        if (time > std::chrono::milliseconds(200)) {
+            testIndex = i + 4;
+            printf("testing index for generator %s: %d\n", (mnd::toString(mg.getType()) + ", " + mnd::toString(mg.getExtension())).c_str(), testIndex);
+            printf("    w: %d, h: %d, iter: %d\n", benches[testIndex].bWidth, benches[testIndex].bHeight, benches[testIndex].maxIter);
+            fflush(stdout);fflush(stdout);fflush(stdout);fflush(stdout);fflush(stdout);fflush(stdout);fflush(stdout);
             break;
         }
         else if (time < std::chrono::milliseconds(10)) {
@@ -131,15 +131,23 @@ double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
         }
     }
 
+    try {
+        const mnd::MandelInfo& mi = benches[(testIndex >= benches.size()) ? (benches.size() - 1) : testIndex];
+        Bitmap<float> bmp(mi.bWidth, mi.bHeight);
+        auto [iters, time] = measureMips([&mg, &mi, &bmp]() {
+            mg.generate(mi, bmp.pixels.get());
+            return &bmp;
+        });
 
-    const mnd::MandelInfo& mi = benches[(testIndex >= benches.size()) ? (benches.size() - 1) : testIndex];
-    Bitmap<float> bmp(mi.bWidth, mi.bHeight);
-    auto [iters, time] = measureMips([&mg, &mi, &bmp]() {
-        mg.generate(mi, bmp.pixels.get());
-        return &bmp;
-    });
-
-    return double(iters) / time.count() * 1000;
+        return double(iters) / time.count() * 1000;
+    }
+    catch(const std::string& c) {
+        printf("error benchmarking: %s\n", c.c_str());
+    }
+    catch(...) {
+        printf("error benchmarking\n");
+    }
+    return 0;
 }
 
 

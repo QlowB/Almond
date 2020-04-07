@@ -188,33 +188,22 @@ void CpuGenerator<double, mnd::X86_SSE2, parallel>::generate(const mnd::MandelIn
                 counter = _mm_add_pd(counter, adder);
                 adder2 = _mm_and_pd(adder2, cmp2);
                 counter2 = _mm_add_pd(counter2, adder2);
-                if ((k & 0x7 == 0) && _mm_movemask_epi8(_mm_castpd_si128(cmp)) == 0 &&
-                    _mm_movemask_epi8(_mm_castpd_si128(cmp)) == 0) {
+                if (((k & 0x7) == 0) && _mm_movemask_epi8(_mm_castpd_si128(cmp)) == 0 &&
+                    _mm_movemask_epi8(_mm_castpd_si128(cmp2)) == 0) {
                     break;
                 }
             }
 
-            auto alignVec = [](double* data) -> double* {
-                void* aligned = data;
-                ::size_t length = 64;
-                std::align(32, 4 * sizeof(double), aligned, length);
-                return static_cast<double*>(aligned);
-            };
-
-            double resData[24];
-            double* ftRes = alignVec(resData);
+            double ftRes[24];
             double* resa = ftRes + 4;
             double* resb = ftRes + 8;
 
-            _mm_store_pd(ftRes, counter);
-            _mm_store_pd(ftRes + 2, counter2);
-            _mm_store_pd(resa, resulta);
-            _mm_store_pd(resa + 2, resulta2);
-            _mm_store_pd(resb, resultb);
-            _mm_store_pd(resb + 2, resultb2);
-            //for (int k = 0; k < 2 && i + k < info.bWidth; k++)
-            //    data[i + k + j * info.bWidth] = ftRes[k] > 0 ? ftRes[k] : info.maxIter;
-
+            _mm_storeu_pd(ftRes, counter);
+            _mm_storeu_pd(ftRes + 2, counter2);
+            _mm_storeu_pd(resa, resulta);
+            _mm_storeu_pd(resa + 2, resulta2);
+            _mm_storeu_pd(resb, resultb);
+            _mm_storeu_pd(resb + 2, resultb2);
             for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
                 if (info.smooth)
                     data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :

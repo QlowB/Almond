@@ -435,9 +435,7 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd
 #pragma omp parallel for schedule(static, 1) if (parallel)
     for (long j = 0; j < info.bHeight; j++) {
         T y = viewy + T(double(j)) * hpp;
-        __m256d y0s = { y.x[0], y.x[0], y.x[0], y.x[0] };
-        __m256d y1s = { y.x[1], y.x[1], y.x[1], y.x[1] };
-        AvxDoubleDouble ys{ y0s, y1s };
+        AvxDoubleDouble ys{ y[0], y[1] };
         for (long i = 0; i < info.bWidth; i += 4) {
             T x1 = viewx + T(double(i)) * wpp;
             T x2 = x1 + wpp;
@@ -466,8 +464,8 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd
             AvxDoubleDouble a = xs;
             AvxDoubleDouble b = ys;
 
-            __m256d resultsa;
-            __m256d resultsb;
+            __m256d resultsa = _mm256_set1_pd(0);
+            __m256d resultsb = _mm256_set1_pd(0);
 
             for (int k = 0; k < info.maxIter; k++) {
                 AvxDoubleDouble aa = a * a;

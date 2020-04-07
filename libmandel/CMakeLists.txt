@@ -42,7 +42,6 @@ endif()
 #    message(${MandelSources})
 
 add_library(mandel STATIC ${MandelSources})
-set_source_files_properties(${MandelSources} PROPERTIES COMPILE_FLAGS -march=native)
 
 FILE(GLOB QdSources qd-2.3.22/src/*.cpp)
 

@@ -145,9 +145,10 @@ void ClGeneratorFloat::generate(const mnd::MandelInfo& info, float* data)
     } else {
         queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     }
+    cl::Event event;
+    queue.enqueueReadBuffer(buffer_A, CL_FALSE, 0, bufferSize, data, nullptr, &event);
     queue.flush();
-    queue.finish();
-    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+    event.wait();
 }
 
 
@@ -336,7 +337,10 @@ void ClGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
     kernel.setArg(10, double(info.juliaY));
 
     cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
-    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+    cl::Event event;
+    queue.enqueueReadBuffer(buffer_A, CL_FALSE, 0, bufferSize, data, nullptr, &event);
+    queue.flush();
+    event.wait();
 }
 
 

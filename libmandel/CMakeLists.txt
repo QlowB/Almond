@@ -10,7 +10,7 @@ find_package(OpenCL)
 find_package(OpenMP)
 #set(Boost_DEBUG 1)
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.53)
+find_package(Boost 1.53 REQUIRED)
 
 
 set(CMAKE_CXX_STANDARD 17)

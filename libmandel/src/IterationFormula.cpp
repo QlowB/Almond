@@ -255,13 +255,13 @@ class Parser
 public:
     Parser(const std::string& s) :
         in{ s },
-        rit{ in.begin(), in.end(), tokenize }
+        rit{ in.begin(), in.end(), tokenize },
+	expectingBinaryOperator{ false }
     {}
 
     void parse(void)
     {
         std::string token;
-        bool unary = true;
         while (getToken(token)) {
             if (std::regex_match(token, num) || std::regex_match(token, floatNum)) {
                 output.push_back(mnd::Constant{ std::atof(token.c_str()) });
@@ -273,7 +273,7 @@ public:
             }
             else if (token == "+" || token == "-") {
                 if (expectingBinaryOperator) {
-                    while (!operators.empty() && getTopPrecedence() >= 1) {
+                    while (!operators.empty() && getTopPrecedence() > 3) {
                         popOperator();
                     }
                     operators.push(token[0]);
@@ -325,6 +325,21 @@ public:
             throw ParseError("error parsing expression");
         }
         char top = operators.top();
+
+        if (output.size() < 1) {
+            throw ParseError("not enough operands for unary operator '-'");
+        }
+
+
+        mnd::Expression& unaryOperand = output.at(output.size() - 1);
+        // handle unary minus separately
+        if (top == 'm') {
+            auto neg = mnd::Negation{ std::make_unique<mnd::Expression>(std::move(unaryOperand)) };
+            output.pop_back();
+            output.push_back(std::move(neg));
+            return;
+        }
+
         if (output.size() < 2) {
             throw ParseError(std::string("not enough operands for operator '") + top + "'");
         }
@@ -332,14 +347,6 @@ public:
         mnd::Expression& left = output.at(output.size() - 2);
         mnd::Expression& right = output.at(output.size() - 1);
         mnd::Expression newExpr = mnd::Constant{ 0.0 };
-
-        // handle unary minus separately
-        if (top == 'm') {
-            auto neg = mnd::Negation{ std::make_unique<mnd::Expression>(std::move(right)) };
-            output.pop_back();
-            output.push_back(std::move(neg));
-            return;
-        }
 
         if (top == '+' || top == '-') {
             newExpr = mnd::Addition {
@@ -380,11 +387,11 @@ public:
 
     int getPrecedence(char op) const {
         char t = op;
-        if (t == '+' || t == '-' || t == 'm') // 'm' == unary minus
+        if (t == '+' || t == '-') // 'm' == unary minus
             return 1;
         else if (t == '*' || t == '/')
             return 2;
-        else if (t == '^')
+        else if (t == '^' || t == 'm')
             return 3;
         return 0;
     }

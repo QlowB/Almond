@@ -416,7 +416,7 @@ struct ConstantPropagator
 
     bool hasBeenVisited(Node* n) {
         return std::visit([] (auto& x) {
-            if (auto* b = std::any_cast<bool>(x.nodeData))
+            if (auto* b = std::any_cast<bool>(&x.nodeData))
                 return *b;
             else
                 return false;

@@ -273,7 +273,7 @@ public:
             }
             else if (token == "+" || token == "-") {
                 if (expectingBinaryOperator) {
-                    while (!operators.empty() && getTopPrecedence() > 3) {
+                    while (!operators.empty() && getTopPrecedence() >= 1) {
                         popOperator();
                     }
                     operators.push(token[0]);
@@ -325,9 +325,10 @@ public:
             throw ParseError("error parsing expression");
         }
         char top = operators.top();
+        operators.pop();
 
         if (output.size() < 1) {
-            throw ParseError("not enough operands for unary operator '-'");
+            throw ParseError("not enough operands");
         }
 
 
@@ -343,7 +344,6 @@ public:
         if (output.size() < 2) {
             throw ParseError(std::string("not enough operands for operator '") + top + "'");
         }
-        operators.pop();
         mnd::Expression& left = output.at(output.size() - 2);
         mnd::Expression& right = output.at(output.size() - 1);
         mnd::Expression newExpr = mnd::Constant{ 0.0 };
@@ -387,11 +387,11 @@ public:
 
     int getPrecedence(char op) const {
         char t = op;
-        if (t == '+' || t == '-') // 'm' == unary minus
+        if (t == '+' || t == '-')
             return 1;
         else if (t == '*' || t == '/')
             return 2;
-        else if (t == '^' || t == 'm')
+        else if (t == '^' || t == 'm') // 'm' == unary minus
             return 3;
         return 0;
     }

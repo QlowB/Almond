@@ -45,7 +45,7 @@ static std::vector<mnd::MandelInfo> createBenches()
 }
 
 
-const std::vector<mnd::MandelInfo> Benchmarker::benches = createBenches(); /*{
+const std::vector<mnd::MandelInfo> Benchmarker::benches = {
     mnd::MandelInfo{ benchViewport(), 32, 32, 15, false },
     mnd::MandelInfo{ benchViewport(), 32, 32, 25, false },
     mnd::MandelInfo{ benchViewport(), 32, 32, 75, false },
@@ -85,7 +85,7 @@ const std::vector<mnd::MandelInfo> Benchmarker::benches = createBenches(); /*{
     mnd::MandelInfo{ benchViewport(), 2048, 2048, 524288000, false },
     mnd::MandelInfo{ benchViewport(), 2048, 2048, 1048576000, false },
     mnd::MandelInfo{ benchViewport(), 2048, 2048, 2097152000, false },
-};*/
+};
 
 
 Benchmarker::~Benchmarker(void)
@@ -123,7 +123,7 @@ double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
             testIndex = i + 4;
             printf("testing index for generator %s: %d\n", (mnd::toString(mg.getType()) + ", " + mnd::toString(mg.getExtension())).c_str(), testIndex);
             printf("    w: %d, h: %d, iter: %d\n", benches[testIndex].bWidth, benches[testIndex].bHeight, benches[testIndex].maxIter);
-            fflush(stdout);fflush(stdout);fflush(stdout);fflush(stdout);fflush(stdout);fflush(stdout);fflush(stdout);
+            fflush(stdout);
             break;
         }
         else if (time < std::chrono::milliseconds(10)) {
@@ -138,6 +138,8 @@ double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
             mg.generate(mi, bmp.pixels.get());
             return &bmp;
         });
+
+        printf("%lld iterations in %lld microseconds\n\n", iters, time.count() / 1000);
 
         return double(iters) / time.count() * 1000;
     }

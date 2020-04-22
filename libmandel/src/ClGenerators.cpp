@@ -238,63 +238,22 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
     };
 
     Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
-    double pixelScX = double(info.view.width / info.bWidth);
-    double pixelScY = double(info.view.height / info.bHeight);
+    mnd::LightDoubleFloat pixelScX = double(info.view.width / info.bWidth);
+    mnd::LightDoubleFloat pixelScY = double(info.view.height / info.bHeight);
 
-    auto[x1, x2] = splitDouble(double(info.view.x));
-    auto[y1, y2] = splitDouble(double(info.view.y));
-    auto[w1, w2] = splitDouble(pixelScX);
-    auto[h1, h2] = splitDouble(pixelScY);
+    mnd::LightDoubleFloat x = double(info.view.x);
+    mnd::LightDoubleFloat y = double(info.view.y);
 
-    /*
-    for (int px = 0; px < info.bWidth; px++) {
-        for (int py = 0; py < info.bHeight; py++) {
-            std::pair<float, float> xl = { x1, x2 };
-            std::pair<float, float> yt = { y1, y2 };
-            std::pair<float, float> pixelScaleX = { w1, w2 };
-            std::pair<float, float> pixelScaleY = { h1, h2 };
-
-            std::pair<float, float> a = add(mulFloat(pixelScaleX, (float) px), xl); // pixelScaleX * px + xl
-            std::pair<float, float> b = add(mulFloat(pixelScaleY, (float) py), yt); // pixelScaleY * py + yt
-            std::pair<float, float> ca = a;
-            std::pair<float, float> cb = b;
-
-            int n = 0;
-            while (n < info.maxIter - 1) {
-                std::pair<float, float> aa = mul(a, a);
-                std::pair<float, float> bb = mul(b, b);
-                std::pair<float, float> ab = mul(a, b);
-                if (aa.first + bb.first > 16) break;
-                std::pair<float, float> minusbb = { -bb.first, -bb.second };
-                a = add(add(aa, minusbb), ca);
-                b = add(add(ab, ab), cb);
-                n++;
-            }
-
-            // N + 1 - log (log  |Z(N)|) / log 2
-            if (n >= info.maxIter - 1)
-                data[px + py * info.bWidth] = info.maxIter;
-            else {
-                if (info.smooth)
-                    data[px + py * info.bWidth] = ((float) n) + 1 - log(log(a.first * a.first + b.first * b.first ) / 2) / log(2.0f);
-                else
-                    data[px + py * info.bWidth] = ((float)n);
-            }
-        }
-    }
-    return;
-    */
-    
     kernel.setArg(0, buffer_A);
     kernel.setArg(1, int(info.bWidth));
-    kernel.setArg(2, x1);
-    kernel.setArg(3, x2);
-    kernel.setArg(4, y1);
-    kernel.setArg(5, y2);
-    kernel.setArg(6, w1);
-    kernel.setArg(7, w2);
-    kernel.setArg(8, h1);
-    kernel.setArg(9, h2);
+    kernel.setArg(2, x[0]);
+    kernel.setArg(3, x[1]);
+    kernel.setArg(4, y[0]);
+    kernel.setArg(5, y[1]);
+    kernel.setArg(6, pixelScX[0]);
+    kernel.setArg(7, pixelScX[1]);
+    kernel.setArg(8, pixelScY[0]);
+    kernel.setArg(9, pixelScY[1]);
     kernel.setArg(10, int(info.maxIter));
     kernel.setArg(11, int(info.smooth ? 1 : 0));
 

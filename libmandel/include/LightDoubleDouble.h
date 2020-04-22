@@ -6,26 +6,33 @@
 namespace mnd
 {
     struct LightDoubleDouble;
+    struct LightDoubleFloat;
 
     namespace ldd
     {
-        using DoublePair = std::pair<double, double>;
-        inline static DoublePair quickTwoSum(double a, double b)
+        template<typename T>
+        using Pair = std::pair<T, T>;
+        using DoublePair = Pair<double>;
+        using FloatPair = Pair<float>;
+
+        template<typename T>
+        inline static Pair<T> quickTwoSum(T a, T b)
         {
-            double s = a + b;
-            double e = b - (s - a);
+            T s = a + b;
+            T e = b - (s - a);
             return { s, e };
         }
 
-        inline DoublePair twoSum(double a, double b)
+        template<typename T>
+        inline Pair<T> twoSum(T a, T b)
         {
-            double s = a + b;
-            double v = s - a;
-            double e = (a - (s - v)) + (b - v);
+            T s = a + b;
+            T v = s - a;
+            T e = (a - (s - v)) + (b - v);
             return { s, e };
         }
 
-        inline DoublePair split(double a)
+        inline Pair<double> split(double a)
         {
             static const double splitter = double((1ULL << 27) + 1);
             double t = splitter * a;
@@ -34,19 +41,21 @@ namespace mnd
             return { ahi, alo };
         }
 
-        inline DoublePair twoProd(double a, double b)
+        template<typename T>
+        inline Pair<T> twoProd(T a, T b)
         {
-            double p = a * b;
+            T p = a * b;
             auto [ahi, alo] = split(a);
             auto [bhi, blo] = split(b);
-            double e = ((ahi * bhi - p) + ahi * blo + alo * bhi) + alo * blo;
+            T e = ((ahi * bhi - p) + ahi * blo + alo * bhi) + alo * blo;
             return { p, e };
         }
 
-        inline DoublePair twoProdFma(double a, double b)
+        template<typename T>
+        inline Pair<T> twoProdFma(T a, T b)
         {
-            double p = a * b;
-            double e = std::fma(a, b, -p);
+            T p = a * b;
+            T e = std::fma(a, b, -p);
             return { p, e };
         }
     }
@@ -101,5 +110,54 @@ inline mnd::LightDoubleDouble operator*(const mnd::LightDoubleDouble& a,
     return mnd::ldd::quickTwoSum(p1, p2);
 }
 
+
+struct mnd::LightDoubleFloat
+{
+    float x[2];
+
+    inline LightDoubleFloat(double val)
+    {
+        x[0] = float(val);
+        x[1] = float(val - double(x[0]));
+    }
+
+    inline LightDoubleFloat(float u, float l) :
+        x{ u, l }
+    {}
+
+    inline LightDoubleFloat(mnd::ldd::FloatPair dp) :
+        x{ dp.first, dp.second }
+    {}
+
+    float operator[]           (int i) const   { return x[i]; }
+    const float& operator[]    (int i)         { return x[i]; }
+
+private:
+};
+
+
+inline mnd::LightDoubleFloat operator+(const mnd::LightDoubleFloat& a,
+    const mnd::LightDoubleFloat& b)
+{
+    auto[s, e] = mnd::ldd::twoSum(a[0], b[0]);
+    e += a[1] + b[1];
+    return mnd::ldd::quickTwoSum(s, e);
+}
+
+inline mnd::LightDoubleFloat operator-(const mnd::LightDoubleFloat& a,
+    const mnd::LightDoubleFloat& b)
+{
+    auto[s, e] = mnd::ldd::twoSum(a[0], -b[0]);
+    e += a[1] - b[1];
+    return mnd::ldd::quickTwoSum(s, e);
+}
+
+inline mnd::LightDoubleFloat operator*(const mnd::LightDoubleFloat& a,
+    const mnd::LightDoubleFloat& b)
+{
+    auto[p1, p2] = mnd::ldd::twoProd(a[0], b[0]);
+    p2 += a[0] * b[1] + a[1] * b[0];
+    return mnd::ldd::quickTwoSum(p1, p2);
+}
 
 #endif // MANDEL_LIGHTDOUBLEDOUBLE_H

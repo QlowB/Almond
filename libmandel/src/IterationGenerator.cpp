@@ -183,13 +183,28 @@ void NaiveIRGenerator<U>::generate(const mnd::MandelInfo& info, float* data)
 
 
 template<typename T>
+struct EvalNode
+{
+
+};
+
+
+template<typename T>
 double NaiveIRGenerator<T>::calc(mnd::ir::Node* expr, double a, double b, double x, double y)
 {
     struct DoubleVisitor
     {
         double a, b, x, y;
         double visitNode(ir::Node* n) {
+            auto& nodeData = getNodeData(n);
+            if (std::get_a)
             return std::visit(*this, *n);
+        }
+
+        std::any& getNodeData(ir::Node* n) {
+            return std::visit([](auto& n) {
+                return n.nodeData;
+            }, *n);
         }
 
         double operator()(const ir::Constant& c) {

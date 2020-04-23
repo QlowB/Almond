@@ -11,7 +11,6 @@ set(CMAKE_AUTOUIC ON)
 find_package(Qt5 COMPONENTS Core Widgets OpenGL Xml REQUIRED)
 find_package(OpenMP)
 find_package(OpenGL REQUIRED COMPONENTS OpenGL)
-#set(Boost_DEBUG 1)
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.65 REQUIRED)
 

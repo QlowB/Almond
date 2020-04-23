@@ -197,11 +197,11 @@ double NaiveIRGenerator<T>::calc(mnd::ir::Node* expr, double a, double b, double
         double a, b, x, y;
         double visitNode(ir::Node* n) {
             auto& nodeData = getNodeData(n);
-            if (std::get_a)
+            //if (std::get_a)
             return std::visit(*this, *n);
         }
 
-        std::any& getNodeData(ir::Node* n) {
+        const std::any& getNodeData(ir::Node* n) {
             return std::visit([](auto& n) {
                 return n.nodeData;
             }, *n);

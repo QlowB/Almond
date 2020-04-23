@@ -1,6 +1,7 @@
 // citation: Guillaume da Graçca, David Defour. Implementation of float-float operators on graphics hardware.
 // Real Numbers and Computers 7, Jul 2006, Nancy, France. pp.23-32. ffhal-00021443
 // https://hal.archives-ouvertes.fr/hal-00021443/document
+// added some optimizations using fma
 
 float2 twoSum(float a, float b) {
     float s = a + b;
@@ -18,6 +19,7 @@ float2 split(float a) {
 }
 
 float2 twoProd(float a, float b) {
+    /*
     float x = a * b;
     float2 aex = split(a);
     float2 bex = split(b);
@@ -26,6 +28,10 @@ float2 twoProd(float a, float b) {
     float errz = erry - (aex.s0 * bex.s1);
     float y = (aex.s1 * bex.s1) - errz;
     return (float2)(x, y);
+    */
+    float p = a * b;
+    float e = fma(a, b, -p);
+    return (float2)(p, e);
 }
 
 float2 add(float2 a, float2 b) {

@@ -9,7 +9,6 @@ namespace mnd
 }
 
 
-
 template<typename T>
 class mnd::NaiveIRGenerator : public mnd::MandelGenerator
 {

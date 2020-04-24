@@ -6,7 +6,7 @@ set(ARCH "X86_64" CACHE STRING "Target Architecture")
 
 project(mandel VERSION 1.0.0 DESCRIPTION "library for mandelbrot calculations")
 
-find_package(OpenCL)
+find_package(OpenCL REQUIRED)
 find_package(OpenMP)
 #set(Boost_DEBUG 1)
 set(Boost_USE_STATIC_LIBS ON)

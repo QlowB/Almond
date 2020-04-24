@@ -10,8 +10,7 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 COMPONENTS Core Widgets OpenGL Xml REQUIRED)
 find_package(OpenMP)
-find_package(OpenGL)
-#set(Boost_DEBUG 1)
+find_package(OpenGL REQUIRED COMPONENTS OpenGL)
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.65 REQUIRED)
 
@@ -38,7 +37,7 @@ target_include_directories(Almond PUBLIC ${FFMPEG_INCLUDE_DIRS})
 target_link_libraries(Almond PUBLIC mandel asmjit qd)
 target_link_libraries(Almond PUBLIC Qt5::Core Qt5::Widgets Qt5::OpenGL Qt5::Xml)
 target_link_libraries(Almond PUBLIC ${FFMPEG_LIBRARIES})
-target_link_libraries(Almond PUBLIC ${OPENGL_LIBRARIES})
+target_link_libraries(Almond PUBLIC OpenGL::OpenGL)
 
 if(Boost_FOUND)
     target_compile_definitions(Almond PUBLIC WITH_BOOST)
@@ -50,3 +49,16 @@ endif(Boost_FOUND)
 if(OpenMP_CXX_FOUND)
     target_link_libraries(mandel PUBLIC OpenMP::OpenMP_CXX)
 endif()
+
+install(TARGETS Almond RUNTIME DESTINATION "bin")
+set(CPACK_GENERATOR "DEB")
+set(CPACK_SOURCE_GENERATOR "DEB")
+set(CPACK_COMPONENTS_ALL Almond)
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Nicolas Winkler")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "qt5-default,libavformat58,libavdevice58,libavfilter7,libavutil56,libswscale5,libgl1,ocl-icd-libopencl1")
+set(CPACK_SET_DESTDIR True)
+set(CPACK_INSTALL_PREFIX "/usr")
+
+include(CPack)
+
+

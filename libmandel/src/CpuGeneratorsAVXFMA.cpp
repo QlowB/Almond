@@ -37,9 +37,11 @@ void CpuGenerator<float, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mandel
     __m256 juliaX = { jX, jX, jX, jX, jX, jX, jX, jX };
     __m256 juliaY = { jY, jY, jY, jY, jY, jY, jY, jY };
 
+#if defined(_OPENMP)
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1) if (parallel)
+#   pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         __m256 ys = {y, y, y, y, y, y, y, y};
@@ -204,9 +206,12 @@ void CpuGenerator<double, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mande
     __m256d juliaX = { jX, jX, jX, jX };
     __m256d juliaY = { jY, jY, jY, jY };
 
+
+#if defined(_OPENMP)
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1) if (parallel)
+#   pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y + T(j) * view.height / info.bHeight);
         __m256d ys = { y, y, y, y };
@@ -418,9 +423,11 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
     AvxDoubleDouble juliaX = { jX[0], jX[1] };
     AvxDoubleDouble juliaY = { jY[0], jY[1] };
 
+#if defined(_OPENMP)
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1) if (parallel)
+#   pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = viewy + T(double(j)) * hpp;
         __m256d y0s = { y.x[0], y.x[0], y.x[0], y.x[0] };

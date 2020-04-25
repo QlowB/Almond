@@ -47,7 +47,7 @@ endif(Boost_FOUND)
 
 
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(mandel PUBLIC OpenMP::OpenMP_CXX)
+    target_link_libraries(Almond PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
 install(TARGETS Almond RUNTIME DESTINATION "bin")

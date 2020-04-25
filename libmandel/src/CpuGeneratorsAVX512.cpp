@@ -29,9 +29,11 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
     __m512 enumerate = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     __m512 two = _mm512_set1_ps(2);
 
+#if defined(_OPENMP)
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
 #pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y + double(j) * view.height / info.bHeight);
         __m512 ys = _mm512_set1_ps(y);
@@ -171,9 +173,11 @@ void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::Mande
     __m512d viewx = { viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf };
     __m512d dpp = { dppf, dppf, dppf, dppf, dppf, dppf, dppf, dppf };
 
+#if defined(_OPENMP)
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1) if (parallel)
+#   pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y + double(j) * view.height / info.bHeight);
         __m512d ys = { y, y, y, y, y, y, y, y };

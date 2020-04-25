@@ -67,9 +67,11 @@ void CpuGenerator<T, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info,
     T juliaX = mnd::convert<T>(info.juliaX);
     T juliaY = mnd::convert<T>(info.juliaY);
 
+#if defined(_OPENMP)
     if constexpr (parallel)
         omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1) if (parallel)
+#   pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = viewy + T(double(j)) * hpp;
         for (long i = 0; i < info.bWidth; i++) {
@@ -215,9 +217,11 @@ void CpuGenerator<mnd::MpfrFloat<bits>, mnd::NONE, parallel>::generate(const mnd
     const MandelViewport& view = info.view;
     using T = mnd::MpfrFloat<bits>;
 
+#if defined(_OPENMP)
     if constexpr (parallel)
         omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for if (parallel)
+#   pragma omp parallel for if (parallel)
+#endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         long i = 0;

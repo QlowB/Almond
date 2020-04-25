@@ -51,9 +51,11 @@ void NaiveGenerator::generate(const mnd::MandelInfo& info, float* data)
     T wpp = mnd::convert<T>(view.width / info.bWidth);
     T hpp = mnd::convert<T>(view.height / info.bHeight);
 
-    if constexpr (parallel)
+#if defined(_OPENMP)
+   if constexpr (parallel)
         omp_set_num_threads(omp_get_num_procs());
-//#pragma omp parallel for schedule(static, 1) if (parallel)
+#   pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = viewy + T(double(j)) * hpp;
         long i = 0;
@@ -155,9 +157,11 @@ void NaiveIRGenerator<U>::generate(const mnd::MandelInfo& info, float* data)
     T wpp = mnd::convert<T>(view.width / info.bWidth);
     T hpp = mnd::convert<T>(view.height / info.bHeight);
 
+#if defined(_OPENMP)
     if constexpr (parallel)
         omp_set_num_threads(omp_get_num_procs());
-//#pragma omp parallel for schedule(static, 1) if (parallel)
+#   pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = viewy + T(double(j)) * hpp;
         long i = 0;
@@ -323,8 +327,10 @@ void CompiledGenerator::generate(const mnd::MandelInfo& info, float* data)
 {
     using IterFunc = int (*)(double, double, int);
 
+#if defined(_OPENMP)
     omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1)
+#   pragma omp parallel for schedule(static, 1)
+#endif
     for (int i = 0; i < info.bHeight; i++) {
         double y = mnd::convert<double>(info.view.y + info.view.height * i / info.bHeight);
         for (int j = 0; j < info.bWidth; j++) {
@@ -365,8 +371,10 @@ void CompiledGeneratorVec::generate(const mnd::MandelInfo& info, float* data)
 
     double dx = mnd::convert<double>(info.view.width / info.bWidth);
 
+#if defined(_OPENMP)
     omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1)
+#   pragma omp parallel for schedule(static, 1)
+#endif
     for (int i = 0; i < info.bHeight; i++) {
         double y = mnd::convert<double>(info.view.y + info.view.height * i / info.bHeight);
         for (int j = 0; j < info.bWidth; j += 8) {

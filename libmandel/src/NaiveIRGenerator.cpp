@@ -54,7 +54,7 @@ struct TVisitor
 
     EvalRes<T>* getNodeData(ir::Node* n) {
         assert(n != nullptr);
-        std::any& x = std::visit([](auto& n) {
+        std::any& x = std::visit([](auto& n) -> std::any& {
             return n.nodeData;
         }, *n);
         if (auto* v = std::any_cast<EvalRes<T>>(&x))

@@ -37,7 +37,7 @@ target_include_directories(Almond PUBLIC ${FFMPEG_INCLUDE_DIRS})
 target_link_libraries(Almond PUBLIC mandel asmjit qd)
 target_link_libraries(Almond PUBLIC Qt5::Core Qt5::Widgets Qt5::OpenGL Qt5::Xml)
 target_link_libraries(Almond PUBLIC ${FFMPEG_LIBRARIES})
-target_link_libraries(Almond PUBLIC OpenGL::OpenGL)
+target_link_libraries(Almond PUBLIC OpenGL::GL)
 
 if(Boost_FOUND)
     target_compile_definitions(Almond PUBLIC WITH_BOOST)
@@ -47,18 +47,31 @@ endif(Boost_FOUND)
 
 
 if(OpenMP_CXX_FOUND)
-    target_link_libraries(mandel PUBLIC OpenMP::OpenMP_CXX)
+    target_link_libraries(Almond PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
-install(TARGETS Almond RUNTIME DESTINATION "bin")
-set(CPACK_GENERATOR "DEB")
-set(CPACK_SOURCE_GENERATOR "DEB")
-set(CPACK_COMPONENTS_ALL Almond)
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Nicolas Winkler")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "qt5-default,libavformat58,libavdevice58,libavfilter7,libavutil56,libswscale5,libgl1,ocl-icd-libopencl1")
-set(CPACK_SET_DESTDIR True)
-set(CPACK_INSTALL_PREFIX "/usr")
 
-include(CPack)
+set(CPACK_PACKAGE_NAME "Almond")
+set(CPACK_PACKAGE_VERSION "1.0.0")
+IF (WIN32)
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "MyPackage Installation Example")
+    include(CPack)
+    include(CPackIFW)
+    cpack_add_component(Almond
+        DISPLAY_NAME "Almond"
+        DESCRIPTION "Almond Application")
+    cpack_ifw_configure_component(Almond)
+
+ELSEIF (UNIX AND NOT APPLE)
+    install(TARGETS Almond RUNTIME DESTINATION "bin")
+    set(CPACK_GENERATOR "DEB")
+    set(CPACK_SOURCE_GENERATOR "DEB")
+    set(CPACK_COMPONENTS_ALL Almond)
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Nicolas Winkler")
+    set(CPACK_DEBIAN_PACKAGE_DEPENDS "qt5-default,libavformat58,libavdevice58,libavfilter7,libavutil56,libswscale5,libgl1,ocl-icd-libopencl1")
+    set(CPACK_SET_DESTDIR True)
+    set(CPACK_INSTALL_PREFIX "/usr")
+    include(CPack)
+ENDIF()
 
 

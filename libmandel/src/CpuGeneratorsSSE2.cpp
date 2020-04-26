@@ -32,9 +32,11 @@ void CpuGenerator<float, mnd::X86_SSE2, parallel>::generate(const mnd::MandelInf
     __m128 juliaX = { jX, jX, jX, jX };
     __m128 juliaY = { jY, jY, jY, jY };
 
+#if defined(_OPENMP)
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1) if (parallel)
+#   pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         __m128 ys = {y, y, y, y};
@@ -137,9 +139,11 @@ void CpuGenerator<double, mnd::X86_SSE2, parallel>::generate(const mnd::MandelIn
     __m128d juliaX = { jX, jX };
     __m128d juliaY = { jY, jY };
 
+#if defined(_OPENMP)
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1) if (parallel)
+#   pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
         __m128d ys = { y, y };

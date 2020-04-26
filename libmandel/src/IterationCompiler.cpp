@@ -1,4 +1,5 @@
 #include "IterationCompiler.h"
+#include "NaiveIRGenerator.h"
 
 #include "ExecData.h"
 #include "Mandel.h"
@@ -783,6 +784,9 @@ namespace mnd
             printf("asm avxvec: %s\n", dgavx->dump().c_str()); fflush(stdout);
             vec.push_back(std::move(dgavx));
         }
+
+        //vec.push_back(std::make_unique<NaiveIRGenerator<mnd::DoubleDouble>>(irf));
+        //vec.push_back(std::make_unique<NaiveIRGenerator<mnd::QuadDouble>>(irf));
         
         //auto dg = std::make_unique<NaiveIRGenerator>(*irf, mnd::getPrecision<double>());
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.12)
 
 set(ARCH "X86_64" CACHE STRING "Target Architecture")
 option(AVX512 "generate code that can make use of avx-512-instructions" ON)
@@ -32,6 +32,7 @@ SET(MandelSources
     src/IterationFormula.cpp
     src/IterationCompiler.cpp
     src/IterationIR.cpp
+    src/NaiveIRGenerator.cpp
 )
 FILE(GLOB MandelHeaders include/*.h)
 
@@ -89,7 +90,6 @@ if (APPLE AND OpenCL_FOUND)
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -framework OpenCL")
 endif()
 
-    target_compile_definitions(mandel PUBLIC WITH_BOOST)
 if(Boost_FOUND)
     target_compile_definitions(mandel PUBLIC WITH_BOOST)
     target_include_directories(mandel PRIVATE ${Boost_INCLUDE_DIRS})

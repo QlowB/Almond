@@ -12,15 +12,6 @@ using mnd::NaiveGenerator;
 using mnd::IterationFormula;
 
 
-namespace mnd
-{
-    template class NaiveIRGenerator<float>;
-    template class NaiveIRGenerator<double>;
-    template class NaiveIRGenerator<mnd::DoubleDouble>;
-    template class NaiveIRGenerator<mnd::QuadDouble>;
-}
-
-
 IterationGenerator::IterationGenerator(IterationFormula z0, IterationFormula zi,
             mnd::Precision prec, mnd::CpuExtension ex) :
     mnd::MandelGenerator{ prec, ex },

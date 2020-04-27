@@ -1,8 +1,11 @@
 #include "IterationCompiler.h"
 #include "NaiveIRGenerator.h"
 
-#include "ExecData.h"
 #include "Mandel.h"
+#ifdef WITH_ASMJIT
+#include "ExecData.h"
+#endif // WITH_ASMJIT
+
 #include "OpenClInternal.h"
 #include "OpenClCode.h"
 
@@ -14,6 +17,7 @@
 using namespace std::string_literals;
 namespace mnd
 {
+#ifdef WITH_ASMJIT
     struct CompileVisitor
     {
         using Reg = asmjit::x86::Xmm;
@@ -560,6 +564,7 @@ namespace mnd
         return CompiledGeneratorVec{ std::move(ed) };
     }
 
+#endif // WITH_ASMJIT
 
     struct OpenClVisitor
     {
@@ -775,6 +780,9 @@ namespace mnd
 
         ir::Formula irf = mnd::expand(z0o, zio);
         irf.optimize();
+
+
+#ifdef WITH_ASMJIT
         printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
         auto dg = std::make_unique<CompiledGenerator>(compile(irf));
         printf("asm: %s\n", dg->dump().c_str()); fflush(stdout);
@@ -784,6 +792,7 @@ namespace mnd
             printf("asm avxvec: %s\n", dgavx->dump().c_str()); fflush(stdout);
             vec.push_back(std::move(dgavx));
         }
+#endif // WITH_ASMJIT
 
         //vec.push_back(std::make_unique<NaiveIRGenerator<mnd::DoubleDouble>>(irf));
         //vec.push_back(std::make_unique<NaiveIRGenerator<mnd::QuadDouble>>(irf));

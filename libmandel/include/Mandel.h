@@ -5,6 +5,11 @@
 //#include <asmjit/asmjit.h>
 namespace asmjit { class JitRuntime; }
 
+#ifndef WITH_ASMJIT
+// if no asmjit, use dummy implementation
+namespace asmjit { class JitRuntime{}; }
+#endif // WITH_ASMJITH
+
 #include <vector>
 #include <map>
 #include <string>

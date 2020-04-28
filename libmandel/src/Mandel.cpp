@@ -138,16 +138,16 @@ MandelContext::MandelContext(void)
         cpuGenerators.insert({ GeneratorType::FLOAT_AVX, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_AVX, std::move(db) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX, std::move(ddb) });
-        if (cpuInfo.hasFma()) {
-            auto favxfma = std::make_unique<CpuGenerator<float, mnd::X86_AVX_FMA, true>>();
-            auto davxfma = std::make_unique<CpuGenerator<double, mnd::X86_AVX_FMA, true>>();
-            auto ddavxfma = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>>();
-            auto qdavxfma = std::make_unique<CpuGenerator<QuadDouble, mnd::X86_AVX_FMA, true>>();
-            cpuGenerators.insert({ GeneratorType::FLOAT_AVX_FMA, std::move(favxfma) });
-            cpuGenerators.insert({ GeneratorType::DOUBLE_AVX_FMA, std::move(davxfma) });
-            cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX_FMA, std::move(ddavxfma) });
-            cpuGenerators.insert({ GeneratorType::QUAD_DOUBLE_AVX_FMA, std::move(qdavxfma) });
-        }
+    }
+    if (cpuInfo.hasAvx2() && cpuInfo.hasFma()) {
+        auto favxfma = std::make_unique<CpuGenerator<float, mnd::X86_AVX_FMA, true>>();
+        auto davxfma = std::make_unique<CpuGenerator<double, mnd::X86_AVX_FMA, true>>();
+        auto ddavxfma = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>>();
+        auto qdavxfma = std::make_unique<CpuGenerator<QuadDouble, mnd::X86_AVX_FMA, true>>();
+        cpuGenerators.insert({ GeneratorType::FLOAT_AVX_FMA, std::move(favxfma) });
+        cpuGenerators.insert({ GeneratorType::DOUBLE_AVX_FMA, std::move(davxfma) });
+        cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX_FMA, std::move(ddavxfma) });
+        cpuGenerators.insert({ GeneratorType::QUAD_DOUBLE_AVX_FMA, std::move(qdavxfma) });
     }
     if (cpuInfo.hasSse2()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_SSE2, true>>();
@@ -215,7 +215,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
         floatGen = getCpuGenerator(GeneratorType::FLOAT_SSE2);
         doubleGen = getCpuGenerator(GeneratorType::DOUBLE_SSE2);
     }
-    if (cpuInfo.hasAvx() && cpuInfo.hasFma()) {
+    if (cpuInfo.hasAvx2() && cpuInfo.hasFma()) {
         floatGen = getCpuGenerator(GeneratorType::FLOAT_AVX_FMA);
         doubleGen = getCpuGenerator(GeneratorType::DOUBLE_AVX_FMA);
         doubleDoubleGen = getCpuGenerator(GeneratorType::DOUBLE_DOUBLE_AVX_FMA);

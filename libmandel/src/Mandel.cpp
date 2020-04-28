@@ -219,6 +219,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
         floatGen = getCpuGenerator(GeneratorType::FLOAT_AVX_FMA);
         doubleGen = getCpuGenerator(GeneratorType::DOUBLE_AVX_FMA);
         doubleDoubleGen = getCpuGenerator(GeneratorType::DOUBLE_DOUBLE_AVX_FMA);
+        quadDoubleGen = getCpuGenerator(GeneratorType::QUAD_DOUBLE_AVX_FMA);
     }
     if (cpuInfo.hasAvx512()) {
         floatGen = getCpuGenerator(GeneratorType::FLOAT_AVX512);

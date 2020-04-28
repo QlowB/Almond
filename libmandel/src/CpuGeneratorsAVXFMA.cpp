@@ -383,6 +383,14 @@ static inline VecTriple threeSum(__m256d a, __m256d b, __m256d c)
 }
 
 
+static inline VecPair threeTwoSum(__m256d a, __m256d b, __m256d c)
+{
+    auto[t, e1] = twoSum(a, b);
+    auto[s, e2] = twoSum(t, c);
+    return { s, _mm256_add_pd(e1, e2) };
+}
+
+
 static inline __m256d threeOneSum(__m256d a, __m256d b, __m256d c)
 {
     return _mm256_add_pd(a, _mm256_add_pd(b, c));
@@ -402,6 +410,31 @@ static inline VecTriple sixThreeSum(__m256d a, __m256d b, __m256d c,
     auto r2 = threeOneSum(t2, t3, t4);
 
     return { r0, r1, r2 };
+}
+
+static inline VecPair addDD(const VecPair& a, const VecPair& b)
+{
+    auto[s, e] = twoSum(a.a, b.a);
+    e = _mm256_add_pd(e, _mm256_add_pd(a.b, b.b));
+    auto[r1, r2] = quickTwoSum(s, e);
+    return { r1, r2 };
+}
+
+static inline VecPair nineTwoSum(__m256d a, __m256d b, __m256d c,
+                                    __m256d d, __m256d e, __m256d f,
+                                    __m256d g, __m256d h, __m256d i)
+{
+    auto[x1, x2] = twoSum(a, d);
+    auto[y1, y2] = twoSum(b, c);
+    auto[z1, z2] = twoSum(e, h);
+    auto[u1, u2] = twoSum(f, g);
+
+    auto[t1, t2] = addDD({ x1, x2 }, { y1, y2 });
+    auto[t3, t4] = addDD({ z1, z2 }, { u1, u2 });
+
+    auto[t5, t6] = addDD({ t1, t2 }, { t3, t4 });
+
+    return threeTwoSum(t5, t6, i);
 }
 
 static inline VecQuadruple renormalize(__m256d x0, __m256d x1, __m256d x2, __m256d x3, __m256d x4)
@@ -638,12 +671,18 @@ struct AvxQuadDouble
         auto[c2, d0] = twoProd(x[0], sm.x[2]);
         auto[c3, d1] = twoProd(x[1], sm.x[1]);
         auto[c4, d2] = twoProd(x[2], sm.x[0]);
+        auto d5 = _mm256_mul_pd(x[3], sm.x[0]);
+        auto d6 = _mm256_mul_pd(x[2], sm.x[1]);
+        auto d7 = _mm256_mul_pd(x[1], sm.x[2]);
+        auto d8 = _mm256_mul_pd(x[0], sm.x[3]);
 
         auto r0 = a0;
         auto[r1, c5, d3] = threeSum(b0, b1, b2);
         auto[r2, d4, e0] = sixThreeSum(c0, c1, c2, c3, c4, c5);
+        auto[r3, e1] = nineTwoSum(d0, d1, d2, d3, d4, d5, d6, d7, d8);
+        auto r4 = _mm256_add_pd(e0, e1);
 
-        auto [n0, n1, n2, n3] = renormalize(r0, r1, r2, _mm256_set1_pd(0.0), _mm256_set1_pd(0.0));
+        auto [n0, n1, n2, n3] = renormalize(r0, r1, r2, r3, r4);
 
         return { n0, n1, n2, n3 };
     }

@@ -694,7 +694,7 @@ void CpuGenerator<mnd::QuadDouble, mnd::X86_AVX_FMA, parallel>::generate(const m
 {
     const MandelViewport& view = info.view;
 
-    using T = mnd::QuadDouble;
+    using T = mnd::Float256;
 
     T viewx = mnd::convert<T>(view.x);
     T viewy = mnd::convert<T>(view.y);
@@ -705,8 +705,40 @@ void CpuGenerator<mnd::QuadDouble, mnd::X86_AVX_FMA, parallel>::generate(const m
     T jX = mnd::convert<T>(info.juliaX);
     T jY = mnd::convert<T>(info.juliaY);
 
-    AvxQuadDouble juliaX = { jX[0], jX[1], jX[2], jX[3] };
-    AvxQuadDouble juliaY = { jY[0], jY[1], jY[2], jY[3] };
+
+    auto toQd = [] (const mnd::Float256& x) -> std::tuple<double, double, double, double> {
+        double a = double(x);
+        mnd::Float256 rem = x - a;
+        double b = double(rem);
+        rem = rem - b;
+        double c = double(rem);
+        rem = rem - c;
+        double d = double(rem);
+        return { a, b, c, d };
+    };
+
+    auto toAvxQuadDouble = [&toQd] (const mnd::Float256& x) -> AvxQuadDouble {
+        auto [a, b, c, d] = toQd(x);
+        return AvxQuadDouble{ a, b, c, d };
+    };
+
+    auto toAvxQuadDouble4 = [&toQd] (const mnd::Float256& a, const mnd::Float256& b,
+                            const mnd::Float256& c, const mnd::Float256& d) -> AvxQuadDouble {
+        auto [x0, y0, z0, u0] = toQd(a);
+        auto [x1, y1, z1, u1] = toQd(b);
+        auto [x2, y2, z2, u2] = toQd(c);
+        auto [x3, y3, z3, u3] = toQd(d);
+
+        __m256d xs = { x0, x1, x2, x3 };
+        __m256d ys = { y0, y1, y2, y3 };
+        __m256d zs = { z0, z1, z2, z3 };
+        __m256d us = { u0, u1, u2, u3 };
+
+        return AvxQuadDouble{ xs, ys, zs, us };
+    };
+
+    AvxQuadDouble juliaX = toAvxQuadDouble(jX);
+    AvxQuadDouble juliaY = toAvxQuadDouble(jY);
 
 #if defined(_OPENMP)
     if constexpr(parallel)
@@ -715,23 +747,14 @@ void CpuGenerator<mnd::QuadDouble, mnd::X86_AVX_FMA, parallel>::generate(const m
 #endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = viewy + T(double(j)) * hpp;
-        __m256d y0s = { y.x[0], y.x[0], y.x[0], y.x[0] };
-        __m256d y1s = { y.x[1], y.x[1], y.x[1], y.x[1] };
-        __m256d y2s = { y.x[2], y.x[2], y.x[2], y.x[2] };
-        __m256d y3s = { y.x[3], y.x[3], y.x[3], y.x[3] };
-        AvxQuadDouble ys{ y0s, y1s, y2s, y3s };
+        AvxQuadDouble ys = toAvxQuadDouble(y);
         for (long i = 0; i < info.bWidth; i += 4) {
             T x1 = viewx + T(double(i)) * wpp;
             T x2 = x1 + wpp;
             T x3 = x2 + wpp;
             T x4 = x3 + wpp;
 
-            __m256d x0s = { x1[0], x2[0], x3[0], x4[0] };
-            __m256d x1s = { x1[1], x2[1], x3[1], x4[1] };
-            __m256d x2s = { x1[2], x2[2], x3[2], x4[2] };
-            __m256d x3s = { x1[3], x2[3], x3[3], x4[3] };
-
-            AvxQuadDouble xs{ x0s, x1s, x2s, x3s };
+            AvxQuadDouble xs = toAvxQuadDouble4(x1, x2, x3, x4);
 
             AvxQuadDouble cx = info.julia ? juliaX : xs;
             AvxQuadDouble cy = info.julia ? juliaY : ys;

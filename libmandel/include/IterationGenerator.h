@@ -53,6 +53,7 @@ private:
 };
 
 
+#ifdef WITH_ASMJIT
 #if defined(__x86_64__) || defined(_M_X64)
 class mnd::CompiledGenerator : public mnd::MandelGenerator
 {
@@ -81,6 +82,7 @@ public:
     virtual void generate(const MandelInfo& info, float* data) override;
 };
 #endif
+#endif // WITH_ASMJIT
 
 
 #ifdef WITH_OPENCL

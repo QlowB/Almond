@@ -90,12 +90,13 @@ public:
     virtual void generate(const MandelInfo& info, float* data);
 };
 
+
 template<bool parallel>
 class mnd::CpuGenerator<float, mnd::X86_AVX_FMA, parallel> : public MandelGenerator
 {
 public:
     inline CpuGenerator(void) :
-        MandelGenerator{ mnd::Precision::FLOAT, mnd::X86_AVX_FMA }
+        MandelGenerator{ mnd::Precision::DOUBLE, mnd::X86_AVX_FMA }
     {
     }
     virtual void generate(const MandelInfo& info, float* data);
@@ -174,6 +175,7 @@ public:
     virtual void generate(const MandelInfo& info, float* data);
 };
 
+
 template<bool parallel>
 class mnd::CpuGenerator<double, mnd::ARM_NEON, parallel> : public Generator
 {
@@ -184,6 +186,19 @@ public:
     }
     virtual void generate(const MandelInfo& info, float* data);
 };
+
+
+template<bool parallel>
+class mnd::CpuGenerator<DoubleDouble, mnd::ARM_NEON, parallel> : public Generator
+{
+public:
+    inline CpuGenerator(void) :
+        MandelGenerator{ mnd::Precision::DOUBLE_DOUBLE, mnd::ARM_NEON }
+    {
+    }
+    virtual void generate(const MandelInfo& info, float* data);
+};
+
 #endif
 
 

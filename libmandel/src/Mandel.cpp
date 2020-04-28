@@ -6,7 +6,9 @@
 #include "OpenClInternal.h"
 #include "OpenClCode.h"
 
+#ifdef WITH_ASMJIT
 #include <asmjit/asmjit.h>
+#endif // WITH_ASMJIT
 
 #include <map>
 
@@ -44,6 +46,7 @@ static const std::map<mnd::GeneratorType, std::string> typeNames =
     { mnd::GeneratorType::DOUBLE_DOUBLE, "double double" },
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX, "double double AVX" },
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX_FMA, "double double AVX+FMA" },
+    { mnd::GeneratorType::DOUBLE_DOUBLE_NEON, "double double NEON" },
     { mnd::GeneratorType::QUAD_DOUBLE, "quad double" },
     { mnd::GeneratorType::QUAD_DOUBLE_AVX_FMA, "quad double AVX+FMA" },
     { mnd::GeneratorType::FLOAT128, "float128" },
@@ -113,17 +116,21 @@ bool MandelDevice::supportsDouble(void) const
 }
 
 
-MandelContext::MandelContext(void) :
-    jitRuntime{ std::make_unique<asmjit::JitRuntime>() }
+MandelContext::MandelContext(void)
+#ifdef WITH_ASMJIT
+    : jitRuntime{ std::make_unique<asmjit::JitRuntime>() }
+#endif // WITH_ASMJIT
 {
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
+#   if defined(WITH_AVX512)
     if (cpuInfo.hasAvx512()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX_512, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX_512, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_AVX512, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_AVX512, std::move(db) });
     }
+#   endif
     if (cpuInfo.hasAvx()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX, true>>();
@@ -152,8 +159,10 @@ MandelContext::MandelContext(void) :
     if (cpuInfo.hasNeon()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::ARM_NEON, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::ARM_NEON, true>>();
+        auto ddb = std::make_unique<CpuGenerator<mnd::DoubleDouble, mnd::ARM_NEON, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_NEON, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_NEON, std::move(db) });
+        cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_NEON, std::move(ddb) });
     }
 #endif
     {
@@ -219,6 +228,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
     if (cpuInfo.hasNeon()) {
         floatGen = getCpuGenerator(GeneratorType::FLOAT_NEON);
         doubleGen = getCpuGenerator(GeneratorType::DOUBLE_NEON);
+        doubleDoubleGen = getCpuGenerator(GeneratorType::DOUBLE_DOUBLE_NEON);
     }
 
     if (!devices.empty()) {

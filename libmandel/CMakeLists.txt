@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.12)
 
 set(ARCH "X86_64" CACHE STRING "Target Architecture")
+option(AVX512 "generate code that can make use of avx-512-instructions" ON)
+option(WITH_ASMJIT "use just-in-time-compilation capabilities of asmjit" ON)
 
 #message(CMAKE_SYSTEM_PROCESSOR)
 
@@ -36,13 +38,16 @@ SET(MandelSources
 FILE(GLOB MandelHeaders include/*.h)
 
 if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
-    list(APPEND MandelSources src/CpuGeneratorsAVX.cpp src/CpuGeneratorsAVXFMA.cpp src/CpuGeneratorsSSE2.cpp src/CpuGeneratorsAVX512.cpp)
+    list(APPEND MandelSources src/CpuGeneratorsAVX.cpp src/CpuGeneratorsAVXFMA.cpp src/CpuGeneratorsSSE2.cpp)
+    if (AVX512)
+        list(APPEND MandelSources src/CpuGeneratorsAVX512.cpp)
+    endif()
 elseif(ARCH STREQUAL "ARM")
     list(APPEND MandelSources src/CpuGeneratorsNeon.cpp)
 endif()
 
+
 #    message(${MandelSources})
-add_subdirectory(asmjit)
 
 add_library(mandel STATIC ${MandelSources})
 
@@ -62,7 +67,12 @@ target_include_directories(qd PUBLIC qd-2.3.22/include qd-2.3.22)
 #target_include_directories(mandel PUBLI#C qd-2.3.22/include)
 #target_include_directories(mandel PUBLI#C qd-2.3.22/include)
 target_link_libraries(mandel PUBLIC qd)
-target_link_libraries(mandel PUBLIC asmjit)
+
+if(WITH_ASMJIT)
+	add_subdirectory(asmjit)
+	target_compile_definitions(mandel PUBLIC WITH_ASMJIT)
+	target_link_libraries(mandel PUBLIC asmjit)
+endif(WITH_ASMJIT)
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT LTO_SUPPORTED)
@@ -95,34 +105,29 @@ if(Boost_FOUND)
 endif(Boost_FOUND)
 
 if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
-    if (MSVC)
-        set_source_files_properties(src/CpuGeneratorsAVX512.cpp PROPERTIES COMPILE_FLAGS /arch:AVX512F)
-    else()
-        set_source_files_properties(src/CpuGeneratorsAVX512.cpp PROPERTIES COMPILE_FLAGS -mavx512f)
-    endif(MSVC)
+    if (AVX512)
+        target_compile_definitions(mandel PUBLIC WITH_AVX512)
+        if (MSVC)
+            set_source_files_properties(src/CpuGeneratorsAVX512.cpp PROPERTIES COMPILE_FLAGS /arch:AVX512F)
+        else()
+            set_source_files_properties(src/CpuGeneratorsAVX512.cpp PROPERTIES COMPILE_FLAGS -mavx512f)
+        endif(MSVC)
+    endif()
 
     if (MSVC)
         set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS /arch:AVX)
         set_source_files_properties(src/CpuGeneratorsAVXFMA.cpp PROPERTIES COMPILE_FLAGS /arch:AVX)
-    else()
-        set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS -mavx)
-        set_source_files_properties(src/JuliaGenerators.cpp PROPERTIES COMPILE_FLAGS -mavx)
-        set_source_files_properties(src/CpuGeneratorsAVXFMA.cpp PROPERTIES COMPILE_FLAGS -mavx)
-    endif(MSVC)
-
-    if (MSVC)
         set_source_files_properties(src/CpuGeneratorsAVXFMA.cpp PROPERTIES COMPILE_FLAGS /arch:FMA)
-    else()
-        set_source_files_properties(src/CpuGeneratorsAVXFMA.cpp PROPERTIES COMPILE_FLAGS -mfma)
-    endif(MSVC)
-
-    if (MSVC)
         set_source_files_properties(src/CpuGeneratorsSSE2.cpp PROPERTIES COMPILE_FLAGS /arch:SSE2)
     else()
+        set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS -mavx)
+        set_source_files_properties(src/CpuGeneratorsAVXFMA.cpp PROPERTIES COMPILE_FLAGS -mavx)
+        set_source_files_properties(src/CpuGeneratorsAVXFMA.cpp PROPERTIES COMPILE_FLAGS -mfma)
         set_source_files_properties(src/CpuGeneratorsSSE2.cpp PROPERTIES COMPILE_FLAGS -msse2)
     endif(MSVC)
+
 elseif(ARCH STREQUAL "ARM")
-    #set_source_files_properties(src/CpuGeneratorsNeon.cpp PROPERTIES COMPILE_FLAGS -mfpu=neon)
+    set_source_files_properties(src/CpuGeneratorsNeon.cpp PROPERTIES COMPILE_FLAGS -march=armv8-a+simd)
 endif()
 
 

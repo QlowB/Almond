@@ -342,7 +342,8 @@ MandelView::MandelView(mnd::MandelGenerator* generator, MandelWidget& owner) :
 }
 
 
-int MandelView::getLevel(mnd::Real dpp) {
+int MandelView::getLevel(mnd::Real dpp)
+{
     return int(mnd::log2(dpp / chunkSize));
 }
 

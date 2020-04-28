@@ -16,7 +16,7 @@ find_package(Boost 1.65 REQUIRED)
 
 find_package(FFmpeg COMPONENTS AVCODEC AVDEVICE AVFORMAT AVUTIL SWSCALE REQUIRED)
 
-message( ${FFMPEG_INCLUDE_DIRS})
+#message(${FFMPEG_INCLUDE_DIRS})
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -34,7 +34,7 @@ add_subdirectory(libmandel)
 
 target_include_directories(Almond SYSTEM PUBLIC ${FFMPEG_INCLUDE_DIRS})
 
-target_link_libraries(Almond PUBLIC mandel asmjit qd)
+target_link_libraries(Almond PUBLIC mandel)
 target_link_libraries(Almond PUBLIC Qt5::Core Qt5::Widgets Qt5::OpenGL Qt5::Xml)
 target_link_libraries(Almond PUBLIC ${FFMPEG_LIBRARIES})
 target_link_libraries(Almond PUBLIC OpenGL::GL)

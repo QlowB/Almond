@@ -326,7 +326,7 @@ MandelView::MandelView(mnd::MandelGenerator* generator, MandelWidget& owner) :
     calcer{ generator, owner },
     owner{ owner }
 {
-    Bitmap<RGBColor> emp(8, 8);
+    /*Bitmap<RGBColor> emp(8, 8);
     for(auto i = 0; i < emp.width; i++) {
         for(auto j = 0; j < emp.height; j++) {
             if((i + j) & 0x1) { // if i+j is odd
@@ -336,7 +336,9 @@ MandelView::MandelView(mnd::MandelGenerator* generator, MandelWidget& owner) :
                 emp.get(i, j) = RGBColor{ 120, 120, 120 };
             }
         }
-    }
+    }*/
+    Bitmap<RGBColor> emp(1, 1);
+    emp.get(0, 0) = RGBColor{ 0, 0, 0 };
     empty = std::make_unique<Texture>(emp, GL_NEAREST);
     connect(&calcer, &Calcer::done, this, &MandelView::cellReady);
 }

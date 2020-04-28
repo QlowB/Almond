@@ -1,8 +1,13 @@
 cmake_minimum_required(VERSION 3.12)
 
+include(CheckCXXCompilerFlag)
+
 set(ARCH "X86_64" CACHE STRING "Target Architecture")
 option(AVX512 "generate code that can make use of avx-512-instructions" ON)
 option(WITH_ASMJIT "use just-in-time-compilation capabilities of asmjit" ON)
+option(MANDEL_BUILD_NATIVE
+	"use the -march=native flags if supported WARNING: when compiling with this flag, the binary might not run on machines other than the one it was compiled on"
+	OFF)
 
 #message(CMAKE_SYSTEM_PROCESSOR)
 
@@ -47,6 +52,17 @@ elseif(ARCH STREQUAL "ARM")
 endif()
 
 
+# use both flags just to be sure
+CHECK_CXX_COMPILER_FLAG("-march=native" MARCH_NATIVE_SUPPORTED)
+CHECK_CXX_COMPILER_FLAG("-mtune=native" MTUNE_NATIVE_SUPPORTED)
+if(MARCH_NATIVE_SUPPORTED AND MANDEL_BUILD_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif()
+if(MTUNE_NATIVE_SUPPORTED AND MANDEL_BUILD_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=native")
+endif()
+
+
 #    message(${MandelSources})
 
 add_library(mandel STATIC ${MandelSources})
@@ -57,15 +73,6 @@ target_compile_definitions(mandel PUBLIC WITH_QD)
 add_library(qd STATIC ${QdSources})
 target_include_directories(qd PUBLIC qd-2.3.22/include qd-2.3.22)
 
-#FILE(GLOB AsmjitSources asmjit/src/asmjit/*/*.cpp)
-#add_library(asmjit STATIC ${AsmjitSources})
-
-#target_include_directories(asmjit PUBLIC asmjit/src)
-#target_compile_definitions(asmjit PUBLIC NOMINMAX)
-#target_compile_definitions(asmjit PUBLIC ASMJIT_STATIC)
-
-#target_include_directories(mandel PUBLI#C qd-2.3.22/include)
-#target_include_directories(mandel PUBLI#C qd-2.3.22/include)
 target_link_libraries(mandel PUBLIC qd)
 
 if(WITH_ASMJIT)
@@ -74,14 +81,6 @@ if(WITH_ASMJIT)
 	target_link_libraries(mandel PUBLIC asmjit)
 endif(WITH_ASMJIT)
 
-include(CheckIPOSupported)
-check_ipo_supported(RESULT LTO_SUPPORTED)
-
-if (LTO_SUPPORTED AND WITH_LTO)
-    message("Enabling link-time optimization.")
-    set_property(TARGET mandel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-    set_property(TARGET qd PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-endif()
 
 if(OPENCL_FOUND)
     target_compile_definitions(mandel PUBLIC WITH_OPENCL)
@@ -116,7 +115,7 @@ if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
 
     if (MSVC)
         set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS /arch:AVX)
-        set_source_files_properties(src/CpuGeneratorsAVXFMA.cpp PROPERTIES COMPILE_FLAGS "/arch:FMA /arch:AVX2")
+        set_source_files_properties(src/CpuGeneratorsAVXFMA.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)
         set_source_files_properties(src/CpuGeneratorsSSE2.cpp PROPERTIES COMPILE_FLAGS /arch:SSE2)
     else()
         set_source_files_properties(src/CpuGeneratorsAVX.cpp PROPERTIES COMPILE_FLAGS -mavx)

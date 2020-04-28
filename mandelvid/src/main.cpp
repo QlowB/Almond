@@ -20,13 +20,13 @@ int main() {
     //evi.end.zoomCenter(1.0e+27);
     evi.gradient = Gradient::defaultGradient();
 
-    evi.width = 2560;
-    evi.height = 1440;
-    evi.maxIterations = 20000;
-    evi.fps = 60;
-    evi.zoomSpeed = 0.9;
+    evi.width = 64;
+    evi.height = 64;
+    evi.maxIterations = 5000;
+    evi.fps = 30;
+    evi.zoomSpeed = 1.3;
     evi.path = "video.avi";
-    evi.bitrate = 15000;
+    evi.bitrate = 1500;
     evi.preset = "slow";
 
     evi.start.adjustAspectRatio(evi.width, evi.height);

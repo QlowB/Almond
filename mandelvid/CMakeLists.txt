@@ -1,15 +1,12 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.13)
 
 project(mandelvid VERSION 1.0.0 DESCRIPTION "mandel video generator")
 
 set(ARCH "X86_64" CACHE STRING "Target Architecture")
 
 
-find_package(PkgConfig)
-pkg_check_modules(LIBAVCODEC REQUIRED libavcodec)
-pkg_check_modules(LIBAVUTIL REQUIRED libavutil)
-pkg_check_modules(LIBAVFORMAT REQUIRED libavformat)
-pkg_check_modules(LIBSWSCALE REQUIRED libswscale)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CMakeModules)
+find_package(FFmpeg COMPONENTS AVCODEC AVDEVICE AVFORMAT AVUTIL SWSCALE REQUIRED)
 
 
 add_subdirectory(../libmandel ./libmandel)
@@ -18,7 +15,7 @@ find_package(OpenCL)
 find_package(OpenMP)
 #set(Boost_DEBUG 1)
 set(Boost_USE_STATIC_LIBS ON)
-find_package(Boost 1.53)
+find_package(Boost 1.65 REQUIRED)
 
 
 set(CMAKE_CXX_STANDARD 17)
@@ -29,16 +26,10 @@ FILE(GLOB mvidheaders include/*.h)
 
 add_executable(mvg ${mvidsources})
 target_include_directories(mvg PUBLIC "include")
-target_include_directories(mvg PUBLIC ${LIBAVCODEC_INCLUDE_DIRS})
-target_include_directories(mvg PUBLIC ${LIBAVUTIL_INCLUDE_DIRS})
-target_include_directories(mvg PUBLIC ${LIBAVFORMAT_INCLUDE_DIRS})
-target_include_directories(mvg PUBLIC ${LIBSWSCALE_INCLUDE_DIRS})
+target_include_directories(mvg SYSTEM PUBLIC ${FFMPEG_INCLUDE_DIRS})
 target_link_libraries(mvg PUBLIC mandel)
 target_link_libraries(mvg PUBLIC qd)
-target_link_libraries(mvg PUBLIC ${LIBAVCODEC_LIBRARIES})
-target_link_libraries(mvg PUBLIC ${LIBAVUTIL_LIBRARIES})
-target_link_libraries(mvg PUBLIC ${LIBAVFORMAT_LIBRARIES})
-target_link_libraries(mvg PUBLIC ${LIBSWSCALE_LIBRARIES})
+target_link_libraries(mvg PUBLIC ${FFMPEG_LIBRARIES})
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT LTO_SUPPORTED)

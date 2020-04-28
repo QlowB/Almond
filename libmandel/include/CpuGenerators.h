@@ -96,7 +96,7 @@ class mnd::CpuGenerator<float, mnd::X86_AVX_FMA, parallel> : public MandelGenera
 {
 public:
     inline CpuGenerator(void) :
-        MandelGenerator{ mnd::Precision::DOUBLE, mnd::X86_AVX_FMA }
+        MandelGenerator{ mnd::Precision::FLOAT, mnd::X86_AVX_FMA }
     {
     }
     virtual void generate(const MandelInfo& info, float* data);

@@ -10,10 +10,15 @@ MandelVideoGenerator::MandelVideoGenerator(const ExportVideoInfo& evi) :
 }
 
 
+void MandelVideoGenerator::addProgressCallback(ProgressCallback pc)
+{
+    progressCallbacks.push_back(std::move(pc));
+}
+
 void MandelVideoGenerator::generate(void)
 {
     mnd::MandelContext ctxt = mnd::initializeContext();
-    mnd::Generator& gen = ctxt.getDefaultGenerator();
+    mnd::MandelGenerator& gen = ctxt.getDefaultGenerator();
     mnd::MandelInfo mi;
     mi.bWidth = evi.width * 2;
     mi.bHeight = evi.height * 2;
@@ -31,6 +36,7 @@ void MandelVideoGenerator::generate(void)
     Bitmap<RGBColor> big;
     Bitmap<RGBColor> small;
 
+    int64_t frameCounter = 0;
     while(w > evi.end.width || h > evi.end.height) {
         mi.view = mnd::MandelViewport{ x - w/2, y - h/2, w, h };
 
@@ -51,10 +57,21 @@ void MandelVideoGenerator::generate(void)
         }
 
         vs.addFrame(overlay(big, small, bigFac));
+        frameCounter++;
+        MandelVideoProgressInfo mvpi{ frameCounter };
+        callCallbacks(mvpi);
 
         w *= ::pow(0.99, evi.zoomSpeed);
         h *= ::pow(0.99, evi.zoomSpeed);
         bigFac *= ::pow(0.99, evi.zoomSpeed);
+    }
+}
+
+
+void MandelVideoGenerator::callCallbacks(const MandelVideoProgressInfo& evi)
+{
+    for (auto& pc : progressCallbacks) {
+        pc(evi);
     }
 }
 

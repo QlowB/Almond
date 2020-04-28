@@ -1,6 +1,6 @@
 #pragma once
-#ifndef BITMAP_H_
-#define BITMAP_H_
+#ifndef ALMOND_BITMAP_H_
+#define ALMOND_BITMAP_H_
 
 #include "Color.h"
 #include <memory>
@@ -59,4 +59,5 @@ public:
     }
 };
 
-#endif // BITMAP_H_
+#endif // ALMOND_BITMAP_H_
+

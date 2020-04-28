@@ -4,6 +4,7 @@
 #include "MandelUtil.h"
 #include "Gradient.h"
 #include "Bitmap.h"
+#include <functional>
 
 struct ExportVideoInfo
 {
@@ -26,15 +27,27 @@ struct ExportVideoInfo
 };
 
 
+struct MandelVideoProgressInfo
+{
+    int framesExported;
+};
+
+
 class MandelVideoGenerator
 {
-    const ExportVideoInfo evi;
 public:
+    using ProgressCallback = std::function<void(const MandelVideoProgressInfo&)>;
+private:
+    const ExportVideoInfo evi;
+    std::vector<ProgressCallback> progressCallbacks;
+    public:
     MandelVideoGenerator(const ExportVideoInfo& evi);
 
     void generate(void);
+    void addProgressCallback(ProgressCallback pc);
 
 private:
+    void callCallbacks(const MandelVideoProgressInfo& evi);
     Bitmap<RGBColor> overlay(const Bitmap<RGBColor>& outer,
                              const Bitmap<RGBColor>& inner,
                              double scale);

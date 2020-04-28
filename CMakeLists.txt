@@ -4,9 +4,9 @@ project(Almond VERSION 1.0.0 DESCRIPTION "Fractal Viewer")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
+#set(CMAKE_AUTOMOC ON)
+#set(CMAKE_AUTORCC ON)
+#set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5 COMPONENTS Core Widgets OpenGL Xml REQUIRED)
 find_package(OpenMP)
@@ -16,7 +16,7 @@ find_package(Boost 1.65 REQUIRED)
 
 find_package(FFmpeg COMPONENTS AVCODEC AVDEVICE AVFORMAT AVUTIL SWSCALE REQUIRED)
 
-message( ${FFMPEG_INCLUDE_DIRS})
+#message(${FFMPEG_INCLUDE_DIRS})
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -32,16 +32,22 @@ ENDIF()
 
 add_subdirectory(libmandel)
 
-target_include_directories(Almond PUBLIC ${FFMPEG_INCLUDE_DIRS})
+target_include_directories(Almond SYSTEM PUBLIC ${FFMPEG_INCLUDE_DIRS})
 
-target_link_libraries(Almond PUBLIC mandel asmjit qd)
+target_link_libraries(Almond PUBLIC mandel)
 target_link_libraries(Almond PUBLIC Qt5::Core Qt5::Widgets Qt5::OpenGL Qt5::Xml)
 target_link_libraries(Almond PUBLIC ${FFMPEG_LIBRARIES})
 target_link_libraries(Almond PUBLIC OpenGL::GL)
 
+set_property(TARGET Almond PROPERTY AUTOMOC ON)
+set_property(TARGET Almond PROPERTY AUTORCC ON)
+set_property(TARGET Almond PROPERTY AUTOUIC ON)
+
+
+
 if(Boost_FOUND)
     target_compile_definitions(Almond PUBLIC WITH_BOOST)
-    target_include_directories(Almond PUBLIC ${Boost_INCLUDE_DIRS})
+    target_include_directories(Almond SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
     #target_link_libraries(Almond PRIVATE ${Boost_LIBRARIES})
 endif(Boost_FOUND)
 

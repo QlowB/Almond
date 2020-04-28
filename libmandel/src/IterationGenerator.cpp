@@ -1,5 +1,4 @@
 #include "IterationGenerator.h"
-#include "ExecData.h"
 #include "Mandel.h"
 
 #include "OpenClInternal.h"
@@ -125,10 +124,12 @@ std::complex<double> NaiveGenerator::calc(mnd::Expression& expr, std::complex<do
     return result;
 }
 
+#ifdef WITH_ASMJIT
+
+#include "ExecData.h"
+
 using mnd::CompiledGenerator;
 using mnd::CompiledGeneratorVec;
-using mnd::CompiledClGenerator;
-using mnd::CompiledClGeneratorDouble;
 
 
 CompiledGenerator::CompiledGenerator(std::unique_ptr<mnd::ExecData> execData,
@@ -236,8 +237,11 @@ void CompiledGeneratorVec::generate(const mnd::MandelInfo& info, float* data)
     }
 }
 
+#endif // WITH_ASMJIT
 
 #ifdef WITH_OPENCL
+using mnd::CompiledClGenerator;
+using mnd::CompiledClGeneratorDouble;
 CompiledClGenerator::CompiledClGenerator(mnd::MandelDevice& device, const std::string& code) :
     ClGeneratorFloat{ device, code }
 {

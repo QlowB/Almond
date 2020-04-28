@@ -100,6 +100,7 @@ enum class mnd::GeneratorType : int
     DOUBLE_DOUBLE_AVX,
     DOUBLE_DOUBLE_AVX_FMA,
     QUAD_DOUBLE,
+    QUAD_DOUBLE_AVX_FMA,
     FLOAT128,
     FLOAT256,
     FIXED64,

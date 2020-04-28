@@ -45,6 +45,7 @@ static const std::map<mnd::GeneratorType, std::string> typeNames =
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX, "double double AVX" },
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX_FMA, "double double AVX+FMA" },
     { mnd::GeneratorType::QUAD_DOUBLE, "quad double" },
+    { mnd::GeneratorType::QUAD_DOUBLE_AVX_FMA, "quad double AVX+FMA" },
     { mnd::GeneratorType::FLOAT128, "float128" },
     { mnd::GeneratorType::FLOAT256, "float256" },
     { mnd::GeneratorType::FIXED64, "fixed64" },
@@ -133,10 +134,12 @@ MandelContext::MandelContext(void) :
         if (cpuInfo.hasFma()) {
             auto favxfma = std::make_unique<CpuGenerator<float, mnd::X86_AVX_FMA, true>>();
             auto davxfma = std::make_unique<CpuGenerator<double, mnd::X86_AVX_FMA, true>>();
-            auto ddavx = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>>();
+            auto ddavxfma = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>>();
+            auto qdavxfma = std::make_unique<CpuGenerator<QuadDouble, mnd::X86_AVX_FMA, true>>();
             cpuGenerators.insert({ GeneratorType::FLOAT_AVX_FMA, std::move(favxfma) });
             cpuGenerators.insert({ GeneratorType::DOUBLE_AVX_FMA, std::move(davxfma) });
-            cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX_FMA, std::move(ddavx) });
+            cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX_FMA, std::move(ddavxfma) });
+            cpuGenerators.insert({ GeneratorType::QUAD_DOUBLE_AVX_FMA, std::move(qdavxfma) });
         }
     }
     if (cpuInfo.hasSse2()) {

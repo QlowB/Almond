@@ -32,7 +32,7 @@ ENDIF()
 
 add_subdirectory(libmandel)
 
-target_include_directories(Almond PUBLIC ${FFMPEG_INCLUDE_DIRS})
+target_include_directories(Almond SYSTEM PUBLIC ${FFMPEG_INCLUDE_DIRS})
 
 target_link_libraries(Almond PUBLIC mandel asmjit qd)
 target_link_libraries(Almond PUBLIC Qt5::Core Qt5::Widgets Qt5::OpenGL Qt5::Xml)
@@ -43,9 +43,11 @@ set_property(TARGET Almond PROPERTY AUTOMOC ON)
 set_property(TARGET Almond PROPERTY AUTORCC ON)
 set_property(TARGET Almond PROPERTY AUTOUIC ON)
 
+
+
 if(Boost_FOUND)
     target_compile_definitions(Almond PUBLIC WITH_BOOST)
-    target_include_directories(Almond PUBLIC ${Boost_INCLUDE_DIRS})
+    target_include_directories(Almond SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
     #target_link_libraries(Almond PRIVATE ${Boost_LIBRARIES})
 endif(Boost_FOUND)
 

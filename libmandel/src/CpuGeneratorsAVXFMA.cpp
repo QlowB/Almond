@@ -19,6 +19,9 @@ namespace mnd
 
     template class CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, false>;
     template class CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>;
+
+    template class CpuGenerator<QuadDouble, mnd::X86_AVX_FMA, false>;
+    template class CpuGenerator<QuadDouble, mnd::X86_AVX_FMA, true>;
 }
 
 
@@ -324,6 +327,20 @@ struct VecPair
     __m256d b;
 };
 
+struct VecTriple
+{
+    __m256d a;
+    __m256d b;
+    __m256d c;
+};
+
+struct VecQuadruple
+{
+    __m256d a;
+    __m256d b;
+    __m256d c;
+    __m256d d;
+};
 
 static inline VecPair quickTwoSum(__m256d a, __m256d b)
 {
@@ -355,6 +372,65 @@ static inline VecPair twoDiff(__m256d a, __m256d b)
     return { s, e };
 }
 
+
+static inline VecTriple threeSum(__m256d a, __m256d b, __m256d c)
+{
+    auto [s, e] = twoSum(a, b);
+    auto [r0, e2] = twoSum(s, c);
+    auto [r1, r2] = twoSum(e, e2);
+
+    return { r0, r1, r2 };
+}
+
+
+static inline __m256d threeOneSum(__m256d a, __m256d b, __m256d c)
+{
+    return _mm256_add_pd(a, _mm256_add_pd(b, c));
+}
+
+
+static inline VecTriple sixThreeSum(__m256d a, __m256d b, __m256d c,
+                                    __m256d d, __m256d e, __m256d f)
+{
+    auto[x0, x1, x2] = threeSum(a, b, c);
+    auto[y0, y1, y2] = threeSum(d, e, f);
+
+    auto[r0, t0] = twoSum(x0, y0);
+    auto[t1, t2] = twoSum(x1, y1);
+    auto[r1, t3] = twoSum(t0, t1);
+    auto t4 = _mm256_add_pd(x2, y2);
+    auto r2 = threeOneSum(t2, t3, t4);
+
+    return { r0, r1, r2 };
+}
+
+static inline VecQuadruple renormalize(__m256d x0, __m256d x1, __m256d x2, __m256d x3, __m256d x4)
+{
+    auto [st1, t4] = quickTwoSum(x3, x4);
+    auto [st2, t3] = quickTwoSum(x2, st1);
+    auto [st3, t2] = quickTwoSum(x1, st2);
+    auto [t0, t1] = quickTwoSum(x0, st3);
+
+    __m256d s = t0;
+    __m256d e;
+
+    __m256d t[] = { t1, t2, t3, t4 };
+    __m256d b[4] = { 0, 0, 0, 0 };
+
+    int k = 0;
+    for (int i = 0; i < 4; i++) {
+        auto[st, et] = quickTwoSum(s, t[i]);
+        s = st; e = et;
+        b[k] = s;
+        //if (e != 0) {
+            b[k] = s;
+            s = e;
+            k = k + 1;
+        //}
+    }
+
+    return { b[0], b[1], b[2], b[3] };
+}
 
 static inline VecPair twoProd(__m256d a, __m256d b)
 {
@@ -507,5 +583,171 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
     }
 }
 
+struct AvxQuadDouble
+{
+    __m256d x[4];
+
+    inline AvxQuadDouble(__m256d a, __m256d b, __m256d c, __m256d d) :
+        x{ a, b, c, d}
+    {}
+
+    inline AvxQuadDouble(double a, double b, double c, double d) :
+        x{ _mm256_set1_pd(a), _mm256_set1_pd(b), _mm256_set1_pd(c), _mm256_set1_pd(d) }
+    {}
 
 
+    inline AvxQuadDouble operator + (const AvxQuadDouble& sm) const
+    {
+        auto[s0, e0] = twoSum(x[0], sm.x[0]);
+        auto[s1, e1] = twoSum(x[1], sm.x[1]);
+        auto[s2, e2] = twoSum(x[2], sm.x[2]);
+        auto[s3, e3] = twoSum(x[3], sm.x[3]);
+        __m256d r0 = s0;
+
+        auto [r1, t0] = twoSum(s1, e0);
+        auto [r2, t1, t2] = threeSum(s2, e1, t0);
+        auto [r3, t3, _t4] = threeSum(s3, e2, t1);
+        auto [r4, _t5, _t6] = threeSum(e3, t3, t2);
+
+        auto [re0, re1, re2, re3] = renormalize(r0, r1, r2, r3, r4);
+        return { re0, re1, re2, re3 };
+    }
+
+    inline AvxQuadDouble operator - (const AvxQuadDouble& sm) const
+    {
+        auto[s0, e0] = twoDiff(x[0], sm.x[0]);
+        auto[s1, e1] = twoDiff(x[1], sm.x[1]);
+        auto[s2, e2] = twoDiff(x[2], sm.x[2]);
+        auto[s3, e3] = twoDiff(x[3], sm.x[3]);
+        __m256d r0 = s0;
+
+        auto [r1, t0] = twoSum(s1, e0);
+        auto [r2, t1, t2] = threeSum(s2, e1, t0);
+        auto [r3, t3, _t4] = threeSum(s3, e2, t1);
+        auto [r4, _t5, _t6] = threeSum(e3, t3, t2);
+
+        auto [re0, re1, re2, re3] = renormalize(r0, r1, r2, r3, r4);
+        return { re0, re1, re2, re3 };
+    }
+
+    inline AvxQuadDouble operator * (const AvxQuadDouble& sm) const
+    {
+        auto[a0, b0] = twoProd(x[0], sm.x[0]);
+        auto[b1, c0] = twoProd(x[0], sm.x[1]);
+        auto[b2, c1] = twoProd(x[1], sm.x[0]);
+        auto[c2, d0] = twoProd(x[0], sm.x[2]);
+        auto[c3, d1] = twoProd(x[1], sm.x[1]);
+        auto[c4, d2] = twoProd(x[2], sm.x[0]);
+
+        auto r0 = a0;
+        auto[r1, c5, d3] = threeSum(b0, b1, b2);
+        auto[r2, d4, e0] = sixThreeSum(c0, c1, c2, c3, c4, c5);
+
+        auto [n0, n1, n2, n3] = renormalize(r0, r1, r2, _mm256_set1_pd(0.0), _mm256_set1_pd(0.0));
+
+        return { n0, n1, n2, n3 };
+    }
+};
+
+
+template<bool parallel>
+void CpuGenerator<mnd::QuadDouble, mnd::X86_AVX_FMA, parallel>::generate(const mnd::MandelInfo& info, float* data)
+{
+    const MandelViewport& view = info.view;
+
+    using T = mnd::QuadDouble;
+
+    T viewx = mnd::convert<T>(view.x);
+    T viewy = mnd::convert<T>(view.y);
+    T wpp = mnd::convert<T>(view.width / info.bWidth);
+    T hpp = mnd::convert<T>(view.height / info.bHeight);
+
+
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+
+    AvxQuadDouble juliaX = { jX[0], jX[1], jX[2], jX[3] };
+    AvxQuadDouble juliaY = { jY[0], jY[1], jY[2], jY[3] };
+
+#if defined(_OPENMP)
+    if constexpr(parallel)
+        omp_set_num_threads(omp_get_num_procs());
+#   pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
+    for (long j = 0; j < info.bHeight; j++) {
+        T y = viewy + T(double(j)) * hpp;
+        __m256d y0s = { y.x[0], y.x[0], y.x[0], y.x[0] };
+        __m256d y1s = { y.x[1], y.x[1], y.x[1], y.x[1] };
+        __m256d y2s = { y.x[2], y.x[2], y.x[2], y.x[2] };
+        __m256d y3s = { y.x[3], y.x[3], y.x[3], y.x[3] };
+        AvxQuadDouble ys{ y0s, y1s, y2s, y3s };
+        for (long i = 0; i < info.bWidth; i += 4) {
+            T x1 = viewx + T(double(i)) * wpp;
+            T x2 = x1 + wpp;
+            T x3 = x2 + wpp;
+            T x4 = x3 + wpp;
+
+            __m256d x0s = { x1[0], x2[0], x3[0], x4[0] };
+            __m256d x1s = { x1[1], x2[1], x3[1], x4[1] };
+            __m256d x2s = { x1[2], x2[2], x3[2], x4[2] };
+            __m256d x3s = { x1[3], x2[3], x3[3], x4[3] };
+
+            AvxQuadDouble xs{ x0s, x1s, x2s, x3s };
+
+            AvxQuadDouble cx = info.julia ? juliaX : xs;
+            AvxQuadDouble cy = info.julia ? juliaY : ys;
+
+            int itRes[4] = { 0, 0, 0, 0 };
+
+            __m256d threshold = { 16.0, 16.0, 16.0, 16.0 };
+            __m256d counter = { 0, 0, 0, 0 };
+            __m256d adder = { 1, 1, 1, 1 };
+
+            AvxQuadDouble a = xs;
+            AvxQuadDouble b = ys;
+
+            __m256d resultsa;
+            __m256d resultsb;
+
+            for (int k = 0; k < info.maxIter; k++) {
+                AvxQuadDouble aa = a * a;
+                AvxQuadDouble bb = b * b;
+                AvxQuadDouble abab = a * b; abab = abab + abab;
+                a = aa - bb + cx;
+                b = abab + cy;
+                __m256d cmp = _mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ);
+                if (info.smooth) {
+                    resultsa = _mm256_blendv_pd(resultsa, a.x[0], cmp);
+                    resultsb = _mm256_blendv_pd(resultsb, b.x[0], cmp);
+                }
+                adder = _mm256_and_pd(adder, cmp);
+                counter = _mm256_add_pd(counter, adder);
+                if (_mm256_testz_si256(_mm256_castpd_si256(cmp), _mm256_castpd_si256(cmp)) != 0) {
+                    break;
+                }
+            }
+
+            auto alignVec = [](double* data) -> double* {
+                void* aligned = data;
+                ::size_t length = 64;
+                std::align(32, 4 * sizeof(double), aligned, length);
+                return static_cast<double*>(aligned);
+            };
+
+            double resData[8];
+            double* ftRes = alignVec(resData);
+            double* resa = (double*) &resultsa;
+            double* resb = (double*) &resultsb;
+            _mm256_store_pd(ftRes, counter);
+
+            for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
+                if (info.smooth)
+                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                        ftRes[k] >= info.maxIter ? info.maxIter :
+                        ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
+                else
+                    data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+            }
+        }
+    }
+}

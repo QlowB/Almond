@@ -75,7 +75,7 @@ endif()
 
 if(OPENCL_FOUND)
     target_compile_definitions(mandel PUBLIC WITH_OPENCL)
-    target_include_directories(mandel PUBLIC
+    target_include_directories(mandel SYSTEM PUBLIC
         "include"
         ${OpenCL_INCLUDE_DIRS}
     )

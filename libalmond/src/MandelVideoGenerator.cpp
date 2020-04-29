@@ -44,24 +44,31 @@ void MandelVideoGenerator::generate(void)
     mi.bHeight = evi.height * oversizeFactor;
     mi.maxIter = evi.maxIterations;
 
+    bool first = true;
 
     while(w > evi.end.width || h > evi.end.height) {
 
         if (bigW > sqrt(oversizeFactor) * w) {
             mi.view = mnd::MandelViewport{ x - w/2, y - h/2, w, h };
-            //Bitmap<float> raw{ evi.width * oversizeFactor, evi.height * oversizeFactor };
+            Bitmap<float> raw{ evi.width * oversizeFactor, evi.height * oversizeFactor };
             Bitmap<float> rawSmall{ evi.width * oversizeFactor, evi.height * oversizeFactor };
-            //gen.generate(mi, raw.pixels.get());
-            mi.view.zoomCenter(1.0f / sqrt(oversizeFactor));
+            mi.view.zoomCenter(oversizeFactor);
             gen.generate(mi, rawSmall.pixels.get());
+            //mi.view.zoomCenter(sqrt(oversizeFactor));
+            //gen.generate(mi, raw.pixels.get());
             //auto before = std::chrono::high_resolution_clock::now();
-            /*big = raw.map<RGBColor>([&mi, this] (float i) {
-                return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : evi.gradient.get(i);
-            });*/
+            if (first) {
+                mi.view.zoomCenter(sqrt(oversizeFactor));
+                gen.generate(mi, raw.pixels.get());
+                small = raw.map<RGBColor>([&mi, this] (float i) {
+                    return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : evi.gradient.get(i);
+                });
+            }
             big = std::move(small);
-            small = raw.map<RGBColor>([&mi, this] (float i) {
+            small = rawSmall.map<RGBColor>([&mi, this] (float i) {
                 return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : evi.gradient.get(i);
             });
+            printf("recalced\n");
             /*mi.view.zoomCenter(0.5);
             gen.generate(mi, raw.pixels.get());
             small = raw.map<RGBColor>([] (float x) { return
@@ -69,6 +76,7 @@ void MandelVideoGenerator::generate(void)
             });*/
             bigW = w;
             bigFac = 1.0;
+            first = false;
         }
 
         vs.addFrame(overlay(big, small, evi.width, evi.height, bigFac, sqrt(oversizeFactor)));
@@ -170,16 +178,18 @@ Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
     printf("%lf\n", scale);
     Bitmap<RGBColor> ret{ bw, bh };
 
-    double outerLeft = outer.width * (1 - scale) / 2;
-    double outerTop = outer.height * (1 - scale) / 2;
-    double outerWidth = outer.width * scale;
-    double outerHeight = outer.height * scale;
+    double outerLeft = outer.width * (1 - scale / oversizeFactor / oversizeFactor) / 2;
+    double outerTop = outer.height * (1 - scale / oversizeFactor / oversizeFactor) / 2;
+    double outerWidth = outer.width * scale / oversizeFactor / oversizeFactor;
+    double outerHeight = outer.height * scale / oversizeFactor / oversizeFactor;
 
-    double innerLeft = outer.width * (1 - scale * oversizeFactor) / 2;
-    double innerTop = outer.height * (1 - scale * oversizeFactor) / 2;
-    double innerWidth = outer.width * scale * oversizeFactor;
-    double innerHeight = outer.height * scale * oversizeFactor;
+    double innerLeft = outer.width * (1 - scale / oversizeFactor) / 2;
+    double innerTop = outer.height * (1 - scale / oversizeFactor) / 2;
+    double innerWidth = outer.width * scale / oversizeFactor;
+    double innerHeight = outer.height * scale / oversizeFactor;
 
+            double lerpVal = ::log(1.0 / scale) / ::log(oversizeFactor);
+            printf("lerpval: %f\n", lerpVal);
     auto before = std::chrono::high_resolution_clock::now();
 #pragma omp parallel for schedule(static, 1)
     for (int i = 0; i < ret.height; i++) {
@@ -191,13 +201,13 @@ Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
             double innJ = innerLeft + innerWidth * j / ret.width;
             double innI = innerTop + innerHeight * i / ret.height;
             RGBColor b = biliniear(inner, innJ, innI);
-            double lerpVal = ::log(1.0 / scale) / ::log(oversizeFactor) / 2;
-            RGBColor lerped = lerpColors(a, b, lerpVal);
-            ret.get(j, i) = b;
+            double lerpVal = -::log(scale) / ::log(oversizeFactor);
+            RGBColor lerped = lerpColors(b, a, lerpVal);
+            ret.get(j, i) = lerped;
         }
     }
     auto after = std::chrono::high_resolution_clock::now();
-    printf("gradient applied in: %lld microseconds\n", std::chrono::duration_cast<std::chrono::microseconds>(after - before).count());
+    //printf("gradient applied in: %lld microseconds\n", std::chrono::duration_cast<std::chrono::microseconds>(after - before).count());
     fflush(stdout);
     /*for (int i = 0; i < ret.height * ret.width; i++) {
         ret.pixels[i] = outer.pixels[i];

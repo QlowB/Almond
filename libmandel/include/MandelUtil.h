@@ -39,6 +39,7 @@ struct mnd::MandelViewport
      * \brief zoom in around the center by a factor specified
      */
     void zoomCenter(float scale);
+    void zoomCenter(const Real& scale);
 
     /*!
      * \brief zoom in around a specific point
@@ -46,6 +47,7 @@ struct mnd::MandelViewport
      * \param y value between 0.0f and 1.0f
      */
     void zoom(float scale, float x, float y);
+    void zoom(const Real& scale, const Real& x, const Real& y);
 
     /*!
      * \brief returns a viewport where the whole mandelbrot set can be observed

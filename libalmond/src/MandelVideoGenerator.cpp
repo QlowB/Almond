@@ -19,10 +19,7 @@ void MandelVideoGenerator::generate(void)
 {
     mnd::MandelContext ctxt = mnd::initializeContext();
     mnd::MandelGenerator& gen = ctxt.getDefaultGenerator();
-    mnd::MandelInfo mi;
-    mi.bWidth = evi.width * 2;
-    mi.bHeight = evi.height * 2;
-    mi.maxIter = evi.maxIterations;
+
 
     VideoStream vs(evi.width, evi.height, evi.path, evi.bitrate, evi.fps, evi.preset.c_str());
 
@@ -31,20 +28,38 @@ void MandelVideoGenerator::generate(void)
     mnd::Real w = evi.start.width;
     mnd::Real h = evi.start.height;
 
-    mnd::Real bigW = 10000000000000000.0;
+    mnd::Real bigW = mnd::Real("1e+300");
     double bigFac = 1.0;
     Bitmap<RGBColor> big;
     Bitmap<RGBColor> small;
 
     int64_t frameCounter = 0;
-    while(w > evi.end.width || h > evi.end.height) {
-        mi.view = mnd::MandelViewport{ x - w/2, y - h/2, w, h };
 
-        if (bigW > 2 * w) {
-            Bitmap<float> raw{ evi.width * 2, evi.height * 2 };
-            gen.generate(mi, raw.pixels.get());
+    const float oversizeFactor = 2;
+    const float sqrFactor = sqrt(oversizeFactor);
+    //const mnd::Real invsqrt2 = mnd::Real(1.0) / mnd::sqrt(mnd::Real(2));
+
+    mnd::MandelInfo mi;
+    mi.bWidth = evi.width * oversizeFactor;
+    mi.bHeight = evi.height * oversizeFactor;
+    mi.maxIter = evi.maxIterations;
+
+
+    while(w > evi.end.width || h > evi.end.height) {
+
+        if (bigW > sqrt(oversizeFactor) * w) {
+            mi.view = mnd::MandelViewport{ x - w/2, y - h/2, w, h };
+            //Bitmap<float> raw{ evi.width * oversizeFactor, evi.height * oversizeFactor };
+            Bitmap<float> rawSmall{ evi.width * oversizeFactor, evi.height * oversizeFactor };
+            //gen.generate(mi, raw.pixels.get());
+            mi.view.zoomCenter(1.0f / sqrt(oversizeFactor));
+            gen.generate(mi, rawSmall.pixels.get());
             //auto before = std::chrono::high_resolution_clock::now();
-            big = raw.map<RGBColor>([&mi, this] (float i) {
+            /*big = raw.map<RGBColor>([&mi, this] (float i) {
+                return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : evi.gradient.get(i);
+            });*/
+            big = std::move(small);
+            small = raw.map<RGBColor>([&mi, this] (float i) {
                 return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : evi.gradient.get(i);
             });
             /*mi.view.zoomCenter(0.5);
@@ -56,7 +71,7 @@ void MandelVideoGenerator::generate(void)
             bigFac = 1.0;
         }
 
-        vs.addFrame(overlay(big, small, bigFac));
+        vs.addFrame(overlay(big, small, evi.width, evi.height, bigFac, sqrt(oversizeFactor)));
         frameCounter++;
         MandelVideoProgressInfo mvpi{ frameCounter };
         callCallbacks(mvpi);
@@ -75,6 +90,21 @@ void MandelVideoGenerator::callCallbacks(const MandelVideoProgressInfo& evi)
     }
 }
 
+inline RGBColor lerpColors(const RGBColor& a, const RGBColor& b, double lerp)
+{
+    auto mklin = [] (double x) {
+        return x;
+    };
+    auto unlin = [] (double x) {
+        return x;
+    };
+
+    return RGBColor{
+        a.r * lerp + b.r * (1 - lerp),
+        a.g * lerp + b.g * (1 - lerp),
+        a.b * lerp + b.b * (1 - lerp)
+    };
+}
 
 inline RGBColor biliniear(const Bitmap<RGBColor>& img, double x, double y)
 {
@@ -134,23 +164,36 @@ inline RGBColor nearest(const Bitmap<RGBColor>& img, double x, double y)
 
 
 Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
-                         const Bitmap<RGBColor>& inner, double scale)
+                         const Bitmap<RGBColor>& inner, long bw, long bh,
+                         double scale, double oversizeFactor)
 {
     printf("%lf\n", scale);
-    Bitmap<RGBColor> ret{ outer.width / 2, outer.height / 2 };
-    double newW = outer.width * scale * 2;
-    double newH = outer.height * scale * 2;
-    double newX = outer.width * (1 - scale) / 2;
-    double newY = outer.height * (1 - scale) / 2;
+    Bitmap<RGBColor> ret{ bw, bh };
+
+    double outerLeft = outer.width * (1 - scale) / 2;
+    double outerTop = outer.height * (1 - scale) / 2;
+    double outerWidth = outer.width * scale;
+    double outerHeight = outer.height * scale;
+
+    double innerLeft = outer.width * (1 - scale * oversizeFactor) / 2;
+    double innerTop = outer.height * (1 - scale * oversizeFactor) / 2;
+    double innerWidth = outer.width * scale * oversizeFactor;
+    double innerHeight = outer.height * scale * oversizeFactor;
 
     auto before = std::chrono::high_resolution_clock::now();
 #pragma omp parallel for schedule(static, 1)
     for (int i = 0; i < ret.height; i++) {
         for (int j = 0; j < ret.width; j++) {
-            double newJ = newX + j * newW / outer.width;
-            double newI = newY + i * newH / outer.height;
+            double newJ = outerLeft + outerWidth * j / ret.width;
+            double newI = outerTop + outerHeight * i / ret.height;
             RGBColor a = biliniear(outer, newJ, newI);
-            ret.get(j, i) = a;
+
+            double innJ = innerLeft + innerWidth * j / ret.width;
+            double innI = innerTop + innerHeight * i / ret.height;
+            RGBColor b = biliniear(inner, innJ, innI);
+            double lerpVal = ::log(1.0 / scale) / ::log(oversizeFactor) / 2;
+            RGBColor lerped = lerpColors(a, b, lerpVal);
+            ret.get(j, i) = b;
         }
     }
     auto after = std::chrono::high_resolution_clock::now();

@@ -50,7 +50,8 @@ private:
     void callCallbacks(const MandelVideoProgressInfo& evi);
     Bitmap<RGBColor> overlay(const Bitmap<RGBColor>& outer,
                              const Bitmap<RGBColor>& inner,
-                             double scale);
+                             long bw, long bh,
+                             double scale, double oversizeFactor);
 };
 
 #endif // MANDELVIDEOGENERATOR_H

@@ -39,6 +39,7 @@ namespace mnd
             boost::multiprecision::et_off>;*/
 #   endif
     inline Float128 abs(const Float128& x) { return boost::multiprecision::abs(x); }
+    inline Float128 sqrt(const Float128& x) { return boost::multiprecision::sqrt(x); }
     inline Float128 floor(const Float128& x) { return boost::multiprecision::floor(x); }
     inline Float128 log(const Float128& x) { return boost::multiprecision::log(x); }
     inline Float128 log2(const Float128& x) { return boost::multiprecision::log2(x); }
@@ -51,6 +52,7 @@ namespace mnd
 
     //using Float256 = long double;
     inline Float256 abs(const Float256& x) { return boost::multiprecision::abs(x); }
+    inline Float256 sqrt(const Float256& x) { return boost::multiprecision::sqrt(x); }
     inline Float256 floor(const Float256& x) { return boost::multiprecision::floor(x); }
     inline Float256 log(const Float256& x) { return boost::multiprecision::log(x); }
     inline Float256 log2(const Float256& x) { return boost::multiprecision::log2(x); }
@@ -62,6 +64,7 @@ namespace mnd
             boost::multiprecision::et_off>;
 
     inline Float512 abs(const Float512& x) { return boost::multiprecision::abs(x); }
+    inline Float512 sqrt(const Float512& x) { return boost::multiprecision::sqrt(x); }
     inline Float512 floor(const Float512& x) { return boost::multiprecision::floor(x); }
     inline Float512 log(const Float512& x) { return boost::multiprecision::log(x); }
     inline Float512 log2(const Float512& x) { return boost::multiprecision::log2(x); }
@@ -83,6 +86,7 @@ namespace mnd
     using QuadDouble = qd_real;
 
     inline DoubleDouble abs(const DoubleDouble& x) { return ::abs(x); }
+    inline DoubleDouble sqrt(const DoubleDouble& x) { return ::sqrt(x); }
     inline DoubleDouble floor(const DoubleDouble& x) { return ::floor(x); }
     inline DoubleDouble log(const DoubleDouble& x) { return ::log(x); }
     inline DoubleDouble log2(const DoubleDouble& x) { return ::log(x) / ::log(DoubleDouble(2.0)); }
@@ -90,6 +94,7 @@ namespace mnd
 
 
     inline QuadDouble abs(const QuadDouble& x) { return ::abs(x); }
+    inline QuadDouble sqrt(const QuadDouble& x) { return ::sqrt(x); }
     inline QuadDouble floor(const QuadDouble& x) { return ::floor(x); }
     inline QuadDouble log(const QuadDouble& x) { return ::log(x); }
     inline QuadDouble log2(const QuadDouble& x) { return ::log(x) / ::log(QuadDouble(2.0)); }
@@ -97,6 +102,8 @@ namespace mnd
 
     inline double abs(double x) { return ::abs(x); }
     inline float abs(float x) { return ::abs(x); }
+    inline double sqrt(double x) { return ::sqrt(x); }
+    inline float sqrt(float x) { return ::sqrtf(x); }
     inline double floor(double x) { return ::floor(x); }
     inline float floor(float x) { return ::floorf(x); }
     inline double log(double x) { return ::log(x); }

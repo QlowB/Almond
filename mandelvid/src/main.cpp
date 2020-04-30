@@ -27,7 +27,7 @@ int main() {
     evi.zoomSpeed = 1.3;
     evi.path = "video.avi";
     evi.bitrate = 1500;
-    evi.preset = "slow";
+    evi.preset = "veryfast";
 
     evi.start.adjustAspectRatio(evi.width, evi.height);
 

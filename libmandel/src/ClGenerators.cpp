@@ -358,6 +358,9 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
     mnd::DoubleDouble psx = mnd::convert<mnd::DoubleDouble>(info.view.width / info.bWidth);
     mnd::DoubleDouble psy = mnd::convert<mnd::DoubleDouble>(info.view.height / info.bHeight);
 
+    mnd::DoubleDouble juliaX = mnd::convert<mnd::DoubleDouble>(info.juliaX);
+    mnd::DoubleDouble juliaY = mnd::convert<mnd::DoubleDouble>(info.juliaY);
+
     kernel.setArg(0, buffer_A);
     kernel.setArg(1, int(info.bWidth));
     kernel.setArg(2, x.x[0]);
@@ -370,6 +373,11 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
     kernel.setArg(9, psy.x[1]);
     kernel.setArg(10, int(info.maxIter));
     kernel.setArg(11, int(info.smooth ? 1 : 0));
+    kernel.setArg(12, info.julia ? 1 : 0);
+    kernel.setArg(13, juliaX.x[0]);
+    kernel.setArg(14, juliaX.x[1]);
+    kernel.setArg(15, juliaY.x[0]);
+    kernel.setArg(16, juliaY.x[1]);
 
     cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);

@@ -99,7 +99,7 @@ endif()
 
 if(Boost_FOUND)
     target_compile_definitions(mandel PUBLIC WITH_BOOST)
-    target_include_directories(mandel PRIVATE ${Boost_INCLUDE_DIRS})
+    target_include_directories(mandel PUBLIC ${Boost_INCLUDE_DIRS})
     target_link_libraries(mandel PRIVATE ${Boost_LIBRARIES})
 endif(Boost_FOUND)
 

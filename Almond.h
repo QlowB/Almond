@@ -34,7 +34,9 @@ class Almond : public QMainWindow
     Q_OBJECT
 private:
     mnd::MandelContext mandelContext;
+public:
     std::unique_ptr<MandelWidget> mw;
+private:
     //std::unique_ptr<BenchmarkDialog> benchmarkDialog;
     std::unique_ptr<CustomGenerator> customGeneratorDialog;
     GradientChooseDialog gcd;
@@ -48,6 +50,7 @@ private:
     mnd::MandelViewport mandelViewSave;
     mnd::MandelViewport customViewSave;
     mnd::AdaptiveGenerator* mandelGenerator;
+public:
     mnd::MandelGenerator* currentGenerator;
 public:
     Almond(QWidget *parent = Q_NULLPTR);

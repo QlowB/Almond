@@ -28,14 +28,11 @@ CONFIG += c++17
 SOURCES += \
         Almond.cpp \
         BackgroundTask.cpp \
-        Bitmap.cpp \
         Color.cpp \
         CubicSpline.cpp \
         Gradient.cpp \
         GradientWidget.cpp \
-        MandelVideoGenerator.cpp \
         MandelWidget.cpp \
-        VideoStream.cpp \
         choosegenerators.cpp \
         customgenerator.cpp \
         exportdialogs.cpp \
@@ -45,14 +42,11 @@ SOURCES += \
 HEADERS += \
         Almond.h \
         BackgroundTask.h \
-        Bitmap.h \
         Color.h \
         CubicSpline.h \
         Gradient.h \
         GradientWidget.h \
-        MandelVideoGenerator.h \
         MandelWidget.h \
-        VideoStream.h \
         choosegenerators.h \
         customgenerator.h \
         exportdialogs.h \
@@ -131,16 +125,16 @@ unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 
 RESOURCES += Almond.qrc
 
-unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel -lqd -lasmjit
+unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond
 unix: LIBS += -lrt
 
-INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include
-DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include
-INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/src
-DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/stc
+INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include
+DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include
+INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/src $$PWD/libalmond/include
+DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/stc $$PWD/libalmond/include
 
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/asmjit.lib $$PWD/libmandel/mandel.lib $$PWD/libmandel/qd.lib
-else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/libqd.a $$PWD/libmandel/libasmjit.a
+win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/asmjit.lib $$PWD/libmandel/mandel.lib $$PWD/libmandel/qd.lib $$PWD/libalmond/almond.lib
+else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/libqd.a $$PWD/libmandel/libasmjit.a $$PWD/libalmond/almond.a
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/' -lopencl

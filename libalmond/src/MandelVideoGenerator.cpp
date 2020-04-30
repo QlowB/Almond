@@ -15,12 +15,8 @@ void MandelVideoGenerator::addProgressCallback(ProgressCallback pc)
     progressCallbacks.push_back(std::move(pc));
 }
 
-void MandelVideoGenerator::generate(void)
+void MandelVideoGenerator::generate(mnd::MandelGenerator& gen)
 {
-    mnd::MandelContext ctxt = mnd::initializeContext();
-    mnd::MandelGenerator& gen = ctxt.getDefaultGenerator();
-
-
     VideoStream vs(evi.width, evi.height, evi.path, evi.bitrate, evi.fps, evi.preset.c_str());
 
     mnd::Real x = evi.end.x + evi.end.width / 2;
@@ -50,8 +46,8 @@ void MandelVideoGenerator::generate(void)
 
         if (bigW > sqrt(oversizeFactor) * w) {
             mi.view = mnd::MandelViewport{ x - w/2, y - h/2, w, h };
-            Bitmap<float> raw{ evi.width * oversizeFactor, evi.height * oversizeFactor };
-            Bitmap<float> rawSmall{ evi.width * oversizeFactor, evi.height * oversizeFactor };
+            Bitmap<float> raw{ long(evi.width * oversizeFactor), long(evi.height * oversizeFactor) };
+            Bitmap<float> rawSmall{ long(evi.width * oversizeFactor), long(evi.height * oversizeFactor) };
             mi.view.zoomCenter(oversizeFactor);
             gen.generate(mi, rawSmall.pixels.get());
             //mi.view.zoomCenter(sqrt(oversizeFactor));
@@ -108,9 +104,9 @@ inline RGBColor lerpColors(const RGBColor& a, const RGBColor& b, double lerp)
     };
 
     return RGBColor{
-        a.r * lerp + b.r * (1 - lerp),
-        a.g * lerp + b.g * (1 - lerp),
-        a.b * lerp + b.b * (1 - lerp)
+        uint8_t(a.r * lerp + b.r * (1 - lerp)),
+        uint8_t(a.g * lerp + b.g * (1 - lerp)),
+        uint8_t(a.b * lerp + b.b * (1 - lerp))
     };
 }
 

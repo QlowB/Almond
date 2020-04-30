@@ -5,6 +5,7 @@
 #include <QMessageBox>
 
 #include "Mandel.h"
+#include "Almond.h"
 #include "VideoStream.h"
 
 //static bool exportVideo(const ExportVideoInfo& evi);
@@ -70,8 +71,10 @@ void ExportImageDialog::on_buttonBox_accepted()
     }
 }
 
-ExportVideoDialog::ExportVideoDialog(QWidget* parent, const ExportVideoInfo& evi) :
+
+ExportVideoDialog::ExportVideoDialog(Almond *parent, const ExportVideoInfo& evi) :
     QDialog{ parent },
+    almond{ parent },
     evi{ evi }
 {
     evd.setupUi(this);
@@ -121,6 +124,7 @@ ExportVideoDialog::ExportVideoDialog(QWidget* parent, const ExportVideoInfo& evi
     }
 }
 
+
 const ExportVideoInfo& ExportVideoDialog::getExportVideoInfo(void) const
 {
     return evi;
@@ -159,9 +163,11 @@ void ExportVideoDialog::on_buttonBox_accepted()
 
     evi.start.adjustAspectRatio(evi.width, evi.height);
     evi.end.adjustAspectRatio(evi.width, evi.height);
+    evi.
+    evi.gradient = almond->mw->getGradient();
 
     MandelVideoGenerator mvg(evi);
-    mvg.generate();
+    mvg.generate(*almond->mw->getGenerator());
     //if (exportVideo(evi)) {
         QMessageBox* msgBox = new QMessageBox;
         msgBox->setText("Video successfully exported.");

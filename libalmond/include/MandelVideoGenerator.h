@@ -1,7 +1,7 @@
 #ifndef MANDELVIDEOGENERATOR_H
 #define MANDELVIDEOGENERATOR_H
 
-#include "MandelUtil.h"
+#include "Mandel.h"
 #include "Gradient.h"
 #include "Bitmap.h"
 #include <functional>
@@ -43,7 +43,7 @@ private:
     public:
     MandelVideoGenerator(const ExportVideoInfo& evi);
 
-    void generate(void);
+    void generate(mnd::MandelGenerator& gen);
     void addProgressCallback(ProgressCallback pc);
 
 private:

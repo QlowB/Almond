@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.13)
 
 project(mandelvid VERSION 1.0.0 DESCRIPTION "mandel video generator")
 
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../CMakeModules)
+
 add_subdirectory(../libalmond ./libalmond)
 
 set(CMAKE_CXX_STANDARD 17)

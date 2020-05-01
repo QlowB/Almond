@@ -54,7 +54,7 @@ endif(Boost_FOUND)
 
 if(OpenMP_CXX_FOUND)
     target_link_libraries(Almond PUBLIC OpenMP::OpenMP_CXX)
-    target_link_libraries(Almond PUBLIC ${OpenMP_CXX_FLAGS})
+    target_compile_options(Almond PUBLIC ${OpenMP_CXX_FLAGS})
 endif()
 
 

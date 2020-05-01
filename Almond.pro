@@ -125,7 +125,7 @@ unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 
 RESOURCES += Almond.qrc
 
-unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond
+unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond -lpng
 unix: LIBS += -lrt
 
 INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include
@@ -134,7 +134,7 @@ INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/src $$PWD/libalmon
 DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/stc $$PWD/libalmond/include
 
 win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/asmjit.lib $$PWD/libmandel/mandel.lib $$PWD/libmandel/qd.lib $$PWD/libalmond/almond.lib
-else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/libqd.a $$PWD/libmandel/libasmjit.a $$PWD/libalmond/almond.a
+else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/libqd.a $$PWD/libmandel/libasmjit.a $$PWD/libalmond/libalmond.a
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/' -lopencl

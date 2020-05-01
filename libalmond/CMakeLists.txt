@@ -11,7 +11,7 @@ add_subdirectory(../libmandel ./libmandel)
 #set(Boost_DEBUG 1)
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.65 REQUIRED)
-
+find_package(PNG REQUIRED)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -22,8 +22,10 @@ FILE(GLOB libalmondheaders include/*.h)
 add_library(libalmond STATIC ${libalmondsources})
 target_include_directories(libalmond PUBLIC "include")
 target_include_directories(libalmond SYSTEM PUBLIC ${FFMPEG_INCLUDE_DIRS})
+target_include_directories(libalmond SYSTEM PUBLIC ${PNG_INCLUDE_DIRS})
 target_link_libraries(libalmond PUBLIC mandel)
 target_link_libraries(libalmond PUBLIC ${FFMPEG_LIBRARIES})
+target_link_libraries(libalmond PUBLIC ${PNG_LIBRARIES})
 set_target_properties(libalmond PROPERTIES OUTPUT_NAME almond)
 
 

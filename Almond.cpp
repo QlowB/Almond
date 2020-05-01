@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QGradient>
 #include "gradientchoosedialog.h"
+#include "ImageExport.h"
 
 #include <cmath>
 
@@ -141,13 +142,19 @@ void Almond::on_exportImage_clicked()
         }
         mnd::MandelGenerator* currentGenerator = mw->getGenerator();
         mnd::MandelGenerator& g = currentGenerator ? *currentGenerator : mandelContext.getDefaultGenerator();
-        auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
+
+        alm::ImageExportInfo iei;
+        iei.drawInfo = mi;
+        iei.generator = &g;
+        iei.gradient = &mw->getGradient();
+        alm::exportPng(dialog.getPath().toStdString(), iei);
+        /*auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
         g.generate(mi, fmap.pixels.get());
         auto bitmap = fmap.map<RGBColor>([&mi, this] (float i) {
             return i >= mi.maxIter ? RGBColor{ 0,0,0 } : mw->getGradient().get(i);
         });
         QImage img(reinterpret_cast<unsigned char*>(bitmap.pixels.get()), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
-        img.save(dialog.getPath());
+        img.save(dialog.getPath());*/
     }
 }
 

@@ -54,7 +54,8 @@ void ExportImageDialog::on_pushButton_clicked()
 {
     QString saveAs = QFileDialog::getSaveFileName(this,
             tr("Save exported image"), "",
-            tr("PNG image (*.png);;JPEG image (*.jpg);;All Files (*)"));
+            //tr("PNG image (*.png);;JPEG image (*.jpg);;All Files (*)"));
+            tr("PNG image (*.png)"));
     if(!saveAs.isEmpty() && !saveAs.isNull())
         eid.savePath->setText(saveAs);
     this->repaint();

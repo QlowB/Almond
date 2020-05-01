@@ -1,4 +1,5 @@
 #include "MandelVideoGenerator.h"
+#include "ImageExport.h"
 #include "Gradient.h"
 #include "Mandel.h"
 #include "Fixed.h"
@@ -31,9 +32,25 @@ int main() {
 
     evi.start.adjustAspectRatio(evi.width, evi.height);
 
-    MandelVideoGenerator mvg(evi);
+    //MandelVideoGenerator mvg(evi);
 
-    mvg.generate();
+    //mvg.generate();
+    //
+    
+
+    mnd::MandelContext mc = mnd::initializeContext();
+    mnd::MandelInfo mi;
+    mi.view = evi.start;
+    mi.bWidth = 8000;
+    mi.bHeight = 8000;
+    mi.maxIter = 100;
+    mi.smooth = true;
+    alm::ImageExportInfo iei;
+    iei.drawInfo = mi;
+    iei.gradient = &evi.gradient;
+    iei.generator = &mc.getDefaultGenerator();
+    alm::exportPng("file.png", iei);
+
     return 0;
 }
 

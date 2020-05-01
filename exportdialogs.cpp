@@ -163,7 +163,6 @@ void ExportVideoDialog::on_buttonBox_accepted()
 
     evi.start.adjustAspectRatio(evi.width, evi.height);
     evi.end.adjustAspectRatio(evi.width, evi.height);
-    evi.
     evi.gradient = almond->mw->getGradient();
 
     MandelVideoGenerator mvg(evi);

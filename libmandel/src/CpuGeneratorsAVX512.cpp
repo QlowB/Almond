@@ -29,6 +29,11 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
     __m512 enumerate = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     __m512 two = _mm512_set1_ps(2);
 
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+    __m512 juliaX = _mm512_set1_ps(jX);
+    __m512 juliaY = _mm512_set1_ps(jY);
+
 #if defined(_OPENMP)
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
@@ -60,6 +65,15 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
 
             __m512 threshold = _mm512_set1_ps(16);
 
+            __m512 cx0 = xs0;
+            __m512 cx1 = xs1;
+            __m512 cy = ys;
+	    if (info.julia) {
+		cx0 = juliaX;
+		cx1 = juliaX;
+		cy = juliaY;
+	    }
+
             __m512 a0 = xs0;
             __m512 a1 = xs1;
             //__m512 a2 = xs2;
@@ -78,11 +92,11 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
                     __mmask16 cmp0 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b0, b0, aa0), threshold, _CMP_LE_OQ);
                     __mmask16 cmp1 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b1, b1, aa1), threshold, _CMP_LE_OQ);
                     //__mmask16 cmp2 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b2, b2, aa2), threshold, _CMP_LE_OQ);
-                    a0 = _mm512_sub_ps(aa0, _mm512_fmsub_ps(b0, b0, xs0));
-                    a1 = _mm512_sub_ps(aa1, _mm512_fmsub_ps(b1, b1, xs1));
+                    a0 = _mm512_sub_ps(aa0, _mm512_fmsub_ps(b0, b0, cx0));
+                    a1 = _mm512_sub_ps(aa1, _mm512_fmsub_ps(b1, b1, cx1));
                     //a2 = _mm512_sub_ps(aa2, _mm512_fmsub_ps(b2, b2, xs2));
-                    b0 = _mm512_fmadd_ps(two, abab0, ys);
-                    b1 = _mm512_fmadd_ps(two, abab1, ys);
+                    b0 = _mm512_fmadd_ps(two, abab0, cy);
+                    b1 = _mm512_fmadd_ps(two, abab1, cy);
                     //b2 = _mm512_fmadd_ps(two, abab2, ys);
                     counter0 = _mm512_mask_add_ps(counter0, cmp0, counter0, adder0);
                     counter1 = _mm512_mask_add_ps(counter1, cmp1, counter1, adder1);
@@ -109,11 +123,11 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
                     __mmask16 cmp0 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b0, b0, aa0), threshold, _CMP_LE_OQ);
                     __mmask16 cmp1 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b1, b1, aa1), threshold, _CMP_LE_OQ);
                     //__mmask16 cmp2 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b2, b2, aa2), threshold, _CMP_LE_OQ);
-                    a0 = _mm512_sub_ps(aa0, _mm512_fmsub_ps(b0, b0, xs0));
-                    a1 = _mm512_sub_ps(aa1, _mm512_fmsub_ps(b1, b1, xs1));
+                    a0 = _mm512_sub_ps(aa0, _mm512_fmsub_ps(b0, b0, cx0));
+                    a1 = _mm512_sub_ps(aa1, _mm512_fmsub_ps(b1, b1, cx1));
                     //a2 = _mm512_sub_ps(aa2, _mm512_fmsub_ps(b2, b2, xs2));
-                    b0 = _mm512_fmadd_ps(two, abab0, ys);
-                    b1 = _mm512_fmadd_ps(two, abab1, ys);
+                    b0 = _mm512_fmadd_ps(two, abab0, cy);
+                    b1 = _mm512_fmadd_ps(two, abab1, cy);
                     //b2 = _mm512_fmadd_ps(two, abab2, ys);
                     counter0 = _mm512_mask_add_ps(counter0, cmp0, counter0, adder0);
                     counter1 = _mm512_mask_add_ps(counter1, cmp1, counter1, adder1);
@@ -173,6 +187,11 @@ void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::Mande
     __m512d viewx = { viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf };
     __m512d dpp = { dppf, dppf, dppf, dppf, dppf, dppf, dppf, dppf };
 
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+    __m512d juliaX = _mm512_set1_pd(jX);
+    __m512d juliaY = _mm512_set1_pd(jY);
+
 #if defined(_OPENMP)
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
@@ -193,6 +212,12 @@ void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::Mande
 
             __m512d threshold = { 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f };
 
+            __m512d cx = xs;
+            __m512d cy = ys;
+	    if (info.julia) {
+		cx = juliaX;
+		cy = juliaY;
+	    }
             __m512d a = xs;
             __m512d b = ys;
 
@@ -201,8 +226,8 @@ void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::Mande
                     __m512d aa = _mm512_mul_pd(a, a);
                     __m512d ab = _mm512_mul_pd(a, b);
                     __mmask8 cmp = _mm512_cmp_pd_mask(_mm512_fmadd_pd(b, b, aa), threshold, _CMP_LE_OQ);
-                    a = _mm512_sub_pd(aa, _mm512_fmsub_pd(b, b, xs));
-                    b = _mm512_fmadd_pd(two, ab, ys);
+                    a = _mm512_sub_pd(aa, _mm512_fmsub_pd(b, b, cx));
+                    b = _mm512_fmadd_pd(two, ab, cy);
                     resultsa = _mm512_mask_blend_pd(cmp, resultsa, a);
                     resultsb = _mm512_mask_blend_pd(cmp, resultsb, b);
                     counter = _mm512_mask_add_pd(counter, cmp, counter, adder);
@@ -216,8 +241,8 @@ void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::Mande
                     __m512d aa = _mm512_mul_pd(a, a);
                     __m512d ab = _mm512_mul_pd(a, b);
                     __mmask8 cmp = _mm512_cmp_pd_mask(_mm512_fmadd_pd(b, b, aa), threshold, _CMP_LE_OQ);
-                    a = _mm512_sub_pd(aa, _mm512_fmsub_pd(b, b, xs));
-                    b = _mm512_fmadd_pd(two, ab, ys);
+                    a = _mm512_sub_pd(aa, _mm512_fmsub_pd(b, b, cx));
+                    b = _mm512_fmadd_pd(two, ab, cy);
                     counter = _mm512_mask_add_pd(counter, cmp, counter, adder);
                     if (cmp == 0) {
                         break;

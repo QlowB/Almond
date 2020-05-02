@@ -16,41 +16,6 @@ namespace mnd
 namespace mnd::eval
 {
 
-
-    struct Load { size_t index; };
-    struct Store
-    {
-        size_t index;
-        std::unique_ptr<EvalNode> v;
-    };
-
-    struct BinaryOperation
-    {
-        std::unique_ptr<EvalNode> a;
-        std::unique_ptr<EvalNode> b;
-    };
-
-    struct UnaryOperation
-    {
-        std::unique_ptr<EvalNode> a;
-    };
-
-    struct Add : BinaryOperation {};
-    struct Sub : BinaryOperation {};
-    struct Mul : BinaryOperation {};
-    struct Div : BinaryOperation {};
-
-    struct Neg : UnaryOperation {};
-
-
-    struct Atan2 : BinaryOperation {};
-    struct Pow : BinaryOperation {};
-    struct Cos : UnaryOperation {};
-    struct Sin : UnaryOperation {};
-    struct Exp : UnaryOperation {};
-    struct Ln : UnaryOperation {};
-
-
     using namespace mnd;
     using namespace mnd::ir;
     template<typename T>

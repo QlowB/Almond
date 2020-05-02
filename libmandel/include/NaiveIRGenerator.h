@@ -3,6 +3,7 @@
 
 #include "IterationIR.h"
 #include "Generators.h"
+#include <memory>
 #include <variant>
 
 namespace mnd
@@ -41,6 +42,42 @@ namespace mnd
             Exp,
             Ln
         >;
+
+
+        struct Load { size_t index; };
+        struct Store
+        {
+            size_t index;
+            std::unique_ptr<EvalNode> v;
+        };
+    
+        struct BinaryOperation
+        {
+            std::unique_ptr<EvalNode> a;
+            std::unique_ptr<EvalNode> b;
+        };
+    
+        struct UnaryOperation
+        {
+            std::unique_ptr<EvalNode> a;
+        };
+    
+        struct Add : BinaryOperation {};
+        struct Sub : BinaryOperation {};
+        struct Mul : BinaryOperation {};
+        struct Div : BinaryOperation {};
+    
+        struct Neg : UnaryOperation {};
+    
+    
+        struct Atan2 : BinaryOperation {};
+        struct Pow : BinaryOperation {};
+        struct Cos : UnaryOperation {};
+        struct Sin : UnaryOperation {};
+        struct Exp : UnaryOperation {};
+        struct Ln : UnaryOperation {};
+
+
 
         template<typename T>
         struct EvalStruct

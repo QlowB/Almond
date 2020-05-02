@@ -60,8 +60,8 @@ __kernel void iterate(__global float* A, const int width,
     double2 pixelScaleY = (double2)(ph1, ph2);
     double2 a = add(mulDouble(pixelScaleX, (double) px), xl); // pixelScaleX * px + xl
     double2 b = add(mulDouble(pixelScaleY, (double) py), yt); // pixelScaleY * py + yt
-    double2 ca = julia != 0 ? ((double2) (jx1, jx2)) : ca;
-    double2 cb = julia != 0 ? ((double2) (jy1, jy2)) : cb;
+    double2 ca = julia != 0 ? ((double2) (jx1, jx2)) : a;
+    double2 cb = julia != 0 ? ((double2) (jy1, jy2)) : b;
 
 
     int n = 0;

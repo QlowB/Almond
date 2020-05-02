@@ -5,7 +5,9 @@
 #include <QSplashScreen>
 #include <QMovie>
 #include <QTimer>
+#include <QFuture>
 #include <cmath>
+#include <QtConcurrent>
 
 class AlmondSplashScreen : public QSplashScreen
 {
@@ -64,7 +66,7 @@ public:
             QPen pen(QColor(255, 255, 255, int(opacity)));
             pen.setWidth(4);
             painter->setPen(pen);
-            painter->drawEllipse(QRectF{ x, height - 40, 16, 16 });
+            painter->drawEllipse(QRectF{ x, double(height - 40), 16, 16 });
         }
     }
 
@@ -72,7 +74,7 @@ public slots:
     void nextFrame() //(const QRect& rect)
     {
         emit this->repaint();
-        animOff += 7;
+        animOff += 3;
     }
 };
 
@@ -86,7 +88,9 @@ int main(int argc, char *argv[])
     QPixmap splashImg(":/splash/splash");
     QPixmap splashScaled = splashImg.scaled(splashW, splashW * splashImg.height() / splashImg.width());
     AlmondSplashScreen splash{ splashScaled };
+    a.processEvents();
     splash.show();
+    a.processEvents();
     /*for (int i = 0; i < 100; i++) {
         a.processEvents();
         system("sleep 0.03");
@@ -94,6 +98,7 @@ int main(int argc, char *argv[])
     Almond w;
     a.processEvents();
     splash.finish(&w);
+    a.processEvents();
     w.show();
     return a.exec();
 }

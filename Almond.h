@@ -55,6 +55,7 @@ public:
     mnd::MandelGenerator* currentGenerator;
 public:
     Almond(QWidget *parent = Q_NULLPTR);
+    Almond(Almond&&) = default;
     ~Almond(void);
 
     void submitBackgroundTask(BackgroundTask* task);

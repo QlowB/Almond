@@ -44,6 +44,10 @@ namespace mnd
     inline Float128 log(const Float128& x) { return boost::multiprecision::log(x); }
     inline Float128 log2(const Float128& x) { return boost::multiprecision::log2(x); }
     inline Float128 pow(const Float128& x, const Float128& y) { return boost::multiprecision::pow(x, y); }
+    inline Float128 atan2(const Float128& y, const Float128& x) { return boost::multiprecision::atan2(y, x); }
+    inline Float128 cos(const Float128& x) { return boost::multiprecision::cos(x); }
+    inline Float128 sin(const Float128& x) { return boost::multiprecision::sin(x); }
+    inline Float128 exp(const Float128& x) { return boost::multiprecision::exp(x); }
 
     using Float256 = boost::multiprecision::number<
         boost::multiprecision::backends::cpp_bin_float<
@@ -57,6 +61,10 @@ namespace mnd
     inline Float256 log(const Float256& x) { return boost::multiprecision::log(x); }
     inline Float256 log2(const Float256& x) { return boost::multiprecision::log2(x); }
     inline Float256 pow(const Float256& x, const Float256& y) { return boost::multiprecision::pow(x, y); }
+    inline Float256 atan2(const Float256& y, const Float256& x) { return boost::multiprecision::atan2(y, x); }
+    inline Float256 cos(const Float256& x) { return boost::multiprecision::cos(x); }
+    inline Float256 sin(const Float256& x) { return boost::multiprecision::sin(x); }
+    inline Float256 exp(const Float256& x) { return boost::multiprecision::exp(x); }
 
     using Float512 = boost::multiprecision::number<
         boost::multiprecision::backends::cpp_bin_float<
@@ -91,6 +99,10 @@ namespace mnd
     inline DoubleDouble log(const DoubleDouble& x) { return ::log(x); }
     inline DoubleDouble log2(const DoubleDouble& x) { return ::log(x) / ::log(DoubleDouble(2.0)); }
     inline DoubleDouble pow(const DoubleDouble& x, const DoubleDouble& y) { return ::pow(x, y); }
+    inline DoubleDouble atan2(const DoubleDouble& y, const DoubleDouble& x) { return ::atan2(y, x); }
+    inline DoubleDouble cos(const DoubleDouble& x) { return ::cos(x); }
+    inline DoubleDouble sin(const DoubleDouble& x) { return ::sin(x); }
+    inline DoubleDouble exp(const DoubleDouble& x) { return ::exp(x); }
 
 
     inline QuadDouble abs(const QuadDouble& x) { return ::abs(x); }
@@ -99,6 +111,10 @@ namespace mnd
     inline QuadDouble log(const QuadDouble& x) { return ::log(x); }
     inline QuadDouble log2(const QuadDouble& x) { return ::log(x) / ::log(QuadDouble(2.0)); }
     inline QuadDouble pow(const QuadDouble& x, const QuadDouble& y) { return ::pow(x, y); }
+    inline QuadDouble atan2(const QuadDouble& y, const QuadDouble& x) { return ::atan2(y, x); }
+    inline QuadDouble cos(const QuadDouble& x) { return ::cos(x); }
+    inline QuadDouble sin(const QuadDouble& x) { return ::sin(x); }
+    inline QuadDouble exp(const QuadDouble& x) { return ::exp(x); }
 
     inline double abs(double x) { return ::abs(x); }
     inline float abs(float x) { return ::abs(x); }
@@ -110,8 +126,16 @@ namespace mnd
     inline float log(float x) { return ::logf(x); }
     inline double log2(double x) { return ::log2(x); }
     inline float log2(float x) { return ::log2f(x); }
+    inline double atan2(double x, double y) { return ::atan2(x, y); }
+    inline float atan2(float x, float y) { return ::atan2(x, y); }
     inline double pow(double x, double y) { return ::pow(x, y); }
     inline float pow(float x, float y) { return ::powf(x, y); }
+    inline double cos(double x) { return ::cos(x); }
+    inline float cos(float x) { return ::cos(x); }
+    inline double sin(double x) { return ::sin(x); }
+    inline float sin(float x) { return ::sin(x); }
+    inline double exp(double x) { return ::exp(x); }
+    inline float exp(float x) { return ::exp(x); }
 
 
     template<typename T, typename U>

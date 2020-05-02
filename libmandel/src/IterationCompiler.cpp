@@ -794,8 +794,8 @@ namespace mnd
         }
 #endif // WITH_ASMJIT
 
-        //vec.push_back(std::make_unique<NaiveIRGenerator<mnd::DoubleDouble>>(irf));
-        //vec.push_back(std::make_unique<NaiveIRGenerator<mnd::QuadDouble>>(irf));
+        vec.push_back(std::make_unique<NaiveIRGenerator<mnd::DoubleDouble>>(irf));
+        vec.push_back(std::make_unique<NaiveIRGenerator<mnd::QuadDouble>>(irf));
         
         //auto dg = std::make_unique<NaiveIRGenerator>(*irf, mnd::getPrecision<double>());
 

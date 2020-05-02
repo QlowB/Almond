@@ -10,6 +10,12 @@ float2 twoSum(float a, float b) {
     return (float2)(s, r);
 }
 
+float2 quickTwoSum(float a, float b) {
+    float s = a + b;
+    float e = b - (s - a);
+    return (float2)(s, e);
+}
+
 float2 split(float a) {
     float c = (4096 + 1) * a;
     float abig = c - a;
@@ -34,7 +40,13 @@ float2 twoProd(float a, float b) {
     return (float2)(p, e);
 }
 
-float2 add(float2 a, float2 b) {
+float2 twoProdSq(float a) {
+    float p = a * a;
+    float e = fma(a, a, -p);
+    return (float2)(p, e);
+}
+
+/*float2 add(float2 a, float2 b) {
     float r = a.s0 + b.s0;
     float s;
     if (fabs(a.s0) >= fabs(b.s0)) {
@@ -44,6 +56,12 @@ float2 add(float2 a, float2 b) {
         s = (((b.s0 - r) + a.s0) + a.s1) + b.s1;
     }
     return twoSum(r, s);
+}*/
+
+float2 add(float2 a, float2 b) {
+    float2 se = twoSum(a.s0, b.s0);
+    se.s1 += a.s1 + b.s1;
+    return quickTwoSum(se.s0, se.s1);
 }
 
 float2 mul(float2 a, float2 b) {
@@ -52,10 +70,17 @@ float2 mul(float2 a, float2 b) {
     return twoSum(t.s0, t.s1);
 }
 
+float2 sq(float2 a) {
+    float2 t = twoProdSq(a.s0);
+    float e = a.s0 * a.s1;
+    t.s1 += e + e;
+    return quickTwoSum(t.s0, t.s1);
+}
+
 float2 mulFloat(float2 a, float b) {
     float2 t = twoProd(a.s0, b);
     t.s1 += (a.s1 * b);
-    return twoSum(t.s0, t.s1);
+    return quickTwoSum(t.s0, t.s1);
 }
 
 __kernel void iterate(__global float* A, const int width,
@@ -82,8 +107,8 @@ __kernel void iterate(__global float* A, const int width,
 
     int n = 0;
     while (n < max - 1) {
-        float2 aa = mul(a, a);
-        float2 bb = mul(b, b);
+        float2 aa = sq(a);
+        float2 bb = sq(b);
         float2 ab = mul(a, b);
         if (aa.s0 + bb.s0 > 16) break;
         float2 minusbb = (float2)(-bb.s0, -bb.s1);

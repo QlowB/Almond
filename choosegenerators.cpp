@@ -63,28 +63,25 @@ const std::vector<mnd::MandelInfo> Benchmarker::benches = {
     mnd::MandelInfo{ benchViewport(), 256, 512, 2000, false },
     mnd::MandelInfo{ benchViewport(), 512, 512, 2000, false },
     mnd::MandelInfo{ benchViewport(), 512, 512, 4000, false },
-    mnd::MandelInfo{ benchViewport(), 512, 1024, 4000, false },
-    mnd::MandelInfo{ benchViewport(), 1024, 1024, 4000, false },
-    mnd::MandelInfo{ benchViewport(), 1024, 1024, 8000, false },
-    mnd::MandelInfo{ benchViewport(), 1024, 1024, 16000, false },
-    mnd::MandelInfo{ benchViewport(), 1024, 2048, 16000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 16000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 32000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 64000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 128000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 256000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 512000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 1024000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 4096000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 8192000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 16384000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 32768000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 65536000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 131072000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 262144000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 524288000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 1048576000, false },
-    mnd::MandelInfo{ benchViewport(), 2048, 2048, 2097152000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 8000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 16000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 32000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 64000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 128000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 256000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 512000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 1024000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 2048000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 4096000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 8192000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 16384000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 32768000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 65536000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 131072000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 262144000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 524288000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 1048576000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 2097152000, false },
 };
 
 
@@ -120,7 +117,7 @@ double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
             return &bmp;
         });
         if (time > std::chrono::milliseconds(200)) {
-            testIndex = i + 4;
+            testIndex = i + 2;
             printf("testing index for generator %s: %d\n", (mnd::toString(mg.getType()) + ", " + mnd::toString(mg.getExtension())).c_str(), testIndex);
             printf("    w: %d, h: %d, iter: %d\n", benches[testIndex].bWidth, benches[testIndex].bHeight, benches[testIndex].maxIter);
             fflush(stdout);

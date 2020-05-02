@@ -90,16 +90,17 @@ Benchmarker::~Benchmarker(void)
 }
 
 
-std::pair<long long, std::chrono::nanoseconds> Benchmarker::measureMips(const std::function<Bitmap<float>*()>& bench) const
+std::pair<long long, std::chrono::nanoseconds> Benchmarker::measureMips(
+        std::function<void(Bitmap<float>&)> bench, Bitmap<float>& bmp) const
 {
     using namespace std::chrono;
     auto before = high_resolution_clock::now();
-    auto* bitmap = bench();
+    bench(bmp);
     auto after = high_resolution_clock::now();
 
     long long sum = 0;
-    for (int i = 0; i < bitmap->width * bitmap->height; i++) {
-        sum += static_cast<long long>(std::floor(bitmap->pixels[size_t(i)]));
+    for (int i = 0; i < bmp.width * bmp.height; i++) {
+        sum += static_cast<long long>(std::floor(bmp.pixels[size_t(i)]));
     }
 
     return std::make_pair(sum, duration_cast<nanoseconds>(after - before));
@@ -112,29 +113,30 @@ double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
     for (size_t i = 0; i < benches.size(); i++) {
         const mnd::MandelInfo& mi = benches[i];
         Bitmap<float> bmp(mi.bWidth, mi.bHeight);
-        auto [iters, time] = measureMips([&mg, &mi, &bmp]() {
+        auto [iters, time] = measureMips([&mg, mi](Bitmap<float>& bmp) {
             mg.generate(mi, bmp.pixels.get());
-            return &bmp;
-        });
-        if (time > std::chrono::milliseconds(200)) {
-            testIndex = i + 2;
+        }, bmp);
+        if (time > std::chrono::milliseconds(120)) {
+            testIndex = i + 4;
             printf("testing index for generator %s: %d\n", (mnd::toString(mg.getType()) + ", " + mnd::toString(mg.getExtension())).c_str(), testIndex);
             printf("    w: %d, h: %d, iter: %d\n", benches[testIndex].bWidth, benches[testIndex].bHeight, benches[testIndex].maxIter);
             fflush(stdout);
             break;
         }
-        else if (time < std::chrono::milliseconds(10)) {
+        else if (time < std::chrono::milliseconds(3)) {
             i += 7;
+        }
+        else if (time < std::chrono::milliseconds(20)) {
+            i += 3;
         }
     }
 
     try {
         const mnd::MandelInfo& mi = benches[(testIndex >= benches.size()) ? (benches.size() - 1) : testIndex];
         Bitmap<float> bmp(mi.bWidth, mi.bHeight);
-        auto [iters, time] = measureMips([&mg, &mi, &bmp]() {
+        auto [iters, time] = measureMips([&mg, mi](Bitmap<float>& bmp) {
             mg.generate(mi, bmp.pixels.get());
-            return &bmp;
-        });
+        }, bmp);
 
         printf("%lld iterations in %lld microseconds\n\n", iters, time.count() / 1000);
 

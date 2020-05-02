@@ -47,7 +47,7 @@ public:
 
     static mnd::MandelViewport benchViewport(void);
 
-    std::pair<long long, std::chrono::nanoseconds> measureMips(const std::function<Bitmap<float>*()>& bench) const;
+    std::pair<long long, std::chrono::nanoseconds> measureMips(std::function<void(Bitmap<float>&)> bench, Bitmap<float>& bmp) const;
     double benchmarkResult(mnd::MandelGenerator& mg) const;
 
     void run(void) override;

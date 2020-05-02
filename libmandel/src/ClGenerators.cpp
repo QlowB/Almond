@@ -508,6 +508,8 @@ void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
     ull y = ull(::round(double(info.view.y) * (1LL << 48)));
     ull w = ull(::round(double(pixelScaleX) * (1LL << 48)));
     ull h = ull(::round(double(pixelScaleY) * (1LL << 48)));
+    ull jx = ull(::round(double(info.juliaX) * (1LL << 48)));
+    ull jy = ull(::round(double(info.juliaY) * (1LL << 48)));
     //x = 0;
     //y = 0;
     
@@ -519,6 +521,9 @@ void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
     kernel.setArg(5, ull(h));
     kernel.setArg(6, int(info.maxIter));
     kernel.setArg(7, int(info.smooth ? 1 : 0));
+    kernel.setArg(8, int(info.julia ? 1 : 0));
+    kernel.setArg(9, ull(jx));
+    kernel.setArg(10, ull(jy));
 
     queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);

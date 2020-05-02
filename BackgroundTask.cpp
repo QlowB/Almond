@@ -41,6 +41,6 @@ void VideoExportTask::run(void)
     emit finished(true);
     QMessageBox* msgBox = new QMessageBox;
     msgBox->setText("Video successfully exported.");
-    msgBox->exec();
+    emit msgBox->exec();
 }
 

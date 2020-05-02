@@ -72,7 +72,9 @@ void Almond::backgroundTaskProgress(float percentage)
         ui.backgroundProgress->setValue(percentage);
     }
     else {
+        ui.backgroundProgress->reset();
         ui.backgroundProgress->setRange(0, 0);
+        ui.backgroundProgress->setValue(-1);
     }
 }
 

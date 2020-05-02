@@ -58,6 +58,15 @@ void CpuGenerator<float, mnd::X86_SSE2, parallel>::generate(const mnd::MandelInf
             __m128 a2 = xs2;
             __m128 b2 = ys;
 
+            __m128 cx = xs;
+            __m128 cy = ys;
+            __m128 cx2 = xs2;
+	    if (info.julia) {
+		cx = juliaX;
+		cx2 = juliaX;
+		cy = juliaY;
+	    }
+
             __m128 resulta = { 0, 0, 0, 0 };
             __m128 resultb = { 0, 0, 0, 0 };
             __m128 resulta2 = { 0, 0, 0, 0 };
@@ -70,10 +79,10 @@ void CpuGenerator<float, mnd::X86_SSE2, parallel>::generate(const mnd::MandelInf
                 __m128 bb2 = _mm_mul_ps(b2, b2);
                 __m128 abab = _mm_mul_ps(a, b); abab = _mm_add_ps(abab, abab);
                 __m128 abab2 = _mm_mul_ps(a2, b2); abab2 = _mm_add_ps(abab2, abab2);
-                a = _mm_add_ps(_mm_sub_ps(aa, bb), xs);
-                b = _mm_add_ps(abab, ys);
-                a2 = _mm_add_ps(_mm_sub_ps(aa2, bb2), xs2);
-                b2 = _mm_add_ps(abab2, ys);
+                a = _mm_add_ps(_mm_sub_ps(aa, bb), cx);
+                b = _mm_add_ps(abab, cy);
+                a2 = _mm_add_ps(_mm_sub_ps(aa2, bb2), cx2);
+                b2 = _mm_add_ps(abab2, cy);
                 __m128 cmp = _mm_cmple_ps(_mm_add_ps(aa, bb), threshold);
                 __m128 cmp2 = _mm_cmple_ps(_mm_add_ps(aa2, bb2), threshold);
                 if (info.smooth) {
@@ -164,6 +173,16 @@ void CpuGenerator<double, mnd::X86_SSE2, parallel>::generate(const mnd::MandelIn
             __m128d b = ys;
             __m128d a2 = xs2;
             __m128d b2 = ys;
+
+            __m128d cx = xs;
+            __m128d cy = ys;
+            __m128d cx2 = xs2;
+	    if (info.julia) {
+		cx = juliaX;
+		cx2 = juliaX;
+		cy = juliaY;
+	    }
+
             __m128d resulta = { 0, 0 };
             __m128d resultb = { 0, 0 };
             __m128d resulta2 = { 0, 0 };
@@ -176,10 +195,10 @@ void CpuGenerator<double, mnd::X86_SSE2, parallel>::generate(const mnd::MandelIn
                 __m128d bb2 = _mm_mul_pd(b2, b2);
                 __m128d abab = _mm_mul_pd(a, b); abab = _mm_add_pd(abab, abab);
                 __m128d abab2 = _mm_mul_pd(a2, b2); abab2 = _mm_add_pd(abab2, abab2);
-                a = _mm_add_pd(_mm_sub_pd(aa, bb), xs);
-                b = _mm_add_pd(abab, ys);
-                a2 = _mm_add_pd(_mm_sub_pd(aa2, bb2), xs2);
-                b2 = _mm_add_pd(abab2, ys);
+                a = _mm_add_pd(_mm_sub_pd(aa, bb), cx);
+                b = _mm_add_pd(abab, cy);
+                a2 = _mm_add_pd(_mm_sub_pd(aa2, bb2), cx2);
+                b2 = _mm_add_pd(abab2, cy);
                 __m128d cmp = _mm_cmple_pd(_mm_add_pd(aa, bb), threshold);
                 __m128d cmp2 = _mm_cmple_pd(_mm_add_pd(aa2, bb2), threshold);
                 if (info.smooth) {

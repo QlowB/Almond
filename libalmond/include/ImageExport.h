@@ -3,7 +3,7 @@
 
 #include "Mandel.h"
 #include "Gradient.h"
-#include "../../libmandel/include/Mandel.h"
+#include <functional>
 
 namespace alm
 {
@@ -11,10 +11,20 @@ namespace alm
     {
         mnd::MandelInfo drawInfo;
         mnd::MandelGenerator* generator;
-        const Gradient* gradient;
+        Gradient gradient;
+        std::string path;
     };
 
-    void exportPng(const std::string& name, const ImageExportInfo& iei);
+    /**
+     * \brief generates and saves a fractal image in png format.
+     * 
+     * \param iei               info to generate the image
+     * \param progressCallback  optional function that is called to
+     *                          report progress; the float parameter
+     *                          contains a value from 0 to 100
+     */
+    void exportPng(const ImageExportInfo& iei,
+        std::function<void(float)> progressCallback = [](float){});
 }
 
 

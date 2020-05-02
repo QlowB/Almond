@@ -1,15 +1,53 @@
 #ifndef BACKGROUNDTASK_H
 #define BACKGROUNDTASK_H
 
+#include <QObject>
 #include <QRunnable>
+#include <string>
+#include <functional>
+#include "ImageExport.h"
+#include "MandelVideoGenerator.h"
 
-class BackgroundTask
+class BackgroundTask : public QObject, public QRunnable
 {
-    QRunnable* task;
+    Q_OBJECT
+protected:
+    std::string shortDescription;
 public:
-    BackgroundTask(QRunnable* task);
+    BackgroundTask(const std::string& shortDescription);
 
-    QRunnable* getRunnable(void);
+    void run(void) = 0;
+
+    inline const std::string& getShortDescription(void) const { return shortDescription; }
+
+signals:
+    void progress(float percentage);
+    void finished(bool success);
+};
+
+
+class ImageExportTask : public BackgroundTask
+{
+    Q_OBJECT
+private:
+    const alm::ImageExportInfo iei;
+public:
+    ImageExportTask(const alm::ImageExportInfo& iei);
+
+    void run(void) override;
+};
+
+
+class VideoExportTask : public BackgroundTask
+{
+    Q_OBJECT
+private:
+    MandelVideoGenerator mvg;
+    mnd::MandelGenerator& generator;
+public:
+    VideoExportTask(MandelVideoGenerator mvg, mnd::MandelGenerator& generator);
+
+    void run(void) override;
 };
 
 #endif // BACKGROUNDTASK_H

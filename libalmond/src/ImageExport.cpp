@@ -7,13 +7,16 @@ namespace alm
 {
 
 
-void exportPng(const std::string& name, const ImageExportInfo& iei)
+void exportPng(const ImageExportInfo& iei, std::function<void(float)> progressCallback)
 {
     if (iei.generator == nullptr) {
         throw "no generator";
     }
+
+    progressCallback(0.0f);
+
     mnd::MandelGenerator& generator = *iei.generator;
-    FILE* file = fopen(name.c_str(), "wb");
+    FILE* file = fopen(iei.path.c_str(), "wb");
     if(!file) exit(1);
 
     png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -40,13 +43,11 @@ void exportPng(const std::string& name, const ImageExportInfo& iei)
     );
     png_write_info(png, info);
 
-    long chunkHeight = 512;
-    if (width <= 1024 && height <= 1024) {
-        chunkHeight = 1024;
-    }
-    if (width >= 4096) {
-        chunkHeight = 128;
-    }
+    long chunkHeight = height / 20;
+    if (chunkHeight < 1)
+        chunkHeight = 1;
+    if (width >= 4096 && chunkHeight > 64)
+        chunkHeight = 64;
 
     auto rowPointers = std::make_unique<png_byte*[]>(chunkHeight);
     for (long chunkY = 0; chunkY < height; chunkY += chunkHeight) {
@@ -60,12 +61,14 @@ void exportPng(const std::string& name, const ImageExportInfo& iei)
         Bitmap<float> chunk(width, tmpHeight);
         generator.generate(chunkInfo, chunk.pixels.get());
         Bitmap<RGBColor> coloredChunk = chunk.map<RGBColor>([&iei] (float i) {
-            return i >= iei.drawInfo.maxIter ? RGBColor{ 0, 0, 0 } : iei.gradient->get(i);
+            return i >= iei.drawInfo.maxIter ? RGBColor{ 0, 0, 0 } : iei.gradient.get(i);
         });
         for (long i = 0; i < tmpHeight; i++) {
             rowPointers[i] = reinterpret_cast<png_byte*>(&coloredChunk.get(0, i));
         }
         png_write_rows(png, &rowPointers[0], tmpHeight);
+        if (chunkY < height)
+            progressCallback(100.0f * chunkY / height);
     }
 
     png_write_end(png, NULL);
@@ -73,6 +76,7 @@ void exportPng(const std::string& name, const ImageExportInfo& iei)
     fclose(file);
 
     png_destroy_write_struct(&png, &info);
+    progressCallback(100.0f);
 }
 
 

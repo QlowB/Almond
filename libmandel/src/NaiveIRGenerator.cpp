@@ -13,6 +13,67 @@ namespace mnd
     template class NaiveIRGenerator<mnd::QuadDouble>;
 }
 
+namespace eval {
+    struct Load;
+    struct Store;
+    struct Add;
+    struct Sub;
+    struct Mul;
+    struct Div;
+    struct Neg;    
+    struct Atan;
+    struct Pow;
+    struct Cos;
+    struct Sin;
+    struct Exp;
+    struct Ln;
+
+    using EvalNode = std::variant<
+        Load,
+        Store,
+        Add,
+        Sub,
+        Mul,
+        Div,
+        Neg,
+        Atan,
+        Pow,
+        Cos,
+        Sin,
+        Exp,
+        Ln
+    >;
+
+    struct Load { int index; };
+    struct Store { int index; };
+
+    struct BinaryOperation
+    {
+        std::unique_ptr<EvalNode> a;
+        std::unique_ptr<EvalNode> b;
+    };
+
+    struct UnaryOperation
+    {
+        std::unique_ptr<EvalNode> a;
+    };
+
+    struct Add : BinaryOperation {};
+    struct Sub : BinaryOperation {};
+    struct Mul : BinaryOperation {};
+    struct Div : BinaryOperation {};
+
+    struct Neg : UnaryOperation {};
+
+
+    struct Atan : BinaryOperation {};
+    struct Pow : BinaryOperation {};
+    struct Cos : UnaryOperation {};
+    struct Sin : UnaryOperation {};
+    struct Exp : UnaryOperation {};
+    struct Ln : UnaryOperation {};
+}
+
 
 template<typename T>
 NaiveIRGenerator<T>::NaiveIRGenerator(const mnd::ir::Formula& irf,

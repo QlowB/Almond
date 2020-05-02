@@ -34,6 +34,7 @@ class Almond : public QMainWindow
     Q_OBJECT
 private:
     mnd::MandelContext mandelContext;
+    QThreadPool backgroundTasks;
 public:
     std::unique_ptr<MandelWidget> mw;
 private:
@@ -72,7 +73,8 @@ private slots:
 
     void on_chooseGenerator_clicked();
 
-    void backgroundTaskFinished();
+    void backgroundTaskFinished(bool);
+    void backgroundTaskProgress(float percentage);
 
     void pointSelected(mnd::Real x, mnd::Real y);
 

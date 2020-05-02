@@ -166,12 +166,6 @@ void ExportVideoDialog::on_buttonBox_accepted()
     evi.end.adjustAspectRatio(evi.width, evi.height);
     evi.gradient = almond->mw->getGradient();
 
-    MandelVideoGenerator mvg(evi);
-    mvg.generate(*almond->mw->getGenerator());
-    //if (exportVideo(evi)) {
-        QMessageBox* msgBox = new QMessageBox;
-        msgBox->setText("Video successfully exported.");
-        msgBox->exec();
     //}
 }
 

@@ -123,7 +123,8 @@ unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 #INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 #DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-RESOURCES += Almond.qrc
+RESOURCES += Almond.qrc \
+    splash.qrc
 
 unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond -lpng
 unix: LIBS += -lrt

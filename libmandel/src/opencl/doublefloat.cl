@@ -60,7 +60,8 @@ float2 mulFloat(float2 a, float b) {
 
 __kernel void iterate(__global float* A, const int width,
                       float x1, float x2, float y1, float y2,
-                      float pw1, float pw2, float ph1, float ph2, int max, int smooth) {
+                      float pw1, float pw2, float ph1, float ph2, int max, int smooth,
+                      int julia, float jx1, float jx2, float jy1, float jy2) {
     int index = get_global_id(0);
     int px = index % width;
     int py = index / width;
@@ -74,6 +75,10 @@ __kernel void iterate(__global float* A, const int width,
     float2 b = add(mulFloat(pixelScaleY, (float) py), yt); // pixelScaleY * py + yt
     float2 ca = a;
     float2 cb = b;
+    if (julia != 0) {
+        ca = (float2)(jx1, jx2);
+        cb = (float2)(jy1, jy2);
+    }
 
     int n = 0;
     while (n < max - 1) {

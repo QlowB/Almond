@@ -220,29 +220,14 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
 {
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
 
-    auto splitDouble = [] (double x) {
-        /*uint64_t xl = *((uint64_t*)&x);
-        uint64_t mantissa = xl & 0x000FFFFFFFFFFFFFULL;
-        uint64_t exp = (xl & 0x7FF0000000000000ULL) >> 53;
-        bool sign = (xl & 0x1000000000000000ULL) != 0;
-
-        uint32_t floathi = exp << 23;*/
-
-        float hi = float(x);
-        float lo = float(x - double(hi));
-        if (abs(lo) >= 1.0e-10f) {
-            //printf("hi: %.10ef, lo: %.10ef\n", hi, lo);
-            //fflush(stdout);
-        }
-        return std::pair{ hi, lo };
-    };
-
     Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
     mnd::LightDoubleFloat pixelScX = double(info.view.width / info.bWidth);
     mnd::LightDoubleFloat pixelScY = double(info.view.height / info.bHeight);
 
     mnd::LightDoubleFloat x = double(info.view.x);
     mnd::LightDoubleFloat y = double(info.view.y);
+    mnd::LightDoubleFloat jx = double(info.juliaX);
+    mnd::LightDoubleFloat jy = double(info.juliaY);
 
     kernel.setArg(0, buffer_A);
     kernel.setArg(1, int(info.bWidth));
@@ -256,6 +241,11 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
     kernel.setArg(9, pixelScY[1]);
     kernel.setArg(10, int(info.maxIter));
     kernel.setArg(11, int(info.smooth ? 1 : 0));
+    kernel.setArg(12, int(info.julia ? 1 : 0));
+    kernel.setArg(13, jx[0]);
+    kernel.setArg(14, jx[1]);
+    kernel.setArg(15, jy[0]);
+    kernel.setArg(16, jy[1]);
 
     cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);

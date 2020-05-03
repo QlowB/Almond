@@ -1,5 +1,6 @@
 #include "Almond.h"
 #include <QIntValidator>
+#include <QIcon>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QGradient>
@@ -31,6 +32,8 @@ Almond::Almond(QWidget* parent) :
     ui.mainContainer->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
     ui.backgroundProgress->setVisible(false);
+
+    this->setWindowIcon(QIcon(":/icons/icon"));
     //ui.verticalLayout_left->addWidget(new MyGLWidget(ui.centralWidget));
     //mw->show();
 }

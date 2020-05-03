@@ -399,6 +399,9 @@ void ClGeneratorQuadDouble::generate(const mnd::MandelInfo& info, float* data)
     mnd::QuadDouble psx = mnd::convert<mnd::QuadDouble>(info.view.width / info.bWidth);
     mnd::QuadDouble psy = mnd::convert<mnd::QuadDouble>(info.view.height / info.bHeight);
 
+    mnd::QuadDouble jx = mnd::convert<mnd::QuadDouble>(info.juliaX);
+    mnd::QuadDouble jy = mnd::convert<mnd::QuadDouble>(info.juliaY);
+
     kernel.setArg(0, buffer_A);
     kernel.setArg(1, int(info.bWidth));
     kernel.setArg(2, x.x[0]);
@@ -419,6 +422,15 @@ void ClGeneratorQuadDouble::generate(const mnd::MandelInfo& info, float* data)
     kernel.setArg(17, psy.x[3]);
     kernel.setArg(18, int(info.maxIter));
     kernel.setArg(19, int(info.smooth ? 1 : 0));
+    kernel.setArg(20, int(info.julia ? 1 : 0));
+    kernel.setArg(21, jx.x[0]);
+    kernel.setArg(22, jx.x[1]);
+    kernel.setArg(23, jx.x[2]);
+    kernel.setArg(24, jx.x[3]);
+    kernel.setArg(25, jy.x[0]);
+    kernel.setArg(26, jy.x[1]);
+    kernel.setArg(27, jy.x[2]);
+    kernel.setArg(28, jy.x[3]);
 
     cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);

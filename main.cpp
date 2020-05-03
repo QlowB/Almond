@@ -3,40 +3,37 @@
 #include <QPixmap>
 #include <QDesktopWidget>
 #include <QSplashScreen>
-#include <QMovie>
-#include <QTimer>
-#include <QFuture>
+//#include <QTimer>
 #include <cmath>
-#include <QtConcurrent>
 
 class AlmondSplashScreen : public QSplashScreen
 {
 private:
     float animOff = 0.0f;
-    QTimer animUpdate;
+    //QTimer animUpdate;
     volatile bool updated = true;
 public:
     AlmondSplashScreen(QPixmap splash) :
-        QSplashScreen{ splash },
-        animUpdate{ this }
+        QSplashScreen{ splash }
+        //animUpdate{ this }
     {
-        animUpdate.start(10);
+        //animUpdate.start(10);
         //loading.start();
         //this->add(loading);
         //connect(&loading, &QMovie::updated, this, &AlmondSplashScreen::nextFrame);
-        connect(&animUpdate, &QTimer::timeout, this, &AlmondSplashScreen::nextFrame);
+        //connect(&animUpdate, &QTimer::timeout, this, &AlmondSplashScreen::nextFrame);
     }
 
     ~AlmondSplashScreen(void)
     {
-        animUpdate.stop();
+        //animUpdate.stop();
     }
 
     void drawContents(QPainter* painter) override
     {
         QSplashScreen::drawContents(painter);
-        drawAnimation(painter);
-        updated = true;
+        //drawAnimation(painter);
+        //updated = true;
     }
 
     void drawAnimation(QPainter* painter)
@@ -74,7 +71,7 @@ public slots:
     void nextFrame() //(const QRect& rect)
     {
         emit this->repaint();
-        animOff += 3;
+        //animOff += 3;
     }
 };
 

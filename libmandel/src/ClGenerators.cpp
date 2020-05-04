@@ -460,14 +460,18 @@ void ClGenerator128::generate(const mnd::MandelInfo& info, float* data)
     float pixelScaleY = float(info.view.height / info.bHeight);
 
     using ull = unsigned long long;
-    ull x1 = ull(double(info.view.x) * 0x100000000ULL);
+    ull x1 = ull(double(info.view.x) * 0x10000ULL);
     ull x2 = 0;
-    ull y1 = ull(double(info.view.y) * 0x100000000ULL);
+    ull y1 = ull(double(info.view.y) * 0x10000ULL);
     ull y2 = 0;
-    ull w1 = ull(double(pixelScaleX) * 0x100000000ULL);
+    ull w1 = ull(double(pixelScaleX) * 0x10000ULL);
     ull w2 = 0;
-    ull h1 = ull(double(pixelScaleY) * 0x100000000ULL);
+    ull h1 = ull(double(pixelScaleY) * 0x10000ULL);
     ull h2 = 0;
+    ull jx1 = ull(double(info.juliaX) * 0x10000ULL);
+    ull jx2 = 0;
+    ull jy1 = ull(double(info.juliaY) * 0x10000ULL);
+    ull jy2 = 0;
 
     kernel.setArg(0, buffer_A);
     kernel.setArg(1, int(info.bWidth));
@@ -481,6 +485,11 @@ void ClGenerator128::generate(const mnd::MandelInfo& info, float* data)
     kernel.setArg(9, ull(h2));
     kernel.setArg(10, int(info.maxIter));
     kernel.setArg(11, int(info.smooth ? 1 : 0));
+    kernel.setArg(12, int(info.julia ? 1 : 0));
+    kernel.setArg(13, ull(jx1));
+    kernel.setArg(14, ull(jx2));
+    kernel.setArg(15, ull(jy1));
+    kernel.setArg(16, ull(jy2));
 
     queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
@@ -495,7 +504,7 @@ std::string ClGenerator128::getKernelCode(bool smooth) const
         std::istreambuf_iterator<char>());
     //fprintf(stderr, "%s\n", str);
     return str;*/
-    return getFixed512_cl();
+    return getFixed128_cl();
 }
 
 

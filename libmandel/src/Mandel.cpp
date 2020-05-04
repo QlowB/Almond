@@ -301,6 +301,7 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
             try {
                 md.mandelGenerators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(md) });
                 md.mandelGenerators.insert({ GeneratorType::FIXED64, std::make_unique<ClGenerator64>(md) });
+                md.mandelGenerators.insert({ GeneratorType::FIXED128, std::make_unique<ClGenerator128>(md) });
                 md.mandelGenerators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(md) });
             }
             catch (const std::string& err) {

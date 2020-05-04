@@ -126,7 +126,7 @@ unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 RESOURCES += Almond.qrc \
     splash.qrc
 
-unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond -lpng
+unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond -llibpng16_static -lzlibstatic
 unix: LIBS += -lrt
 
 INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include

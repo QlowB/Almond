@@ -1,9 +1,26 @@
 
 
 long2 mul(long2 a, long2 b) {
-    long upper = mul_hi(a, b);
-    long lower = a * b;
-    return (upper << 16) + ((lower >> 48) & 0xFFFF);
+    long a0 = mul_hi(a[0], b[0]);
+    long b0 = a[0] * b[0];
+    long b1 = mul_hi(a[0], b[1]);
+    long b2 = mul_hi(a[1], b[0]);
+    long c0 = a[1] * b[0];
+    long c1 = a[0] * b[1];
+    long c2 = mul_hi(a[1], b[1]);
+    long c3 = mul_hi(a[1], b[1]);
+
+    long carry = 0;
+    long r1 = b0 + b1;
+    if (r1 < b0)
+        carry++;
+    long r2 = r1 + b2;
+    if (r2 < r1)
+        carry++;
+
+    a0 += carry;
+
+    long newUpper = (a0 << 16) + ((r2 >> 48) & 0xFFFF);
 }
 
 

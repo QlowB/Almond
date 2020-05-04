@@ -87,6 +87,8 @@ MandelDevice::MandelDevice(mnd::ClDeviceWrapper device) :
     clDevice{ std::make_unique<ClDeviceWrapper>(std::move(device)) }
 {
     extensions = clDevice->device.getInfo<CL_DEVICE_EXTENSIONS>();
+    name = clDevice->device.getInfo<CL_DEVICE_NAME>();
+    vendor = clDevice->device.getInfo<CL_DEVICE_VENDOR>();
 }
 
 
@@ -295,13 +297,11 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
             auto supportsDouble = md.supportsDouble();
             //printf("clock: %d", device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
 
-            md.name = device.getInfo<CL_DEVICE_NAME>();
-            md.vendor = device.getInfo<CL_DEVICE_VENDOR>();
             //printf("    using opencl device: %s\n", md.name.c_str());
             try {
                 md.mandelGenerators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(md) });
                 md.mandelGenerators.insert({ GeneratorType::FIXED64, std::make_unique<ClGenerator64>(md) });
-                md.mandelGenerators.insert({ GeneratorType::FIXED128, std::make_unique<ClGenerator128>(md) });
+                //md.mandelGenerators.insert({ GeneratorType::FIXED128, std::make_unique<ClGenerator128>(md) });
                 md.mandelGenerators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(md) });
             }
             catch (const std::string& err) {

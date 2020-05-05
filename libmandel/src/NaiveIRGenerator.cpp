@@ -217,8 +217,7 @@ void NaiveIRGenerator<T>::generate(const mnd::MandelInfo& info, float* data)
 #endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = viewy + T(double(j)) * hpp;
-        long i = 0;
-        for (i; i < info.bWidth; i++) {
+        for (long i = 0; i < info.bWidth; i++) {
             T x = viewx + T(double(i)) * wpp;
 
             es.prepare(0, 0, x, y);

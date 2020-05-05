@@ -117,7 +117,7 @@ protected:
     Precision type;
     CpuExtension extension;
 public:
-    MandelGenerator();
+    MandelGenerator(void);
     inline MandelGenerator(Precision type) :
         precision{ mnd::getPrecision(type) },
         type{ type },
@@ -142,8 +142,8 @@ public:
     virtual ~MandelGenerator(void);
 
 
-    MandelGenerator(const MandelGenerator&) = delete;
-    MandelGenerator& operator=(const MandelGenerator&) = delete;
+    MandelGenerator(const MandelGenerator&) = default;
+    MandelGenerator& operator=(const MandelGenerator&) = default;
 
     MandelGenerator(MandelGenerator&&) = default;
     MandelGenerator& operator=(MandelGenerator&&) = default;

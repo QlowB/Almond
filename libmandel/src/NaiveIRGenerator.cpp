@@ -4,14 +4,10 @@
 
 using mnd::NaiveIRGenerator;
 
-
-namespace mnd
-{
-    template class NaiveIRGenerator<float>;
-    template class NaiveIRGenerator<double>;
-    template class NaiveIRGenerator<mnd::DoubleDouble>;
-    template class NaiveIRGenerator<mnd::QuadDouble>;
-}
+template class mnd::NaiveIRGenerator<float>;
+template class mnd::NaiveIRGenerator<double>;
+template class mnd::NaiveIRGenerator<mnd::DoubleDouble>;
+template class mnd::NaiveIRGenerator<mnd::QuadDouble>;
 
 namespace mnd::eval
 {

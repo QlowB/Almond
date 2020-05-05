@@ -89,12 +89,18 @@ if(OPENCL_FOUND)
         ${OpenCL_INCLUDE_DIRS}
     )
     link_directories(${OpenCL_LIBRARY})
+    target_link_libraries(mandel PUBLIC OpenCL::OpenCL)
 else(OPENCL_FOUND)
     include_directories("include")
 endif(OPENCL_FOUND)
 
 if (APPLE AND OpenCL_FOUND)
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -framework OpenCL")
+endif()
+
+
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(mandel PUBLIC OpenMP::OpenMP_CXX)
 endif()
 
 if(Boost_FOUND)
@@ -125,12 +131,4 @@ if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
 
 elseif(ARCH STREQUAL "ARM")
     set_source_files_properties(src/CpuGeneratorsNeon.cpp PROPERTIES COMPILE_FLAGS -march=armv8-a+simd)
-endif()
-
-
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(mandel PUBLIC OpenMP::OpenMP_CXX)
-endif()
-if(OpenCL_FOUND)
-    target_link_libraries(mandel PUBLIC OpenCL::OpenCL)
 endif()

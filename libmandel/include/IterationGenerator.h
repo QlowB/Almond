@@ -44,7 +44,6 @@ public:
     NaiveGenerator(IterationFormula z0, IterationFormula zi,
             mnd::Precision prec,
             mnd::CpuExtension ex = mnd::CpuExtension::NONE);
-    NaiveGenerator(NaiveGenerator&&) = default;
 
     virtual void generate(const MandelInfo& info, float* data);
 private:
@@ -90,7 +89,6 @@ class mnd::CompiledClGenerator : public mnd::ClGeneratorFloat
 {
 public:
     CompiledClGenerator(MandelDevice& device, const std::string& code);
-    CompiledClGenerator(CompiledClGenerator&&) = default;
     virtual void generate(const MandelInfo& info, float* data) override;
 };
 
@@ -98,7 +96,6 @@ class mnd::CompiledClGeneratorDouble : public mnd::ClGeneratorDouble
 {
 public:
     CompiledClGeneratorDouble(MandelDevice& device, const std::string& code);
-    CompiledClGeneratorDouble(CompiledClGeneratorDouble&&) = default;
 };
 #endif // WITH_OPENCL
 

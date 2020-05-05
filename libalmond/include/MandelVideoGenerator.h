@@ -29,7 +29,7 @@ struct ExportVideoInfo
 
 struct MandelVideoProgressInfo
 {
-    int framesExported;
+    int64_t framesExported;
 };
 
 

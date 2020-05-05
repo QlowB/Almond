@@ -163,7 +163,7 @@ class mnd::AdaptiveGenerator : public MandelGenerator
     std::map<Real, MandelGenerator*, std::greater<Real>> generators;
 public:
     AdaptiveGenerator(void);
-    AdaptiveGenerator(AdaptiveGenerator&) = default;
+    AdaptiveGenerator(AdaptiveGenerator&) = delete;
     AdaptiveGenerator(AdaptiveGenerator&&) = default;
     AdaptiveGenerator(MandelGenerator* floatGen, MandelGenerator* doubleGen);
     virtual ~AdaptiveGenerator(void) = default;

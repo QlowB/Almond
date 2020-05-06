@@ -73,7 +73,7 @@ private slots:
 
     void on_chooseGenerator_clicked();
 
-    void backgroundTaskFinished(bool);
+    void backgroundTaskFinished(bool, QString message);
     void backgroundTaskProgress(float percentage);
 
     void pointSelected(mnd::Real x, mnd::Real y);

@@ -84,10 +84,10 @@ endif(WITH_ASMJIT)
 
 if(OPENCL_FOUND)
     target_compile_definitions(mandel PUBLIC WITH_OPENCL)
-    target_include_directories(mandel PUBLIC "include")
     target_include_directories(mandel SYSTEM PUBLIC
         ${OpenCL_INCLUDE_DIRS}
     )
+    target_include_directories(mandel PUBLIC "include")
     link_directories(${OpenCL_LIBRARY})
 else(OPENCL_FOUND)
     include_directories("include")

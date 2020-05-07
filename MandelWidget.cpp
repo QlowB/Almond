@@ -678,14 +678,17 @@ void MandelWidget::initializeGL(void)
 
 void MandelWidget::resizeGL(int w, int h)
 {
-    double aspect = double(geometry().width()) / geometry().height();
+    double aspect = double(w) / h;
 
     currentViewport.height = currentViewport.width / aspect;
     targetViewport = currentViewport;
+    float x = this->devicePixelRatioF();
+    glViewport(0, 0, w * x, h * x);
 
     if (mandelView.get() != nullptr) {
-        mandelView->width = this->width();
-        mandelView->height = this->height();
+        mandelView->width = w;
+        mandelView->height = h;
+        //printf("resize: %d, %d\n", w, h);
     }
 }
 
@@ -698,17 +701,17 @@ void MandelWidget::paintGL(void)
 
     int width = this->width();
     int height = this->height();
-    mandelView->width = width;
-    mandelView->height = height;
-
+    float x = this->devicePixelRatioF();
+    mandelView->width = width * x;
+    mandelView->height = height * x;
     //glViewport(0, 0, width, height);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 #ifdef QT_OPENGL_ES_1
-    glOrthof(0, width, height, 0, -1.0, 1.0);
+    glOrthof(0, width * x, height * x, 0, -1.0, 1.0);
 #else
-    glOrtho(0, width, height, 0, -1.0, 1.0);
+    glOrtho(0, width * x, height * x, 0, -1.0, 1.0);
 #endif
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();

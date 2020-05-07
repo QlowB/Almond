@@ -141,9 +141,11 @@ void ExportVideoDialog::on_buttonBox_accepted()
     }
 
     evi.path = evd.savePath->text().toStdString();
-    evi.width = evd.vidWidth->text().toInt();
-    evi.height = evd.vidHeight->text().toInt();
-    evi.maxIterations = evd.maxIterations->text().toInt();
+
+    evi.mi = almond->mw->getMandelInfo();
+    evi.mi.bWidth = evd.vidWidth->text().toInt();
+    evi.mi.bHeight = evd.vidHeight->text().toInt();
+    evi.mi.maxIter = evd.maxIterations->text().toInt();
 
     evi.bitrate = evd.bitrate->text().toInt();
     evi.preset = evd.encodingPresetBox->currentText().toStdString();
@@ -162,8 +164,8 @@ void ExportVideoDialog::on_buttonBox_accepted()
         evd.endH->text().toDouble(),
     };*/
 
-    evi.start.adjustAspectRatio(evi.width, evi.height);
-    evi.end.adjustAspectRatio(evi.width, evi.height);
+    evi.start.adjustAspectRatio(evi.mi.bWidth, evi.mi.bHeight);
+    evi.end.adjustAspectRatio(evi.mi.bWidth, evi.mi.bHeight);
     evi.gradient = almond->mw->getGradient();
 
     //}

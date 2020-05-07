@@ -22,7 +22,7 @@ public:
 
 signals:
     void progress(float percentage);
-    void finished(bool success);
+    void finished(bool success, QString message);
 };
 
 

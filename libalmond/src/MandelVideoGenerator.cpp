@@ -17,7 +17,9 @@ void MandelVideoGenerator::addProgressCallback(ProgressCallback pc)
 
 void MandelVideoGenerator::generate(mnd::MandelGenerator& gen)
 {
-    VideoStream vs(evi.width, evi.height, evi.path, evi.bitrate, evi.fps, evi.preset.c_str());
+    const long width = evi.mi.bWidth;
+    const long height = evi.mi.bHeight;
+    VideoStream vs(width, height, evi.path, evi.bitrate, evi.fps, evi.preset.c_str());
 
     mnd::Real x = evi.end.x + evi.end.width / 2;
     mnd::Real y = evi.end.y + evi.end.height / 2;
@@ -33,56 +35,49 @@ void MandelVideoGenerator::generate(mnd::MandelGenerator& gen)
 
     const float oversizeFactor = 2;
     const float sqrFactor = sqrt(oversizeFactor);
-    //const mnd::Real invsqrt2 = mnd::Real(1.0) / mnd::sqrt(mnd::Real(2));
 
-    mnd::MandelInfo mi;
-    mi.bWidth = evi.width * oversizeFactor;
-    mi.bHeight = evi.height * oversizeFactor;
-    mi.maxIter = evi.maxIterations;
+    mnd::MandelInfo mi = evi.mi;
+    mi.bHeight *= oversizeFactor;
+    mi.bWidth *= oversizeFactor;
 
     bool first = true;
 
-    while(w > evi.end.width || h > evi.end.height) {
+    double zoomFactor = ::pow(0.99, evi.zoomSpeed);
+    double approxFrames = double(mnd::log(evi.end.width / evi.start.width) / mnd::log(zoomFactor));
 
+    while(w > evi.end.width || h > evi.end.height) {
         if (bigW > sqrt(oversizeFactor) * w) {
             mi.view = mnd::MandelViewport{ x - w/2, y - h/2, w, h };
-            Bitmap<float> raw{ long(evi.width * oversizeFactor), long(evi.height * oversizeFactor) };
-            Bitmap<float> rawSmall{ long(evi.width * oversizeFactor), long(evi.height * oversizeFactor) };
+            Bitmap<float> raw{ long(width * oversizeFactor), long(height * oversizeFactor) };
+            Bitmap<float> rawSmall{ long(width * oversizeFactor), long(height * oversizeFactor) };
             mi.view.zoomCenter(oversizeFactor);
             gen.generate(mi, rawSmall.pixels.get());
-            //mi.view.zoomCenter(sqrt(oversizeFactor));
-            //gen.generate(mi, raw.pixels.get());
-            //auto before = std::chrono::high_resolution_clock::now();
             if (first) {
                 mi.view.zoomCenter(sqrt(oversizeFactor));
                 gen.generate(mi, raw.pixels.get());
                 small = raw.map<RGBColor>([&mi, this] (float i) {
                     return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : evi.gradient.get(i);
                 });
+                first = false;
             }
             big = std::move(small);
             small = rawSmall.map<RGBColor>([&mi, this] (float i) {
                 return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : evi.gradient.get(i);
             });
             printf("recalced\n");
-            /*mi.view.zoomCenter(0.5);
-            gen.generate(mi, raw.pixels.get());
-            small = raw.map<RGBColor>([] (float x) { return
-                RGBColor{ uint8_t(::sin(x / 100) * 127 + 127), uint8_t(::sin(x / 213) * 127 + 127), uint8_t(::cos(x / 173) * 127 + 127) };
-            });*/
             bigW = w;
             bigFac = 1.0;
-            first = false;
         }
 
-        vs.addFrame(overlay(big, small, evi.width, evi.height, bigFac, sqrt(oversizeFactor)));
+        vs.addFrame(overlay(big, small, evi.mi.bWidth, evi.mi.bHeight, bigFac, sqrt(oversizeFactor)));
         frameCounter++;
-        MandelVideoProgressInfo mvpi{ frameCounter };
+        float progress = float(frameCounter / approxFrames);
+        MandelVideoProgressInfo mvpi{ frameCounter, progress * 100 };
         callCallbacks(mvpi);
 
-        w *= ::pow(0.99, evi.zoomSpeed);
-        h *= ::pow(0.99, evi.zoomSpeed);
-        bigFac *= ::pow(0.99, evi.zoomSpeed);
+        w *= zoomFactor;
+        h *= zoomFactor;
+        bigFac *= zoomFactor;
     }
 }
 

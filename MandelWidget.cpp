@@ -4,8 +4,6 @@
 
 using namespace mnd;
 
-#include <QPainter>
-
 #include <cstdio>
 
 
@@ -492,7 +490,7 @@ GridElement* MandelView::searchUnder(int level, GridIndex i, GridIndex j, int re
 }
 
 
-void MandelView::paint(const mnd::MandelViewport& mvp)
+void MandelView::paint(const mnd::MandelViewport& mvp, QPainter& qp)
 {
     mnd::Real dpp = mvp.width / width;
     int level = getLevel(dpp) - 1;
@@ -678,6 +676,18 @@ void MandelWidget::initializeGL(void)
     requestRecalc();
 }
 
+void MandelWidget::resizeGL(int w, int h)
+{
+    double aspect = double(geometry().width()) / geometry().height();
+
+    currentViewport.height = currentViewport.width / aspect;
+    targetViewport = currentViewport;
+
+    if (mandelView.get() != nullptr) {
+        mandelView->width = this->width();
+        mandelView->height = this->height();
+    }
+}
 
 void MandelWidget::paintGL(void)
 {
@@ -691,7 +701,7 @@ void MandelWidget::paintGL(void)
     mandelView->width = width;
     mandelView->height = height;
 
-    glViewport(0, 0, width, height);
+    //glViewport(0, 0, width, height);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -701,12 +711,15 @@ void MandelWidget::paintGL(void)
     glOrtho(0, width, height, 0, -1.0, 1.0);
 #endif
     glMatrixMode(GL_MODELVIEW);
-
-    glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
 
+    glClear(GL_COLOR_BUFFER_BIT);
+
     updateAnimations();
-    mandelView->paint(this->currentViewport);
+
+    QPainter painter{ this };
+
+    mandelView->paint(this->currentViewport, painter);
 
     if (rubberbanding)
         drawRubberband();
@@ -744,7 +757,15 @@ void MandelWidget::updateAnimations(void)
 
 void MandelWidget::drawRubberband(void)
 {
-    glColor3ub(10, 200, 10);
+    QPainter rubberbandPainter{ this };
+    rubberbandPainter.fillRect(rubberband, QColor{ 25, 225, 25, 50 });
+
+    QPen pen{ QColor{ 10, 200, 10 } };
+    pen.setWidth(2);
+    rubberbandPainter.setPen(pen);
+
+    rubberbandPainter.drawRect(rubberband);
+    /*glColor3ub(10, 200, 10);
     glBegin(GL_LINE_LOOP);
     glVertex2d(rubberband.x(), rubberband.y());
     glVertex2d(rubberband.right(), rubberband.y());
@@ -761,7 +782,7 @@ void MandelWidget::drawRubberband(void)
     glVertex2d(rubberband.right(), rubberband.bottom());
     glVertex2d(rubberband.x(), rubberband.bottom());
     glEnd();
-    glDisable(GL_BLEND);
+    glDisable(GL_BLEND);*/
 }
 
 
@@ -812,14 +833,20 @@ void MandelWidget::drawInfo(void)
 
 void MandelWidget::drawPoint(void)
 {
-    glColor3ub(255, 255, 255);
+    QPainter pointPainter{ this };
+    pointPainter.setPen(QColor{ 255, 255, 255 });
+    pointPainter.drawLine(0, pointY, width(), pointY);
+    pointPainter.drawLine(pointX, 0, pointX, height());
+
+
+    /*glColor3ub(255, 255, 255);
     glBegin(GL_LINES);
     glVertex2f(0, pointY);
     glVertex2f(width(), pointY);
 
     glVertex2f(pointX, 0);
     glVertex2f(pointX, height());
-    glEnd();
+    glEnd();*/
 }
 
 

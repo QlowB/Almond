@@ -7,6 +7,7 @@
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QMutex>
+#include <QPainter>
 //#include <qopengl.h>
 //#include <qopenglfunctions.h>
 //#include <qopenglcontext.h>
@@ -263,7 +264,7 @@ public:
     void garbageCollect(int level, GridIndex i, GridIndex j);
     GridElement* searchAbove(int level, GridIndex i, GridIndex j, int recursionLevel);
     GridElement* searchUnder(int level, GridIndex i, GridIndex j, int recursionLevel);
-    void paint(const mnd::MandelViewport& mvp);
+    void paint(const mnd::MandelViewport& mvp, QPainter& qp);
 public slots:
     void cellReady(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
 signals:
@@ -327,6 +328,7 @@ public:
     void clearAll(void);
 
     void initializeGL(void) override;
+    void resizeGL(int w, int h) override;
     void paintGL() override;
 
 private:

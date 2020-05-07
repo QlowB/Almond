@@ -33,6 +33,7 @@ Almond::Almond(QWidget* parent) :
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
     ui.backgroundProgress->setVisible(false);
 
+    backgroundTasks.setMaxThreadCount(1);
     this->setWindowIcon(QIcon(":/icons/icon"));
     //ui.verticalLayout_left->addWidget(new MyGLWidget(ui.centralWidget));
     //mw->show();
@@ -57,8 +58,19 @@ void Almond::submitBackgroundTask(BackgroundTask* task)
 }
 
 
-void Almond::backgroundTaskFinished(bool succ)
+void Almond::backgroundTaskFinished(bool succ, QString message)
 {
+    if (succ) {
+        QMessageBox info = QMessageBox(QMessageBox::Icon::Information, "Task Finished", message);
+        //info->setParent(this);
+        emit info.exec();
+    }
+    else {
+        QMessageBox info = QMessageBox(QMessageBox::Icon::Critical, "Task Failed", message);
+        //info->setParent(this);
+        emit info.exec();
+    }
+
     ui.backgroundProgress->setVisible(false);
     ui.backgroundProgress->setFormat("");
 }

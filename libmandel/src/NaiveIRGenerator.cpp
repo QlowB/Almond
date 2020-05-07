@@ -55,19 +55,21 @@ namespace mnd::eval
 
         size_t createTemp(void)
         {
-            es.variables.push_back(0);
+            es.temporaries.push_back(0);
+            es.variables.push_back(&es.temporaries[es.temporaries.size() - 1]);
             return es.variables.size() - 1;
         }
 
         size_t createConstant(mnd::Real& value)
         {
-            es.variables.push_back(mnd::convert<T>(value));
+            es.temporaries.push_back(mnd::convert<T>(value));
+            es.variables.push_back(&es.temporaries[es.temporaries.size() - 1]);
             return es.variables.size() - 1;
         }
 
         size_t createVariable(std::string& value)
         {
-            es.variables.push_back(0);
+            es.variables.push_back(nullptr);
             es.variableNames.emplace(value, es.variables.size() - 1);
             return es.variables.size() - 1;
         }
@@ -79,25 +81,31 @@ namespace mnd::eval
             return Load{ createVariable(x.name) };
         }
         EvalNode operator()(ir::Addition& x) {
-            return Add{ visit(x.left), visit(x.right) };
+            auto left = visit(x.left);
+            return Add{ std::move(left), visit(x.right) };
         }
         EvalNode operator()(ir::Subtraction& x) {
-            return Sub{ visit(x.left), visit(x.right) };
+            auto left = visit(x.left);
+            return Sub{ std::move(left), visit(x.right) };
         }
         EvalNode operator()(ir::Multiplication& x) {
-            return Mul{ visit(x.left), visit(x.right) };
+            auto left = visit(x.left);
+            return Mul{ std::move(left), visit(x.right) };
         }
         EvalNode operator()(ir::Division& x) {
-            return Div{ visit(x.left), visit(x.right) };
+            auto left = visit(x.left);
+            return Div{ std::move(left), visit(x.right) };
         }
         EvalNode operator()(ir::Negation& x) {
             return Neg{ visit(x.value) };
         }
         EvalNode operator()(ir::Atan2& x) {
-            return Atan2{ visit(x.left), visit(x.right) };
+            auto left = visit(x.left);
+            return Atan2{ std::move(left), visit(x.right) };
         }
         EvalNode operator()(ir::Pow& x) {
-            return Pow{ visit(x.left), visit(x.right) };
+            auto left = visit(x.left);
+            return Pow{ std::move(left), visit(x.right) };
         }
         EvalNode operator()(ir::Cos& x) {
             return Cos{ visit(x.value) };
@@ -125,12 +133,12 @@ namespace mnd::eval
         }
 
         T operator()(const Load& x) {
-            return es.variables[x.index];
+            return *es.variables[x.index];
         }
 
         T operator()(const Store& x) {
             T r = visit(*x.v);
-            es.variables[x.index] = r;
+            *es.variables[x.index] = r;
             return r;
         }
 
@@ -215,15 +223,14 @@ void NaiveIRGenerator<T>::generate(const mnd::MandelInfo& info, float* data)
         T y = viewy + T(double(j)) * hpp;
         for (long i = 0; i < info.bWidth; i++) {
             T x = viewx + T(double(i)) * wpp;
-
-            es.prepare(0, 0, x, y);
+            T a;
+            T b;
+            es.prepare(&a, &b, &x, &y);
 
             eval::EvalVisitor<T> visitor{ es };
 
-            T a = visitor.visit(*start_re);
-            T b = visitor.visit(*start_im);
-
-            es.prepare(a, b, x, y);
+            a = visitor.visit(*start_re);
+            b = visitor.visit(*start_im);
 
             int k = 0;
             for (k = 0; k < info.maxIter; k++) {

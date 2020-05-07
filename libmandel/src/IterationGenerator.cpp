@@ -124,6 +124,7 @@ std::complex<double> NaiveGenerator::calc(mnd::Expression& expr, std::complex<do
 }
 
 #ifdef WITH_ASMJIT
+#if defined(__x86_64__) || defined(_M_X64)
 
 #include "ExecData.h"
 
@@ -145,29 +146,6 @@ CompiledGenerator::CompiledGenerator(CompiledGenerator&&) = default;
 CompiledGenerator::~CompiledGenerator(void)
 {
 }
-
-
-/*__declspec(noinline)
-int iter(double x, double y, int maxIter)
-{
-int k = 0;
-
-double a = x;
-double b = y;
-
-for (k = 0; k < maxIter; k++) {
-double aa = a * a;
-double bb = b * b;
-double abab = a * b + a * b;
-a = aa - bb + x;
-b = abab + y;
-if (aa + bb >= 16)
-break;
-}
-
-return k;
-}*/
-
 
 
 void CompiledGenerator::generate(const mnd::MandelInfo& info, float* data)
@@ -235,7 +213,7 @@ void CompiledGeneratorVec::generate(const mnd::MandelInfo& info, float* data)
         }
     }
 }
-
+#endif // defined(__x86_64__) || defined(_M_X64)
 #endif // WITH_ASMJIT
 
 #ifdef WITH_OPENCL

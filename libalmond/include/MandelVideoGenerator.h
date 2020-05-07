@@ -8,13 +8,18 @@
 
 struct ExportVideoInfo
 {
+    /// the viewport at the start of the video
     mnd::MandelViewport start;
+    /// the viewport at the end of the video
     mnd::MandelViewport end;
+    /// Info struct to hold further data about the generation
+    /// of mandelbrot images. The Viewport specified in this
+    /// struct is ignored.
+    mnd::MandelInfo mi;
+
+    /// the gradient to use
     Gradient gradient;
 
-    int width;
-    int height;
-    int maxIterations;
     int fps;
     double zoomSpeed;
 
@@ -30,6 +35,7 @@ struct ExportVideoInfo
 struct MandelVideoProgressInfo
 {
     int64_t framesExported;
+    float progress;
 };
 
 

@@ -66,10 +66,10 @@ namespace mnd
         struct Sub : BinaryOperation {};
         struct Mul : BinaryOperation {};
         struct Div : BinaryOperation {};
-    
+
         struct Neg : UnaryOperation {};
-    
-    
+
+
         struct Atan2 : BinaryOperation {};
         struct Pow : BinaryOperation {};
         struct Cos : UnaryOperation {};
@@ -83,9 +83,10 @@ namespace mnd
         struct EvalStruct
         {
             std::map<std::string, size_t> variableNames;
-            std::vector<T> variables;
+            std::vector<T*> variables;
+            std::vector<T> temporaries;
 
-            void prepare(const T& zre, const T& zim, const T& cre, const T& cim)
+            void prepare(T* zre, T* zim, T* cre, T* cim)
             {
                 auto z_re = variableNames.find("z_re");
                 auto z_im = variableNames.find("z_im");

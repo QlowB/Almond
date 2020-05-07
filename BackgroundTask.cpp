@@ -1,5 +1,4 @@
 #include "BackgroundTask.h"
-#include <QMessageBox>
 
 BackgroundTask::BackgroundTask(const std::string& shortDescription) :
     shortDescription{ shortDescription }
@@ -8,7 +7,7 @@ BackgroundTask::BackgroundTask(const std::string& shortDescription) :
 
 
 ImageExportTask::ImageExportTask(const alm::ImageExportInfo& iei) :
-    BackgroundTask{ "exporting image" },
+    BackgroundTask{ "Exporting Image" },
     iei{ iei }
 {
 }
@@ -16,15 +15,20 @@ ImageExportTask::ImageExportTask(const alm::ImageExportInfo& iei) :
 
 void ImageExportTask::run(void)
 {
-    alm::exportPng(iei, [this](float percentage) {
-        emit progress(percentage);
-    });
-    emit finished(true);
+    try {
+        alm::exportPng(iei, [this](float percentage) {
+            emit progress(percentage);
+        });
+        emit finished(true, "Image successfully exported.");
+    }
+    catch (...) {
+        emit finished(false, "Error occurred during image export.");
+    }
 }
 
 
 VideoExportTask::VideoExportTask(MandelVideoGenerator mvg, mnd::MandelGenerator& generator) :
-    BackgroundTask{ "exporting video" },
+    BackgroundTask{ "Exporting Video" },
     mvg{ std::move(mvg) },
     generator{ generator }
 {
@@ -33,14 +37,15 @@ VideoExportTask::VideoExportTask(MandelVideoGenerator mvg, mnd::MandelGenerator&
 
 void VideoExportTask::run(void)
 {
-
-    mvg.addProgressCallback([this](const MandelVideoProgressInfo& mvpi) {
-        emit progress(0);
-    });
-    mvg.generate(generator);
-    emit finished(true);
-    QMessageBox* msgBox = new QMessageBox;
-    msgBox->setText("Video successfully exported.");
-    emit msgBox->exec();
+    try {
+        mvg.addProgressCallback([this](const MandelVideoProgressInfo& mvpi) {
+            emit progress(mvpi.progress);
+        });
+        mvg.generate(generator);
+        emit finished(true, "Video successfully exported.");
+    }
+    catch (...) {
+        emit finished(false, "Error occurred during video export.");
+    }
 }
 

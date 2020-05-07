@@ -17,9 +17,7 @@ int main(int argc, char *argv[])
     QSplashScreen splash{ splashScaled };
     a.processEvents();
     splash.show();
-    a.processEvents();
     Almond w;
-    a.processEvents();
     splash.finish(&w);
     a.processEvents();
     w.showMaximized();

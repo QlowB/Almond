@@ -4,8 +4,6 @@
 
 using namespace mnd;
 
-#include <QPainter>
-
 #include <cstdio>
 
 

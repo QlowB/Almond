@@ -1,10 +1,10 @@
-#pragma once
+#ifndef VIDEO_STREAM_H_
+#define VIDEO_STREAM_H_
+
 #define FFMPEG_ENABLED
 #ifdef FFMPEG_ENABLED
 
-
-#ifndef VIDEO_STREAM_H_
-#define VIDEO_STREAM_H_
+#include <stdexcept>
 
 #include <string>
 #include "Bitmap.h"
@@ -19,6 +19,17 @@ extern "C" {
 #   include <libswscale/swscale.h>
 }
 
+namespace alm
+{
+    struct VideoExportException;
+}
+
+struct alm::VideoExportException :
+    public std::runtime_error
+{
+    VideoExportException(const std::string& err);
+};
+
 class VideoStream
 {
     const AVCodec* codec;
@@ -30,7 +41,6 @@ class VideoStream
     AVPacket* pkt;
     AVStream* stream;
     SwsContext* swsContext;
-    static const uint8_t endcode[];
 
     int width;
     int height;
@@ -40,11 +50,12 @@ public:
     VideoStream(int width, int height, const std::string& filename, int bitrate, int fps, const char* preset);
     ~VideoStream(void);
 
-    void encode(AVFrame* frame);
-
     void addFrame(const Bitmap<RGBColor>& frame);
+private:
+    void encode(AVFrame* frame);
 };
 
-#endif // VIDEO_STREAM_H_
 
 #endif // FFMPEG_ENABLED
+
+#endif // VIDEO_STREAM_H_

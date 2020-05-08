@@ -118,9 +118,9 @@ double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
         }, bmp);
         if (time > std::chrono::milliseconds(120)) {
             testIndex = i + 4;
-            printf("testing index for generator %s: %d\n", (mnd::toString(mg.getType()) + ", " + mnd::toString(mg.getExtension())).c_str(), testIndex);
-            printf("    w: %d, h: %d, iter: %d\n", benches[testIndex].bWidth, benches[testIndex].bHeight, benches[testIndex].maxIter);
-            fflush(stdout);
+            //printf("testing index for generator %s: %d\n", (mnd::toString(mg.getType()) + ", " + mnd::toString(mg.getExtension())).c_str(), testIndex);
+            //printf("    w: %d, h: %d, iter: %d\n", benches[testIndex].bWidth, benches[testIndex].bHeight, benches[testIndex].maxIter);
+            //fflush(stdout);
             break;
         }
         else if (time < std::chrono::milliseconds(3)) {
@@ -138,7 +138,7 @@ double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
             mg.generate(mi, bmp.pixels.get());
         }, bmp);
 
-        printf("%lld iterations in %lld microseconds\n\n", iters, time.count() / 1000);
+        //printf("%lld iterations in %lld microseconds\n\n", iters, time.count() / 1000);
 
         return double(iters) / time.count() * 1000;
     }

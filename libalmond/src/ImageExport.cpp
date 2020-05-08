@@ -6,6 +6,10 @@
 namespace alm
 {
 
+ImageExportException::ImageExportException(const std::string& err) :
+    std::runtime_error{ err }
+{
+}
 
 void exportPng(const ImageExportInfo& iei, std::function<void(float)> progressCallback)
 {
@@ -17,15 +21,21 @@ void exportPng(const ImageExportInfo& iei, std::function<void(float)> progressCa
 
     mnd::MandelGenerator& generator = *iei.generator;
     FILE* file = fopen(iei.path.c_str(), "wb");
-    if(!file) exit(1);
+    if(!file)
+        throw ImageExportException{ std::string("could not open file '") + iei.path + "'" };
 
     png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png) exit(1);
+    if (!png)
+        throw ImageExportException{ "error creating png write struct" };
 
     png_infop info = png_create_info_struct(png);
-    if (!info) exit(1);
+    if (!info)
+        throw ImageExportException{ "error creating png info struct" };
 
-    if (setjmp(png_jmpbuf(png))) exit(1);
+    if (setjmp(png_jmpbuf(png))) {
+        png_destroy_write_struct(&png, &info);
+        throw ImageExportException{ "error while creating png" };
+    }
 
     png_init_io(png, file);
 

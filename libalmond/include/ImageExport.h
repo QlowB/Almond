@@ -4,6 +4,7 @@
 #include "Mandel.h"
 #include "Gradient.h"
 #include <functional>
+#include <stdexcept>
 
 namespace alm
 {
@@ -13,6 +14,12 @@ namespace alm
         mnd::MandelGenerator* generator;
         Gradient gradient;
         std::string path;
+    };
+
+    struct ImageExportException :
+        std::runtime_error
+    {
+        ImageExportException(const std::string& err);
     };
 
     /**

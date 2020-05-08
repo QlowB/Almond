@@ -2,6 +2,7 @@
 #define MANDELVIDEOGENERATOR_H
 
 #include "Mandel.h"
+#include "VideoStream.h"
 #include "Gradient.h"
 #include "Bitmap.h"
 #include <functional>

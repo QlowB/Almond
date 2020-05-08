@@ -21,8 +21,11 @@ void ImageExportTask::run(void)
         });
         emit finished(true, "Image successfully exported.");
     }
+    catch (alm::ImageExportException& ex) {
+        emit finished(false, QString("Error during image export: ") + ex.what());
+    }
     catch (...) {
-        emit finished(false, "Error occurred during image export.");
+        emit finished(false, "Unknown error occurred during image export.");
     }
 }
 
@@ -44,8 +47,11 @@ void VideoExportTask::run(void)
         mvg.generate(generator);
         emit finished(true, "Video successfully exported.");
     }
+    catch (alm::VideoExportException& ex) {
+        emit finished(false, QString("Error during video export: ") + ex.what());
+    }
     catch (...) {
-        emit finished(false, "Error occurred during video export.");
+        emit finished(false, "Unknown error occurred during video export.");
     }
 }
 

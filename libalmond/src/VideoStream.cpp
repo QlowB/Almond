@@ -86,18 +86,10 @@ VideoStream::VideoStream(int width, int height, const std::string& filename, int
     if (avformat_write_header(formatContext, nullptr) < 0) {
         throw VideoExportException{ "error writing header" };
     }
-    /*file = fopen(filename.c_str(), "wb");
-    if (!file) {
-        fprintf(stderr, "could not open %s\n", filename.c_str());
-        exit(1);
-    }*/
 
     picture = av_frame_alloc();
     if (!picture)
         throw VideoExportException{ "error allocating frame" };
-    if (av_frame_make_writable(picture) < 0) {
-        throw VideoExportException{ "error making frame writeable" };
-    }
     picture->format = codecContext->pix_fmt;
     picture->width  = codecContext->width;
     picture->height = codecContext->height;
@@ -105,6 +97,9 @@ VideoStream::VideoStream(int width, int height, const std::string& filename, int
     int retval = av_frame_get_buffer(picture, 0);
     if (retval < 0) {
         throw VideoExportException{ "could not allocate frame data" };
+    }
+    if (av_frame_make_writable(picture) < 0) {
+        throw VideoExportException{ "error making frame writeable" };
     }
     //av_image_alloc(picture->data, picture->linesize, width, height, codecContext->pix_fmt, 32);
 

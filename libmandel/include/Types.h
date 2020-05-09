@@ -148,16 +148,17 @@ namespace mnd
     template<>
     inline DoubleDouble convert<DoubleDouble, Real>(const Real& x)
     {
-        std::string s = x.str();
-        return DoubleDouble(s.c_str());
+        double s = static_cast<double>(x);
+        double e = static_cast<double>(x - s);
+        return DoubleDouble{ s, e };
     }
 
     template<>
     inline LightDoubleDouble convert<LightDoubleDouble, Real>(const Real& x)
     {
-        double upper = static_cast<double>(x);
-        double lower = static_cast<double>(x - upper);
-        return { upper, lower };
+        double s = static_cast<double>(x);
+        double e = static_cast<double>(x - s);
+        return LightDoubleDouble{ s, e };
     }
 
     template<>
@@ -175,8 +176,14 @@ namespace mnd
     template<>
     inline QuadDouble convert<QuadDouble, Real>(const Real& x)
     {
-        std::string s = x.str();
-        return QuadDouble(s.c_str());
+        double s = static_cast<double>(x);
+        Real tmp = x - s;
+        double e1 = static_cast<double>(tmp);
+        tmp = tmp - e1;
+        double e2 = static_cast<double>(tmp);
+        tmp = tmp - e2;
+        double e3 = static_cast<double>(tmp);
+        return QuadDouble{ s, e1, e2, e3 };
     }
 
     template<>

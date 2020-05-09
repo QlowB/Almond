@@ -129,7 +129,10 @@ double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
         else if (time < std::chrono::milliseconds(20)) {
             i += 3;
         }
+        QThread::msleep(1);
     }
+
+    QThread::msleep(10);
 
     try {
         const mnd::MandelInfo& mi = benches[(testIndex >= benches.size()) ? (benches.size() - 1) : testIndex];

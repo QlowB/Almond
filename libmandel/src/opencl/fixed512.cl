@@ -98,9 +98,9 @@ __kernel void iterate(__global float* A, const int width,
         ulong2 aa = mul(a, a);
         ulong2 bb = mul(b, b);
         ulong2 ab = mul(a, b);
-        if (aa.s0 + aa.s1 + bb.s0 + bb.s1 > 16) break;
         a = add(sub(aa, bb), ca);
         b = add(add(ab, ab), cb);
+        if (aa.s0 + aa.s1 + bb.s0 + bb.s1 > 16) break;
         n++;
     }
 

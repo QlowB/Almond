@@ -54,13 +54,9 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
 
             __m256 counter = _mm256_setzero_ps();
             __m256 adder = _mm256_set1_ps(1);
-            __m256 resultsa = _mm256_setzero_ps();
-            __m256 resultsb = _mm256_setzero_ps();
 
             __m256 counter2 = _mm256_setzero_ps();
             __m256 adder2 = _mm256_set1_ps(1);
-            __m256 resultsa2 = _mm256_setzero_ps();
-            __m256 resultsb2 = _mm256_setzero_ps();
 
             __m256 threshold = _mm256_set1_ps(16);
 
@@ -73,7 +69,14 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
             __m256 cx2 = info.julia ? juliaX : xs2;
             __m256 cy = info.julia ? juliaY : ys;
 
+            __m256 resultsa = a;
+            __m256 resultsb = b;
+            __m256 resultsa2 = a2;
+            __m256 resultsb2 = b2;
+
             if (info.smooth) {
+                __m256 cmp = _mm256_cmp_ps(a, a, _CMP_LE_OQ);
+                __m256 cmp2 = _mm256_cmp_ps(a, a, _CMP_LE_OQ);
                 for (int k = 0; k < info.maxIter; k++) {
                     __m256 aa = _mm256_mul_ps(a, a);
                     __m256 aa2 = _mm256_mul_ps(a2, a2);
@@ -85,12 +88,12 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
                     a2 = _mm256_add_ps(_mm256_sub_ps(aa2, bb2), cx2);
                     b = _mm256_add_ps(abab, cy);
                     b2 = _mm256_add_ps(abab2, cy);
-                    __m256 cmp = _mm256_cmp_ps(_mm256_add_ps(aa, bb), threshold, _CMP_LE_OQ);
-                    __m256 cmp2 = _mm256_cmp_ps(_mm256_add_ps(aa2, bb2), threshold, _CMP_LE_OQ);
                     resultsa = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsa), _mm256_and_ps(cmp, a));
                     resultsb = _mm256_or_ps(_mm256_andnot_ps(cmp, resultsb), _mm256_and_ps(cmp, b));
                     resultsa2 = _mm256_or_ps(_mm256_andnot_ps(cmp2, resultsa2), _mm256_and_ps(cmp2, a2));
                     resultsb2 = _mm256_or_ps(_mm256_andnot_ps(cmp2, resultsb2), _mm256_and_ps(cmp2, b2));
+                    cmp = _mm256_cmp_ps(_mm256_add_ps(aa, bb), threshold, _CMP_LE_OQ);
+                    cmp2 = _mm256_cmp_ps(_mm256_add_ps(aa2, bb2), threshold, _CMP_LE_OQ);
                     adder = _mm256_and_ps(adder, cmp);
                     counter = _mm256_add_ps(counter, adder);
                     adder2 = _mm256_and_ps(adder2, cmp2);
@@ -145,12 +148,12 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
             _mm256_store_ps(resb + 8, resultsb2);
             for (int k = 0; k < 16 && i + k < info.bWidth; k++) {
                 if (info.smooth) {
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter :
                         ftRes[k] >= info.maxIter ? info.maxIter :
                         ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
                 }
                 else {
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter : ftRes[k];
+                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter : ftRes[k];
                 }
             }
         }
@@ -211,6 +214,8 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
             __m256d cy = info.julia ? juliaY : ys;
 
             if (info.smooth) {
+                __m256d cmp = _mm256_cmp_pd(a, a, _CMP_LE_OQ);
+                __m256d cmp2 = _mm256_cmp_pd(a, a, _CMP_LE_OQ);
                 for (int k = 0; k < info.maxIter; k++) {
                     __m256d aa = _mm256_mul_pd(a, a);
                     __m256d aa2 = _mm256_mul_pd(a2, a2);
@@ -222,12 +227,12 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
                     a2 = _mm256_add_pd(_mm256_sub_pd(aa2, bb2), cx2);
                     b = _mm256_add_pd(abab, cy);
                     b2 = _mm256_add_pd(abab2, cy);
-                    __m256d cmp = _mm256_cmp_pd(_mm256_add_pd(aa, bb), threshold, _CMP_LE_OQ);
-                    __m256d cmp2 = _mm256_cmp_pd(_mm256_add_pd(aa2, bb2), threshold, _CMP_LE_OQ);
                     resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a));
                     resultsb = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsb), _mm256_and_pd(cmp, b));
                     resultsa2 = _mm256_or_pd(_mm256_andnot_pd(cmp2, resultsa2), _mm256_and_pd(cmp2, a2));
                     resultsb2 = _mm256_or_pd(_mm256_andnot_pd(cmp2, resultsb2), _mm256_and_pd(cmp2, b2));
+                    cmp = _mm256_cmp_pd(_mm256_add_pd(aa, bb), threshold, _CMP_LE_OQ);
+                    cmp2 = _mm256_cmp_pd(_mm256_add_pd(aa2, bb2), threshold, _CMP_LE_OQ);
                     adder = _mm256_and_pd(adder, cmp);
                     counter = _mm256_add_pd(counter, adder);
                     adder2 = _mm256_and_pd(adder2, cmp2);
@@ -278,11 +283,11 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
             _mm256_store_pd(ftRes, counter);
             for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
                 if (info.smooth)
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? float(info.maxIter) :
+                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? float(info.maxIter) :
                         ftRes[k] >= info.maxIter ? float(info.maxIter) :
                         float(((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f));
                 else
-                    data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+                    data[i + k + j * info.bWidth] = ftRes[k] >= 0 ? float(ftRes[k]) : info.maxIter;
             }
 
             resa = (double*) &resultsa2;
@@ -291,11 +296,11 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
             i += 4;
             for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
                 if (info.smooth)
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? float(info.maxIter) :
+                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? float(info.maxIter) :
                         ftRes[k] >= info.maxIter ? float(info.maxIter) :
                         float(((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f));
                 else
-                    data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+                    data[i + k + j * info.bWidth] = ftRes[k] >= 0 ? float(ftRes[k]) : info.maxIter;
             }
             i -= 4;
         }
@@ -473,17 +478,18 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd
             __m256d resultsa = _mm256_set1_pd(0);
             __m256d resultsb = _mm256_set1_pd(0);
 
+            __m256d cmp = _mm256_cmp_pd(threshold, threshold, _CMP_LE_OQ);
             for (int k = 0; k < info.maxIter; k++) {
                 AvxDoubleDouble aa = a * a;
                 AvxDoubleDouble bb = b * b;
                 AvxDoubleDouble abab = a * b; abab = abab + abab;
                 a = aa - bb + cx;
                 b = abab + cy;
-                __m256d cmp = _mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ);
                 if (info.smooth) {
                     resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a.x[0]));
                     resultsb = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsb), _mm256_and_pd(cmp, b.x[0]));
                 }
+                cmp = _mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ);
                 adder = _mm256_and_pd(adder, cmp);
                 counter = _mm256_add_pd(counter, adder);
                 if (_mm256_testz_si256(_mm256_castpd_si256(cmp), _mm256_castpd_si256(cmp)) != 0) {
@@ -506,11 +512,11 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd
 
             for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
                 if (info.smooth)
-                    data[i + k + j * info.bWidth] = float(ftRes[k] <= 0 ? info.maxIter :
+                    data[i + k + j * info.bWidth] = float(ftRes[k] < 0 ? info.maxIter :
                         ftRes[k] >= info.maxIter ? info.maxIter :
                         ((float)ftRes[k]) + 1 - ::log(::log(float(resa[k] * resa[k] + resb[k] * resb[k])) / 2) / ::log(2.0f));
                 else
-                    data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+                    data[i + k + j * info.bWidth] = ftRes[k] >= 0 ? float(ftRes[k]) : info.maxIter;
             }
         }
     }

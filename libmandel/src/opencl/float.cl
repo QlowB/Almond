@@ -13,9 +13,9 @@ __kernel void iterate(__global float* A, const int width, float xl, float yt, fl
        float aa = a * a;
        float bb = b * b;
        float ab = a * b;
-       if (aa + bb > 16) break;
        a = aa - bb + ca;
        b = ab + ab + cb;
+       if (aa + bb > 16) break;
        n++;
    }
    if (n >= max - 1) {
@@ -44,15 +44,16 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
 
    int n = 0;
    if (smooth) {
+       int4 cmp = isless((float4)(16.0f), (float4)(16.0f));
        while (n < max) {
            float4 ab = a * b;
            float4 cmpVal = fma(a, a, b * b);
-           int4 cmp = isless(cmpVal, (float4)(16.0f));
-           if (!any(cmp)) break;
            a = fma(a, a, -fma(b, b, -ca));
            b = fma(2, ab, cb);
            resa = as_float4((as_int4(a) & cmp) | (as_int4(resa) & ~cmp));
            resb = as_float4((as_int4(b) & cmp) | (as_int4(resb) & ~cmp));
+           cmp = isless(cmpVal, (float4)(16.0f));
+           if (!any(cmp)) break;
            count += cmp & (int4)(1);
            n++;
        }
@@ -61,10 +62,10 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
        while (n < max) {
            float4 ab = a * b;
            float4 cmpVal = fma(a, a, b * b);
-           int4 cmp = isless(cmpVal, (float4)(16.0f));
-           if (!any(cmp)) break;
            a = fma(a, a, -fma(b, b, -ca));
            b = fma(2, ab, cb);
+           int4 cmp = isless(cmpVal, (float4)(16.0f));
+           if (!any(cmp)) break;
            count += cmp & (int4)(1);
            n++;
        }
@@ -76,4 +77,3 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
           A[index + i] = ((float) count[i]);
    }
 }
-

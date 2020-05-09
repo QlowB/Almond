@@ -40,6 +40,7 @@ else()
     endforeach()
     set(ZLIB_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/zlib-1.2.11 ${ZLIB_PUB_INCLUDE} )
     
+    set(SKIP_INSTALL_ALL ON)
     add_subdirectory(lpng1637)
     foreach(header ${libpng_public_hdrs})
         get_filename_component(the_incluude ${header} DIRECTORY)

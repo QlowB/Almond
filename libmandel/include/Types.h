@@ -172,9 +172,9 @@ namespace mnd
     template<>
     inline LightDoubleDouble convert<LightDoubleDouble, Real>(const Real& x)
     {
-        double upper = static_cast<double>(x);
-        double lower = static_cast<double>(x - upper);
-        return { upper, lower };
+        double s = static_cast<double>(x);
+        double e = static_cast<double>(x - s);
+        return LightDoubleDouble{ s, e };
     }
 
     template<>

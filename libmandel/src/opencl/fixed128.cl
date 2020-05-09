@@ -73,9 +73,9 @@ __kernel void iterate(__global float* A, const int width,
         long2 aa = mul(a, a);
         long2 bb = mul(b, b);
         long2 ab = mul(a, b);
-        if (aa[0] + bb[0] > (16LL << 48)) break;
         a = add(sub(aa, bb), ca);
         b = add(add(ab, ab), cb);
+        if (aa[0] + bb[0] > (16LL << 48)) break;
         n++;
     }
 

@@ -1,16 +1,18 @@
 #ifndef MANDEL_OPENCLCODE_H
 #define MANDEL_OPENCLCODE_H
 
+#include <string>
+
 namespace mnd
 {
-    const char* getFloat_cl();
-    const char* getDouble_cl();
-    const char* getDoubleFloat_cl();
-    const char* getDoubleDouble_cl();
-    const char* getQuadDouble_cl();
-    const char* getFixed64_cl();
-    const char* getFixed128_cl();
-    const char* getFixed512_cl();
+    std::string getFloat_cl();
+    std::string getDouble_cl();
+    std::string getDoubleFloat_cl();
+    std::string getDoubleDouble_cl();
+    std::string getQuadDouble_cl();
+    std::string getFixed64_cl();
+    std::string getFixed128_cl();
+    std::string getFixed512_cl();
 }
 
 #endif // MANDEL_OPENCLCODE_H

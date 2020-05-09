@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/icons">
         <file alias="icon">icon.png</file>
+        <file alias="icon@2x">icon.png</file>
     </qresource>
     <qresource prefix="/gradients">
         <file alias="default">gradients/default.xml</file>

@@ -662,13 +662,14 @@ void MandelWidget::clearAll(void)
 
 void MandelWidget::initializeGL(void)
 {
-    this->context()->functions()->glClearColor(0, 0, 0, 0);
+    auto& gl = *this->context()->functions();
+    gl.glClearColor(0, 0, 0, 0);
     this->context()->makeCurrent(nullptr);
 
-    glDisable(GL_DEPTH_TEST);
+    gl.glDisable(GL_DEPTH_TEST);
 
     // looks not even better
-    glEnable(GL_FRAMEBUFFER_SRGB);
+    gl.glEnable(GL_FRAMEBUFFER_SRGB);
 
     //glShadeModel(GL_SMOOTH);
 
@@ -682,8 +683,8 @@ void MandelWidget::resizeGL(int w, int h)
 
     currentViewport.height = currentViewport.width / aspect;
     targetViewport = currentViewport;
-    float x = this->devicePixelRatioF();
-    glViewport(0, 0, w * x, h * x);
+    float pixelRatio = this->devicePixelRatioF();
+    glViewport(0, 0, w * pixelRatio, h * pixelRatio);
 
     if (mandelView.get() != nullptr) {
         mandelView->width = w;
@@ -701,17 +702,17 @@ void MandelWidget::paintGL(void)
 
     int width = this->width();
     int height = this->height();
-    float x = this->devicePixelRatioF();
-    mandelView->width = width * x;
-    mandelView->height = height * x;
+    float pixelRatio = this->devicePixelRatioF();
+    mandelView->width = width * pixelRatio;
+    mandelView->height = height * pixelRatio;
     //glViewport(0, 0, width, height);
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 #ifdef QT_OPENGL_ES_1
-    glOrthof(0, width * x, height * x, 0, -1.0, 1.0);
+    glOrthof(0, width * pixelRatio, height * pixelRatio, 0, -1.0, 1.0);
 #else
-    glOrtho(0, width * x, height * x, 0, -1.0, 1.0);
+    glOrtho(0, width * pixelRatio, height * pixelRatio, 0, -1.0, 1.0);
 #endif
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -761,31 +762,13 @@ void MandelWidget::updateAnimations(void)
 void MandelWidget::drawRubberband(void)
 {
     QPainter rubberbandPainter{ this };
-    rubberbandPainter.fillRect(rubberband, QColor{ 25, 225, 25, 50 });
+    rubberbandPainter.fillRect(rubberband, QColor{ 125, 140, 225, 120 });
 
-    QPen pen{ QColor{ 10, 200, 10 } };
+    QPen pen{ QColor{ 100, 115, 200 } };
     pen.setWidth(2);
     rubberbandPainter.setPen(pen);
 
     rubberbandPainter.drawRect(rubberband);
-    /*glColor3ub(10, 200, 10);
-    glBegin(GL_LINE_LOOP);
-    glVertex2d(rubberband.x(), rubberband.y());
-    glVertex2d(rubberband.right(), rubberband.y());
-    glVertex2d(rubberband.right(), rubberband.bottom());
-    glVertex2d(rubberband.x(), rubberband.bottom());
-    glEnd();
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColor4f(0.1f, 0.9f, 0.1f, 0.2f);
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex2d(rubberband.x(), rubberband.y());
-    glVertex2d(rubberband.right(), rubberband.y());
-    glVertex2d(rubberband.right(), rubberband.bottom());
-    glVertex2d(rubberband.x(), rubberband.bottom());
-    glEnd();
-    glDisable(GL_BLEND);*/
 }
 
 

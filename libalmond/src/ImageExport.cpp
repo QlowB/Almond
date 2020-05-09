@@ -56,8 +56,8 @@ void exportPng(const ImageExportInfo& iei, std::function<void(float)> progressCa
     long chunkHeight = height / 20;
     if (chunkHeight < 1)
         chunkHeight = 1;
-    if (width >= 4096 && chunkHeight > 64)
-        chunkHeight = 64;
+    while (width * chunkHeight > 512 * 512)
+        chunkHeight /= 2;
 
     auto rowPointers = std::make_unique<png_byte*[]>(chunkHeight);
     for (long chunkY = 0; chunkY < height; chunkY += chunkHeight) {

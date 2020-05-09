@@ -6,6 +6,8 @@
 #include <QGradient>
 #include "gradientchoosedialog.h"
 
+#include "GridFlowLayout.h"
+
 #include <cmath>
 
 Almond::Almond(QWidget* parent) :
@@ -34,9 +36,20 @@ Almond::Almond(QWidget* parent) :
     ui.backgroundProgress->setVisible(false);
 
     backgroundTasks.setMaxThreadCount(1);
-    this->setWindowIcon(QIcon(":/icons/icon"));
-    //ui.verticalLayout_left->addWidget(new MyGLWidget(ui.centralWidget));
-    //mw->show();
+    QIcon icon{ ":/icons/icon" };
+    icon.addFile(":/icons/icon@2x");
+    this->setWindowIcon(icon);
+
+    // replace vertical layout with gridflowlayout
+    /*GridFlowLayout* gfl = new GridFlowLayout(nullptr);
+    //ui.horizontalLayout_4->addItem(gfl);
+    for (int i = 0; i < ui.verticalLayout_right->count(); i++) {
+        printf("%d: \n", i);
+        gfl->addItem(ui.verticalLayout_right->takeAt(i));
+    }
+    ui.verticalLayout_right->setEnabled(false);
+    delete ui.dockWidgetContents_2->layout();
+    ui.dockWidgetContents_2->setLayout(gfl);*/
 }
 
 

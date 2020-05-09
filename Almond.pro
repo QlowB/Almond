@@ -37,6 +37,7 @@ SOURCES += \
         customgenerator.cpp \
         exportdialogs.cpp \
         gradientchoosedialog.cpp \
+        GridFlowLayout.cpp \
         main.cpp
 
 HEADERS += \
@@ -50,6 +51,7 @@ HEADERS += \
         choosegenerators.h \
         customgenerator.h \
         exportdialogs.h \
+        GridFlowLayout.h \
         gradientchoosedialog.h
 
 FORMS += \
@@ -79,7 +81,7 @@ unix:LIBS += -lm -latomic
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
-else:unix: LIBS += -L$$PWD/../libs/ffmpeg-4.1.1-win32-dev/lib/ -lavcodec
+else:unix: LIBS += -lavcodec
 
 win32:FFMPEGPATH = $$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/
 win32:INCLUDEPATH += $$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/include
@@ -126,8 +128,9 @@ unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 RESOURCES += Almond.qrc \
     splash.qrc
 
-unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond -llibpng16_static -lzlibstatic
-unix: LIBS += -lrt
+win32:LIBS += -llibpng16_static -lzlibstatic
+unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond
+unix: LIBS += -lrt -lpng -lavcodec -lavdevice -lavformat -lavutil -lswscale -lavfilter
 
 INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include
 DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include

@@ -52,10 +52,23 @@ QString ExportImageDialog::getPath(void) const
 
 void ExportImageDialog::on_pushButton_clicked()
 {
+    std::string formatString = "";
+    if (alm::supportsImageFormat(alm::ImageFormat::PNG)) {
+        formatString += "PNG image (*.png);;";
+    }
+    if (alm::supportsImageFormat(alm::ImageFormat::JPEG)) {
+        formatString += "JPEG image (*.jpg *.jpeg);;";
+    }
+    if (alm::supportsImageFormat(alm::ImageFormat::BMP)) {
+        formatString += "BMP image (*.bmp *.dib);;";
+    }
+    if (!formatString.empty()) {
+        formatString.erase(formatString.end() - 2, formatString.end());
+    }
+
     QString saveAs = QFileDialog::getSaveFileName(this,
             tr("Save exported image"), "",
-            //tr("PNG image (*.png);;JPEG image (*.jpg);;All Files (*)"));
-            tr("PNG image (*.png)"));
+            tr(formatString.c_str()));
     if(!saveAs.isEmpty() && !saveAs.isNull())
         eid.savePath->setText(saveAs);
     this->repaint();
@@ -133,6 +146,7 @@ const ExportVideoInfo& ExportVideoDialog::getExportVideoInfo(void) const
 
 void ExportVideoDialog::on_buttonBox_accepted()
 {
+    /*
     if (evd.savePath->text() == "") {
         QMessageBox* msgBox = new QMessageBox;
         msgBox->setText("Please specify a path.");
@@ -163,13 +177,14 @@ void ExportVideoDialog::on_buttonBox_accepted()
         evd.endW->text().toDouble(),
         evd.endH->text().toDouble(),
     };*/
-
+    /*
     evi.start.adjustAspectRatio(evi.mi.bWidth, evi.mi.bHeight);
     evi.end.adjustAspectRatio(evi.mi.bWidth, evi.mi.bHeight);
     evi.gradient = almond->mw->getGradient();
-
+    */
     //}
 }
+
 
 void ExportVideoDialog::on_pushButton_clicked()
 {

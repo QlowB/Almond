@@ -98,6 +98,9 @@ void CpuGenerator<float, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mandel
                     __m256 ab = _mm256_mul_ps(a, b);
                     __m256 ab2 = _mm256_mul_ps(a2, b2);
                     __m256 ab3 = _mm256_mul_ps(a3, b3);
+                    __m256 olda = a;
+                    __m256 olda2 = a2;
+                    __m256 olda3 = a3;
                     a = _mm256_add_ps(_mm256_fmsub_ps(a, a, bb), cx);
                     a2 = _mm256_add_ps(_mm256_fmsub_ps(a2, a2, bb2), cx2);
                     a3 = _mm256_add_ps(_mm256_fmsub_ps(a3, a3, bb3), cx3);
@@ -116,9 +119,9 @@ void CpuGenerator<float, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mandel
                     resultsb2 = _mm256_blendv_ps(resultsb2, b2, cmp2);
                     resultsa3 = _mm256_blendv_ps(resultsa3, a3, cmp3);
                     resultsb3 = _mm256_blendv_ps(resultsb3, b3, cmp3);
-                    cmp = _mm256_cmp_ps(_mm256_fmadd_ps(a, a, bb), threshold, _CMP_LE_OQ);
-                    cmp2 = _mm256_cmp_ps(_mm256_fmadd_ps(a2, a2, bb2), threshold, _CMP_LE_OQ);
-                    cmp3 = _mm256_cmp_ps(_mm256_fmadd_ps(a3, a3, bb3), threshold, _CMP_LE_OQ);
+                    cmp = _mm256_cmp_ps(_mm256_fmadd_ps(olda, olda, bb), threshold, _CMP_LE_OQ);
+                    cmp2 = _mm256_cmp_ps(_mm256_fmadd_ps(olda2, olda2, bb2), threshold, _CMP_LE_OQ);
+                    cmp3 = _mm256_cmp_ps(_mm256_fmadd_ps(olda3, olda3, bb3), threshold, _CMP_LE_OQ);
                     adder = _mm256_and_ps(adder, cmp);
                     counter = _mm256_add_ps(counter, adder);
                     adder2 = _mm256_and_ps(adder2, cmp2);
@@ -254,8 +257,10 @@ void CpuGenerator<double, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mande
             __m256d cmp = _mm256_cmp_pd(threshold, threshold, _CMP_LE_OQ);
             __m256d cmp2 = _mm256_cmp_pd(threshold, threshold, _CMP_LE_OQ);
             for (int k = 0; k < info.maxIter; k++) {
+                __m256d aa = _mm256_mul_pd(a, a);
                 __m256d ab = _mm256_mul_pd(a, b);
                 __m256d bb = _mm256_mul_pd(b, b);
+                __m256d aa2 = _mm256_mul_pd(a2, a2);
                 __m256d ab2 = _mm256_mul_pd(a2, b2);
                 __m256d bb2 = _mm256_mul_pd(b2, b2);
                 a = _mm256_fmsub_pd(a, a, bb);
@@ -270,8 +275,8 @@ void CpuGenerator<double, mnd::X86_AVX_FMA, parallel>::generate(const mnd::Mande
                     resultsa2 = _mm256_blendv_pd(resultsa2, a2, cmp2);
                     resultsb2 = _mm256_blendv_pd(resultsb2, b2, cmp2);
                 }
-                cmp = _mm256_cmp_pd(_mm256_fmadd_pd(a, a, bb), threshold, _CMP_LE_OQ);
-                cmp2 = _mm256_cmp_pd(_mm256_fmadd_pd(a2, a2, bb2), threshold, _CMP_LE_OQ);
+                cmp = _mm256_cmp_pd(_mm256_add_pd(aa, bb), threshold, _CMP_LE_OQ);
+                cmp2 = _mm256_cmp_pd(_mm256_add_pd(aa2, bb2), threshold, _CMP_LE_OQ);
                 adder = _mm256_and_pd(adder, cmp);
                 adder2 = _mm256_and_pd(adder2, cmp2);
                 counter = _mm256_add_pd(counter, adder);

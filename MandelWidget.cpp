@@ -1,6 +1,13 @@
+#if 0
+
 #include "MandelWidget.h"
 #include <cmath>
 #include <sstream>
+
+#include <QStyle>
+#include <QStyleOption>
+#include <QOpenGLShader>
+#include <QOpenGLFunctions_3_0>
 
 using namespace mnd;
 
@@ -10,11 +17,15 @@ using namespace mnd;
 #include <cstdio>
 
 
-Texture::Texture(QOpenGLFunctions_2_0& gl, const Bitmap<RGBColor>& bitmap, GLint param) :
+Texture::Texture(QOpenGLFunctions& gl, const Bitmap<float>& bitmap, GLint param) :
     gl{ gl }
 {
     gl.glGenTextures(1, &id);
+    gl.glActiveTexture(GL_TEXTURE0);
     gl.glBindTexture(GL_TEXTURE_2D, id);
+
+    Bitmap<float> copy = bitmap.map<float>([](float x) { return x / 200; });
+    Bitmap<RGBColor> rgbs = bitmap.map<RGBColor>([](float x) { return RGBColor{ 100, uint8_t(::sin(x * 0.01) * 127 + 127), 20 }; });
 
     //int lineLength = (bitmap.width * 3 + 3) & ~3;
 
@@ -28,11 +39,12 @@ Texture::Texture(QOpenGLFunctions_2_0& gl, const Bitmap<RGBColor>& bitmap, GLint
             pixels[index + 2] = c.b;
         }
     }*/
-    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, int(bitmap.width), int(bitmap.height), 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<char*> (bitmap.pixels.get()));
+    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, int(bitmap.width), int(bitmap.height), 0, GL_RGB, GL_UNSIGNED_BYTE, rgbs.pixels.get());
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+    gl.glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
@@ -51,23 +63,66 @@ Texture::Texture(Texture&& other) :
 }
 
 
-Texture& Texture::operator=(Texture&& other)
-{
-    this->id = other.id;
-    this->gl = other.gl;
-    other.id = 0;
-    return *this;
-}
-
-
 void Texture::bind(void) const
 {
+    gl.glActiveTexture(GL_TEXTURE0);
     gl.glBindTexture(GL_TEXTURE_2D, id);
 }
 
 
-void Texture::drawRect(float x, float y, float width, float height)
+static GLuint gradId;
+void Texture::drawRect(QOpenGLShaderProgram* program,
+                       float x, float y, float width, float height,
+                       float tx, float ty, float tw, float th)
 {
+#if 1
+    GLfloat const vertices[] = {
+        x, y,  0.0f,
+        x, y + height, 0.0f,
+        x + width, y + height, 0.0f,
+        x + width, y, 0.0f,
+    };
+
+    GLfloat const texCoords[] = {
+        tx,      ty,
+        tx,      ty + th,
+        tx + tw, ty + th,
+        tx + tw, ty,
+    };
+
+    QColor color(255, 255, 255);
+
+    int vertexLoc = program->attributeLocation("vertex");
+    int texCoordsLoc = program->attributeLocation("texCoord");
+    int colorLocation = program->uniformLocation("color");
+    int texLoc = program->uniformLocation("tex");
+    int gradLoc = program->uniformLocation("gradient");
+    program->setAttributeArray(vertexLoc, vertices, 3);
+    program->setAttributeArray(texCoordsLoc, texCoords, 2);
+    program->enableAttributeArray(vertexLoc);
+    program->enableAttributeArray(texCoordsLoc);
+    program->setUniformValue(colorLocation, color);
+
+
+    auto& gl3 = *QOpenGLContext::currentContext()->functions();
+    gl3.glEnable(GL_TEXTURE_2D);
+
+    gl3.glUniform1i(texLoc, GL_TEXTURE0);
+    gl3.glUniform1i(gradLoc, GL_TEXTURE2);
+
+    gl3.glActiveTexture(GL_TEXTURE0);
+    gl3.glBindTexture(GL_TEXTURE_2D, id);
+
+    gl3.glActiveTexture(GL_TEXTURE2);
+    gl3.glBindTexture(GL_TEXTURE_2D, gradId);
+    gl3.glActiveTexture(GL_TEXTURE0);
+
+    gl3.glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+    program->disableAttributeArray(vertexLoc);
+    program->disableAttributeArray(texCoordsLoc);
+    gl3.glActiveTexture(GL_TEXTURE0);
+#else
     gl.glColor3ub(255, 255, 255);
     gl.glEnable(GL_TEXTURE_2D);
     bind();
@@ -82,6 +137,7 @@ void Texture::drawRect(float x, float y, float width, float height)
     gl.glVertex2f(x + width, y + height);
     gl.glEnd();
     gl.glDisable(GL_TEXTURE_2D);
+#endif
 }
 
 
@@ -95,8 +151,11 @@ TextureClip::~TextureClip(void)
 {
 }
 
-void TextureClip::drawRect(float x, float y, float width, float height)
+
+void TextureClip::drawRect(QOpenGLShaderProgram* program,
+        float x, float y, float width, float height)
 {
+    /*
     auto& gl = texture->gl;
     gl.glColor3ub(255, 255, 255);
     gl.glEnable(GL_TEXTURE_2D);
@@ -111,7 +170,9 @@ void TextureClip::drawRect(float x, float y, float width, float height)
     gl.glTexCoord2f(tx + tw, ty + th);
     gl.glVertex2f(x + width, y + height);
     gl.glEnd();
-    gl.glDisable(GL_TEXTURE_2D);
+    gl.glDisable(GL_TEXTURE_2D);*/
+    texture->drawRect(program, x, y, width, height,
+                      tx, ty, tw, th);
 }
 
 
@@ -142,11 +203,13 @@ QuadImage::~QuadImage(void)
 }
 
 
-void QuadImage::drawRect(float x, float y, float width, float height)
+void QuadImage::drawRect(QOpenGLShaderProgram* program,
+        float x, float y, float width, float height)
 {
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
-            this->cells[i][j]->drawRect(x + i * 0.5f * width,
+            this->cells[i][j]->drawRect(program,
+                                        x + i * 0.5f * width,
                                         y + j * 0.5f * height,
                                         width * 0.5f,
                                         height * 0.5f);
@@ -225,18 +288,18 @@ void Job::run(void)
     auto [absX, absY] = grid->getPositions(i, j);
     mnd::Real gw = grid->dpp * MandelView::chunkSize;
 
-    Bitmap<float> f(MandelView::chunkSize, MandelView::chunkSize);
+    Bitmap<float>* f = new Bitmap<float>(MandelView::chunkSize, MandelView::chunkSize);
     mnd::MandelInfo mi = owner.getMandelInfo();
     mi.view.x = absX;
     mi.view.y = absY;
     mi.view.width = mi.view.height = gw;
     mi.bWidth = mi.bHeight = MandelView::chunkSize;
     try {
-        generator->generate(mi, f.pixels.get());
-        auto* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([&mi, this] (float i) {
+        generator->generate(mi, f->pixels.get());
+        /*auto* rgb = new Bitmap<RGBColor>(f.map<RGBColor>([&mi, this] (float i) {
             return i >= mi.maxIter ? RGBColor{ 0, 0, 0 } : gradient.get(i);
-        }));
-        emit done(level, i, j, calcState, rgb);
+        }));*/
+        emit done(level, i, j, calcState, f);
     }
     catch(std::exception& ex) {
         printf("wat: %s?!\n", ex.what()); fflush(stdout);
@@ -310,7 +373,7 @@ void Calcer::notFinished(int level, GridIndex i, GridIndex j)
 }
 
 
-void Calcer::redirect(int level, GridIndex i, GridIndex j, long calcState, Bitmap<RGBColor>* bmp)
+void Calcer::redirect(int level, GridIndex i, GridIndex j, long calcState, Bitmap<float>* bmp)
 {
     jobsMutex.lock();
     jobs.erase({ level, i, j });
@@ -329,7 +392,9 @@ const int MandelView::chunkSize = 256;
 MandelView::MandelView(mnd::MandelGenerator* generator, MandelWidget& owner) :
     generator{ generator },
     calcer{ generator, owner },
-    owner{ owner }
+    owner{ owner },
+    width{ 0 },
+    height{ 0 }
 {
     /*Bitmap<RGBColor> emp(8, 8);
     for(auto i = 0; i < emp.width; i++) {
@@ -342,9 +407,9 @@ MandelView::MandelView(mnd::MandelGenerator* generator, MandelWidget& owner) :
             }
         }
     }*/
-    Bitmap<RGBColor> emp(1, 1);
-    emp.get(0, 0) = RGBColor{ 0, 0, 0 };
-    auto& gl = *QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_0>();
+    Bitmap<float> emp(1, 1);
+    emp.get(0, 0) = 0.0f;
+    auto& gl = *QOpenGLContext::currentContext()->functions();
     empty = std::make_unique<Texture>(gl, emp, GL_NEAREST);
     connect(&calcer, &Calcer::done, this, &MandelView::cellReady);
 }
@@ -498,8 +563,8 @@ GridElement* MandelView::searchUnder(int level, GridIndex i, GridIndex j, int re
 }
 
 
-void MandelView::paint(const mnd::MandelViewport& mvp, QPainter& qp)
-{
+void MandelView::paint(const mnd::MandelViewport& mvp)
+{    
     mnd::Real dpp = mvp.width / width;
     int level = getLevel(dpp) - 1;
     auto& grid = getGrid(level);
@@ -536,7 +601,11 @@ void MandelView::paint(const mnd::MandelViewport& mvp, QPainter& qp)
             }
 
             if (t != nullptr) {
-                t->img->drawRect(float(x), float(y), float(w), float(w));
+
+                auto& gl3 = *QOpenGLContext::currentContext()->functions();
+                gl3.glActiveTexture(GL_TEXTURE2);
+                gl3.glBindTexture(GL_TEXTURE_2D, owner.gradientTexture);
+                t->img->drawRect(this->owner.program,float(x), float(y), float(w), float(w));
                 /*glBegin(GL_LINE_LOOP);
                 glVertex2f(float(x), float(y));
                 glVertex2f(float(x) + float(w), float(y));
@@ -550,15 +619,17 @@ void MandelView::paint(const mnd::MandelViewport& mvp, QPainter& qp)
             }
             else {
                 calcer.calc(grid, level, i, j, 1000);
-                this->empty->drawRect(float(x), float(y), float(w), float(w));
+                this->empty->drawRect(this->owner.program,
+                            float(x), float(y), float(w), float(w));
             }
         }
     }
 }
 
-void MandelView::cellReady(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp)
+
+void MandelView::cellReady(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp)
 {
-    auto& gl = *QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_0>();
+    auto& gl = *QOpenGLContext::currentContext()->functions();
     this->getGrid(level).setCell(i, j,
         std::make_unique<GridElement>(true, std::make_shared<TextureClip>(std::make_shared<Texture>(gl, *bmp))));
     delete bmp;
@@ -572,7 +643,7 @@ MandelWidget::MandelWidget(mnd::MandelContext& ctxt, mnd::MandelGenerator* gener
     generator{ generator },
     gradient{ Gradient::defaultGradient() }
 {
-    this->setContentsMargins(0, 0, 0, 0);
+    //this->setContentsMargins(0, 0, 0, 0);
     this->setSizePolicy(QSizePolicy::Expanding,
         QSizePolicy::Expanding);
     qRegisterMetaType<GridIndex>("GridIndex");
@@ -587,12 +658,46 @@ MandelWidget::~MandelWidget()
 
 void MandelWidget::setGradient(Gradient g)
 {
-    this->gradient = std::move(g);
+    /*this->gradient = std::move(g);
     if (mandelView) {
         mandelView->clearCells();
         mandelView->calcer.changeState();
     }
-    emit update();
+    emit update();*/
+
+    auto& gl = *this->context()->functions();
+    this->gradient = std::move(g);
+    int width = 1024;
+
+    std::vector<unsigned char> pixels(size_t(width * 3));
+    for (int i = 0; i < width; i++) {
+        float pos = i * this->gradient.getMax() / width;
+        RGBColor c = gradient.get(pos);
+        pixels.push_back(c.r);
+        pixels.push_back(c.g);
+        pixels.push_back(c.b);
+    }
+
+    unsigned char pix[] = { 255, 0, 0, 0, 255, 0, 0, 0, 255 };
+
+    GLuint id;
+    gl.glEnable(GL_TEXTURE_2D);
+    gl.glActiveTexture(GL_TEXTURE2);
+    gl.glGenTextures(1, &id);
+    gl.glBindTexture(GL_TEXTURE_2D, id);
+
+    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 3, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<char*> (pix));
+    gl.glUniform1i(this->program->uniformLocation("gradient"), GL_TEXTURE2);
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl.glBindTexture(GL_TEXTURE_2D, 0);
+
+
+    gradientTexture = id;
+    gradId = id;
+    update();
 }
 
 
@@ -662,7 +767,6 @@ void MandelWidget::initializeGL(void)
 {
     auto& gl = *this->context()->functions();
     gl.glClearColor(0, 0, 0, 0);
-    this->context()->makeCurrent(nullptr);
 
     gl.glDisable(GL_DEPTH_TEST);
 
@@ -671,7 +775,39 @@ void MandelWidget::initializeGL(void)
 
     //glShadeModel(GL_SMOOTH);
 
+
+    program = new QOpenGLShaderProgram{ this->context() };
+    bool vert = program->addShaderFromSourceCode(QOpenGLShader::Vertex,
+    "attribute highp vec4 vertex;\n"
+    "attribute highp vec2 texCoord;\n"
+    "uniform highp mat4 matrix;\n"
+    "varying highp vec2 texc;\n"
+    "void main(void)\n"
+    "{\n"
+    "   gl_Position = matrix * vertex;\n"
+    "   texc = texCoord;\n"
+    "}");
+    bool frag = program->addShaderFromSourceCode(QOpenGLShader::Fragment,
+    "uniform sampler2D gradient;\n"
+    "uniform sampler2D tex;\n"
+    "uniform mediump vec4 color;\n"
+    "varying highp vec2 texc;\n"
+    "void main(void)\n"
+    "{\n"
+    "   float v = texture2D(tex, texc).r;\n"
+    "   gl_FragColor = texture2D(gradient, texc);\n"
+//    "   gl_FragColor = gl_FragColor * texture2D(tex, texc);\n"
+//    "   float v = texture2D(tex, texc).r;\n"
+//    "   gl_FragColor = vec4(v, 1.0 - v, v*v, 1);\n"
+//    "   gl_FragColor.g = 0.3;\n"
+    "}");
+    //program.link();
+    bool bound = program->bind();
+
+    //gl3.glBindSampler(0, id);
+
     mandelView = nullptr;
+    setGradient(gradient);
     requestRecalc();
 }
 
@@ -694,12 +830,15 @@ void MandelWidget::resizeGL(int w, int h)
 
 void MandelWidget::paintGL(void)
 {
-    auto& gl = *QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_0>();
+    //auto& gl = *QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_0>();
     if (mandelView == nullptr) {
         mandelView = std::make_unique<MandelView>(generator, *this);
         QObject::connect(mandelView.get(), &MandelView::redrawRequested, this, static_cast<void(QOpenGLWidget::*)(void)>(&QOpenGLWidget::update));
     }
+    //if (program)
+        //program->bind();
 
+    /*
     int width = this->width();
     int height = this->height();
     float pixelRatio = this->devicePixelRatioF();
@@ -712,32 +851,71 @@ void MandelWidget::paintGL(void)
 #ifdef QT_OPENGL_ES_1
     gl.glOrthof(0, width * pixelRatio, height * pixelRatio, 0, -1.0, 1.0);
 #else
-    gl.glOrtho(0, width * pixelRatio, height * pixelRatio, 0, -1.0, 1.0);
+    gl.glOrtho(0, double(width) * pixelRatio, double(height) * pixelRatio, 0, -1.0, 1.0);
 #endif
     gl.glMatrixMode(GL_MODELVIEW);
     gl.glLoadIdentity();
 
     gl.glClear(GL_COLOR_BUFFER_BIT);
 
-    updateAnimations();
 
     QPainter painter{ this };
 
     mandelView->paint(this->currentViewport, painter);
 
     if (rubberbanding)
-        drawRubberband();
+    drawRubberband();
     if (displayInfo)
-        drawInfo();
+    drawInfo();
     if (selectingPoint)
-        drawPoint();
+    drawPoint();*/
+    //QPainter painter{ this };
+
+
+    updateAnimations();
+
+    mandelView->paint(this->currentViewport);
+
+    static GLfloat const triangleVertices[] = {
+        0.0,  20,  0.0f,
+        49, 50, 0.0f,
+        -60,  70, 0.0f
+    };
+
+    QColor color(0, 255, 0);
+
+    QMatrix4x4 pmvMatrix;
+    pmvMatrix.ortho(rect());
+
+    int vertexLocation = program->attributeLocation("vertex");
+    int matrixLocation = program->uniformLocation("matrix");
+    int colorLocation = program->uniformLocation("color");
+    program->enableAttributeArray(vertexLocation);
+    program->setAttributeArray(vertexLocation, triangleVertices, 3);
+    program->setUniformValue(matrixLocation, pmvMatrix);
+    program->setUniformValue(colorLocation, color);
+    
+    auto& gl3 = *QOpenGLContext::currentContext()->functions();
+    gl3.glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    program->disableAttributeArray(vertexLocation);
+
+    /*QPainter painter{ this };
+    painter.beginNativePainting();
+    painter.endNativePainting();*/
+    /*if (rubberbanding)
+        drawRubberband(painter);
+    if (displayInfo)
+        drawInfo(painter);
+    if (selectingPoint)
+        drawPoint(painter);*/
 }
 
 
 void MandelWidget::updateAnimations(void)
 {
-    if (mnd::abs(currentViewport.width / targetViewport.width - 1.0) < 0.1e-5
-            && mnd::abs(currentViewport.height / targetViewport.height - 1.0) < 0.1e-5) {
+    if (mnd::abs(currentViewport.width / targetViewport.width - 1.0) < 1e-3
+            && mnd::abs(currentViewport.height / targetViewport.height - 1.0) < 1e-3) {
         // animation finished
         currentViewport = targetViewport;
     }
@@ -759,9 +937,8 @@ void MandelWidget::updateAnimations(void)
 }
 
 
-void MandelWidget::drawRubberband(void)
+void MandelWidget::drawRubberband(QPainter& rubberbandPainter)
 {
-    QPainter rubberbandPainter{ this };
     rubberbandPainter.fillRect(rubberband, QColor{ 125, 140, 225, 120 });
 
     QPen pen{ QColor{ 100, 115, 200 } };
@@ -769,10 +946,12 @@ void MandelWidget::drawRubberband(void)
     rubberbandPainter.setPen(pen);
 
     rubberbandPainter.drawRect(rubberband);
+    //QStyleOption so;
+    //style()->drawControl(QStyle::CE_RubberBand, &so, &rubberbandPainter, this);
 }
 
 
-void MandelWidget::drawInfo(void)
+void MandelWidget::drawInfo(QPainter& infoPainter)
 {
     const float DIST_FROM_BORDER = 15;
     float maxWidth = this->width() - 2 * DIST_FROM_BORDER;
@@ -805,7 +984,6 @@ void MandelWidget::drawInfo(void)
     float lineY = this->height() - DIST_FROM_BORDER;
     float lineXEnd = DIST_FROM_BORDER + pixels;
 
-    QPainter infoPainter{ this };
     infoPainter.setPen(Qt::white);
     infoPainter.setFont(QFont("Arial", 12));
     infoPainter.drawLine(QPointF{ DIST_FROM_BORDER, lineY }, QPointF{ lineXEnd, lineY });
@@ -813,13 +991,11 @@ void MandelWidget::drawInfo(void)
     infoPainter.drawLine(QPointF{ lineXEnd, lineY }, QPointF{ lineXEnd, lineY - 5 });
     infoPainter.drawText(int(DIST_FROM_BORDER), int(lineY - 20), int(lineXEnd - DIST_FROM_BORDER), 20,
                          Qt::AlignCenter, QString::fromStdString(dis.str()));
-    infoPainter.end();
 }
 
 
-void MandelWidget::drawPoint(void)
+void MandelWidget::drawPoint(QPainter& pointPainter)
 {
-    QPainter pointPainter{ this };
     pointPainter.setPen(QColor{ 255, 255, 255 });
     pointPainter.drawLine(0, pointY, width(), pointY);
     pointPainter.drawLine(pointX, 0, pointX, height());
@@ -898,7 +1074,7 @@ void MandelWidget::mousePressEvent(QMouseEvent* me)
     if (me->button() == Qt::RightButton) {
         rubberbanding = true;
         rubberband.setCoords(me->x(), me->y(), me->x(), me->y());
-        emit repaint();
+        update();
         me->accept();
     }
     else if (me->button() == Qt::LeftButton) {
@@ -923,12 +1099,12 @@ void MandelWidget::mouseMoveEvent(QMouseEvent* me)
         else
             rect.setWidth(rect.height() * aspect);
 
-        emit repaint();
+        update();
     }
     else if (selectingPoint) {
         pointX = me->x();
         pointY = me->y();
-        emit repaint();
+        update();
     }
     else if (dragging) {
         double deltaX = me->x() - dragX;
@@ -939,7 +1115,7 @@ void MandelWidget::mouseMoveEvent(QMouseEvent* me)
         targetViewport = currentViewport;
         dragX = me->x(); dragY = me->y();
 
-        emit repaint();
+        update();
     }
     me->accept();
 }
@@ -969,7 +1145,7 @@ void MandelWidget::mouseReleaseEvent(QMouseEvent* me)
         mnd::Real x = currentViewport.x + currentViewport.width * mnd::convert<mnd::Real>(float(me->x()) / width());
         mnd::Real y = currentViewport.y + currentViewport.height * mnd::convert<mnd::Real>(float(me->y()) / height());
         emit pointSelected(x, y);
-        emit repaint();
+        update();
     }
     dragging = false;
 
@@ -996,3 +1172,5 @@ void MandelWidget::wheelEvent(QWheelEvent* we)
         emit repaint();
     }
 }*/
+
+#endif

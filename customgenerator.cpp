@@ -13,6 +13,7 @@ CustomGenerator::CustomGenerator(mnd::MandelContext& mndCtxt, QWidget *parent) :
     ui->setupUi(this);
 }
 
+
 CustomGenerator::~CustomGenerator()
 {
     delete ui;

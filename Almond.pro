@@ -28,10 +28,16 @@ QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
 
 SOURCES += \
         Almond.cpp \
+        AlmondMenuWidget.cpp \
         BackgroundTask.cpp \
         Color.cpp \
-        CubicSpline.cpp \
-        Gradient.cpp \
+        EscapeTimeVisualWidget.cpp \
+        ExportImageMenu.cpp \
+        ExportVideoMenu.cpp \
+        FractalWidget.cpp \
+        FractalWidgetUtils.cpp \
+        FractalZoomWidget.cpp \
+        GradientMenu.cpp \
         GradientWidget.cpp \
         MandelWidget.cpp \
         choosegenerators.cpp \
@@ -43,10 +49,16 @@ SOURCES += \
 
 HEADERS += \
         Almond.h \
+        AlmondMenuWidget.h \
         BackgroundTask.h \
         Color.h \
-        CubicSpline.h \
-        Gradient.h \
+        EscapeTimeVisualWidget.h \
+        ExportImageMenu.h \
+        ExportVideoMenu.h \
+        FractalWidget.h \
+        FractalWidgetUtils.h \
+        FractalZoomWidget.h \
+        GradientMenu.h \
         GradientWidget.h \
         MandelWidget.h \
         choosegenerators.h \
@@ -57,6 +69,9 @@ HEADERS += \
 
 FORMS += \
         Almond.ui \
+        ExportImageMenu.ui \
+        ExportVideoMenu.ui \
+        GradientMenu.ui \
         choosegenerators.ui \
         customgenerator.ui \
         exportimagedialog.ui \
@@ -78,9 +93,8 @@ else:unix:QMAKE_LFLAGS+= -fopenmp
 LIBS += -fopenmp
 unix:LIBS += -lm -latomic
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
-else:macx: LIBS += -L/usr/local/lib -lavcodec
+win32:CONFIG(release, debug|profile|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
+else:win32:CONFIG(debug, debug|profile|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
 else:unix: LIBS += -lavcodec
 
 win32:FFMPEGPATH = $$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/
@@ -89,6 +103,9 @@ win32:DEPENDPATH += $$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/include
 
 win32:INCLUDEPATH += ../libs/boost_1_72_0
 DEFINES += WITH_BOOST=1
+
+win32:LIBS += -L$$PWD/../libs/libjpeg-turbo-2.0.4/libjpeg-turbo-2.0.4/build/Release
+win32:INCLUDEPATH += $$PWD/../libs/libjpeg-turbo-2.0.4/libjpeg-turbo-2.0.4
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
 #else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
@@ -128,9 +145,9 @@ unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 RESOURCES += Almond.qrc \
     splash.qrc
 
-win32:LIBS += -llibpng16_static -lzlibstatic
+win32:LIBS += -llibpng16_static -lzlibstatic -ljpeg
 unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond
-unix: LIBS += -lrt -lpng -lavcodec -lavdevice -lavformat -lavutil -lswscale -lavfilter
+unix: LIBS += -lrt -lpng -ljpeg -lavcodec -lavdevice -lavformat -lavutil -lswscale -lavfilter
 
 INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include
 DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include

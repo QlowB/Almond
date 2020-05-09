@@ -3,7 +3,9 @@
 #include <QIcon>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QStatusBar>
 #include <QGradient>
+#include <QWindow>
 #include "gradientchoosedialog.h"
 
 #include "GridFlowLayout.h"
@@ -11,34 +13,77 @@
 #include <cmath>
 
 Almond::Almond(QWidget* parent) :
-    QMainWindow{ parent },
+    QMainWindow{ parent, Qt::WindowFlags() },
     mandelContext{ mnd::initializeContext() }
 {
     ui.setupUi(this);
-    mw = std::make_unique<MandelWidget>(mandelContext,
-                                        &mandelContext.getDefaultGenerator(),
-                                        ui.centralWidget);
+    fractalWidget = new FractalWidget(this);
+    fractalWidget->setGenerator(&mandelContext.getDefaultGenerator());
+    fractalWidget->setGradient(Gradient::defaultGradient());
+    fractalWidget->setSmoothColoring(ui.smooth->isChecked());
+
+    connect(fractalWidget, &FractalWidget::pointSelected, this, &Almond::pointSelected);
+
     customGeneratorDialog = std::make_unique<CustomGenerator>(mandelContext);
     customGenerator = nullptr;
     customViewSave = mnd::MandelViewport::centerView();
 
     on_maxIterations_editingFinished();
-    mw->setSmoothColoring(ui.smooth->isChecked());
-
 
     currentView = MANDELBROT;
     mandelGenerator = &mandelContext.getDefaultGenerator();
-    mandelViewSave = mw->getViewport();
+    mandelViewSave = fractalWidget->getViewport();
 
-    QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
-    ui.mainContainer->addWidget(mw.get());
+    ui.mandel_container->addWidget(fractalWidget);
+    //ui.mandel_container->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
-    ui.backgroundProgress->setVisible(false);
+
+    ui.backgroundProgress->setEnabled(false);
+    ui.cancelProgress->setEnabled(false);
+
+    amw = new AlmondMenuWidget(this);
+    amw->setMainMenu(ui.dockWidgetContents_2);
+    eim = new ExportImageMenu();
+    evm = new ExportVideoMenu();
+    gradientMenu = new GradientMenu();
+    AlmondSubMenu* imageSm = amw->addSubMenu(eim);
+    AlmondSubMenu* videoSm = amw->addSubMenu(evm);
+    AlmondSubMenu* gradientSm = amw->addSubMenu(gradientMenu);
+    ui.dockWidget_2->setWidget(amw);
+
+    connect(amw, &AlmondMenuWidget::submenuCancel, [this] (int) { amw->showMainMenu(); });
+    //connect(amw, &AlmondMenuWidget::submenuOK, this, &Almond::submenuOK);
+    connect(imageSm, &AlmondSubMenu::accepted, this, &Almond::imageExportOk);
+    connect(videoSm, &AlmondSubMenu::accepted, this, &Almond::videoExportOk);
+    connect(gradientSm, &AlmondSubMenu::accepted, this, &Almond::gradientEditOk);
+    connect(gradientSm, &AlmondSubMenu::cancelled, [this] () {
+        fractalWidget->setGradient(gradientMenu->getGradientBefore());
+    });
+    connect(gradientMenu, &GradientMenu::gradientChanged, [this] () {
+        fractalWidget->setGradient(gradientMenu->getGradient());
+    });
+
+
+    /*QStatusBar* bar = new QStatusBar(this);
+    bar->addWidget(new QLabel("ayay"));
+    auto* p = new QPushButton("About");
+    bar->addPermanentWidget(p);
+    QObject::connect(p, &QPushButton::clicked, [this]() {
+        toggleFullscreen();
+    });
+    bar->setFixedHeight(bar->sizeHint().height());
+    //ui.mainContainer->addWidget(bar);
+    this->setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
+    this->setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);*/
+
+    installEventFilter(this);
 
     backgroundTasks.setMaxThreadCount(1);
     QIcon icon{ ":/icons/icon" };
     icon.addFile(":/icons/icon@2x");
     this->setWindowIcon(icon);
+
+
 
     // replace vertical layout with gridflowlayout
     /*GridFlowLayout* gfl = new GridFlowLayout(nullptr);
@@ -62,12 +107,126 @@ void Almond::submitBackgroundTask(BackgroundTask* task)
 {
     QObject::connect(task, &BackgroundTask::finished, this, &Almond::backgroundTaskFinished);
     QObject::connect(task, &BackgroundTask::progress, this, &Almond::backgroundTaskProgress);
+    int running = backgroundTasks.activeThreadCount();
     backgroundTasks.start(task);
-    //if (taken) {
+    if (running == 0) {
         ui.backgroundProgress->setRange(0, 0);
-        ui.backgroundProgress->setVisible(true);
         ui.backgroundProgress->setFormat("");
-    //}
+        ui.backgroundProgress->setEnabled(true);
+        ui.cancelProgress->setEnabled(true);
+    }
+}
+
+
+void Almond::stopBackgroundTask(void)
+{
+    stoppingBackgroundTasks = true;
+}
+
+bool Almond::eventFilter(QObject *target, QEvent *event)
+{
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+        if (keyEvent->key() == Qt::Key_F11) {
+            emit toggleFullscreen();
+        }
+    }
+    return QObject::eventFilter(target, event);
+}
+
+
+void Almond::submenuOK(int smIndex)
+{
+    switch(smIndex) {
+    case 0:
+        emit imageExportOk();
+        break;
+    case 1:
+        emit videoExportOk();
+        break;
+    }
+}
+
+void Almond::imageExportOk(void)
+{
+    mnd::MandelInfo mi;
+    mi.maxIter = eim->getMaxIterations();
+    mi.view = fractalWidget->getViewport();
+    mi.bWidth = eim->getWidth();
+    mi.bHeight = eim->getHeight();
+    mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
+    mi.smooth = true;
+    if (currentView == JULIA) {
+        mi.julia = fractalWidget->getMandelInfo().julia;
+        mi.juliaX = fractalWidget->getMandelInfo().juliaX;
+        mi.juliaY = fractalWidget->getMandelInfo().juliaY;
+    }
+
+    mnd::MandelGenerator* currentGenerator = fractalWidget->getGenerator();
+    if (currentGenerator == nullptr)
+        currentGenerator = &mandelContext.getDefaultGenerator();
+
+    alm::ImageExportInfo iei;
+    iei.drawInfo = mi;
+    iei.generator = currentGenerator;
+    iei.gradient = fractalWidget->getGradient();
+    iei.path = eim->getPath().toStdString();
+    iei.options.jpegQuality = 95;
+    submitBackgroundTask(new ImageExportTask(iei, [this] () { return stoppingBackgroundTasks; }));
+    
+    amw->showMainMenu();
+}
+
+
+void Almond::videoExportOk(void)
+{
+    ExportVideoInfo evi = evm->getInfo();
+    evi.gradient = fractalWidget->getGradient();
+    evi.mi.smooth = fractalWidget->getMandelInfo().smooth;
+    if (currentView == JULIA) {
+        evi.mi.julia = fractalWidget->getMandelInfo().julia;
+        evi.mi.juliaX = fractalWidget->getMandelInfo().juliaX;
+        evi.mi.juliaY = fractalWidget->getMandelInfo().juliaY;
+    }
+    if (evi.path == "") {
+        QMessageBox errMsg = QMessageBox(QMessageBox::Icon::Critical, "Error", "No path specified.");
+        errMsg.exec();
+    }
+    else {
+        MandelVideoGenerator mvg(evi);
+        mnd::MandelGenerator& g = *fractalWidget->getGenerator();
+        //printf("wii: %ld\n", evi.mi.bWidth);
+        fflush(stdout);
+        submitBackgroundTask(new VideoExportTask(std::move(mvg), g));
+        amw->showMainMenu();
+    }
+}
+
+
+void Almond::gradientEditOk(void)
+{
+    fractalWidget->setGradient(gradientMenu->getGradient());
+    amw->showMainMenu();
+}
+
+
+void Almond::toggleFullscreen(void)
+{
+    /*
+    if (fullscreenMode) {
+        auto* m = this->takeCentralWidget();
+        ui.mandel_container->addWidget(m);
+        this->setCentralWidget(cw);
+        emit this->showNormal();
+        fullscreenMode = false;
+    }
+    else {
+        cw = this->takeCentralWidget();
+        this->setCentralWidget(mw.get());
+        emit this->showFullScreen();
+        fullscreenMode = true;
+    }
+    */
 }
 
 
@@ -84,8 +243,12 @@ void Almond::backgroundTaskFinished(bool succ, QString message)
         emit info.exec();
     }
 
-    ui.backgroundProgress->setVisible(false);
-    ui.backgroundProgress->setFormat("");
+    ui.backgroundProgress->setFormat(tr("Export Progress"));
+    ui.backgroundProgress->setEnabled(false);
+    ui.backgroundProgress->setRange(0, 100);
+    ui.backgroundProgress->setValue(0);
+    ui.cancelProgress->setEnabled(false);
+    stoppingBackgroundTasks = false;
 }
 
 
@@ -109,13 +272,13 @@ void Almond::backgroundTaskProgress(float percentage)
 
 void Almond::on_zoom_out_clicked()
 {
-    mw->zoom(2);
+    fractalWidget->zoom(2);
 }
 
 
 void Almond::on_zoom_in_clicked()
 {
-    mw->zoom(0.5);
+    fractalWidget->zoom(0.5);
 }
 
 
@@ -123,119 +286,51 @@ void Almond::on_maxIterations_editingFinished()
 {
     QString text = ui.maxIterations->text();
     int maxIter = text.toInt();
-    mw->setMaxIterations(maxIter);
+    fractalWidget->setMaxIterations(maxIter);
 }
 
 
 void Almond::on_chooseGradient_clicked()
 {
-    gcd.exec();
-    auto gradient = gcd.getGradient();
-    if (gradient)
-        mw->setGradient(std::move(*gradient));
+    this->gradientMenu->setGradient(fractalWidget->getGradient());
+    emit this->amw->showSubMenu(2);
 }
 
 
 void Almond::on_exportVideo_clicked()
 {
-    ExportVideoInfo evi;
-    evi.start = mnd::MandelViewport::standardView();
-    evi.end = mw->getViewport();
-    evi.gradient = mw->getGradient();
-    ExportVideoDialog dialog(this, evi);
-    //dialog.show();
-    auto response = dialog.exec();
-    printf("dialog executed\n"); fflush(stdout);
-    if (response == 1) {
-        mnd::MandelInfo mi;
-        evi = dialog.getExportVideoInfo();
-        MandelVideoGenerator mvg(evi);
-        mnd::MandelGenerator& g = *mw->getGenerator();
-        submitBackgroundTask(new VideoExportTask(std::move(mvg), g));
-        //if (exportVideo(evi)) {
-
-        //Video
-        /*mi.maxIter = dialog.getMaxIterations();
-        mi.view = mw->getViewport();
-        mi.bWidth = dialog.getWidth();
-        mi.bHeight = dialog.getHeight();
-        mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        mnd::Generator& g = mandelContext.getDefaultGenerator();
-        auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
-        g.generate(mi, fmap.pixels.get());
-        auto bitmap = fmap.map<RGBColor>([](float i) { return i < 0 ? RGBColor{ 0,0,0 } : RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127), uint8_t(sin(i * 0.01f) * 127 + 127), uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
-        QImage img((unsigned char*)bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
-        img.save(dialog.getPath());*/
-    }
+    evm->setEndViewport(fractalWidget->getViewport());
+    emit this->amw->showSubMenu(1);
 }
 
 
 void Almond::on_smooth_stateChanged(int checked)
 {
-    this->mw->setSmoothColoring(checked != Qt::Unchecked);
+    fractalWidget->setSmoothColoring(checked != Qt::Unchecked);
 }
 
 
 void Almond::on_exportImage_clicked()
 {
-    ExportImageDialog dialog(this);
-    dialog.setMaxIterations(mw->getMaxIterations());
-    //dialog.show();
-    auto response = dialog.exec();
-    if (response == 1) {
-        mnd::MandelInfo mi;
-        mi.maxIter = dialog.getMaxIterations();
-        mi.view = mw->getViewport();
-        mi.bWidth = dialog.getWidth();
-        mi.bHeight = dialog.getHeight();
-        mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        mi.smooth = mw->getSmoothColoring();
-        if (currentView == JULIA) {
-            mi.julia = mw->getMandelInfo().julia;
-            mi.juliaX = mw->getJuliaX();
-            mi.juliaY = mw->getJuliaY();
-        }
-        mnd::MandelGenerator* currentGenerator = mw->getGenerator();
-        mnd::MandelGenerator& g = currentGenerator ? *currentGenerator : mandelContext.getDefaultGenerator();
-
-        alm::ImageExportInfo iei;
-        iei.drawInfo = mi;
-        iei.generator = &g;
-        iei.gradient = mw->getGradient();
-        iei.path = dialog.getPath().toStdString();
-        submitBackgroundTask(new ImageExportTask(iei));
-
-        /*auto exprt = [iei, path = dialog.getPath().toStdString()]() {
-            alm::exportPng(path, iei);
-        };
-
-        submitBackgroundTask();*/
-        
-        /*auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
-        g.generate(mi, fmap.pixels.get());
-        auto bitmap = fmap.map<RGBColor>([&mi, this] (float i) {
-            return i >= mi.maxIter ? RGBColor{ 0,0,0 } : mw->getGradient().get(i);
-        });
-        QImage img(reinterpret_cast<unsigned char*>(bitmap.pixels.get()), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
-        img.save(dialog.getPath());*/
-    }
+    this->amw->showSubMenu(0);
+    return;
 }
 
 
 void Almond::on_resetZoom_clicked()
 {
     if (currentView == MANDELBROT) {
-        mw->setViewport(mnd::MandelViewport::standardView());
+        fractalWidget->setViewport(mnd::MandelViewport::standardView());
     }
     else {
-        mw->setViewport(mnd::MandelViewport::centerView());
+        fractalWidget->setViewport(mnd::MandelViewport::centerView());
     }
 }
 
 
 void Almond::on_displayInfo_stateChanged(int checked)
 {
-    this->mw->setDisplayInfo(checked != Qt::Unchecked);
+    this->fractalWidget->setDisplayInfo(checked != Qt::Unchecked);
 }
 
 
@@ -260,7 +355,7 @@ void Almond::on_chooseGenerator_clicked()
             customGenerator = gen.get();
         }
         currentGenerator = gen.get();
-        this->mw->setGenerator(currentGenerator);
+        this->fractalWidget->setGenerator(currentGenerator);
         adjustedGenerators.push_back(std::move(gen));
     }
     else {
@@ -276,19 +371,15 @@ void Almond::pointSelected(mnd::Real x, mnd::Real y)
 {
     if (currentView != JULIA) {
         saveView();
-        this->mw->setViewport(mnd::MandelViewport::centerView());
-        this->mw->setJuliaPos(x, y);
-        this->mw->getMandelInfo().julia = true;
-        this->mw->clearAll();
+        this->fractalWidget->setViewport(mnd::MandelViewport::centerView());
+        this->fractalWidget->getMandelInfo().julia = true;
+        this->fractalWidget->getMandelInfo().juliaX = x;
+        this->fractalWidget->getMandelInfo().juliaY = y;
+        this->fractalWidget->clearCells();
     }
     currentView = JULIA;
 }
 
-
-void Almond::on_groupBox_toggled(bool arg1)
-{
-    printf("arg1: %i\n", int(arg1)); fflush(stdout);
-}
 
 void Almond::on_wMandel_clicked()
 {
@@ -299,9 +390,9 @@ void Almond::on_wMandel_clicked()
 void Almond::saveView()
 {
     if (currentView == MANDELBROT)
-        mandelViewSave = mw->getViewport();
+        mandelViewSave = fractalWidget->getViewport();
     else if (currentView == CUSTOM)
-        customViewSave = mw->getViewport();
+        customViewSave = fractalWidget->getViewport();
 }
 
 
@@ -310,21 +401,21 @@ void Almond::setViewType(ViewType v)
     saveView();
     if (v == MANDELBROT) {
         currentGenerator = mandelGenerator;
-        emit this->mw->stopSelectingPoint();
-        this->mw->setViewport(mandelViewSave);
-        this->mw->setGenerator(currentGenerator);
-        this->mw->getMandelInfo().julia = false;
-        this->mw->clearAll();
+        emit this->fractalWidget->stopSelectingPoint();
+        this->fractalWidget->setViewport(mandelViewSave);
+        this->fractalWidget->setGenerator(currentGenerator);
+        this->fractalWidget->getMandelInfo().julia = false;
+        this->fractalWidget->clearCells();
         currentView = MANDELBROT;
     }
     else if (v == CUSTOM) {
         if (customGenerator != nullptr) {
             currentGenerator = customGenerator;
-            this->mw->setGenerator(currentGenerator);
-            emit this->mw->stopSelectingPoint();
-            this->mw->setViewport(customViewSave);
-            this->mw->getMandelInfo().julia = false;
-            this->mw->clearAll();
+            this->fractalWidget->setGenerator(currentGenerator);
+            emit this->fractalWidget->stopSelectingPoint();
+            this->fractalWidget->setViewport(customViewSave);
+            this->fractalWidget->getMandelInfo().julia = false;
+            this->fractalWidget->clearCells();
             currentView = CUSTOM;
         }
         else {
@@ -333,16 +424,16 @@ void Almond::setViewType(ViewType v)
     }
     else if (v == JULIA) {
         if (currentView == MANDELBROT) {
-            emit this->mw->selectPoint();
+            emit this->fractalWidget->selectJuliaPoint();
         }
         else {
             currentView = MANDELBROT;
             currentGenerator = mandelGenerator;
-            this->mw->setGenerator(currentGenerator);
-            this->mw->setViewport(mandelViewSave);
-            this->mw->getMandelInfo().julia = false;
-            this->mw->clearAll();
-            emit this->mw->selectPoint();
+            this->fractalWidget->setGenerator(currentGenerator);
+            this->fractalWidget->setViewport(mandelViewSave);
+            this->fractalWidget->getMandelInfo().julia = false;
+            this->fractalWidget->clearCells();
+            emit this->fractalWidget->selectJuliaPoint();
         }
     }
 }
@@ -378,6 +469,7 @@ void Almond::on_radioButton_2_toggled(bool checked)
     }
 }
 
+
 void Almond::on_createCustom_clicked()
 {
     auto response = customGeneratorDialog->exec();
@@ -390,4 +482,10 @@ void Almond::on_createCustom_clicked()
         this->ui.radioButton_2->setChecked(true);
         setViewType(CUSTOM);
     }
+}
+
+
+void Almond::on_cancelProgress_clicked()
+{
+    stopBackgroundTask();
 }

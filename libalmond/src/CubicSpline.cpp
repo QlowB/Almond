@@ -1,6 +1,7 @@
 #include "CubicSpline.h"
+#include <cmath>
 
-CubicSpline::CubicSpline(const std::vector<std::pair<float, float> >& dataPoints, bool useSlopes) :
+CubicSpline::CubicSpline(const std::vector<std::pair<float, float> >& dataPoints, bool useSlopes, bool minSlopes) :
     useSlopes{ useSlopes }
 {
     if (dataPoints.size() < 2) {
@@ -24,8 +25,15 @@ CubicSpline::CubicSpline(const std::vector<std::pair<float, float> >& dataPoints
         float s1 = h1 / w1;
         float s2 = h2 / w2;
 
-        float avgSlope = (s1 + s2) / 2;
-        points.push_back({ dp2.first, dp2.second, avgSlope });
+        float slope;
+        if (minSlopes) {
+            if (fabs(s1) > fabs(s2))
+                slope = s2;
+            else
+                slope = s1;
+        } else
+            slope = (s1 + s2) / 2;
+        points.push_back({ dp2.first, dp2.second, slope });
     }
     points.push_back({ dataPoints[dataPoints.size() - 1].first, dataPoints[dataPoints.size() - 1].second,
                        (dataPoints[dataPoints.size() - 2].second - dataPoints[dataPoints.size() - 1].second) /
@@ -39,12 +47,21 @@ float CubicSpline::interpolateAt(float x)
     const static auto h01 = [] (float t) { return t * t * (3 - 2 * t); };
     const static auto h10 = [] (float t) { return t * (1 - t) * (1 - t); };
     const static auto h11 = [] (float t) { return t * t * (t - 1); };
+
+    if (points.empty()) {
+        return 0.0f;
+    }
+
+    if(std::get<0>(points[0]) > x) {
+        return std::get<1>(points[0]);
+    }
+
     for (auto it = points.begin(); it != points.end() && (it + 1) != points.end(); ++it) {
         auto& left = *it;
         auto& right = *(it + 1);
         float xleft = std::get<0>(left);
         float xright = std::get<0>(right);
-        if (xleft < x && xright >= x) {
+        if (xleft <= x && xright >= x) {
             float w = (xright - xleft);
             float t = (x - xleft) / w;
             float yleft = std::get<1>(left);

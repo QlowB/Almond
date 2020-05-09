@@ -1,4 +1,6 @@
 #pragma once
+#ifndef ALMOND_H
+#define ALMOND_H
 
 #include <QtWidgets/QMainWindow>
 #include "ui_Almond.h"
@@ -10,7 +12,14 @@
 #include "gradientchoosedialog.h"
 #include "choosegenerators.h"
 #include "customgenerator.h"
-//#include "benchmarkdialog.h"
+
+#include "FractalWidget.h"
+
+#include "AlmondMenuWidget.h"
+#include "ExportImageMenu.h"
+#include "ExportVideoMenu.h"
+#include "GradientMenu.h"
+
 
 #include <memory>
 
@@ -35,8 +44,17 @@ class Almond : public QMainWindow
 private:
     mnd::MandelContext mandelContext;
     QThreadPool backgroundTasks;
+    bool stoppingBackgroundTasks = false;
+
+    AlmondMenuWidget* amw;
+    ExportImageMenu* eim;
+    ExportVideoMenu* evm;
+    GradientMenu* gradientMenu;
+
+    bool fullscreenMode = false;
+    QWidget* cw;
 public:
-    std::unique_ptr<MandelWidget> mw;
+    FractalWidget* fractalWidget;
 private:
     //std::unique_ptr<BenchmarkDialog> benchmarkDialog;
     std::unique_ptr<CustomGenerator> customGeneratorDialog;
@@ -58,7 +76,16 @@ public:
     ~Almond(void);
 
     void submitBackgroundTask(BackgroundTask* task);
+    void stopBackgroundTask();
 
+    bool eventFilter(QObject *target, QEvent *event);
+
+    void submenuOK(int smIndex);
+    void imageExportOk(void);
+    void videoExportOk(void);
+    void gradientEditOk(void);
+public slots:
+    void toggleFullscreen(void);
 private slots:
     void on_zoom_out_clicked();
     void on_zoom_in_clicked();
@@ -80,8 +107,6 @@ private slots:
 
     void on_wMandel_toggled(bool checked);
 
-    void on_groupBox_toggled(bool arg1);
-
     void saveView(void);
     void setViewType(ViewType v);
 
@@ -89,8 +114,11 @@ private slots:
     void on_radioButton_toggled(bool checked);
     void on_radioButton_2_toggled(bool checked);
     void on_createCustom_clicked();
+    void on_cancelProgress_clicked();
 
 private:
     Ui::AlmondClass ui;
 };
 
+
+#endif // ALMOND_H

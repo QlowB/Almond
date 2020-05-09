@@ -162,12 +162,11 @@ public:
     virtual void generate(const MandelInfo& info, float* data);
 };
 
-#else //if defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) 
+#elif defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) 
 template<bool parallel>
-class mnd::CpuGenerator<float, mnd::ARM_NEON, parallel> : public Generator
+class mnd::CpuGenerator<float, mnd::ARM_NEON, parallel> : public MandelGenerator
 {
 public:
-    CpuGenerator(void);
     inline CpuGenerator(void) :
         MandelGenerator{ mnd::Precision::FLOAT, mnd::ARM_NEON }
     {
@@ -177,7 +176,7 @@ public:
 
 
 template<bool parallel>
-class mnd::CpuGenerator<double, mnd::ARM_NEON, parallel> : public Generator
+class mnd::CpuGenerator<double, mnd::ARM_NEON, parallel> : public MandelGenerator
 {
 public:
     inline CpuGenerator(void) :
@@ -189,7 +188,7 @@ public:
 
 
 template<bool parallel>
-class mnd::CpuGenerator<DoubleDouble, mnd::ARM_NEON, parallel> : public Generator
+class mnd::CpuGenerator<mnd::DoubleDouble, mnd::ARM_NEON, parallel> : public MandelGenerator
 {
 public:
     inline CpuGenerator(void) :

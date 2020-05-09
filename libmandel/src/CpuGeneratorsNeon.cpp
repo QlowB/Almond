@@ -35,8 +35,7 @@ void CpuGenerator<float, mnd::ARM_NEON, parallel>::generate(const mnd::MandelInf
 #endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
-        long i = 0;
-        for (i; i < info.bWidth; i += 4) {
+        for (long i = 0; i < info.bWidth; i += 4) {
             float xsvals[] = {
                 float(view.x + float(i) * view.width / info.bWidth),
                 float(view.x + float(i + 1) * view.width / info.bWidth),
@@ -128,8 +127,7 @@ void CpuGenerator<double, mnd::ARM_NEON, parallel>::generate(const mnd::MandelIn
 #endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = T(view.y) + T(j) * T(view.height / info.bHeight);
-        long i = 0;
-        for (i; i < info.bWidth; i += 2) {
+        for (long i = 0; i < info.bWidth; i += 2) {
             double xsvals[] = {
                 double(view.x + double(i) * view.width / info.bWidth),
                 double(view.x + double(i + 1) * view.width / info.bWidth),

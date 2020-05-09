@@ -23,6 +23,7 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, 
             return a.second < b.second;
         });
 
+    points = colors;
     max = colors.at(colors.size() - 1).second;
 
     std::vector<std::pair<RGBColorf, float>> linearColors;
@@ -40,9 +41,9 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, 
     std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(bs),
                    [] (auto p) { return std::pair{ p.second, p.first.b }; });
 
-    CubicSpline rsp(rs, false);
-    CubicSpline gsp(gs, false);
-    CubicSpline bsp(bs, false);
+    CubicSpline rsp(rs, false, true);
+    CubicSpline gsp(gs, false, true);
+    CubicSpline bsp(bs, false, true);
 
     if(precalcSteps <= 0) {
         precalcSteps = int(max * 15) + 10;
@@ -57,6 +58,60 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, 
         };
         this->colors.push_back(at);
     }
+}
+
+
+Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxVal, bool repeat, int precalcSteps) :
+    repeat{ repeat }
+{
+    if(colors.empty() || colors.size() < 2)
+        return;
+    std::sort(colors.begin(), colors.end(),
+        [] (const auto& a, const auto& b) {
+            return a.second < b.second;
+        });
+
+    points = colors;
+    max = maxVal;
+
+    std::vector<std::pair<RGBColorf, float>> linearColors;
+    std::transform(colors.begin(), colors.end(), std::back_inserter(linearColors),
+                   [] (auto c) { return c; });
+
+    std::vector<std::pair<float, float>> rs;
+    std::vector<std::pair<float, float>> gs;
+    std::vector<std::pair<float, float>> bs;
+
+    std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(rs),
+                   [] (auto p) { return std::pair{ p.second, p.first.r }; });
+    std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(gs),
+                   [] (auto p) { return std::pair{ p.second, p.first.g }; });
+    std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(bs),
+                   [] (auto p) { return std::pair{ p.second, p.first.b }; });
+
+    CubicSpline rsp(rs, false, true);
+    CubicSpline gsp(gs, false, true);
+    CubicSpline bsp(bs, false, true);
+
+    if(precalcSteps <= 0) {
+        precalcSteps = int(max * 7) + 10;
+    }
+
+    for (int i = 0; i < precalcSteps; i++) {
+        float position = i * max / precalcSteps;
+        RGBColorf at = {
+            rsp.interpolateAt(position),
+            gsp.interpolateAt(position),
+            bsp.interpolateAt(position)
+        };
+        this->colors.push_back(at);
+    }
+}
+
+
+const std::vector<std::pair<RGBColor, float>>& Gradient::getPoints(void) const
+{
+    return points;
 }
 
 
@@ -77,8 +132,14 @@ Gradient Gradient::defaultGradient(void)
         { RGBColor{ 20, 30, 180 }, 210.0f },
         { RGBColor{ 20, 190, 30 }, 240.0f },
         { RGBColor{ 120, 240, 120 }, 270.0f },
-        { RGBColor{ 40, 40, 40 }, 300.0f },
+        { RGBColor{ 0, 0, 0 }, 300.0f },
     }, true);
+}
+
+
+float Gradient::getMax(void) const
+{
+    return this->max;
 }
 
 

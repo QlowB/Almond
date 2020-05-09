@@ -1,4 +1,5 @@
 #pragma once
+#if 0
 
 #include <QGLWidget>
 #include <QOpenGLWidget>
@@ -7,6 +8,7 @@
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QOpenGLFunctions_2_0>
+#include <QOpenGLShaderProgram>
 #include <QMutex>
 #include <QPainter>
 //#include <qopengl.h>
@@ -35,25 +37,59 @@ class MandelWidget;
 
 class Texture
 {
+protected:
     GLuint id;
+    QOpenGLFunctions& gl;
+    inline Texture(QOpenGLFunctions& gl) : gl{ gl } {}
 public:
-    QOpenGLFunctions_2_0& gl;
-    Texture(QOpenGLFunctions_2_0& gl, const Bitmap<RGBColor>& pict, GLint param = GL_LINEAR);
+    Texture(QOpenGLFunctions& gl, const Bitmap<float>& pict, GLint param = GL_LINEAR);
     ~Texture(void);
 
     Texture(const Texture& other) = delete;
     Texture& operator=(const Texture& other) = delete;
 
     Texture(Texture&& other);
-    Texture& operator=(Texture&& other);
+    Texture& operator=(Texture&& other) = delete;
 
 private:
     void bind(void) const;
 public:
     inline GLuint getId(void) const { return id; }
 
-    void drawRect(float x, float y, float width, float height);
+    void drawRect(QOpenGLShaderProgram* program,
+                  float x, float y, float width, float height,
+                  float tx = 0.0f, float ty = 0.0f,
+                  float tw = 1.0f, float th = 1.0f);
 };
+
+
+///
+/// \brief The FloatTexture class
+///
+/*class FloatTexture
+{
+    GLuint id;
+    QOpenGLFunctions& gl;
+public:
+    FloatTexture(QOpenGLFunctions& gl, const Bitmap<float>& pict, GLint param = GL_LINEAR);
+    ~Texture(void);
+
+    Texture(const Texture& other) = delete;
+    Texture& operator=(const Texture& other) = delete;
+
+    Texture(Texture&& other);
+    Texture& operator=(Texture&& other) = delete;
+
+private:
+    void bind(void) const;
+public:
+    inline GLuint getId(void) const { return id; }
+
+    void drawRect(QOpenGLShaderProgram* program,
+                  float x, float y, float width, float height,
+                  float tx = 0.0f, float ty = 0.0f,
+                  float tw = 1.0f, float th = 1.0f);
+};*/
 
 
 class CellImage
@@ -64,7 +100,8 @@ public:
     CellImage(const CellImage& b) = delete;
     virtual ~CellImage(void);
 
-    virtual void drawRect(float x, float y, float width, float height) = 0;
+    virtual void drawRect(QOpenGLShaderProgram* program,
+                          float x, float y, float width, float height) = 0;
     virtual std::shared_ptr<CellImage> clip(short i, short j) = 0;
     virtual int getRecalcPriority(void) const = 0;
 };
@@ -90,11 +127,12 @@ public:
 
     virtual ~TextureClip(void);
 
-    void drawRect(float x, float y, float width, float height);
+    void drawRect(QOpenGLShaderProgram* program,
+                  float x, float y, float width, float height) override;
 
     TextureClip clip(float x, float y, float w, float h);
-    std::shared_ptr<CellImage> clip(short i, short j);
-    int getRecalcPriority(void) const;
+    std::shared_ptr<CellImage> clip(short i, short j) override;
+    int getRecalcPriority(void) const override;
 };
 
 
@@ -114,9 +152,10 @@ public:
 
     virtual ~QuadImage(void);
 
-    void drawRect(float x, float y, float width, float height);
-    std::shared_ptr<CellImage> clip(short i, short j);
-    int getRecalcPriority(void) const;
+    void drawRect(QOpenGLShaderProgram* program,
+                  float x, float y, float width, float height) override;
+    std::shared_ptr<CellImage> clip(short i, short j) override;
+    int getRecalcPriority(void) const override;
 };
 
 
@@ -203,7 +242,7 @@ public:
 
     void run() override;
 signals:
-    void done(int level, GridIndex i, GridIndex j, long calcState, Bitmap<RGBColor>* bmp);
+    void done(int level, GridIndex i, GridIndex j, long calcState, Bitmap<float>* bmp);
 };
 
 
@@ -231,9 +270,9 @@ public slots:
     void calc(TexGrid& grid, int level, GridIndex i, GridIndex j, int priority);
     void setCurrentLevel(int level);
     void notFinished(int level, GridIndex i, GridIndex j);
-    void redirect(int level, GridIndex i, GridIndex j, long calcState, Bitmap<RGBColor>* bmp);
+    void redirect(int level, GridIndex i, GridIndex j, long calcState, Bitmap<float>* bmp);
 signals:
-    void done(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
+    void done(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
 };
 
 
@@ -266,9 +305,9 @@ public:
     void garbageCollect(int level, GridIndex i, GridIndex j);
     GridElement* searchAbove(int level, GridIndex i, GridIndex j, int recursionLevel);
     GridElement* searchUnder(int level, GridIndex i, GridIndex j, int recursionLevel);
-    void paint(const mnd::MandelViewport& mvp, QPainter& qp);
+    void paint(const mnd::MandelViewport& mvp);
 public slots:
-    void cellReady(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
+    void cellReady(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
 signals:
     void redrawRequested(void);
 };
@@ -277,6 +316,8 @@ signals:
 class MandelWidget : public QOpenGLWidget
 {
     Q_OBJECT
+
+    friend class MandelView;
 private:
     mnd::MandelContext& mndContext;
     mnd::MandelGenerator* generator;
@@ -302,6 +343,9 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> lastAnimUpdate;
 
     std::unique_ptr<MandelView> mandelView;
+
+    QOpenGLShaderProgram* program;
+    GLuint gradientTexture;
 public:
     MandelWidget(mnd::MandelContext& ctxt, mnd::MandelGenerator* generator, QWidget* parent = nullptr);
     ~MandelWidget(void) override;
@@ -336,9 +380,9 @@ public:
 private:
     void updateAnimations(void);
 
-    void drawRubberband(void);
-    void drawInfo(void);
-    void drawPoint(void);
+    void drawRubberband(QPainter& p);
+    void drawInfo(QPainter& p);
+    void drawPoint(QPainter& p);
 public:
 
     void zoom(float scale, float x = 0.5f, float y = 0.5f);
@@ -360,3 +404,4 @@ signals:
     void pointSelected(mnd::Real x, mnd::Real y);
 };
 
+#endif

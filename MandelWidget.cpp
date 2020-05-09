@@ -7,10 +7,11 @@ using namespace mnd;
 #include <cstdio>
 
 
-Texture::Texture(const Bitmap<RGBColor>& bitmap, GLint param)
+Texture::Texture(QOpenGLFunctions_2_0& gl, const Bitmap<RGBColor>& bitmap, GLint param) :
+    gl{ gl }
 {
-    glGenTextures(1, &id);
-    glBindTexture(GL_TEXTURE_2D, id);
+    gl.glGenTextures(1, &id);
+    gl.glBindTexture(GL_TEXTURE_2D, id);
 
     //int lineLength = (bitmap.width * 3 + 3) & ~3;
 
@@ -24,23 +25,24 @@ Texture::Texture(const Bitmap<RGBColor>& bitmap, GLint param)
             pixels[index + 2] = c.b;
         }
     }*/
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, int(bitmap.width), int(bitmap.height), 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<char*> (bitmap.pixels.get()));
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, int(bitmap.width), int(bitmap.height), 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<char*> (bitmap.pixels.get()));
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
 }
 
 
 Texture::~Texture(void)
 {
     if (id != 0)
-        glDeleteTextures(1, &id);
+        gl.glDeleteTextures(1, &id);
 }
 
 
 Texture::Texture(Texture&& other) :
-    id{ other.id }
+    id{ other.id },
+    gl{ other.gl }
 {
     other.id = 0;
 }
@@ -49,6 +51,7 @@ Texture::Texture(Texture&& other) :
 Texture& Texture::operator=(Texture&& other)
 {
     this->id = other.id;
+    this->gl = other.gl;
     other.id = 0;
     return *this;
 }
@@ -56,26 +59,26 @@ Texture& Texture::operator=(Texture&& other)
 
 void Texture::bind(void) const
 {
-    glBindTexture(GL_TEXTURE_2D, id);
+    gl.glBindTexture(GL_TEXTURE_2D, id);
 }
 
 
 void Texture::drawRect(float x, float y, float width, float height)
 {
-    glColor3ub(255, 255, 255);
-    glEnable(GL_TEXTURE_2D);
+    gl.glColor3ub(255, 255, 255);
+    gl.glEnable(GL_TEXTURE_2D);
     bind();
-    glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(0, 0);
-    glVertex2f(x, y);
-    glTexCoord2f(1, 0);
-    glVertex2f(x + width, y);
-    glTexCoord2f(0, 1);
-    glVertex2f(x, y + height);
-    glTexCoord2f(1, 1);
-    glVertex2f(x + width, y + height);
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
+    gl.glBegin(GL_TRIANGLE_STRIP);
+    gl.glTexCoord2f(0, 0);
+    gl.glVertex2f(x, y);
+    gl.glTexCoord2f(1, 0);
+    gl.glVertex2f(x + width, y);
+    gl.glTexCoord2f(0, 1);
+    gl.glVertex2f(x, y + height);
+    gl.glTexCoord2f(1, 1);
+    gl.glVertex2f(x + width, y + height);
+    gl.glEnd();
+    gl.glDisable(GL_TEXTURE_2D);
 }
 
 
@@ -91,20 +94,21 @@ TextureClip::~TextureClip(void)
 
 void TextureClip::drawRect(float x, float y, float width, float height)
 {
-    glColor3ub(255, 255, 255);
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture->getId());
-    glBegin(GL_TRIANGLE_STRIP);
-    glTexCoord2f(tx, ty);
-    glVertex2f(x, y);
-    glTexCoord2f(tx + tw, ty);
-    glVertex2f(x + width, y);
-    glTexCoord2f(tx, ty + th);
-    glVertex2f(x, y + height);
-    glTexCoord2f(tx + tw, ty + th);
-    glVertex2f(x + width, y + height);
-    glEnd();
-    glDisable(GL_TEXTURE_2D);
+    auto& gl = texture->gl;
+    gl.glColor3ub(255, 255, 255);
+    gl.glEnable(GL_TEXTURE_2D);
+    gl.glBindTexture(GL_TEXTURE_2D, texture->getId());
+    gl.glBegin(GL_TRIANGLE_STRIP);
+    gl.glTexCoord2f(tx, ty);
+    gl.glVertex2f(x, y);
+    gl.glTexCoord2f(tx + tw, ty);
+    gl.glVertex2f(x + width, y);
+    gl.glTexCoord2f(tx, ty + th);
+    gl.glVertex2f(x, y + height);
+    gl.glTexCoord2f(tx + tw, ty + th);
+    gl.glVertex2f(x + width, y + height);
+    gl.glEnd();
+    gl.glDisable(GL_TEXTURE_2D);
 }
 
 
@@ -337,7 +341,8 @@ MandelView::MandelView(mnd::MandelGenerator* generator, MandelWidget& owner) :
     }*/
     Bitmap<RGBColor> emp(1, 1);
     emp.get(0, 0) = RGBColor{ 0, 0, 0 };
-    empty = std::make_unique<Texture>(emp, GL_NEAREST);
+    auto& gl = *QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_0>();
+    empty = std::make_unique<Texture>(gl, emp, GL_NEAREST);
     connect(&calcer, &Calcer::done, this, &MandelView::cellReady);
 }
 
@@ -550,9 +555,9 @@ void MandelView::paint(const mnd::MandelViewport& mvp, QPainter& qp)
 
 void MandelView::cellReady(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp)
 {
-
+    auto& gl = *QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_0>();
     this->getGrid(level).setCell(i, j,
-        std::make_unique<GridElement>(true, std::make_shared<TextureClip>(std::make_shared<Texture>(*bmp))));
+        std::make_unique<GridElement>(true, std::make_shared<TextureClip>(std::make_shared<Texture>(gl, *bmp))));
     delete bmp;
     emit redrawRequested();
 }
@@ -569,16 +574,6 @@ MandelWidget::MandelWidget(mnd::MandelContext& ctxt, mnd::MandelGenerator* gener
         QSizePolicy::Expanding);
     qRegisterMetaType<GridIndex>("GridIndex");
     this->format().setSwapInterval(1);
-
-    /*gradient = Gradient {
-        {
-            { RGBColor{ 0, 0, 0 }, 0 },
-            { RGBColor{ 180, 20, 10 }, 30 },
-            { RGBColor{ 210, 180, 15 }, 70 },
-            { RGBColor{ 160, 220, 45 }, 170 },
-            { RGBColor{ 50, 150, 170 }, 300 },
-        }
-    };*/
 }
 
 
@@ -662,13 +657,14 @@ void MandelWidget::clearAll(void)
 
 void MandelWidget::initializeGL(void)
 {
-    this->context()->functions()->glClearColor(0, 0, 0, 0);
+    auto& gl = *this->context()->functions();
+    gl.glClearColor(0, 0, 0, 0);
     this->context()->makeCurrent(nullptr);
 
-    glDisable(GL_DEPTH_TEST);
+    gl.glDisable(GL_DEPTH_TEST);
 
     // looks not even better
-    glEnable(GL_FRAMEBUFFER_SRGB);
+    gl.glEnable(GL_FRAMEBUFFER_SRGB);
 
     //glShadeModel(GL_SMOOTH);
 
@@ -678,12 +674,13 @@ void MandelWidget::initializeGL(void)
 
 void MandelWidget::resizeGL(int w, int h)
 {
+    auto& gl = *this->context()->functions();
     double aspect = double(w) / h;
 
     currentViewport.height = currentViewport.width / aspect;
     targetViewport = currentViewport;
-    float x = this->devicePixelRatioF();
-    glViewport(0, 0, w * x, h * x);
+    float pixelRatio = this->devicePixelRatioF();
+    gl.glViewport(0, 0, w * pixelRatio, h * pixelRatio);
 
     if (mandelView.get() != nullptr) {
         mandelView->width = w;
@@ -694,6 +691,7 @@ void MandelWidget::resizeGL(int w, int h)
 
 void MandelWidget::paintGL(void)
 {
+    auto& gl = *QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_0>();
     if (mandelView == nullptr) {
         mandelView = std::make_unique<MandelView>(generator, *this);
         QObject::connect(mandelView.get(), &MandelView::redrawRequested, this, static_cast<void(QOpenGLWidget::*)(void)>(&QOpenGLWidget::update));
@@ -701,22 +699,22 @@ void MandelWidget::paintGL(void)
 
     int width = this->width();
     int height = this->height();
-    float x = this->devicePixelRatioF();
-    mandelView->width = width * x;
-    mandelView->height = height * x;
+    float pixelRatio = this->devicePixelRatioF();
+    mandelView->width = width * pixelRatio;
+    mandelView->height = height * pixelRatio;
     //glViewport(0, 0, width, height);
 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
+    gl.glMatrixMode(GL_PROJECTION);
+    gl.glLoadIdentity();
 #ifdef QT_OPENGL_ES_1
-    glOrthof(0, width * x, height * x, 0, -1.0, 1.0);
+    gl.glOrthof(0, width * pixelRatio, height * pixelRatio, 0, -1.0, 1.0);
 #else
-    glOrtho(0, width * x, height * x, 0, -1.0, 1.0);
+    gl.glOrtho(0, width * pixelRatio, height * pixelRatio, 0, -1.0, 1.0);
 #endif
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
+    gl.glMatrixMode(GL_MODELVIEW);
+    gl.glLoadIdentity();
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    gl.glClear(GL_COLOR_BUFFER_BIT);
 
     updateAnimations();
 
@@ -761,31 +759,13 @@ void MandelWidget::updateAnimations(void)
 void MandelWidget::drawRubberband(void)
 {
     QPainter rubberbandPainter{ this };
-    rubberbandPainter.fillRect(rubberband, QColor{ 25, 225, 25, 50 });
+    rubberbandPainter.fillRect(rubberband, QColor{ 125, 140, 225, 120 });
 
-    QPen pen{ QColor{ 10, 200, 10 } };
+    QPen pen{ QColor{ 100, 115, 200 } };
     pen.setWidth(2);
     rubberbandPainter.setPen(pen);
 
     rubberbandPainter.drawRect(rubberband);
-    /*glColor3ub(10, 200, 10);
-    glBegin(GL_LINE_LOOP);
-    glVertex2d(rubberband.x(), rubberband.y());
-    glVertex2d(rubberband.right(), rubberband.y());
-    glVertex2d(rubberband.right(), rubberband.bottom());
-    glVertex2d(rubberband.x(), rubberband.bottom());
-    glEnd();
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColor4f(0.1f, 0.9f, 0.1f, 0.2f);
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex2d(rubberband.x(), rubberband.y());
-    glVertex2d(rubberband.right(), rubberband.y());
-    glVertex2d(rubberband.right(), rubberband.bottom());
-    glVertex2d(rubberband.x(), rubberband.bottom());
-    glEnd();
-    glDisable(GL_BLEND);*/
 }
 
 

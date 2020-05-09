@@ -47,7 +47,7 @@ public:
 private:
     const ExportVideoInfo evi;
     std::vector<ProgressCallback> progressCallbacks;
-    public:
+public:
     MandelVideoGenerator(const ExportVideoInfo& evi);
 
     void generate(mnd::MandelGenerator& gen);

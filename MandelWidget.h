@@ -6,6 +6,7 @@
 #include <QMouseEvent>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#include <QOpenGLFunctions_2_0>
 #include <QMutex>
 #include <QPainter>
 //#include <qopengl.h>
@@ -36,7 +37,8 @@ class Texture
 {
     GLuint id;
 public:
-    Texture(const Bitmap<RGBColor>& pict, GLint param = GL_LINEAR);
+    QOpenGLFunctions_2_0& gl;
+    Texture(QOpenGLFunctions_2_0& gl, const Bitmap<RGBColor>& pict, GLint param = GL_LINEAR);
     ~Texture(void);
 
     Texture(const Texture& other) = delete;

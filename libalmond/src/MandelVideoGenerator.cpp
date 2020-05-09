@@ -180,7 +180,7 @@ Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
     double innerHeight = outer.height * scale / oversizeFactor;
 
     auto before = std::chrono::high_resolution_clock::now();
-#pragma omp parallel for schedule(static, 64)
+#pragma omp parallel for schedule(static, 32)
     for (int i = 0; i < ret.height; i++) {
         for (int j = 0; j < ret.width; j++) {
             double newJ = outerLeft + outerWidth * j / ret.width;

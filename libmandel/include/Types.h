@@ -84,6 +84,22 @@ namespace mnd
 
     using Real = Float512;
     using Integer = boost::multiprecision::int512_t;
+    /*boost::multiprecision::number<
+        boost::multiprecision::backends::cpp_bin_float<
+            1500, boost::multiprecision::backends::digit_base_2, void, boost::int16_t, -16382, 16383>,
+            boost::multiprecision::et_off>;
+
+    inline Real abs(const Real& x) { return boost::multiprecision::abs(x); }
+    inline Real sqrt(const Real& x) { return boost::multiprecision::sqrt(x); }
+    inline Real floor(const Real& x) { return boost::multiprecision::floor(x); }
+    inline Real log(const Real& x) { return boost::multiprecision::log(x); }
+    inline Real log2(const Real& x) { return boost::multiprecision::log2(x); }
+    inline Real pow(const Real& x, const Real& y) { return boost::multiprecision::pow(x, y); }
+    inline Real atan2(const Real& y, const Real& x) { return boost::multiprecision::atan2(y, x); }
+    inline Real cos(const Real& x) { return boost::multiprecision::cos(x); }
+    inline Real sin(const Real& x) { return boost::multiprecision::sin(x); }
+    inline Real exp(const Real& x) { return boost::multiprecision::exp(x); }
+*/
 #else
     using Real = double;
     using Integer = int64_t;
@@ -148,8 +164,9 @@ namespace mnd
     template<>
     inline DoubleDouble convert<DoubleDouble, Real>(const Real& x)
     {
-        std::string s = x.str();
-        return DoubleDouble(s.c_str());
+        double s = static_cast<double>(x);
+        double e = static_cast<double>(x - s);
+        return DoubleDouble{ s, e };
     }
 
     template<>
@@ -175,8 +192,14 @@ namespace mnd
     template<>
     inline QuadDouble convert<QuadDouble, Real>(const Real& x)
     {
-        std::string s = x.str();
-        return QuadDouble(s.c_str());
+        double s = static_cast<double>(x);
+        Real tmp = x - s;
+        double e1 = static_cast<double>(tmp);
+        tmp = tmp - e1;
+        double e2 = static_cast<double>(tmp);
+        tmp = tmp - e2;
+        double e3 = static_cast<double>(tmp);
+        return QuadDouble{ s, e1, e2, e3 };
     }
 
     template<>
@@ -194,7 +217,7 @@ namespace mnd
     template<>
     inline Fixed64 convert<Fixed64, Real>(const Real& x)
     {
-        return Fixed64(double(x));
+        return static_cast<int64_t>(x * 0xFFFFFFFFFFFFLL);
     }
 
     template<>

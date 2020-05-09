@@ -10,6 +10,8 @@
 
 #include "MandelVideoGenerator.h"
 
+class Almond;
+
 class ExportImageDialog : public QDialog
 {
     Q_OBJECT
@@ -36,8 +38,9 @@ private:
     Ui::ExportVideoDialog evd;
 
     ExportVideoInfo evi;
+    Almond* almond;
 public:
-    ExportVideoDialog(QWidget* parent, const ExportVideoInfo& evi);
+    ExportVideoDialog(Almond* parent, const ExportVideoInfo& evi);
 
     const ExportVideoInfo& getExportVideoInfo(void) const;
 private slots:

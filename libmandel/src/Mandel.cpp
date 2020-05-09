@@ -6,7 +6,9 @@
 #include "OpenClInternal.h"
 #include "OpenClCode.h"
 
+#ifdef WITH_ASMJIT
 #include <asmjit/asmjit.h>
+#endif // WITH_ASMJIT
 
 #include <map>
 
@@ -44,7 +46,9 @@ static const std::map<mnd::GeneratorType, std::string> typeNames =
     { mnd::GeneratorType::DOUBLE_DOUBLE, "double double" },
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX, "double double AVX" },
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX_FMA, "double double AVX+FMA" },
+    { mnd::GeneratorType::DOUBLE_DOUBLE_NEON, "double double NEON" },
     { mnd::GeneratorType::QUAD_DOUBLE, "quad double" },
+    { mnd::GeneratorType::QUAD_DOUBLE_AVX_FMA, "quad double AVX+FMA" },
     { mnd::GeneratorType::FLOAT128, "float128" },
     { mnd::GeneratorType::FLOAT256, "float256" },
     { mnd::GeneratorType::FIXED64, "fixed64" },
@@ -83,6 +87,8 @@ MandelDevice::MandelDevice(mnd::ClDeviceWrapper device) :
     clDevice{ std::make_unique<ClDeviceWrapper>(std::move(device)) }
 {
     extensions = clDevice->device.getInfo<CL_DEVICE_EXTENSIONS>();
+    name = clDevice->device.getInfo<CL_DEVICE_NAME>();
+    vendor = clDevice->device.getInfo<CL_DEVICE_VENDOR>();
 }
 
 
@@ -112,8 +118,10 @@ bool MandelDevice::supportsDouble(void) const
 }
 
 
-MandelContext::MandelContext(void) :
-    jitRuntime{ std::make_unique<asmjit::JitRuntime>() }
+MandelContext::MandelContext(void)
+#ifdef WITH_ASMJIT
+    : jitRuntime{ std::make_unique<asmjit::JitRuntime>() }
+#endif // WITH_ASMJIT
 {
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86) 
@@ -132,14 +140,16 @@ MandelContext::MandelContext(void) :
         cpuGenerators.insert({ GeneratorType::FLOAT_AVX, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_AVX, std::move(db) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX, std::move(ddb) });
-        if (cpuInfo.hasFma()) {
-            auto favxfma = std::make_unique<CpuGenerator<float, mnd::X86_AVX_FMA, true>>();
-            auto davxfma = std::make_unique<CpuGenerator<double, mnd::X86_AVX_FMA, true>>();
-            auto ddavx = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>>();
-            cpuGenerators.insert({ GeneratorType::FLOAT_AVX_FMA, std::move(favxfma) });
-            cpuGenerators.insert({ GeneratorType::DOUBLE_AVX_FMA, std::move(davxfma) });
-            cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX_FMA, std::move(ddavx) });
-        }
+    }
+    if (cpuInfo.hasAvx2() && cpuInfo.hasFma()) {
+        auto favxfma = std::make_unique<CpuGenerator<float, mnd::X86_AVX_FMA, true>>();
+        auto davxfma = std::make_unique<CpuGenerator<double, mnd::X86_AVX_FMA, true>>();
+        auto ddavxfma = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>>();
+        auto qdavxfma = std::make_unique<CpuGenerator<QuadDouble, mnd::X86_AVX_FMA, true>>();
+        cpuGenerators.insert({ GeneratorType::FLOAT_AVX_FMA, std::move(favxfma) });
+        cpuGenerators.insert({ GeneratorType::DOUBLE_AVX_FMA, std::move(davxfma) });
+        cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX_FMA, std::move(ddavxfma) });
+        cpuGenerators.insert({ GeneratorType::QUAD_DOUBLE_AVX_FMA, std::move(qdavxfma) });
     }
     if (cpuInfo.hasSse2()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_SSE2, true>>();
@@ -151,8 +161,10 @@ MandelContext::MandelContext(void) :
     if (cpuInfo.hasNeon()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::ARM_NEON, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::ARM_NEON, true>>();
+        auto ddb = std::make_unique<CpuGenerator<mnd::DoubleDouble, mnd::ARM_NEON, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_NEON, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_NEON, std::move(db) });
+        cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_NEON, std::move(ddb) });
     }
 #endif
     {
@@ -205,10 +217,11 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
         floatGen = getCpuGenerator(GeneratorType::FLOAT_SSE2);
         doubleGen = getCpuGenerator(GeneratorType::DOUBLE_SSE2);
     }
-    if (cpuInfo.hasAvx() && cpuInfo.hasFma()) {
+    if (cpuInfo.hasAvx2() && cpuInfo.hasFma()) {
         floatGen = getCpuGenerator(GeneratorType::FLOAT_AVX_FMA);
         doubleGen = getCpuGenerator(GeneratorType::DOUBLE_AVX_FMA);
         doubleDoubleGen = getCpuGenerator(GeneratorType::DOUBLE_DOUBLE_AVX_FMA);
+        quadDoubleGen = getCpuGenerator(GeneratorType::QUAD_DOUBLE_AVX_FMA);
     }
     if (cpuInfo.hasAvx512()) {
         floatGen = getCpuGenerator(GeneratorType::FLOAT_AVX512);
@@ -218,6 +231,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
     if (cpuInfo.hasNeon()) {
         floatGen = getCpuGenerator(GeneratorType::FLOAT_NEON);
         doubleGen = getCpuGenerator(GeneratorType::DOUBLE_NEON);
+        doubleDoubleGen = getCpuGenerator(GeneratorType::DOUBLE_DOUBLE_NEON);
     }
 
     if (!devices.empty()) {
@@ -283,12 +297,16 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
             auto supportsDouble = md.supportsDouble();
             //printf("clock: %d", device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
 
-            md.name = device.getInfo<CL_DEVICE_NAME>();
-            md.vendor = device.getInfo<CL_DEVICE_VENDOR>();
             //printf("    using opencl device: %s\n", md.name.c_str());
             try {
                 md.mandelGenerators.insert({ GeneratorType::FLOAT, std::make_unique<ClGeneratorFloat>(md) });
                 md.mandelGenerators.insert({ GeneratorType::FIXED64, std::make_unique<ClGenerator64>(md) });
+                //md.mandelGenerators.insert({ GeneratorType::FIXED128, std::make_unique<ClGenerator128>(md) });
+            }
+            catch (const std::string& err) {
+                printf("err: %s", err.c_str());
+            }
+            try {
                 md.mandelGenerators.insert({ GeneratorType::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(md) });
             }
             catch (const std::string& err) {

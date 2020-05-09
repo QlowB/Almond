@@ -17,6 +17,7 @@ GradientChooseDialog::GradientChooseDialog()
     gcd.presets->addItem("rainbow");
     gcd.presets->addItem("grayscale");
     gcd.presets->addItem("peach");
+    gcd.presets->addItem("blue gold");
 }
 
 
@@ -29,6 +30,7 @@ void GradientChooseDialog::on_buttonBox_accepted()
 void GradientChooseDialog::on_buttonBox_clicked(QAbstractButton*)
 {
 }
+
 
 void GradientChooseDialog::on_presets_currentIndexChanged(const QString& index)
 {

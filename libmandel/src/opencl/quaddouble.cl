@@ -161,10 +161,53 @@ inline double4 mul(double4 a, double4 b) {
     return (double4)(p0, p1, s0, s1);
 }
 
+inline double4 sq(double4 a) {
+    double p0, p1, p2, p3, p4, p5;
+    double q0, q1, q2, q3;
+    double s0, s1;
+    double t0, t1;
+    
+    p0 = two_prod(a[0], a[0], &q0);
+    p1 = two_prod(2.0 * a[0], a[1], &q1);
+    p2 = two_prod(2.0 * a[0], a[2], &q2);
+    p3 = two_prod(a[1], a[1], &q3);
+
+    p1 = two_sum(q0, p1, &q0);
+
+    q0 = two_sum(q0, q1, &q1);
+    p2 = two_sum(p2, p3, &p3);
+
+    s0 = two_sum(q0, p2, &t0);
+    s1 = two_sum(q1, p3, &t1);
+
+    s1 = two_sum(s1, t0, &t0);
+    t0 += t1;
+
+    s1 = quick_two_sum(s1, t0, &t0);
+    p2 = quick_two_sum(s0, s1, &t1);
+    p3 = quick_two_sum(t1, t0, &q0);
+
+    p4 = 2.0 * a[0] * a[3];
+    p5 = 2.0 * a[1] * a[2];
+
+    p4 = two_sum(p4, p5, &p5);
+    q2 = two_sum(q2, q3, &q3);
+
+    t0 = two_sum(p4, q2, &t1);
+    t1 = t1 + p5 + q3;
+
+    p3 = two_sum(p3, t0, &p4);
+    p4 = p4 + q0 + t1;
+
+    renorm(&p0, &p1, &p2, &p3, &p4);
+    return (double4)(p0, p1, p2, p3);
+}
+
 
 __kernel void iterate(__global float* A, const int width,
                       double x1, double x2, double x3, double x4, double y1, double y2, double y3, double y4,
-                      double pw1, double pw2, double pw3, double pw4, double ph1, double ph2, double ph3, double ph4, int max, int smooth) {
+                      double pw1, double pw2, double pw3, double pw4, double ph1, double ph2, double ph3, double ph4, int max, int smooth, int julia,
+                      double jx1, double jx2, double jx3, double jx4, double jy1, double jy2, double jy3, double jy4) {
     int index = get_global_id(0);
     int px = index % width;
     int py = index / width;
@@ -174,20 +217,24 @@ __kernel void iterate(__global float* A, const int width,
     double4 pixelScaleX = (double4)(pw1, pw2, pw3, pw4);
     double4 pixelScaleY = (double4)(ph1, ph2, ph3, ph4);
 
-    double4 a = add(mul(pixelScaleX, (double4) (px, 0, 0, 0)), xl); // pixelScaleX * px + xl
-    double4 b = add(mul(pixelScaleY, (double4) (py, 0, 0, 0)), yt); // pixelScaleY * py + yt
-    double4 ca = a;
-    double4 cb = b;
+    double4 ca = add(mul(pixelScaleX, (double4) (px, 0, 0, 0)), xl); // pixelScaleX * px + xl
+    double4 cb = add(mul(pixelScaleY, (double4) (py, 0, 0, 0)), yt); // pixelScaleY * py + yt
+    double4 a = ca;
+    double4 b = cb;
+    if (julia != 0) {
+        ca = (double4)(jx1, jx2, jx3, jx4);
+        cb = (double4)(jy1, jy2, jy3, jy4);
+    }
 
     int n = 0;
     while (n < max - 1) {
-        double4 aa = mul(a, a);
-        double4 bb = mul(b, b);
+        double4 aa = sq(a);
+        double4 bb = sq(b);
         double4 ab = mul(a, b);
-        if (aa.s0 + bb.s0 > 16) break;
         double4 minusbb = (double4)(-bb.s0, -bb.s1, -bb.s2, -bb.s3);
         a = add(add(aa, minusbb), ca);
         b = add(add(ab, ab), cb);
+        if (aa.s0 + bb.s0 > 16) break;
         n++;
     }
 

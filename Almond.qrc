@@ -1,9 +1,14 @@
 <RCC>
-    <qresource prefix="gradients">
+    <qresource prefix="/icons">
+        <file alias="icon">icon.png</file>
+        <file alias="icon@2x">icon.png</file>
+    </qresource>
+    <qresource prefix="/gradients">
         <file alias="default">gradients/default.xml</file>
         <file alias="clouds">gradients/clouds.xml</file>
         <file alias="rainbow">gradients/rainbow.xml</file>
         <file alias="grayscale">gradients/grayscale.xml</file>
         <file alias="peach">gradients/peach.xml</file>
+        <file alias="blue gold">gradients/blue_gold.xml</file>
     </qresource>
 </RCC>

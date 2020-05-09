@@ -116,7 +116,7 @@ struct Fixed512
 
     inline Fixed512(double val)
     {
-        body = Once{ boost::multiprecision::pow(Float256{ 2 }, 512 - 32) * val };
+        body = Once{ boost::multiprecision::pow(Float512{ 2 }, 512 - 32) * val };
     }
 
     inline operator Float256(void) const {

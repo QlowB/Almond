@@ -20,6 +20,7 @@ using mnd::CpuInfo;
 CpuInfo::CpuInfo(void) :
     sse2{ false },
     avx{ false },
+    avx2{ false },
     fma{ false },
     avx512{ false },
     neon{ false }
@@ -40,9 +41,9 @@ CpuInfo::CpuInfo(void) :
     unsigned int nExtData;
 
 #ifdef __GNUC__
-    __cpuid(0, dat[0], dat[1], dat[2], dat[3]);
+    __get_cpuid(0, &dat[0], &dat[1], &dat[2], &dat[3]);
     nData = dat[0];
-    __cpuid(0x80000000, dat[0], dat[1], dat[2], dat[3]);
+    __get_cpuid(0x80000000, &dat[0], &dat[1], &dat[2], &dat[3]);
     nExtData = dat[0];
 #else
     __cpuid((int*) dat.data(), 0);
@@ -53,7 +54,7 @@ CpuInfo::CpuInfo(void) :
 
     for (unsigned int i = 0; i <= nData; i++) {
 #ifdef __GNUC__
-        __get_cpuid(i, &dat[0], &dat[1], &dat[2], &dat[3]);
+        __get_cpuid_count(i, 0, &dat[0], &dat[1], &dat[2], &dat[3]);
 #else
         __cpuidex((int*) dat.data(), i, 0);
 #endif
@@ -62,7 +63,7 @@ CpuInfo::CpuInfo(void) :
 
     for (unsigned int i = 0x80000000; i <= nExtData; i++) {
 #ifdef __GNUC__
-        __get_cpuid(i, &dat[0], &dat[1], &dat[2], &dat[3]);
+        __get_cpuid_count(i, 0, &dat[0], &dat[1], &dat[2], &dat[3]);
 #else
         __cpuidex((int*) dat.data(), i, 0);
 #endif
@@ -108,6 +109,7 @@ CpuInfo::CpuInfo(void) :
     sse2 = edx1[26];
     avx = ecx1[28];
     fma = ecx1[12];
+    avx2 = ebx7[5];
     avx512 = ebx7[16];
 }
 

@@ -5,6 +5,7 @@
 #include <QMessageBox>
 
 #include "Mandel.h"
+#include "Almond.h"
 #include "VideoStream.h"
 
 //static bool exportVideo(const ExportVideoInfo& evi);
@@ -53,7 +54,8 @@ void ExportImageDialog::on_pushButton_clicked()
 {
     QString saveAs = QFileDialog::getSaveFileName(this,
             tr("Save exported image"), "",
-            tr("PNG image (*.png);;JPEG image (*.jpg);;All Files (*)"));
+            //tr("PNG image (*.png);;JPEG image (*.jpg);;All Files (*)"));
+            tr("PNG image (*.png)"));
     if(!saveAs.isEmpty() && !saveAs.isNull())
         eid.savePath->setText(saveAs);
     this->repaint();
@@ -70,8 +72,10 @@ void ExportImageDialog::on_buttonBox_accepted()
     }
 }
 
-ExportVideoDialog::ExportVideoDialog(QWidget* parent, const ExportVideoInfo& evi) :
+
+ExportVideoDialog::ExportVideoDialog(Almond *parent, const ExportVideoInfo& evi) :
     QDialog{ parent },
+    almond{ parent },
     evi{ evi }
 {
     evd.setupUi(this);
@@ -121,6 +125,7 @@ ExportVideoDialog::ExportVideoDialog(QWidget* parent, const ExportVideoInfo& evi
     }
 }
 
+
 const ExportVideoInfo& ExportVideoDialog::getExportVideoInfo(void) const
 {
     return evi;
@@ -136,9 +141,11 @@ void ExportVideoDialog::on_buttonBox_accepted()
     }
 
     evi.path = evd.savePath->text().toStdString();
-    evi.width = evd.vidWidth->text().toInt();
-    evi.height = evd.vidHeight->text().toInt();
-    evi.maxIterations = evd.maxIterations->text().toInt();
+
+    evi.mi = almond->mw->getMandelInfo();
+    evi.mi.bWidth = evd.vidWidth->text().toInt();
+    evi.mi.bHeight = evd.vidHeight->text().toInt();
+    evi.mi.maxIter = evd.maxIterations->text().toInt();
 
     evi.bitrate = evd.bitrate->text().toInt();
     evi.preset = evd.encodingPresetBox->currentText().toStdString();
@@ -157,15 +164,10 @@ void ExportVideoDialog::on_buttonBox_accepted()
         evd.endH->text().toDouble(),
     };*/
 
-    evi.start.adjustAspectRatio(evi.width, evi.height);
-    evi.end.adjustAspectRatio(evi.width, evi.height);
+    evi.start.adjustAspectRatio(evi.mi.bWidth, evi.mi.bHeight);
+    evi.end.adjustAspectRatio(evi.mi.bWidth, evi.mi.bHeight);
+    evi.gradient = almond->mw->getGradient();
 
-    MandelVideoGenerator mvg(evi);
-    mvg.generate();
-    //if (exportVideo(evi)) {
-        QMessageBox* msgBox = new QMessageBox;
-        msgBox->setText("Video successfully exported.");
-        msgBox->exec();
     //}
 }
 

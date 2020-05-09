@@ -29,6 +29,11 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
     __m512 enumerate = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     __m512 two = _mm512_set1_ps(2);
 
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+    __m512 juliaX = _mm512_set1_ps(jX);
+    __m512 juliaY = _mm512_set1_ps(jY);
+
 #if defined(_OPENMP)
     if constexpr(parallel)
         omp_set_num_threads(omp_get_num_procs());
@@ -60,6 +65,15 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
 
             __m512 threshold = _mm512_set1_ps(16);
 
+            __m512 cx0 = xs0;
+            __m512 cx1 = xs1;
+            __m512 cy = ys;
+	    if (info.julia) {
+		cx0 = juliaX;
+		cx1 = juliaX;
+		cy = juliaY;
+	    }
+
             __m512 a0 = xs0;
             __m512 a1 = xs1;
             //__m512 a2 = xs2;
@@ -68,6 +82,8 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
             //__m512 b2 = ys;
 
             if (info.smooth) {
+                __mmask16 cmp0 = 0xFFFF;
+                __mmask16 cmp1 = 0xFFFF;
                 for (int k = 0; k < info.maxIter; k++) {
                     __m512 aa0 = _mm512_mul_ps(a0, a0);
                     __m512 aa1 = _mm512_mul_ps(a1, a1);
@@ -75,24 +91,28 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
                     __m512 abab0 = _mm512_mul_ps(a0, b0);
                     __m512 abab1 = _mm512_mul_ps(a1, b1);
                     //__m512 abab2 = _mm512_mul_ps(a2, b2);
-                    __mmask16 cmp0 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b0, b0, aa0), threshold, _CMP_LE_OQ);
-                    __mmask16 cmp1 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b1, b1, aa1), threshold, _CMP_LE_OQ);
-                    //__mmask16 cmp2 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b2, b2, aa2), threshold, _CMP_LE_OQ);
-                    a0 = _mm512_sub_ps(aa0, _mm512_fmsub_ps(b0, b0, xs0));
-                    a1 = _mm512_sub_ps(aa1, _mm512_fmsub_ps(b1, b1, xs1));
+
+                    a0 = _mm512_sub_ps(aa0, _mm512_fmsub_ps(b0, b0, cx0));
+                    a1 = _mm512_sub_ps(aa1, _mm512_fmsub_ps(b1, b1, cx1));
                     //a2 = _mm512_sub_ps(aa2, _mm512_fmsub_ps(b2, b2, xs2));
-                    b0 = _mm512_fmadd_ps(two, abab0, ys);
-                    b1 = _mm512_fmadd_ps(two, abab1, ys);
+                    b0 = _mm512_fmadd_ps(two, abab0, cy);
+                    b1 = _mm512_fmadd_ps(two, abab1, cy);
                     //b2 = _mm512_fmadd_ps(two, abab2, ys);
-                    counter0 = _mm512_mask_add_ps(counter0, cmp0, counter0, adder0);
-                    counter1 = _mm512_mask_add_ps(counter1, cmp1, counter1, adder1);
-                    //counter2 = _mm512_mask_add_ps(counter2, cmp2, counter2, adder2);
+
                     resultsa0 = _mm512_mask_blend_ps(cmp0, resultsa0, a0);
                     resultsa1 = _mm512_mask_blend_ps(cmp1, resultsa1, a1);
                     //resultsa2 = _mm512_mask_blend_ps(cmp2, resultsa2, a2);
                     resultsb0 = _mm512_mask_blend_ps(cmp0, resultsb0, b0);
                     resultsb1 = _mm512_mask_blend_ps(cmp1, resultsb1, b1);
                     //resultsb2 = _mm512_mask_blend_ps(cmp2, resultsb2, b2);
+
+                    cmp0 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b0, b0, aa0), threshold, _CMP_LE_OQ);
+                    cmp1 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b1, b1, aa1), threshold, _CMP_LE_OQ);
+                    //__mmask16 cmp2 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b2, b2, aa2), threshold, _CMP_LE_OQ);
+
+                    counter0 = _mm512_mask_add_ps(counter0, cmp0, counter0, adder0);
+                    counter1 = _mm512_mask_add_ps(counter1, cmp1, counter1, adder1);
+                    //counter2 = _mm512_mask_add_ps(counter2, cmp2, counter2, adder2);
                     if (cmp0 == 0 && cmp1 == 0 /*&& cmp2 == 0*/) {
                         break;
                     }
@@ -109,11 +129,11 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
                     __mmask16 cmp0 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b0, b0, aa0), threshold, _CMP_LE_OQ);
                     __mmask16 cmp1 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b1, b1, aa1), threshold, _CMP_LE_OQ);
                     //__mmask16 cmp2 = _mm512_cmp_ps_mask(_mm512_fmadd_ps(b2, b2, aa2), threshold, _CMP_LE_OQ);
-                    a0 = _mm512_sub_ps(aa0, _mm512_fmsub_ps(b0, b0, xs0));
-                    a1 = _mm512_sub_ps(aa1, _mm512_fmsub_ps(b1, b1, xs1));
+                    a0 = _mm512_sub_ps(aa0, _mm512_fmsub_ps(b0, b0, cx0));
+                    a1 = _mm512_sub_ps(aa1, _mm512_fmsub_ps(b1, b1, cx1));
                     //a2 = _mm512_sub_ps(aa2, _mm512_fmsub_ps(b2, b2, xs2));
-                    b0 = _mm512_fmadd_ps(two, abab0, ys);
-                    b1 = _mm512_fmadd_ps(two, abab1, ys);
+                    b0 = _mm512_fmadd_ps(two, abab0, cy);
+                    b1 = _mm512_fmadd_ps(two, abab1, cy);
                     //b2 = _mm512_fmadd_ps(two, abab2, ys);
                     counter0 = _mm512_mask_add_ps(counter0, cmp0, counter0, adder0);
                     counter1 = _mm512_mask_add_ps(counter1, cmp1, counter1, adder1);
@@ -148,12 +168,12 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
             }
             for (int k = 0; k < 2 * 16 && i + k < info.bWidth; k++) {
                 if (info.smooth) {
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter :
                         ftRes[k] >= info.maxIter ? info.maxIter :
                         ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
                 }
                 else {
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter : ftRes[k];
+                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter : ftRes[k];
                 }
             }
         }
@@ -172,6 +192,11 @@ void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::Mande
     const double viewxf = double(view.x);
     __m512d viewx = { viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf, viewxf };
     __m512d dpp = { dppf, dppf, dppf, dppf, dppf, dppf, dppf, dppf };
+
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+    __m512d juliaX = _mm512_set1_pd(jX);
+    __m512d juliaY = _mm512_set1_pd(jY);
 
 #if defined(_OPENMP)
     if constexpr(parallel)
@@ -193,18 +218,25 @@ void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::Mande
 
             __m512d threshold = { 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f, 16.0f };
 
+            __m512d cx = xs;
+            __m512d cy = ys;
+	    if (info.julia) {
+		cx = juliaX;
+		cy = juliaY;
+	    }
             __m512d a = xs;
             __m512d b = ys;
 
             if (info.smooth) {
+                __mmask8 cmp = 0xFF;
                 for (int k = 0; k < info.maxIter; k++) {
                     __m512d aa = _mm512_mul_pd(a, a);
                     __m512d ab = _mm512_mul_pd(a, b);
-                    __mmask8 cmp = _mm512_cmp_pd_mask(_mm512_fmadd_pd(b, b, aa), threshold, _CMP_LE_OQ);
-                    a = _mm512_sub_pd(aa, _mm512_fmsub_pd(b, b, xs));
-                    b = _mm512_fmadd_pd(two, ab, ys);
+                    a = _mm512_sub_pd(aa, _mm512_fmsub_pd(b, b, cx));
+                    b = _mm512_fmadd_pd(two, ab, cy);
                     resultsa = _mm512_mask_blend_pd(cmp, resultsa, a);
                     resultsb = _mm512_mask_blend_pd(cmp, resultsb, b);
+                    cmp = _mm512_cmp_pd_mask(_mm512_fmadd_pd(b, b, aa), threshold, _CMP_LE_OQ);
                     counter = _mm512_mask_add_pd(counter, cmp, counter, adder);
                     if (cmp == 0) {
                         break;
@@ -216,8 +248,8 @@ void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::Mande
                     __m512d aa = _mm512_mul_pd(a, a);
                     __m512d ab = _mm512_mul_pd(a, b);
                     __mmask8 cmp = _mm512_cmp_pd_mask(_mm512_fmadd_pd(b, b, aa), threshold, _CMP_LE_OQ);
-                    a = _mm512_sub_pd(aa, _mm512_fmsub_pd(b, b, xs));
-                    b = _mm512_fmadd_pd(two, ab, ys);
+                    a = _mm512_sub_pd(aa, _mm512_fmsub_pd(b, b, cx));
+                    b = _mm512_fmadd_pd(two, ab, cy);
                     counter = _mm512_mask_add_pd(counter, cmp, counter, adder);
                     if (cmp == 0) {
                         break;
@@ -243,12 +275,12 @@ void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::Mande
             }
             for (int k = 0; k < 8 && i + k < info.bWidth; k++) {
                 if (info.smooth) {
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter :
                         ftRes[k] >= info.maxIter ? info.maxIter :
                         ((float)ftRes[k]) + 1 - ::log(::log((float) (resa[k] * resa[k] + resb[k] * resb[k])) / 2) / ::log(2.0f);
                 }
                 else {
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter : ftRes[k];
+                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter : ftRes[k];
                 }
             }
         }

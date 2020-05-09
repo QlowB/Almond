@@ -220,29 +220,14 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
 {
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
 
-    auto splitDouble = [] (double x) {
-        /*uint64_t xl = *((uint64_t*)&x);
-        uint64_t mantissa = xl & 0x000FFFFFFFFFFFFFULL;
-        uint64_t exp = (xl & 0x7FF0000000000000ULL) >> 53;
-        bool sign = (xl & 0x1000000000000000ULL) != 0;
-
-        uint32_t floathi = exp << 23;*/
-
-        float hi = float(x);
-        float lo = float(x - double(hi));
-        if (abs(lo) >= 1.0e-10f) {
-            //printf("hi: %.10ef, lo: %.10ef\n", hi, lo);
-            //fflush(stdout);
-        }
-        return std::pair{ hi, lo };
-    };
-
     Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
     mnd::LightDoubleFloat pixelScX = double(info.view.width / info.bWidth);
     mnd::LightDoubleFloat pixelScY = double(info.view.height / info.bHeight);
 
     mnd::LightDoubleFloat x = double(info.view.x);
     mnd::LightDoubleFloat y = double(info.view.y);
+    mnd::LightDoubleFloat jx = double(info.juliaX);
+    mnd::LightDoubleFloat jy = double(info.juliaY);
 
     kernel.setArg(0, buffer_A);
     kernel.setArg(1, int(info.bWidth));
@@ -256,6 +241,11 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
     kernel.setArg(9, pixelScY[1]);
     kernel.setArg(10, int(info.maxIter));
     kernel.setArg(11, int(info.smooth ? 1 : 0));
+    kernel.setArg(12, int(info.julia ? 1 : 0));
+    kernel.setArg(13, jx[0]);
+    kernel.setArg(14, jx[1]);
+    kernel.setArg(15, jy[0]);
+    kernel.setArg(16, jy[1]);
 
     cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
@@ -358,6 +348,9 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
     mnd::DoubleDouble psx = mnd::convert<mnd::DoubleDouble>(info.view.width / info.bWidth);
     mnd::DoubleDouble psy = mnd::convert<mnd::DoubleDouble>(info.view.height / info.bHeight);
 
+    mnd::DoubleDouble juliaX = mnd::convert<mnd::DoubleDouble>(info.juliaX);
+    mnd::DoubleDouble juliaY = mnd::convert<mnd::DoubleDouble>(info.juliaY);
+
     kernel.setArg(0, buffer_A);
     kernel.setArg(1, int(info.bWidth));
     kernel.setArg(2, x.x[0]);
@@ -370,6 +363,11 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
     kernel.setArg(9, psy.x[1]);
     kernel.setArg(10, int(info.maxIter));
     kernel.setArg(11, int(info.smooth ? 1 : 0));
+    kernel.setArg(12, info.julia ? 1 : 0);
+    kernel.setArg(13, juliaX.x[0]);
+    kernel.setArg(14, juliaX.x[1]);
+    kernel.setArg(15, juliaY.x[0]);
+    kernel.setArg(16, juliaY.x[1]);
 
     cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
@@ -401,6 +399,9 @@ void ClGeneratorQuadDouble::generate(const mnd::MandelInfo& info, float* data)
     mnd::QuadDouble psx = mnd::convert<mnd::QuadDouble>(info.view.width / info.bWidth);
     mnd::QuadDouble psy = mnd::convert<mnd::QuadDouble>(info.view.height / info.bHeight);
 
+    mnd::QuadDouble jx = mnd::convert<mnd::QuadDouble>(info.juliaX);
+    mnd::QuadDouble jy = mnd::convert<mnd::QuadDouble>(info.juliaY);
+
     kernel.setArg(0, buffer_A);
     kernel.setArg(1, int(info.bWidth));
     kernel.setArg(2, x.x[0]);
@@ -421,6 +422,15 @@ void ClGeneratorQuadDouble::generate(const mnd::MandelInfo& info, float* data)
     kernel.setArg(17, psy.x[3]);
     kernel.setArg(18, int(info.maxIter));
     kernel.setArg(19, int(info.smooth ? 1 : 0));
+    kernel.setArg(20, int(info.julia ? 1 : 0));
+    kernel.setArg(21, jx.x[0]);
+    kernel.setArg(22, jx.x[1]);
+    kernel.setArg(23, jx.x[2]);
+    kernel.setArg(24, jx.x[3]);
+    kernel.setArg(25, jy.x[0]);
+    kernel.setArg(26, jy.x[1]);
+    kernel.setArg(27, jy.x[2]);
+    kernel.setArg(28, jy.x[3]);
 
     cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
@@ -450,14 +460,18 @@ void ClGenerator128::generate(const mnd::MandelInfo& info, float* data)
     float pixelScaleY = float(info.view.height / info.bHeight);
 
     using ull = unsigned long long;
-    ull x1 = ull(double(info.view.x) * 0x100000000ULL);
+    ull x1 = ull(double(info.view.x) * 0x10000ULL);
     ull x2 = 0;
-    ull y1 = ull(double(info.view.y) * 0x100000000ULL);
+    ull y1 = ull(double(info.view.y) * 0x10000ULL);
     ull y2 = 0;
-    ull w1 = ull(double(pixelScaleX) * 0x100000000ULL);
+    ull w1 = ull(double(pixelScaleX) * 0x10000ULL);
     ull w2 = 0;
-    ull h1 = ull(double(pixelScaleY) * 0x100000000ULL);
+    ull h1 = ull(double(pixelScaleY) * 0x10000ULL);
     ull h2 = 0;
+    ull jx1 = ull(double(info.juliaX) * 0x10000ULL);
+    ull jx2 = 0;
+    ull jy1 = ull(double(info.juliaY) * 0x10000ULL);
+    ull jy2 = 0;
 
     kernel.setArg(0, buffer_A);
     kernel.setArg(1, int(info.bWidth));
@@ -471,6 +485,11 @@ void ClGenerator128::generate(const mnd::MandelInfo& info, float* data)
     kernel.setArg(9, ull(h2));
     kernel.setArg(10, int(info.maxIter));
     kernel.setArg(11, int(info.smooth ? 1 : 0));
+    kernel.setArg(12, int(info.julia ? 1 : 0));
+    kernel.setArg(13, ull(jx1));
+    kernel.setArg(14, ull(jx2));
+    kernel.setArg(15, ull(jy1));
+    kernel.setArg(16, ull(jy2));
 
     queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
@@ -485,7 +504,7 @@ std::string ClGenerator128::getKernelCode(bool smooth) const
         std::istreambuf_iterator<char>());
     //fprintf(stderr, "%s\n", str);
     return str;*/
-    return getFixed512_cl();
+    return getFixed128_cl();
 }
 
 
@@ -510,6 +529,8 @@ void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
     ull y = ull(::round(double(info.view.y) * (1LL << 48)));
     ull w = ull(::round(double(pixelScaleX) * (1LL << 48)));
     ull h = ull(::round(double(pixelScaleY) * (1LL << 48)));
+    ull jx = ull(::round(double(info.juliaX) * (1LL << 48)));
+    ull jy = ull(::round(double(info.juliaY) * (1LL << 48)));
     //x = 0;
     //y = 0;
     
@@ -521,6 +542,9 @@ void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
     kernel.setArg(5, ull(h));
     kernel.setArg(6, int(info.maxIter));
     kernel.setArg(7, int(info.smooth ? 1 : 0));
+    kernel.setArg(8, int(info.julia ? 1 : 0));
+    kernel.setArg(9, ull(jx));
+    kernel.setArg(10, ull(jy));
 
     queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);

@@ -99,7 +99,9 @@ enum class mnd::GeneratorType : int
     DOUBLE_DOUBLE,
     DOUBLE_DOUBLE_AVX,
     DOUBLE_DOUBLE_AVX_FMA,
+    DOUBLE_DOUBLE_NEON,
     QUAD_DOUBLE,
+    QUAD_DOUBLE_AVX_FMA,
     FLOAT128,
     FLOAT256,
     FIXED64,
@@ -115,7 +117,7 @@ protected:
     Precision type;
     CpuExtension extension;
 public:
-    MandelGenerator();
+    MandelGenerator(void);
     inline MandelGenerator(Precision type) :
         precision{ mnd::getPrecision(type) },
         type{ type },
@@ -140,8 +142,8 @@ public:
     virtual ~MandelGenerator(void);
 
 
-    MandelGenerator(const MandelGenerator&) = delete;
-    MandelGenerator& operator=(const MandelGenerator&) = delete;
+    MandelGenerator(const MandelGenerator&) = default;
+    MandelGenerator& operator=(const MandelGenerator&) = default;
 
     MandelGenerator(MandelGenerator&&) = default;
     MandelGenerator& operator=(MandelGenerator&&) = default;
@@ -161,7 +163,7 @@ class mnd::AdaptiveGenerator : public MandelGenerator
     std::map<Real, MandelGenerator*, std::greater<Real>> generators;
 public:
     AdaptiveGenerator(void);
-    AdaptiveGenerator(AdaptiveGenerator&) = default;
+    AdaptiveGenerator(AdaptiveGenerator&) = delete;
     AdaptiveGenerator(AdaptiveGenerator&&) = default;
     AdaptiveGenerator(MandelGenerator* floatGen, MandelGenerator* doubleGen);
     virtual ~AdaptiveGenerator(void) = default;

@@ -24,38 +24,35 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++17
 @CONFIG += debug_and_release@
+QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
 
 SOURCES += \
         Almond.cpp \
         BackgroundTask.cpp \
-        Bitmap.cpp \
         Color.cpp \
         CubicSpline.cpp \
         Gradient.cpp \
         GradientWidget.cpp \
-        MandelVideoGenerator.cpp \
         MandelWidget.cpp \
-        VideoStream.cpp \
         choosegenerators.cpp \
         customgenerator.cpp \
         exportdialogs.cpp \
         gradientchoosedialog.cpp \
+        GridFlowLayout.cpp \
         main.cpp
 
 HEADERS += \
         Almond.h \
         BackgroundTask.h \
-        Bitmap.h \
         Color.h \
         CubicSpline.h \
         Gradient.h \
         GradientWidget.h \
-        MandelVideoGenerator.h \
         MandelWidget.h \
-        VideoStream.h \
         choosegenerators.h \
         customgenerator.h \
         exportdialogs.h \
+        GridFlowLayout.h \
         gradientchoosedialog.h
 
 FORMS += \
@@ -73,8 +70,6 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-win32:LIBS += -lopengl32
-else:LIBS += -lOpenGL
 
 win32:QMAKE_CXXFLAGS += -openmp
 else:unix:QMAKE_CXXFLAGS += -fopenmp
@@ -85,7 +80,7 @@ unix:LIBS += -lm -latomic
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
-else:apple: LIBS += -L/usr/local/lib -lavcodec
+else:macx: LIBS += -L/usr/local/lib -lavcodec
 else:unix: LIBS += -lavcodec
 
 win32:FFMPEGPATH = $$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/
@@ -130,18 +125,20 @@ unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 #INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 #DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-RESOURCES += Almond.qrc
+RESOURCES += Almond.qrc \
+    splash.qrc
 
-unix|win32: LIBS += -L$$PWD/libmandel/ -lmandel -lqd -lasmjit
-unix: LIBS += -lrt
+win32:LIBS += -llibpng16_static -lzlibstatic
+unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond
+unix: LIBS += -lrt -lpng -lavcodec -lavdevice -lavformat -lavutil -lswscale -lavfilter
 
-INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include
-DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include
-INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/src
-DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/stc
+INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include
+DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include
+INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/src $$PWD/libalmond/include
+DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/asmjit/stc $$PWD/libalmond/include
 
-win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/asmjit.lib $$PWD/libmandel/mandel.lib $$PWD/libmandel/qd.lib
-else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/libqd.a $$PWD/libmandel/libasmjit.a
+win32:!win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/asmjit.lib $$PWD/libmandel/mandel.lib $$PWD/libmandel/qd.lib $$PWD/libalmond/almond.lib
+else:unix|win32-g++: PRE_TARGETDEPS += $$PWD/libmandel/libmandel.a $$PWD/libmandel/libqd.a $$PWD/libmandel/libasmjit.a $$PWD/libalmond/libalmond.a
 
 
 win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/' -lopencl
@@ -150,8 +147,8 @@ else:unix: LIBS += -lOpenCL
 
 win32:INCLUDEPATH += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/include'
 win32:DEPENDPATH += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/include'
-apple:INCLUDEPATH += /usr/local/Cellar/ffmpeg/4.2.2_2/include/
-apple:INCLUDEPATH += /usr/local/Cellar/boost/1.72.0_1/include/
+macx:INCLUDEPATH += /usr/local/Cellar/ffmpeg/4.2.2_2/include/
+macx:INCLUDEPATH += /usr/local/Cellar/boost/1.72.0_1/include/
 
 win32-g++:CONFIG(release, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/libopencl.a'
 else:win32-g++:CONFIG(debug, debug|release): PRE_TARGETDEPS += $$PWD/'../../../../../Program Files (x86)/OCL_SDK_Light/lib/x86_64/libopencl.a'

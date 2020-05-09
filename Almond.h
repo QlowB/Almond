@@ -34,7 +34,10 @@ class Almond : public QMainWindow
     Q_OBJECT
 private:
     mnd::MandelContext mandelContext;
+    QThreadPool backgroundTasks;
+public:
     std::unique_ptr<MandelWidget> mw;
+private:
     //std::unique_ptr<BenchmarkDialog> benchmarkDialog;
     std::unique_ptr<CustomGenerator> customGeneratorDialog;
     GradientChooseDialog gcd;
@@ -48,6 +51,7 @@ private:
     mnd::MandelViewport mandelViewSave;
     mnd::MandelViewport customViewSave;
     mnd::AdaptiveGenerator* mandelGenerator;
+public:
     mnd::MandelGenerator* currentGenerator;
 public:
     Almond(QWidget *parent = Q_NULLPTR);
@@ -69,7 +73,8 @@ private slots:
 
     void on_chooseGenerator_clicked();
 
-    void backgroundTaskFinished();
+    void backgroundTaskFinished(bool, QString message);
+    void backgroundTaskProgress(float percentage);
 
     void pointSelected(mnd::Real x, mnd::Real y);
 

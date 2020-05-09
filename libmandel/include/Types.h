@@ -39,10 +39,15 @@ namespace mnd
             boost::multiprecision::et_off>;*/
 #   endif
     inline Float128 abs(const Float128& x) { return boost::multiprecision::abs(x); }
+    inline Float128 sqrt(const Float128& x) { return boost::multiprecision::sqrt(x); }
     inline Float128 floor(const Float128& x) { return boost::multiprecision::floor(x); }
     inline Float128 log(const Float128& x) { return boost::multiprecision::log(x); }
     inline Float128 log2(const Float128& x) { return boost::multiprecision::log2(x); }
     inline Float128 pow(const Float128& x, const Float128& y) { return boost::multiprecision::pow(x, y); }
+    inline Float128 atan2(const Float128& y, const Float128& x) { return boost::multiprecision::atan2(y, x); }
+    inline Float128 cos(const Float128& x) { return boost::multiprecision::cos(x); }
+    inline Float128 sin(const Float128& x) { return boost::multiprecision::sin(x); }
+    inline Float128 exp(const Float128& x) { return boost::multiprecision::exp(x); }
 
     using Float256 = boost::multiprecision::number<
         boost::multiprecision::backends::cpp_bin_float<
@@ -51,10 +56,15 @@ namespace mnd
 
     //using Float256 = long double;
     inline Float256 abs(const Float256& x) { return boost::multiprecision::abs(x); }
+    inline Float256 sqrt(const Float256& x) { return boost::multiprecision::sqrt(x); }
     inline Float256 floor(const Float256& x) { return boost::multiprecision::floor(x); }
     inline Float256 log(const Float256& x) { return boost::multiprecision::log(x); }
     inline Float256 log2(const Float256& x) { return boost::multiprecision::log2(x); }
     inline Float256 pow(const Float256& x, const Float256& y) { return boost::multiprecision::pow(x, y); }
+    inline Float256 atan2(const Float256& y, const Float256& x) { return boost::multiprecision::atan2(y, x); }
+    inline Float256 cos(const Float256& x) { return boost::multiprecision::cos(x); }
+    inline Float256 sin(const Float256& x) { return boost::multiprecision::sin(x); }
+    inline Float256 exp(const Float256& x) { return boost::multiprecision::exp(x); }
 
     using Float512 = boost::multiprecision::number<
         boost::multiprecision::backends::cpp_bin_float<
@@ -62,6 +72,7 @@ namespace mnd
             boost::multiprecision::et_off>;
 
     inline Float512 abs(const Float512& x) { return boost::multiprecision::abs(x); }
+    inline Float512 sqrt(const Float512& x) { return boost::multiprecision::sqrt(x); }
     inline Float512 floor(const Float512& x) { return boost::multiprecision::floor(x); }
     inline Float512 log(const Float512& x) { return boost::multiprecision::log(x); }
     inline Float512 log2(const Float512& x) { return boost::multiprecision::log2(x); }
@@ -83,28 +94,48 @@ namespace mnd
     using QuadDouble = qd_real;
 
     inline DoubleDouble abs(const DoubleDouble& x) { return ::abs(x); }
+    inline DoubleDouble sqrt(const DoubleDouble& x) { return ::sqrt(x); }
     inline DoubleDouble floor(const DoubleDouble& x) { return ::floor(x); }
     inline DoubleDouble log(const DoubleDouble& x) { return ::log(x); }
     inline DoubleDouble log2(const DoubleDouble& x) { return ::log(x) / ::log(DoubleDouble(2.0)); }
     inline DoubleDouble pow(const DoubleDouble& x, const DoubleDouble& y) { return ::pow(x, y); }
+    inline DoubleDouble atan2(const DoubleDouble& y, const DoubleDouble& x) { return ::atan2(y, x); }
+    inline DoubleDouble cos(const DoubleDouble& x) { return ::cos(x); }
+    inline DoubleDouble sin(const DoubleDouble& x) { return ::sin(x); }
+    inline DoubleDouble exp(const DoubleDouble& x) { return ::exp(x); }
 
 
     inline QuadDouble abs(const QuadDouble& x) { return ::abs(x); }
+    inline QuadDouble sqrt(const QuadDouble& x) { return ::sqrt(x); }
     inline QuadDouble floor(const QuadDouble& x) { return ::floor(x); }
     inline QuadDouble log(const QuadDouble& x) { return ::log(x); }
     inline QuadDouble log2(const QuadDouble& x) { return ::log(x) / ::log(QuadDouble(2.0)); }
     inline QuadDouble pow(const QuadDouble& x, const QuadDouble& y) { return ::pow(x, y); }
+    inline QuadDouble atan2(const QuadDouble& y, const QuadDouble& x) { return ::atan2(y, x); }
+    inline QuadDouble cos(const QuadDouble& x) { return ::cos(x); }
+    inline QuadDouble sin(const QuadDouble& x) { return ::sin(x); }
+    inline QuadDouble exp(const QuadDouble& x) { return ::exp(x); }
 
     inline double abs(double x) { return ::abs(x); }
     inline float abs(float x) { return ::abs(x); }
+    inline double sqrt(double x) { return ::sqrt(x); }
+    inline float sqrt(float x) { return ::sqrtf(x); }
     inline double floor(double x) { return ::floor(x); }
     inline float floor(float x) { return ::floorf(x); }
     inline double log(double x) { return ::log(x); }
     inline float log(float x) { return ::logf(x); }
     inline double log2(double x) { return ::log2(x); }
     inline float log2(float x) { return ::log2f(x); }
+    inline double atan2(double x, double y) { return ::atan2(x, y); }
+    inline float atan2(float x, float y) { return ::atan2(x, y); }
     inline double pow(double x, double y) { return ::pow(x, y); }
     inline float pow(float x, float y) { return ::powf(x, y); }
+    inline double cos(double x) { return ::cos(x); }
+    inline float cos(float x) { return ::cos(x); }
+    inline double sin(double x) { return ::sin(x); }
+    inline float sin(float x) { return ::sin(x); }
+    inline double exp(double x) { return ::exp(x); }
+    inline float exp(float x) { return ::exp(x); }
 
 
     template<typename T, typename U>
@@ -117,16 +148,17 @@ namespace mnd
     template<>
     inline DoubleDouble convert<DoubleDouble, Real>(const Real& x)
     {
-        std::string s = x.str();
-        return DoubleDouble(s.c_str());
+        double s = static_cast<double>(x);
+        double e = static_cast<double>(x - s);
+        return DoubleDouble{ s, e };
     }
 
     template<>
     inline LightDoubleDouble convert<LightDoubleDouble, Real>(const Real& x)
     {
-        double upper = static_cast<double>(x);
-        double lower = static_cast<double>(x - upper);
-        return { upper, lower };
+        double s = static_cast<double>(x);
+        double e = static_cast<double>(x - s);
+        return LightDoubleDouble{ s, e };
     }
 
     template<>
@@ -144,8 +176,14 @@ namespace mnd
     template<>
     inline QuadDouble convert<QuadDouble, Real>(const Real& x)
     {
-        std::string s = x.str();
-        return QuadDouble(s.c_str());
+        double s = static_cast<double>(x);
+        Real tmp = x - s;
+        double e1 = static_cast<double>(tmp);
+        tmp = tmp - e1;
+        double e2 = static_cast<double>(tmp);
+        tmp = tmp - e2;
+        double e3 = static_cast<double>(tmp);
+        return QuadDouble{ s, e1, e2, e3 };
     }
 
     template<>

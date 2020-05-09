@@ -26,6 +26,7 @@ private:
 
     bool sse2;
     bool avx;
+    bool avx2;
     bool fma;
     bool avx512;
     bool neon;
@@ -39,6 +40,7 @@ public:
 //#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
     inline bool hasSse2(void) const { return sse2; };
     inline bool hasAvx(void) const { return avx; };
+    inline bool hasAvx2(void) const { return avx2; };
     inline bool hasFma(void) const { return fma; };
     inline bool hasAvx512(void) const { return avx512; };
 //#elif defined(__arm__) || defined(__aarch64__)

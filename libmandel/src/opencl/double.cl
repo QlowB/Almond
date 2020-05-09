@@ -13,9 +13,9 @@ __kernel void iterate(__global float* A, const int width, double xl, double yt, 
        double aa = a * a;
        double bb = b * b;
        double ab = a * b;
-       if (aa + bb > 16) break;
        a = aa - bb + ca;
        b = ab + ab + cb;
+       if (aa + bb > 16) break;
        n++;
    }
 // N + 1 - log (log  |Z(N)|) / log 2
@@ -28,4 +28,3 @@ __kernel void iterate(__global float* A, const int width, double xl, double yt, 
            A[index] = ((float)n);
    }
 }
-

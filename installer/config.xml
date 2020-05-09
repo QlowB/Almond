@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>Almond</Name>
+    <Version>1.0.0</Version>
+    <Title>Almond Installer</Title>
+    <Publisher>Nico</Publisher>
+    <StartMenuDir>Almond</StartMenuDir>
+    <TargetDir>@HomeDir@/Almond</TargetDir>
+    <AdminTargetDir>@ApplicationsDir@/Almond</AdminTargetDir>
+</Installer>

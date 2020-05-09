@@ -37,7 +37,27 @@ void MandelViewport::zoomCenter(float scale)
 }
 
 
+void MandelViewport::zoomCenter(const mnd::Real& scale)
+{
+    /*x += width * (1 - scale) / 2;
+    y += height * (1 - scale) / 2;
+    width *= scale;
+    height *= scale;*/
+    zoom(scale, mnd::Real(0.5), mnd::Real(0.5));
+}
+
+
 void MandelViewport::zoom(float scale, float xz, float yz)
+{
+    mnd::Real scaleR = 1.0f - scale;
+    this->x += width * scaleR * mnd::Real(xz);
+    this->y += height * scaleR * mnd::Real(yz);
+    width *= scale;
+    height *= scale;
+}
+
+
+void MandelViewport::zoom(const mnd::Real& scale, const mnd::Real& xz, const mnd::Real& yz)
 {
     mnd::Real scaleR = 1.0f - scale;
     this->x += width * scaleR * mnd::Real(xz);

@@ -1,9 +1,12 @@
 #include "Almond.h"
 #include <QIntValidator>
+#include <QIcon>
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QGradient>
 #include "gradientchoosedialog.h"
+
+#include "GridFlowLayout.h"
 
 #include <cmath>
 
@@ -31,8 +34,22 @@ Almond::Almond(QWidget* parent) :
     ui.mainContainer->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
     ui.backgroundProgress->setVisible(false);
-    //ui.verticalLayout_left->addWidget(new MyGLWidget(ui.centralWidget));
-    //mw->show();
+
+    backgroundTasks.setMaxThreadCount(1);
+    QIcon icon{ ":/icons/icon" };
+    icon.addFile(":/icons/icon@2x");
+    this->setWindowIcon(icon);
+
+    // replace vertical layout with gridflowlayout
+    /*GridFlowLayout* gfl = new GridFlowLayout(nullptr);
+    //ui.horizontalLayout_4->addItem(gfl);
+    for (int i = 0; i < ui.verticalLayout_right->count(); i++) {
+        printf("%d: \n", i);
+        gfl->addItem(ui.verticalLayout_right->takeAt(i));
+    }
+    ui.verticalLayout_right->setEnabled(false);
+    delete ui.dockWidgetContents_2->layout();
+    ui.dockWidgetContents_2->setLayout(gfl);*/
 }
 
 
@@ -43,16 +60,50 @@ Almond::~Almond(void)
 
 void Almond::submitBackgroundTask(BackgroundTask* task)
 {
-    bool taken = QThreadPool::globalInstance()->tryTake(task->getRunnable());
-    if (taken) {
+    QObject::connect(task, &BackgroundTask::finished, this, &Almond::backgroundTaskFinished);
+    QObject::connect(task, &BackgroundTask::progress, this, &Almond::backgroundTaskProgress);
+    backgroundTasks.start(task);
+    //if (taken) {
         ui.backgroundProgress->setRange(0, 0);
         ui.backgroundProgress->setVisible(true);
-    }
+        ui.backgroundProgress->setFormat("");
+    //}
 }
 
 
-void Almond::backgroundTaskFinished(void)
+void Almond::backgroundTaskFinished(bool succ, QString message)
 {
+    if (succ) {
+        QMessageBox info = QMessageBox(QMessageBox::Icon::Information, "Task Finished", message);
+        //info->setParent(this);
+        emit info.exec();
+    }
+    else {
+        QMessageBox info = QMessageBox(QMessageBox::Icon::Critical, "Task Failed", message);
+        //info->setParent(this);
+        emit info.exec();
+    }
+
+    ui.backgroundProgress->setVisible(false);
+    ui.backgroundProgress->setFormat("");
+}
+
+
+void Almond::backgroundTaskProgress(float percentage)
+{
+    QObject* task = QObject::sender();
+    if (auto* bt = qobject_cast<BackgroundTask*>(task)) {
+        ui.backgroundProgress->setFormat(QString::fromStdString(bt->getShortDescription() + ": %p%"));
+    }
+    if (percentage > 0) {
+        ui.backgroundProgress->setRange(0, 100);
+        ui.backgroundProgress->setValue(percentage);
+    }
+    else {
+        ui.backgroundProgress->reset();
+        ui.backgroundProgress->setRange(0, 0);
+        ui.backgroundProgress->setValue(-1);
+    }
 }
 
 
@@ -98,6 +149,11 @@ void Almond::on_exportVideo_clicked()
     if (response == 1) {
         mnd::MandelInfo mi;
         evi = dialog.getExportVideoInfo();
+        MandelVideoGenerator mvg(evi);
+        mnd::MandelGenerator& g = *mw->getGenerator();
+        submitBackgroundTask(new VideoExportTask(std::move(mvg), g));
+        //if (exportVideo(evi)) {
+
         //Video
         /*mi.maxIter = dialog.getMaxIterations();
         mi.view = mw->getViewport();
@@ -141,13 +197,27 @@ void Almond::on_exportImage_clicked()
         }
         mnd::MandelGenerator* currentGenerator = mw->getGenerator();
         mnd::MandelGenerator& g = currentGenerator ? *currentGenerator : mandelContext.getDefaultGenerator();
-        auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
+
+        alm::ImageExportInfo iei;
+        iei.drawInfo = mi;
+        iei.generator = &g;
+        iei.gradient = mw->getGradient();
+        iei.path = dialog.getPath().toStdString();
+        submitBackgroundTask(new ImageExportTask(iei));
+
+        /*auto exprt = [iei, path = dialog.getPath().toStdString()]() {
+            alm::exportPng(path, iei);
+        };
+
+        submitBackgroundTask();*/
+        
+        /*auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
         g.generate(mi, fmap.pixels.get());
         auto bitmap = fmap.map<RGBColor>([&mi, this] (float i) {
             return i >= mi.maxIter ? RGBColor{ 0,0,0 } : mw->getGradient().get(i);
         });
         QImage img(reinterpret_cast<unsigned char*>(bitmap.pixels.get()), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
-        img.save(dialog.getPath());
+        img.save(dialog.getPath());*/
     }
 }
 

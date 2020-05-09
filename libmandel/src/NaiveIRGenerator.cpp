@@ -4,13 +4,188 @@
 
 using mnd::NaiveIRGenerator;
 
+template class mnd::NaiveIRGenerator<float>;
+template class mnd::NaiveIRGenerator<double>;
+template class mnd::NaiveIRGenerator<mnd::DoubleDouble>;
+template class mnd::NaiveIRGenerator<mnd::QuadDouble>;
 
-namespace mnd
+namespace mnd::eval
 {
-    template class NaiveIRGenerator<float>;
-    template class NaiveIRGenerator<double>;
-    template class NaiveIRGenerator<mnd::DoubleDouble>;
-    template class NaiveIRGenerator<mnd::QuadDouble>;
+
+    using namespace mnd;
+    using namespace mnd::ir;
+    template<typename T>
+    struct ToEvalVisitor
+    {
+        EvalStruct<T>& es;
+
+        std::unique_ptr<EvalNode> visit(ir::Node* f)
+        {
+            std::any& nodeData = getNodeData(f);
+            if (EvalNode** en = std::any_cast<EvalNode*>(&nodeData)) {
+                
+                size_t tmpStore;
+                if (Store* s = std::get_if<Store>(*en)) {
+                    tmpStore = s->index;
+                }
+                else {
+                    tmpStore = createTemp();
+                    EvalNode store = Store{ tmpStore, std::make_unique<EvalNode>(std::move(**en)) };
+                    **en = std::move(store);
+                }
+                auto l = std::make_unique<EvalNode>(Load{ tmpStore });
+                setNodeData(f, l.get());
+                return l;
+            }
+            EvalNode n = std::visit(*this, *f);
+            auto r = std::make_unique<EvalNode>(std::move(n));
+            setNodeData(f, r.get());
+            return r;
+        }
+
+        std::any& getNodeData(ir::Node* n)
+        {
+            return std::visit([](auto& x) -> std::any& { return x.nodeData; }, *n);
+        }
+
+        void setNodeData(ir::Node* n, EvalNode* en)
+        {
+            std::visit([en](auto& x) { x.nodeData = en; }, *n);
+        }
+
+        size_t createTemp(void)
+        {
+            es.temporaries.push_back(0);
+            es.variables.push_back(&es.temporaries[es.temporaries.size() - 1]);
+            return es.variables.size() - 1;
+        }
+
+        size_t createConstant(mnd::Real& value)
+        {
+            es.temporaries.push_back(mnd::convert<T>(value));
+            es.variables.push_back(&es.temporaries[es.temporaries.size() - 1]);
+            return es.variables.size() - 1;
+        }
+
+        size_t createVariable(std::string& value)
+        {
+            es.variables.push_back(nullptr);
+            es.variableNames.emplace(value, es.variables.size() - 1);
+            return es.variables.size() - 1;
+        }
+
+        EvalNode operator()(ir::Constant& x) {
+            return Load{ createConstant(x.value) };
+        }
+        EvalNode operator()(ir::Variable& x) {
+            return Load{ createVariable(x.name) };
+        }
+        EvalNode operator()(ir::Addition& x) {
+            auto left = visit(x.left);
+            return Add{ std::move(left), visit(x.right) };
+        }
+        EvalNode operator()(ir::Subtraction& x) {
+            auto left = visit(x.left);
+            return Sub{ std::move(left), visit(x.right) };
+        }
+        EvalNode operator()(ir::Multiplication& x) {
+            auto left = visit(x.left);
+            return Mul{ std::move(left), visit(x.right) };
+        }
+        EvalNode operator()(ir::Division& x) {
+            auto left = visit(x.left);
+            return Div{ std::move(left), visit(x.right) };
+        }
+        EvalNode operator()(ir::Negation& x) {
+            return Neg{ visit(x.value) };
+        }
+        EvalNode operator()(ir::Atan2& x) {
+            auto left = visit(x.left);
+            return Atan2{ std::move(left), visit(x.right) };
+        }
+        EvalNode operator()(ir::Pow& x) {
+            auto left = visit(x.left);
+            return Pow{ std::move(left), visit(x.right) };
+        }
+        EvalNode operator()(ir::Cos& x) {
+            return Cos{ visit(x.value) };
+        }
+        EvalNode operator()(ir::Sin& x) {
+            return Sin{ visit(x.value) };
+        }
+        EvalNode operator()(ir::Exp& x) {
+            return Exp{ visit(x.value) };
+        }
+        EvalNode operator()(ir::Ln& x) {
+            return Ln{ visit(x.value) };
+        }
+    };
+
+
+
+    template<typename T>
+    struct EvalVisitor
+    {
+        mnd::eval::EvalStruct<T>& es;
+
+        T visit(const EvalNode& en) {
+            return std::visit(*this, en);
+        }
+
+        T operator()(const Load& x) {
+            return *es.variables[x.index];
+        }
+
+        T operator()(const Store& x) {
+            T r = visit(*x.v);
+            *es.variables[x.index] = r;
+            return r;
+        }
+
+        T operator()(const Add& x) {
+            return visit(*x.a) + visit(*x.b);
+        }
+
+        T operator()(const Sub& x) {
+            return visit(*x.a) - visit(*x.b);
+        }
+
+        T operator()(const Mul& x) {
+            return visit(*x.a) * visit(*x.b);
+        }
+
+        T operator()(const Div& x) {
+            return visit(*x.a) / visit(*x.b);
+        }
+
+        T operator()(const Neg& x) {
+            return -visit(*x.a);
+        }
+
+        T operator()(const Atan2& x) {
+            return mnd::atan2(visit(*x.a), visit(*x.b));
+        }
+
+        T operator()(const Pow& x) {
+            return mnd::pow(visit(*x.a), visit(*x.b));
+        }
+
+        T operator()(const Cos& x) {
+            return mnd::cos(visit(*x.a));
+        }
+
+        T operator()(const Sin& x) {
+            return mnd::sin(visit(*x.a));
+        }
+
+        T operator()(const Exp& x) {
+            return mnd::exp(visit(*x.a));
+        }
+
+        T operator()(const Ln& x) {
+            return mnd::log(visit(*x.a));
+        }
+    };
 }
 
 
@@ -20,110 +195,12 @@ NaiveIRGenerator<T>::NaiveIRGenerator(const mnd::ir::Formula& irf,
     mnd::MandelGenerator{ prec },
     form{ irf }
 {
+    eval::ToEvalVisitor<T> tev{ es };
+    newz_re = tev.visit(irf.newA);
+    newz_im = tev.visit(irf.newB);
+    start_re = tev.visit(irf.startA);
+    start_im = tev.visit(irf.startB);
 }
-
-
-template<typename T>
-struct EvalRes
-{
-    size_t incVal;
-    T result;
-};
-
-
-using namespace mnd;
-template<typename T>
-struct TVisitor
-{
-    T a, b, x, y;
-    size_t incrementValue;
-
-    T visitNode(ir::Node* n) {
-        EvalRes<T>* nodeData = getNodeData(n);
-        if (nodeData) {
-            if (nodeData->incVal == incrementValue)
-                return nodeData->result;
-        }
-        T res = std::visit(*this, *n);
-        if (nodeData) {
-            nodeData->incVal = incrementValue;
-            nodeData->result = res;
-        }
-        return res;
-    }
-
-    EvalRes<T>* getNodeData(ir::Node* n) {
-        assert(n != nullptr);
-        std::any& x = std::visit([](auto& n) -> std::any& {
-            return n.nodeData;
-        }, *n);
-        if (auto* v = std::any_cast<EvalRes<T>>(&x))
-            return v;
-        else
-            return nullptr;
-    }
-
-    T operator()(const ir::Constant& c) {
-        return mnd::convert<double>(c.value);
-    }
-
-    T operator()(const ir::Variable& v) {
-        if (v.name == "z_re")
-            return a;
-        else if (v.name == "z_im")
-            return b;
-        else if (v.name == "c_re")
-            return x;
-        else if (v.name == "c_im")
-            return y;
-        else
-            return 0.0;
-    }
-
-    T operator()(const ir::Negation& n) {
-        return -visitNode(n.value);
-    }
-
-    T operator()(const ir::Addition& n) {
-        return visitNode(n.left) + visitNode(n.right);
-    }
-
-    T operator()(const ir::Subtraction& n) {
-        return visitNode(n.left) - visitNode(n.right);
-    }
-
-    T operator()(const ir::Multiplication& n) {
-        return visitNode(n.left) * visitNode(n.right);
-    }
-
-    T operator()(const ir::Division& n) {
-        return visitNode(n.left) / visitNode(n.right);
-    }
-
-    T operator()(const ir::Atan2& n) {
-        return ::atan2(visitNode(n.left), visitNode(n.right));
-    }
-
-    T operator()(const ir::Pow& n) {
-        return ::pow(visitNode(n.left), visitNode(n.right));
-    }
-
-    T operator()(const ir::Cos& n) {
-        return ::cos(visitNode(n.value));
-    }
-
-    T operator()(const ir::Sin& n) {
-        return ::sin(visitNode(n.value));
-    }
-
-    T operator()(const ir::Exp& n) {
-        return ::exp(visitNode(n.value));
-    }
-
-    T operator()(const ir::Ln& n) {
-        return ::log(visitNode(n.value));
-    }
-};
 
 
 template<typename T>
@@ -144,25 +221,25 @@ void NaiveIRGenerator<T>::generate(const mnd::MandelInfo& info, float* data)
 #endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = viewy + T(double(j)) * hpp;
-        long i = 0;
-        for (i; i < info.bWidth; i++) {
+        for (long i = 0; i < info.bWidth; i++) {
             T x = viewx + T(double(i)) * wpp;
+            T a;
+            T b;
+            es.prepare(&a, &b, &x, &y);
 
-            TVisitor<T> beforeVisitor{ 0, 0, x, y, 0 };
+            eval::EvalVisitor<T> visitor{ es };
 
-            T a = beforeVisitor.visitNode(form.startA);
-            T b = beforeVisitor.visitNode(form.startB);
+            a = visitor.visit(*start_re);
+            b = visitor.visit(*start_im);
 
-            TVisitor<T> visitor{ a, b, x, y, 0 };
             int k = 0;
             for (k = 0; k < info.maxIter; k++) {
-                T newA = visitor.visitNode(form.newA);
-                T newB = visitor.visitNode(form.newB);
+                T newA = visitor.visit(*newz_re);
+                T newB = visitor.visit(*newz_im);
                 a = newA;
                 b = newB;
                 if (a * a + b * b >= 16.0)
                     break;
-                visitor.incrementValue++;
             }
             data[i + j * info.bWidth] = float(k);
         }

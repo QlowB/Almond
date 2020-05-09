@@ -1,5 +1,4 @@
 #include "IterationGenerator.h"
-#include "ExecData.h"
 #include "Mandel.h"
 
 #include "OpenClInternal.h"
@@ -48,8 +47,7 @@ void NaiveGenerator::generate(const mnd::MandelInfo& info, float* data)
 #endif
     for (long j = 0; j < info.bHeight; j++) {
         T y = viewy + T(double(j)) * hpp;
-        long i = 0;
-        for (i; i < info.bWidth; i++) {
+        for (long i = 0; i < info.bWidth; i++) {
             T x = viewx + T(double(i)) * wpp;
 
             T cx = x;
@@ -125,10 +123,13 @@ std::complex<double> NaiveGenerator::calc(mnd::Expression& expr, std::complex<do
     return result;
 }
 
+#ifdef WITH_ASMJIT
+#if defined(__x86_64__) || defined(_M_X64)
+
+#include "ExecData.h"
+
 using mnd::CompiledGenerator;
 using mnd::CompiledGeneratorVec;
-using mnd::CompiledClGenerator;
-using mnd::CompiledClGeneratorDouble;
 
 
 CompiledGenerator::CompiledGenerator(std::unique_ptr<mnd::ExecData> execData,
@@ -145,29 +146,6 @@ CompiledGenerator::CompiledGenerator(CompiledGenerator&&) = default;
 CompiledGenerator::~CompiledGenerator(void)
 {
 }
-
-
-/*__declspec(noinline)
-int iter(double x, double y, int maxIter)
-{
-int k = 0;
-
-double a = x;
-double b = y;
-
-for (k = 0; k < maxIter; k++) {
-double aa = a * a;
-double bb = b * b;
-double abab = a * b + a * b;
-a = aa - bb + x;
-b = abab + y;
-if (aa + bb >= 16)
-break;
-}
-
-return k;
-}*/
-
 
 
 void CompiledGenerator::generate(const mnd::MandelInfo& info, float* data)
@@ -235,9 +213,12 @@ void CompiledGeneratorVec::generate(const mnd::MandelInfo& info, float* data)
         }
     }
 }
-
+#endif // defined(__x86_64__) || defined(_M_X64)
+#endif // WITH_ASMJIT
 
 #ifdef WITH_OPENCL
+using mnd::CompiledClGenerator;
+using mnd::CompiledClGeneratorDouble;
 CompiledClGenerator::CompiledClGenerator(mnd::MandelDevice& device, const std::string& code) :
     ClGeneratorFloat{ device, code }
 {

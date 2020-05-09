@@ -31,7 +31,7 @@
 #define HAVE_FORTRAN 1
 
 /* Define to 1 if you have the <fpu_control.h> header file. */
-#define HAVE_FPU_CONTROL_H 1
+//#define HAVE_FPU_CONTROL_H 1
 
 /* Define to 1 if you have the `gettimeofday' function. */
 #define HAVE_GETTIMEOFDAY 1

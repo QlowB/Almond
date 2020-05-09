@@ -5,6 +5,7 @@
 using namespace mnd;
 
 #include <QPainter>
+#include <QTimer>
 
 #include <cstdio>
 
@@ -550,7 +551,6 @@ void MandelView::paint(const mnd::MandelViewport& mvp)
 
 void MandelView::cellReady(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp)
 {
-
     this->getGrid(level).setCell(i, j,
         std::make_unique<GridElement>(true, std::make_shared<TextureClip>(std::make_shared<Texture>(*bmp))));
     delete bmp;

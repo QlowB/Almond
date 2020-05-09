@@ -38,9 +38,9 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
    float4 b = (float4) (y * pixelScaleY + yt);
    float4 ca = julia ? ((float4)(juliaX)) : a;
    float4 cb = julia ? ((float4)(juliaY)) : b;
-   float4 resa = a;
-   float4 resb = b;
-   int4 count = (int4)(0);
+   float4 resa = (float4)(0);
+   float4 resb = (float4)(0);
+   float4 count = (float4)(0);
 
    int n = 0;
    if (smooth) {
@@ -54,7 +54,7 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
            resb = as_float4((as_int4(b) & cmp) | (as_int4(resb) & ~cmp));
            cmp = isless(cmpVal, (float4)(16.0f));
            if (!any(cmp)) break;
-           count += cmp & (int4)(1);
+           count += as_float4(cmp & as_int4((float4)(1)));
            n++;
        }
    }
@@ -66,14 +66,15 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
            b = fma(2, ab, cb);
            int4 cmp = isless(cmpVal, (float4)(16.0f));
            if (!any(cmp)) break;
-           count += cmp & (int4)(1);
+           count += as_float4(cmp & as_int4((float4)(1)));
            n++;
        }
     }
-   for (int i = 0; i < 4 && i + x < width; i++) {
-       if (smooth != 0)
-           A[index + i] = ((float) count[i]) + 1 - log(log(fma(resa[i], resa[i], resb[i] * resb[i])) / 2) / log(2.0f);
-      else
-          A[index + i] = ((float) count[i]);
+    for (int i = 0; i < 4 && i + x < width; i++) {
+    if (smooth != 0)
+        if (count[i] != 0)
+            A[index + i] = ((float) count[i]) + 1 - log(log(fma(resa[i], resa[i], resb[i] * resb[i])) / 2) / log(2.0f);
+    else
+        A[index + i] = ((float) count[i]);
    }
 }

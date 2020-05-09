@@ -10,7 +10,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
 
 find_package(Qt5 COMPONENTS Core Widgets OpenGL Xml Concurrent REQUIRED)
 find_package(OpenMP)
-find_package(OpenGL REQUIRED COMPONENTS OpenGL)
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.65 REQUIRED)
 
@@ -37,7 +36,6 @@ target_include_directories(Almond SYSTEM PUBLIC ${FFMPEG_INCLUDE_DIRS})
 target_link_libraries(Almond PUBLIC libalmond)
 target_link_libraries(Almond PUBLIC Qt5::Core Qt5::Widgets Qt5::OpenGL Qt5::Xml Qt5::Concurrent)
 target_link_libraries(Almond PUBLIC ${FFMPEG_LIBRARIES})
-#target_link_libraries(Almond PUBLIC OpenGL::GL)
 
 set_property(TARGET Almond PROPERTY AUTOMOC ON)
 set_property(TARGET Almond PROPERTY AUTORCC ON)

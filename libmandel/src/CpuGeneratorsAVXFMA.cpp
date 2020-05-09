@@ -695,7 +695,7 @@ void CpuGenerator<mnd::QuadDouble, mnd::X86_AVX_FMA, parallel>::generate(const m
 {
     const MandelViewport& view = info.view;
 
-    using T = mnd::Float256;
+    using T = mnd::Real;
 
     T viewx = mnd::convert<T>(view.x);
     T viewy = mnd::convert<T>(view.y);
@@ -707,9 +707,9 @@ void CpuGenerator<mnd::QuadDouble, mnd::X86_AVX_FMA, parallel>::generate(const m
     T jY = mnd::convert<T>(info.juliaY);
 
 
-    auto toQd = [] (const mnd::Float256& x) -> std::tuple<double, double, double, double> {
+    auto toQd = [] (const mnd::Real& x) -> std::tuple<double, double, double, double> {
         double a = double(x);
-        mnd::Float256 rem = x - a;
+        mnd::Real rem = x - a;
         double b = double(rem);
         rem = rem - b;
         double c = double(rem);
@@ -718,13 +718,13 @@ void CpuGenerator<mnd::QuadDouble, mnd::X86_AVX_FMA, parallel>::generate(const m
         return { a, b, c, d };
     };
 
-    auto toAvxQuadDouble = [&toQd] (const mnd::Float256& x) -> AvxQuadDouble {
+    auto toAvxQuadDouble = [&toQd] (const mnd::Real& x) -> AvxQuadDouble {
         auto [a, b, c, d] = toQd(x);
         return AvxQuadDouble{ a, b, c, d };
     };
 
-    auto toAvxQuadDouble4 = [&toQd] (const mnd::Float256& a, const mnd::Float256& b,
-                            const mnd::Float256& c, const mnd::Float256& d) -> AvxQuadDouble {
+    auto toAvxQuadDouble4 = [&toQd] (const mnd::Real& a, const mnd::Real& b,
+                            const mnd::Real& c, const mnd::Real& d) -> AvxQuadDouble {
         auto [x0, y0, z0, u0] = toQd(a);
         auto [x1, y1, z1, u1] = toQd(b);
         auto [x2, y2, z2, u2] = toQd(c);

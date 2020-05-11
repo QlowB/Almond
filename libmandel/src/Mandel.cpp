@@ -83,8 +83,9 @@ MandelContext mnd::initializeContext(void)
 }
 
 
-MandelDevice::MandelDevice(mnd::ClDeviceWrapper device) :
-    clDevice{ std::make_unique<ClDeviceWrapper>(std::move(device)) }
+MandelDevice::MandelDevice(mnd::ClDeviceWrapper device, const std::string& platformName) :
+    clDevice{ std::make_unique<ClDeviceWrapper>(std::move(device)) },
+    platformName{ platformName }
 {
     extensions = clDevice->device.getInfo<CL_DEVICE_EXTENSIONS>();
     name = clDevice->device.getInfo<CL_DEVICE_NAME>();
@@ -272,26 +273,34 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
     //platforms.erase(platforms.begin() + 1);
 
     for (auto& platform : platforms) {
-        std::string name = platform.getInfo<CL_PLATFORM_NAME>();
+        std::string platformName = platform.getInfo<CL_PLATFORM_NAME>();
         std::string profile = platform.getInfo<CL_PLATFORM_PROFILE>();
 
-        //printf("using opencl platform: %s\n", name.c_str());
+        //printf("using opencl platform: %s\n", platformName.c_str());
 
-        //std::string ext = platform.getInfo<CL_PLATFORM_EXTENSIONS>();
+        std::string ext = platform.getInfo<CL_PLATFORM_EXTENSIONS>();
         //printf("Platform extensions: %s\n", ext.c_str());
-        //printf("Platform: %s, %s\n", name.c_str(), profile.c_str());
+        printf("Platform: %s, %s\n", platformName.c_str(), profile.c_str());
 
         std::vector<cl::Device> devices;
         platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
+        auto onError = [] (const char* errinfo, 
+            const void* private_info,
+            size_t cb, 
+            void* user_data) {
+                printf("opencl error: %s\n", errinfo);
+        };
+        
+        cl::Context context{ devices, nullptr, onError };
         for (auto& device : devices) {
-            //printf("Device: %s\n", device.getInfo<CL_DEVICE_NAME>().c_str());
+            printf("Device: %s\n", device.getInfo<CL_DEVICE_NAME>().c_str());
             //printf("preferred float width: %d\n", device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>());
-            //printf("vendor: %s\n", device.getInfo<CL_DEVICE_VENDOR>().c_str());
+            printf("vendor: %s\n", device.getInfo<CL_DEVICE_VENDOR>().c_str());
 
 
             //printf("Device extensions: %s\n", ext.c_str());
             auto mandelDevice = std::make_unique<mnd::MandelDevice>(
-                ClDeviceWrapper{ device, cl::Context{ device } });
+                ClDeviceWrapper{ device, context }, platformName);
             MandelDevice& md = *mandelDevice;
 
             auto supportsDouble = md.supportsDouble();

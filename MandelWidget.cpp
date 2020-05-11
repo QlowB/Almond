@@ -48,15 +48,6 @@ Texture::Texture(Texture&& other) :
 }
 
 
-Texture& Texture::operator=(Texture&& other)
-{
-    this->id = other.id;
-    this->gl = other.gl;
-    other.id = 0;
-    return *this;
-}
-
-
 void Texture::bind(void) const
 {
     gl.glBindTexture(GL_TEXTURE_2D, id);

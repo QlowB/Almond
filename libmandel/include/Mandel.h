@@ -43,6 +43,7 @@ class mnd::MandelDevice
 private:
     friend class MandelContext;
 
+    std::string platformName;
     std::string vendor;
     std::string name;
     std::string extensions;
@@ -51,7 +52,7 @@ private:
     std::map<GeneratorType, std::unique_ptr<MandelGenerator>> mandelGenerators;
 
 public:
-    MandelDevice(ClDeviceWrapper);
+    MandelDevice(ClDeviceWrapper, const std::string& platformName);
     MandelDevice(const MandelDevice&) = delete;
     MandelDevice(MandelDevice&&) = default;
     MandelDevice& operator=(const MandelDevice&) = delete;

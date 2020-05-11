@@ -71,6 +71,7 @@ FILE(GLOB QdSources qd-2.3.22/src/*.cpp)
 
 target_compile_definitions(mandel PUBLIC WITH_QD)
 add_library(qd STATIC ${QdSources})
+target_include_directories(mandel PUBLIC "include")
 target_include_directories(qd PUBLIC qd-2.3.22/include qd-2.3.22)
 
 target_link_libraries(mandel PUBLIC qd)
@@ -84,14 +85,11 @@ endif(WITH_ASMJIT)
 
 if(OPENCL_FOUND)
     target_compile_definitions(mandel PUBLIC WITH_OPENCL)
-    target_include_directories(mandel SYSTEM PUBLIC
-        ${OpenCL_INCLUDE_DIRS}
-    )
-    target_include_directories(mandel PUBLIC "include")
+    target_include_directories(mandel SYSTEM PUBLIC ${OpenCL_INCLUDE_DIRS})
+    target_include_directories(mandel SYSTEM PUBLIC "include_cl")
     link_directories(${OpenCL_LIBRARY})
     target_link_libraries(mandel PUBLIC OpenCL::OpenCL)
 else(OPENCL_FOUND)
-    include_directories("include")
 endif(OPENCL_FOUND)
 
 if (APPLE AND OpenCL_FOUND)

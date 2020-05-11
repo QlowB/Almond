@@ -69,6 +69,8 @@ IF (WIN32)
 
 ELSEIF (UNIX AND NOT APPLE)
     install(TARGETS Almond RUNTIME DESTINATION "bin")
+    install(FILES Almond.desktop DESTINATION "share/applications")
+    install(FILES Almond.png DESTINATION "share/pixmaps")
     set(CPACK_GENERATOR "DEB")
     set(CPACK_SOURCE_GENERATOR "DEB")
     set(CPACK_COMPONENTS_ALL Almond)

@@ -71,9 +71,10 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
        }
     }
     for (int i = 0; i < 4 && i + x < width; i++) {
-    if (smooth != 0)
+    if (smooth != 0) {
         if (count[i] != 0)
             A[index + i] = ((float) count[i]) + 1 - log(log(fma(resa[i], resa[i], resb[i] * resb[i])) / 2) / log(2.0f);
+    }
     else
         A[index + i] = ((float) count[i]);
    }

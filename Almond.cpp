@@ -3,7 +3,9 @@
 #include <QIcon>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QStatusBar>
 #include <QGradient>
+#include <QWindow>
 #include "gradientchoosedialog.h"
 
 #include "GridFlowLayout.h"
@@ -11,7 +13,7 @@
 #include <cmath>
 
 Almond::Almond(QWidget* parent) :
-    QMainWindow{ parent },
+    QMainWindow{ parent, Qt::WindowFlags() },
     mandelContext{ mnd::initializeContext() }
 {
     ui.setupUi(this);
@@ -31,14 +33,31 @@ Almond::Almond(QWidget* parent) :
     mandelViewSave = mw->getViewport();
 
     QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
-    ui.mainContainer->addWidget(mw.get());
+    ui.mandel_container->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
     ui.backgroundProgress->setVisible(false);
+
+
+    QStatusBar* bar = new QStatusBar(this);
+    bar->addWidget(new QLabel("ayay"));
+    auto* p = new QPushButton("About");
+    bar->addPermanentWidget(p);
+    QObject::connect(p, &QPushButton::clicked, [this]() {
+        ui.centralWidget = this->takeCentralWidget();
+        this->setCentralWidget(mw.get());
+        emit this->showFullScreen();
+        QThread::sleep(2);
+        ui.mandel_container->addWidget(this->takeCentralWidget());
+        emit this->showNormal();
+    });
+    ui.mainContainer->addWidget(bar);
 
     backgroundTasks.setMaxThreadCount(1);
     QIcon icon{ ":/icons/icon" };
     icon.addFile(":/icons/icon@2x");
     this->setWindowIcon(icon);
+
+
 
     // replace vertical layout with gridflowlayout
     /*GridFlowLayout* gfl = new GridFlowLayout(nullptr);

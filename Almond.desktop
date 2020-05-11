@@ -1,0 +1,11 @@
+[Desktop Entry]
+
+Type=Application
+Encoding=UTF-8
+Name=Almond
+Version=1.0
+Comment=Fractal Generation Software
+Exec=/usr/bin/Almond
+Icon=Almond.png
+Terminal=false
+Categories=Education;Art;

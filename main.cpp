@@ -19,20 +19,6 @@ int main(int argc, char *argv[])
     QSplashScreen splash{ splashScaled };
     a.processEvents();
     splash.show();
-
-    /*auto list = QStyleFactory::keys();
-    for (auto& str : list)
-        printf("key: %s\n", str.toStdString().c_str());
-    a.setStyle(QStyleFactory::create("Windows"));*/
-    /*QPalette p = qApp->palette();
-    p.setColor(QPalette::Window, QColor(53,53,53));
-    p.setColor(QPalette::Button, QColor(53,53,53));
-    p.setColor(QPalette::Base, QColor(53,53,53));
-    p.setColor(QPalette::Background, QColor(53,53,53));
-    p.setColor(QPalette::Highlight, QColor(142,45,197));
-    p.setColor(QPalette::ButtonText, QColor(255,255,255));
-    p.setColor(QPalette::WindowText, QColor(255,255,255));
-    qApp->setPalette(p);*/
     Almond w;
     splash.finish(&w);
     a.processEvents();

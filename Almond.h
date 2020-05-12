@@ -35,6 +35,10 @@ class Almond : public QMainWindow
 private:
     mnd::MandelContext mandelContext;
     QThreadPool backgroundTasks;
+
+
+    bool fullscreenMode = false;
+    QWidget* cw;
 public:
     std::unique_ptr<MandelWidget> mw;
 private:
@@ -59,6 +63,9 @@ public:
 
     void submitBackgroundTask(BackgroundTask* task);
 
+    bool eventFilter(QObject *target, QEvent *event);
+public slots:
+    void toggleFullscreen(void);
 private slots:
     void on_zoom_out_clicked();
     void on_zoom_in_clicked();

@@ -43,14 +43,14 @@ Almond::Almond(QWidget* parent) :
     auto* p = new QPushButton("About");
     bar->addPermanentWidget(p);
     QObject::connect(p, &QPushButton::clicked, [this]() {
-        ui.centralWidget = this->takeCentralWidget();
-        this->setCentralWidget(mw.get());
-        emit this->showFullScreen();
-        QThread::sleep(2);
+        /*QThread::sleep(2);
         ui.mandel_container->addWidget(this->takeCentralWidget());
-        emit this->showNormal();
+        emit this->showNormal();*/
+        toggleFullscreen();
     });
     ui.mainContainer->addWidget(bar);
+
+    installEventFilter(this);
 
     backgroundTasks.setMaxThreadCount(1);
     QIcon icon{ ":/icons/icon" };
@@ -87,6 +87,35 @@ void Almond::submitBackgroundTask(BackgroundTask* task)
         ui.backgroundProgress->setVisible(true);
         ui.backgroundProgress->setFormat("");
     //}
+}
+
+bool Almond::eventFilter(QObject *target, QEvent *event)
+{
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+        if (keyEvent->key() == Qt::Key_F11) {
+            emit toggleFullscreen();
+        }
+    }
+    return QObject::eventFilter(target, event);
+}
+
+
+void Almond::toggleFullscreen(void)
+{
+    if (fullscreenMode) {
+        auto* m = this->takeCentralWidget();
+        ui.mandel_container->addWidget(m);
+        this->setCentralWidget(cw);
+        emit this->showNormal();
+        fullscreenMode = false;
+    }
+    else {
+        cw = this->takeCentralWidget();
+        this->setCentralWidget(mw.get());
+        emit this->showFullScreen();
+        fullscreenMode = true;
+    }
 }
 
 

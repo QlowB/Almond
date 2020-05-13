@@ -27,7 +27,7 @@ int main() {
     //evi.end.zoomCenter(1.0e+27);
     evi.gradient = Gradient::defaultGradient();
 
-    evi.mi.bWidth = 1280;
+    /*evi.mi.bWidth = 1280;
     evi.mi.bHeight = 720;
     evi.mi.maxIter = 1000;
     evi.fps = 60;
@@ -40,24 +40,28 @@ int main() {
 
     MandelVideoGenerator mvg(evi);
 
-    mvg.generate(mndCtxt.getDefaultGenerator());
-    //
+    mvg.generate(mndCtxt.getDefaultGenerator());*/
     
 
-/*
     mnd::MandelContext mc = mnd::initializeContext();
     mnd::MandelInfo mi;
     mi.view = evi.start;
-    mi.bWidth = 8000;
-    mi.bHeight = 8000;
-    mi.maxIter = 100;
+    mi.bWidth = 12000;
+    mi.bHeight = 12000;
+    mi.maxIter = 800;
     mi.smooth = true;
     alm::ImageExportInfo iei;
     iei.drawInfo = mi;
-    iei.gradient = &evi.gradient;
+    iei.gradient = evi.gradient;
     iei.generator = &mc.getDefaultGenerator();
-    alm::exportPng("file.png", iei);
-*/
+    iei.options.jpegQuality = 100;
+    iei.path = "file.jpg";
+    try {
+        alm::exportImage(iei);
+    } catch (alm::ImageExportException& iee) {
+        printf("%s\n", iee.what());
+        return 1;
+    }
 
     return 0;
 }

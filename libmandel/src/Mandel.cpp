@@ -280,7 +280,7 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
 
         std::string ext = platform.getInfo<CL_PLATFORM_EXTENSIONS>();
         //printf("Platform extensions: %s\n", ext.c_str());
-        printf("Platform: %s, %s\n", platformName.c_str(), profile.c_str());
+        //printf("Platform: %s, %s\n", platformName.c_str(), profile.c_str());
 
         std::vector<cl::Device> devices;
         platform.getDevices(CL_DEVICE_TYPE_GPU, &devices);
@@ -293,9 +293,9 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
         
         cl::Context context{ devices, nullptr, onError };
         for (auto& device : devices) {
-            printf("Device: %s\n", device.getInfo<CL_DEVICE_NAME>().c_str());
+            //printf("Device: %s\n", device.getInfo<CL_DEVICE_NAME>().c_str());
             //printf("preferred float width: %d\n", device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>());
-            printf("vendor: %s\n", device.getInfo<CL_DEVICE_VENDOR>().c_str());
+            //printf("vendor: %s\n", device.getInfo<CL_DEVICE_VENDOR>().c_str());
 
 
             //printf("Device extensions: %s\n", ext.c_str());

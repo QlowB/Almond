@@ -18,7 +18,6 @@ find_package(OpenMP)
 #set(Boost_DEBUG 1)
 set(Boost_USE_STATIC_LIBS ON)
 set(ASMJIT_STATIC ON)
-set(ASMJIT_EMBED ON)
 find_package(Boost 1.65 REQUIRED)
 
 
@@ -78,12 +77,9 @@ target_include_directories(qd PUBLIC qd-2.3.22/include qd-2.3.22)
 target_link_libraries(mandel PUBLIC qd)
 
 if(WITH_ASMJIT)
-    set(ASMJIT_LIBS "" PARENT_SCOPE)
     add_subdirectory(asmjit)
-    message("depps " ${ASMJIT_LIBS})
     target_compile_definitions(mandel PUBLIC WITH_ASMJIT)
-    target_link_libraries(mandel PUBLIC asmjit)
-    target_link_libraries(mandel PRIVATE ${ASMJIT_LIBS})
+    target_link_libraries(mandel PUBLIC AsmJit::AsmJit)
 endif(WITH_ASMJIT)
 
 

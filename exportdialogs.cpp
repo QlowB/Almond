@@ -57,7 +57,7 @@ void ExportImageDialog::on_pushButton_clicked()
         formatString += "PNG image (*.png);;";
     }
     if (alm::supportsImageFormat(alm::ImageFormat::JPEG)) {
-        formatString += "JPEG image (*.jpg *.jpeg)";
+        formatString += "JPEG image (*.jpg *.jpeg);;";
     }
     if (alm::supportsImageFormat(alm::ImageFormat::BMP)) {
         formatString += "BMP image (*.bmp *.dib);;";

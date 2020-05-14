@@ -16,7 +16,7 @@ ImageExportTask::ImageExportTask(const alm::ImageExportInfo& iei) :
 void ImageExportTask::run(void)
 {
     try {
-        alm::exportPng(iei, [this](float percentage) {
+        alm::exportImage(iei, [this](float percentage) {
             emit progress(percentage);
         });
         emit finished(true, "Image successfully exported.");

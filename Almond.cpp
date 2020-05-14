@@ -251,6 +251,7 @@ void Almond::on_exportImage_clicked()
         iei.generator = &g;
         iei.gradient = mw->getGradient();
         iei.path = dialog.getPath().toStdString();
+        iei.options.jpegQuality = 20;
         submitBackgroundTask(new ImageExportTask(iei));
 
         /*auto exprt = [iei, path = dialog.getPath().toStdString()]() {

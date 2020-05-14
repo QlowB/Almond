@@ -92,6 +92,12 @@ void Almond::submitBackgroundTask(BackgroundTask* task)
     //}
 }
 
+
+void Almond::stopBackgroundTask(void)
+{
+    stoppingBackgroundTasks = true;
+}
+
 bool Almond::eventFilter(QObject *target, QEvent *event)
 {
     if (event->type() == QEvent::KeyPress) {
@@ -138,6 +144,7 @@ void Almond::backgroundTaskFinished(bool succ, QString message)
     ui.backgroundProgress->setFormat("");
     ui.backgroundProgress->setEnabled(false);
     ui.cancelProgress->setEnabled(false);
+    stoppingBackgroundTasks = false;
 }
 
 
@@ -256,7 +263,7 @@ void Almond::on_exportImage_clicked()
         iei.gradient = mw->getGradient();
         iei.path = dialog.getPath().toStdString();
         iei.options.jpegQuality = 95;
-        submitBackgroundTask(new ImageExportTask(iei));
+        submitBackgroundTask(new ImageExportTask(iei, [this] () { return stoppingBackgroundTasks; }));
 
         /*auto exprt = [iei, path = dialog.getPath().toStdString()]() {
             alm::exportPng(path, iei);
@@ -337,11 +344,6 @@ void Almond::pointSelected(mnd::Real x, mnd::Real y)
     currentView = JULIA;
 }
 
-
-void Almond::on_groupBox_toggled(bool arg1)
-{
-    printf("arg1: %i\n", int(arg1)); fflush(stdout);
-}
 
 void Almond::on_wMandel_clicked()
 {
@@ -431,6 +433,7 @@ void Almond::on_radioButton_2_toggled(bool checked)
     }
 }
 
+
 void Almond::on_createCustom_clicked()
 {
     auto response = customGeneratorDialog->exec();
@@ -443,4 +446,10 @@ void Almond::on_createCustom_clicked()
         this->ui.radioButton_2->setChecked(true);
         setViewType(CUSTOM);
     }
+}
+
+
+void Almond::on_cancelProgress_clicked()
+{
+    stopBackgroundTask();
 }

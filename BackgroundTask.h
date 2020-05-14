@@ -13,8 +13,9 @@ class BackgroundTask : public QObject, public QRunnable
     Q_OBJECT
 protected:
     std::string shortDescription;
+    std::function<bool(void)> stopCallback;
 public:
-    BackgroundTask(const std::string& shortDescription);
+    BackgroundTask(const std::string& shortDescription, std::function<bool(void)> stopCallback = [] () { return false; });
 
     void run(void) = 0;
 
@@ -32,7 +33,7 @@ class ImageExportTask : public BackgroundTask
 private:
     const alm::ImageExportInfo iei;
 public:
-    ImageExportTask(const alm::ImageExportInfo& iei);
+    ImageExportTask(const alm::ImageExportInfo& iei, std::function<bool(void)> stopCallback = [] () { return false; });
 
     void run(void) override;
 };

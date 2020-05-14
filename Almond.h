@@ -35,6 +35,7 @@ class Almond : public QMainWindow
 private:
     mnd::MandelContext mandelContext;
     QThreadPool backgroundTasks;
+    bool stoppingBackgroundTasks = false;
 
 
     bool fullscreenMode = false;
@@ -62,6 +63,7 @@ public:
     ~Almond(void);
 
     void submitBackgroundTask(BackgroundTask* task);
+    void stopBackgroundTask();
 
     bool eventFilter(QObject *target, QEvent *event);
 public slots:
@@ -87,8 +89,6 @@ private slots:
 
     void on_wMandel_toggled(bool checked);
 
-    void on_groupBox_toggled(bool arg1);
-
     void saveView(void);
     void setViewType(ViewType v);
 
@@ -96,6 +96,7 @@ private slots:
     void on_radioButton_toggled(bool checked);
     void on_radioButton_2_toggled(bool checked);
     void on_createCustom_clicked();
+    void on_cancelProgress_clicked();
 
 private:
     Ui::AlmondClass ui;

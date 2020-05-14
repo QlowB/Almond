@@ -1,13 +1,14 @@
 #include "BackgroundTask.h"
 
-BackgroundTask::BackgroundTask(const std::string& shortDescription) :
-    shortDescription{ shortDescription }
+BackgroundTask::BackgroundTask(const std::string& shortDescription, std::function<bool(void)> stopCallback) :
+    shortDescription{ shortDescription },
+    stopCallback{ std::move(stopCallback) }
 {
 }
 
 
-ImageExportTask::ImageExportTask(const alm::ImageExportInfo& iei) :
-    BackgroundTask{ "Exporting Image" },
+ImageExportTask::ImageExportTask(const alm::ImageExportInfo& iei, std::function<bool(void)> stopCallback) :
+    BackgroundTask{ "Exporting Image", std::move(stopCallback) },
     iei{ iei }
 {
 }
@@ -18,7 +19,7 @@ void ImageExportTask::run(void)
     try {
         alm::exportImage(iei, [this](float percentage) {
             emit progress(percentage);
-        });
+        }, stopCallback);
         emit finished(true, "Image successfully exported.");
     }
     catch (alm::ImageExportException& ex) {

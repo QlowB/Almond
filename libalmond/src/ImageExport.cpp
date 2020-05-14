@@ -1,10 +1,13 @@
 #include "ImageExport.h"
 #include "Bitmap.h"
 #include <boost/endian/buffers.hpp>
+#include <cstdio>
+
+#ifdef WITH_LIBPNG
 extern "C" {
 #   include <png.h>
 }
-#include <cstdio>
+#endif // WITH_LIBPNG
 
 #ifdef WITH_LIBJPEG
 extern "C" {
@@ -12,16 +15,35 @@ extern "C" {
 }
 #endif // WITH_LIBJPEG
 
+
 namespace alm
 {
+
+#ifdef WITH_LIBPNG
+void exportPng(const ImageExportInfo& iei,
+    std::function<void(float)> progressCallback,
+    std::function<bool(void)> cancelCallback);
+#endif // WITH_LIBPNG
+
+#ifdef WITH_LIBJPEG
+void exportJpeg(const ImageExportInfo& iei,
+    std::function<void(float)> progressCallback,
+    std::function<bool(void)> cancelCallback);
+#endif // WITH_LIBJPEG
+
+void exportBmp(const ImageExportInfo& iei,
+    std::function<void(float)> progressCallback,
+    std::function<bool(void)> cancelCallback);
 
 
 const std::vector<ImageFormat> supportedImageFormats = {
     ImageFormat::BMP,
+#ifdef WITH_LIBPNG
     ImageFormat::PNG,
+#endif // WITH_LIBPNG
 #ifdef WITH_LIBJPEG
     ImageFormat::JPEG,
-#endif
+#endif // WITH_LIBJPEG
 };
 
 bool supportsImageFormat(ImageFormat imgf)
@@ -38,7 +60,9 @@ ImageExportException::ImageExportException(const std::string& err) :
 {
 }
 
-void exportImage(const ImageExportInfo& iei, std::function<void(float)> progressCallback)
+void exportImage(const ImageExportInfo& iei,
+                 std::function<void(float)> progressCallback,
+                 std::function<bool(void)> cancelCallback)
 {
     auto hasSuffix = [] (const std::string& path, const std::string& suffix) -> bool
     {
@@ -48,15 +72,17 @@ void exportImage(const ImageExportInfo& iei, std::function<void(float)> progress
     };
     if (hasSuffix(iei.path, ".bmp") ||
         hasSuffix(iei.path, ".dib")) {
-        exportBmp(iei, progressCallback);
+        exportBmp(iei, progressCallback, cancelCallback);
     }
+#ifdef WITH_LIBPNG
     else if (hasSuffix(iei.path, ".png")) {
-        exportPng(iei, progressCallback);
+        exportPng(iei, progressCallback, cancelCallback);
     }
+#endif // WITH_LIBPNG
 #ifdef WITH_LIBJPEG
     else if (hasSuffix(iei.path, ".jpg") ||
              hasSuffix(iei.path, ".jpeg")) {
-        exportJpeg(iei, progressCallback);
+        exportJpeg(iei, progressCallback, cancelCallback);
     }
 #endif // WITH_LIBJPEG
     else {
@@ -64,7 +90,11 @@ void exportImage(const ImageExportInfo& iei, std::function<void(float)> progress
     }
 }
 
-void exportPng(const ImageExportInfo& iei, std::function<void(float)> progressCallback)
+
+#ifdef WITH_LIBPNG
+void exportPng(const ImageExportInfo& iei,
+               std::function<void(float)> progressCallback,
+               std::function<bool(void)> cancelCallback)
 {
     if (iei.generator == nullptr) {
         throw "no generator";
@@ -132,6 +162,12 @@ void exportPng(const ImageExportInfo& iei, std::function<void(float)> progressCa
         png_write_rows(png, &rowPointers[0], tmpHeight);
         if (chunkY < height)
             progressCallback(100.0f * chunkY / height);
+
+        if (cancelCallback()) {
+            fclose(file);
+            png_destroy_write_struct(&png, &info);
+            return;
+        }
     }
 
     png_write_end(png, NULL);
@@ -141,10 +177,13 @@ void exportPng(const ImageExportInfo& iei, std::function<void(float)> progressCa
     png_destroy_write_struct(&png, &info);
     progressCallback(100.0f);
 }
+#endif // WITH_LIBPNG
 
 
 #ifdef WITH_LIBJPEG
-void exportJpeg(const ImageExportInfo& iei, std::function<void(float)> progressCallback)
+void exportJpeg(const ImageExportInfo& iei,
+                std::function<void(float)> progressCallback,
+                std::function<bool(void)> cancelCallback)
 {
     if (iei.generator == nullptr) {
         throw "no generator";
@@ -214,6 +253,12 @@ void exportJpeg(const ImageExportInfo& iei, std::function<void(float)> progressC
         }
         if (chunkY < height)
             progressCallback(100.0f * chunkY / height);
+
+        if (cancelCallback()) {
+            fclose(file);
+            jpeg_destroy_compress(&jpegInfo);
+            return;
+        }
     }
 
     jpeg_finish_compress(&jpegInfo);
@@ -225,7 +270,9 @@ void exportJpeg(const ImageExportInfo& iei, std::function<void(float)> progressC
 #endif // WITH_LIBJPEG
 
 
-void exportBmp(const ImageExportInfo& iei, std::function<void(float)> progressCallback)
+void exportBmp(const ImageExportInfo& iei,
+               std::function<void(float)> progressCallback,
+               std::function<bool(void)> cancelCallback)
 {
     if (iei.generator == nullptr) {
         throw "no generator";
@@ -343,6 +390,11 @@ void exportBmp(const ImageExportInfo& iei, std::function<void(float)> progressCa
         }
         if (chunkY < height)
             progressCallback(100.0f * chunkY / height);
+
+        if (cancelCallback()) {
+            fclose(file);
+            return;
+        }
     }
 
     fflush(file);

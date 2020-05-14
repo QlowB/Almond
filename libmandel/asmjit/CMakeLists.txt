@@ -403,18 +403,20 @@ if (NOT ASMJIT_EMBED)
   # Add AsmJit::AsmJit target (alias to asmjit).
   add_library(AsmJit::AsmJit ALIAS asmjit)
 
-  # Install 'asmjit' target (shared or static).
-  install(TARGETS asmjit RUNTIME DESTINATION "bin"
-                         LIBRARY DESTINATION "lib${LIB_SUFFIX}"
-                         ARCHIVE DESTINATION "lib${LIB_SUFFIX}")
-
-  # Install 'asmjit' header files (private headers are filtered out).
-  foreach(_src_file ${ASMJIT_SRC_LIST})
-    if ("${_src_file}" MATCHES "\\.h$" AND NOT "${_src_file}" MATCHES "_p\\.h$")
-      get_filename_component(_src_dir ${_src_file} PATH)
-      install(FILES "${ASMJIT_DIR}/src/${_src_file}" DESTINATION "include/${_src_dir}")
-    endif()
-  endforeach()
+  if (MANDEL_INSTALL_ASMJIT)
+    # Install 'asmjit' target (shared or static).
+    install(TARGETS asmjit RUNTIME DESTINATION "bin"
+                           LIBRARY DESTINATION "lib${LIB_SUFFIX}"
+                           ARCHIVE DESTINATION "lib${LIB_SUFFIX}")
+  
+    # Install 'asmjit' header files (private headers are filtered out).
+    foreach(_src_file ${ASMJIT_SRC_LIST})
+      if ("${_src_file}" MATCHES "\\.h$" AND NOT "${_src_file}" MATCHES "_p\\.h$")
+        get_filename_component(_src_dir ${_src_file} PATH)
+        install(FILES "${ASMJIT_DIR}/src/${_src_file}" DESTINATION "include/${_src_dir}")
+      endif()
+    endforeach()
+  endif(MANDEL_INSTALL_ASMJIT)
 
   # Add 'asmjit' tests.
   if (ASMJIT_TEST)

@@ -35,20 +35,22 @@ Almond::Almond(QWidget* parent) :
     QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
     ui.mandel_container->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
-    ui.backgroundProgress->setVisible(false);
+
+    ui.backgroundProgress->setEnabled(false);
+    ui.cancelProgress->setEnabled(false);
 
 
-    QStatusBar* bar = new QStatusBar(this);
+    /*QStatusBar* bar = new QStatusBar(this);
     bar->addWidget(new QLabel("ayay"));
     auto* p = new QPushButton("About");
     bar->addPermanentWidget(p);
     QObject::connect(p, &QPushButton::clicked, [this]() {
-        /*QThread::sleep(2);
-        ui.mandel_container->addWidget(this->takeCentralWidget());
-        emit this->showNormal();*/
         toggleFullscreen();
     });
-    ui.mainContainer->addWidget(bar);
+    bar->setFixedHeight(bar->sizeHint().height());
+    //ui.mainContainer->addWidget(bar);
+    this->setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
+    this->setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);*/
 
     installEventFilter(this);
 
@@ -84,8 +86,9 @@ void Almond::submitBackgroundTask(BackgroundTask* task)
     backgroundTasks.start(task);
     //if (taken) {
         ui.backgroundProgress->setRange(0, 0);
-        ui.backgroundProgress->setVisible(true);
         ui.backgroundProgress->setFormat("");
+        ui.backgroundProgress->setEnabled(true);
+        ui.cancelProgress->setEnabled(true);
     //}
 }
 
@@ -132,8 +135,9 @@ void Almond::backgroundTaskFinished(bool succ, QString message)
         emit info.exec();
     }
 
-    ui.backgroundProgress->setVisible(false);
     ui.backgroundProgress->setFormat("");
+    ui.backgroundProgress->setEnabled(false);
+    ui.cancelProgress->setEnabled(false);
 }
 
 
@@ -251,7 +255,7 @@ void Almond::on_exportImage_clicked()
         iei.generator = &g;
         iei.gradient = mw->getGradient();
         iei.path = dialog.getPath().toStdString();
-        iei.options.jpegQuality = 20;
+        iei.options.jpegQuality = 95;
         submitBackgroundTask(new ImageExportTask(iei));
 
         /*auto exprt = [iei, path = dialog.getPath().toStdString()]() {

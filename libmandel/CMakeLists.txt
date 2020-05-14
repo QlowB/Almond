@@ -2,16 +2,17 @@ cmake_minimum_required(VERSION 3.12)
 
 include(CheckCXXCompilerFlag)
 
-set(ARCH "X86_64" CACHE STRING "Target Architecture")
-option(AVX512 "generate code that can make use of avx-512-instructions" ON)
-option(WITH_ASMJIT "use just-in-time-compilation capabilities of asmjit" ON)
+project(mandel VERSION 1.0.0 DESCRIPTION "library for mandelbrot calculations")
+
+set(MANDEL_TARGET_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "Target Architecture")
+option(MANDEL_AVX512 "generate code that can make use of avx-512-instructions" ON)
+option(MANDEL_ASMJIT "use just-in-time-compilation library asmjit" ON)
 option(MANDEL_BUILD_NATIVE
 	"use the -march=native flags if supported WARNING: when compiling with this flag, the binary might not run on machines other than the one it was compiled on"
 	OFF)
 
 #message(CMAKE_SYSTEM_PROCESSOR)
 
-project(mandel VERSION 1.0.0 DESCRIPTION "library for mandelbrot calculations")
 
 find_package(OpenCL REQUIRED)
 find_package(OpenMP)
@@ -42,12 +43,12 @@ SET(MandelSources
 )
 FILE(GLOB MandelHeaders include/*.h)
 
-if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
+if (MANDEL_TARGET_ARCHITECTURE STREQUAL "x86_64" OR MANDEL_TARGET_ARCHITECTURE STREQUAL "x86")
     list(APPEND MandelSources src/CpuGeneratorsAVX.cpp src/CpuGeneratorsAVXFMA.cpp src/CpuGeneratorsSSE2.cpp)
-    if (AVX512)
+    if (MANDEL_AVX512)
         list(APPEND MandelSources src/CpuGeneratorsAVX512.cpp)
     endif()
-elseif(ARCH STREQUAL "ARM")
+elseif(MANDEL_TARGET_ARCHITECTURE STREQUAL "aarch64")
     list(APPEND MandelSources src/CpuGeneratorsNeon.cpp)
 endif()
 
@@ -76,11 +77,11 @@ target_include_directories(qd PUBLIC qd-2.3.22/include qd-2.3.22)
 
 target_link_libraries(mandel PUBLIC qd)
 
-if(WITH_ASMJIT)
+if(MANDEL_ASMJIT)
     add_subdirectory(asmjit)
-    target_compile_definitions(mandel PUBLIC WITH_ASMJIT)
+    target_compile_definitions(mandel PUBLIC MANDEL_ASMJIT)
     target_link_libraries(mandel PUBLIC AsmJit::AsmJit)
-endif(WITH_ASMJIT)
+endif(MANDEL_ASMJIT)
 
 
 if(OPENCL_FOUND)
@@ -107,8 +108,8 @@ if(Boost_FOUND)
     target_link_libraries(mandel PRIVATE ${Boost_LIBRARIES})
 endif(Boost_FOUND)
 
-if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
-    if (AVX512)
+if (MANDEL_TARGET_ARCHITECTURE STREQUAL "x86_64" OR MANDEL_TARGET_ARCHITECTURE STREQUAL "x86")
+    if (MANDEL_AVX512)
         target_compile_definitions(mandel PUBLIC WITH_AVX512)
         if (MSVC)
             set_source_files_properties(src/CpuGeneratorsAVX512.cpp PROPERTIES COMPILE_FLAGS /arch:AVX512F)
@@ -127,6 +128,6 @@ if (ARCH STREQUAL "X86_64" OR ARCH STREQUAL "X86")
         set_source_files_properties(src/CpuGeneratorsSSE2.cpp PROPERTIES COMPILE_FLAGS -msse2)
     endif(MSVC)
 
-elseif(ARCH STREQUAL "ARM")
+elseif(MANDEL_TARGET_ARCHITECTURE STREQUAL "aarch64")
     set_source_files_properties(src/CpuGeneratorsNeon.cpp PROPERTIES COMPILE_FLAGS -march=armv8-a+simd)
 endif()

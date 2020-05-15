@@ -112,9 +112,10 @@ void AlmondMenuWidget::showMainMenu(void)
     ag->addAnimation(mm);
     ag->addAnimation(rw);
 
-    connect(ag, &QParallelAnimationGroup::finished, [this] () { rightWidget->hide(); });
-    mainMenu->show();
+    connect(ag, &QParallelAnimationGroup::finished, [this] () { emit rightWidget->hide(); });
 
+    mainMenu->setGeometry(rightWidget->geometry().adjusted(-width(), 0, -width(), 0));
+    emit mainMenu->show();
     emit ag->start();
 }
 
@@ -144,7 +145,8 @@ void AlmondMenuWidget::showSubMenu(int index)
     connect(ag, &QParallelAnimationGroup::finished, [this] () { mainMenu->hide(); });
 
     subMenuContainer->setCurrentIndex(index);
-    rightWidget->show();
 
+    rightWidget->setGeometry(mainMenu->geometry().adjusted(width(), 0, width(), 0));
+    emit rightWidget->setVisible(true);
     emit ag->start();
 }

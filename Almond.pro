@@ -27,9 +27,12 @@ CONFIG += c++17
 
 SOURCES += \
         Almond.cpp \
+        AlmondMenuWidget.cpp \
         BackgroundTask.cpp \
         Color.cpp \
         CubicSpline.cpp \
+        ExportImageMenu.cpp \
+        ExportVideoMenu.cpp \
         Gradient.cpp \
         GradientWidget.cpp \
         MandelWidget.cpp \
@@ -42,9 +45,12 @@ SOURCES += \
 
 HEADERS += \
         Almond.h \
+        AlmondMenuWidget.h \
         BackgroundTask.h \
         Color.h \
         CubicSpline.h \
+        ExportImageMenu.h \
+        ExportVideoMenu.h \
         Gradient.h \
         GradientWidget.h \
         MandelWidget.h \
@@ -56,6 +62,8 @@ HEADERS += \
 
 FORMS += \
         Almond.ui \
+        ExportImageMenu.ui \
+        ExportVideoMenu.ui \
         choosegenerators.ui \
         customgenerator.ui \
         exportimagedialog.ui \
@@ -128,9 +136,9 @@ unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 RESOURCES += Almond.qrc \
     splash.qrc
 
-win32:LIBS += -llibpng16_static -lzlibstatic
+win32:LIBS += -llibpng16_static -lzlibstatic -ljpeg
 unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond
-unix: LIBS += -lrt -lpng -lavcodec -lavdevice -lavformat -lavutil -lswscale -lavfilter
+unix: LIBS += -lrt -lpng -ljpeg -lavcodec -lavdevice -lavformat -lavutil -lswscale -lavfilter
 
 INCLUDEPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include
 DEPENDPATH += $$PWD/libmandel/include $$PWD/libmandel/qd-2.3.22/include $$PWD/libalmond/include

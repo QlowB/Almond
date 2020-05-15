@@ -1,4 +1,6 @@
 #pragma once
+#ifndef ALMOND_H
+#define ALMOND_H
 
 #include <QtWidgets/QMainWindow>
 #include "ui_Almond.h"
@@ -10,7 +12,11 @@
 #include "gradientchoosedialog.h"
 #include "choosegenerators.h"
 #include "customgenerator.h"
-//#include "benchmarkdialog.h"
+
+#include "AlmondMenuWidget.h"
+#include "ExportImageMenu.h"
+#include "ExportVideoMenu.h"
+
 
 #include <memory>
 
@@ -37,6 +43,9 @@ private:
     QThreadPool backgroundTasks;
     bool stoppingBackgroundTasks = false;
 
+    AlmondMenuWidget* amw;
+    ExportImageMenu* eim;
+    ExportVideoMenu* evm;
 
     bool fullscreenMode = false;
     QWidget* cw;
@@ -66,6 +75,9 @@ public:
     void stopBackgroundTask();
 
     bool eventFilter(QObject *target, QEvent *event);
+
+    void imageExportOk(void);
+    void videoExportOk(void);
 public slots:
     void toggleFullscreen(void);
 private slots:
@@ -102,3 +114,5 @@ private:
     Ui::AlmondClass ui;
 };
 
+
+#endif // ALMOND_H

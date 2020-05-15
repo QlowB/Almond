@@ -27,7 +27,6 @@ Almond::Almond(QWidget* parent) :
     on_maxIterations_editingFinished();
     mw->setSmoothColoring(ui.smooth->isChecked());
 
-
     currentView = MANDELBROT;
     mandelGenerator = &mandelContext.getDefaultGenerator();
     mandelViewSave = mw->getViewport();
@@ -39,6 +38,26 @@ Almond::Almond(QWidget* parent) :
     ui.backgroundProgress->setEnabled(false);
     ui.cancelProgress->setEnabled(false);
 
+    amw = new AlmondMenuWidget(this);
+    amw->setMainMenu(ui.dockWidgetContents_2);
+    eim = new ExportImageMenu();
+    evm = new ExportVideoMenu();
+    amw->addSubMenu(eim);
+    amw->addSubMenu(evm);
+    ui.dockWidget_2->setWidget(amw);
+
+    connect(amw, &AlmondMenuWidget::submenuCancel, [this] (int) {amw->showMainMenu();});
+    connect(amw, &AlmondMenuWidget::submenuOK, [this] (int smIndex) {
+        switch(smIndex) {
+        case 0:
+            emit imageExportOk();
+            break;
+        case 1:
+            emit videoExportOk();
+            break;
+        }
+        amw->showMainMenu();
+    });
 
     /*QStatusBar* bar = new QStatusBar(this);
     bar->addWidget(new QLabel("ayay"));
@@ -110,6 +129,54 @@ bool Almond::eventFilter(QObject *target, QEvent *event)
 }
 
 
+void Almond::imageExportOk(void)
+{
+    mnd::MandelInfo mi;
+    mi.maxIter = eim->getMaxIterations();
+    mi.view = mw->getViewport();
+    mi.bWidth = eim->getWidth();
+    mi.bHeight = eim->getHeight();
+    mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
+    mi.smooth = mw->getSmoothColoring();
+    if (currentView == JULIA) {
+        mi.julia = mw->getMandelInfo().julia;
+        mi.juliaX = mw->getJuliaX();
+        mi.juliaY = mw->getJuliaY();
+    }
+
+    mnd::MandelGenerator* currentGenerator = mw->getGenerator();
+    mnd::MandelGenerator& g = currentGenerator ? *currentGenerator : mandelContext.getDefaultGenerator();
+
+    alm::ImageExportInfo iei;
+    iei.drawInfo = mi;
+    iei.generator = &g;
+    iei.gradient = mw->getGradient();
+    iei.path = eim->getPath().toStdString();
+    iei.options.jpegQuality = 95;
+    submitBackgroundTask(new ImageExportTask(iei, [this] () { return stoppingBackgroundTasks; }));
+}
+
+
+void Almond::videoExportOk(void)
+{
+    ExportVideoInfo evi = evm->getInfo();
+    evi.start = mnd::MandelViewport::standardView();
+    evi.end = mw->getViewport();
+    evi.gradient = mw->getGradient();
+    evi.mi = mw->getMandelInfo();
+    if (evi.path == "") {
+        QMessageBox* errMsg = new QMessageBox(QMessageBox::Icon::Critical, "Error", "No path specified.");
+        errMsg->setParent(this);
+        emit errMsg->exec();
+    }
+    else {
+        MandelVideoGenerator mvg(evi);
+        mnd::MandelGenerator& g = *mw->getGenerator();
+        submitBackgroundTask(new VideoExportTask(std::move(mvg), g));
+    }
+}
+
+
 void Almond::toggleFullscreen(void)
 {
     if (fullscreenMode) {
@@ -141,7 +208,7 @@ void Almond::backgroundTaskFinished(bool succ, QString message)
         emit info.exec();
     }
 
-    ui.backgroundProgress->setFormat("");
+    ui.backgroundProgress->setFormat(tr("Export Progress"));
     ui.backgroundProgress->setEnabled(false);
     ui.cancelProgress->setEnabled(false);
     stoppingBackgroundTasks = false;
@@ -197,6 +264,9 @@ void Almond::on_chooseGradient_clicked()
 
 void Almond::on_exportVideo_clicked()
 {
+    evm->setEndViewport(mw->getViewport());
+    this->amw->showSubMenu(1);
+    return;
     ExportVideoInfo evi;
     evi.start = mnd::MandelViewport::standardView();
     evi.end = mw->getViewport();
@@ -237,6 +307,9 @@ void Almond::on_smooth_stateChanged(int checked)
 
 void Almond::on_exportImage_clicked()
 {
+    this->amw->showSubMenu(0);
+    return;
+
     ExportImageDialog dialog(this);
     dialog.setMaxIterations(mw->getMaxIterations());
     //dialog.show();

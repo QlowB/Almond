@@ -76,6 +76,7 @@ public:
 
     bool eventFilter(QObject *target, QEvent *event);
 
+    void submenuOK(int smIndex);
     void imageExportOk(void);
     void videoExportOk(void);
 public slots:

@@ -47,17 +47,8 @@ Almond::Almond(QWidget* parent) :
     ui.dockWidget_2->setWidget(amw);
 
     connect(amw, &AlmondMenuWidget::submenuCancel, [this] (int) {amw->showMainMenu();});
-    connect(amw, &AlmondMenuWidget::submenuOK, [this] (int smIndex) {
-        switch(smIndex) {
-        case 0:
-            emit imageExportOk();
-            break;
-        case 1:
-            emit videoExportOk();
-            break;
-        }
-        amw->showMainMenu();
-    });
+    connect(amw, &AlmondMenuWidget::submenuOK, this, &Almond::submenuOK);
+            
 
     /*QStatusBar* bar = new QStatusBar(this);
     bar->addWidget(new QLabel("ayay"));
@@ -129,6 +120,19 @@ bool Almond::eventFilter(QObject *target, QEvent *event)
 }
 
 
+void Almond::submenuOK(int smIndex)
+{
+    switch(smIndex) {
+    case 0:
+        emit imageExportOk();
+        break;
+    case 1:
+        emit videoExportOk();
+        break;
+    }
+    amw->showMainMenu();
+}
+
 void Almond::imageExportOk(void)
 {
     mnd::MandelInfo mi;
@@ -159,15 +163,14 @@ void Almond::imageExportOk(void)
 
 void Almond::videoExportOk(void)
 {
-    ExportVideoInfo evi = evm->getInfo();
+    ExportVideoInfo evi;// = evm->getInfo();
     evi.start = mnd::MandelViewport::standardView();
     evi.end = mw->getViewport();
     evi.gradient = mw->getGradient();
     evi.mi = mw->getMandelInfo();
     if (evi.path == "") {
-        QMessageBox* errMsg = new QMessageBox(QMessageBox::Icon::Critical, "Error", "No path specified.");
-        errMsg->setParent(this);
-        emit errMsg->exec();
+        QMessageBox errMsg = QMessageBox(QMessageBox::Icon::Critical, "Error", "No path specified.");
+        errMsg.exec();
     }
     else {
         MandelVideoGenerator mvg(evi);

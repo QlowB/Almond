@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1202</width>
-    <height>1262</height>
+    <height>691</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -97,12 +97,6 @@
            <layout class="QFormLayout" name="formLayout">
             <item row="0" column="0" colspan="2">
              <widget class="QPushButton" name="chooseGradient">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
               <property name="text">
                <string>Choose Gradient</string>
               </property>
@@ -117,12 +111,6 @@
             </item>
             <item row="1" column="1">
              <widget class="QLineEdit" name="maxIterations">
-              <property name="minimumSize">
-               <size>
-                <width>70</width>
-                <height>0</height>
-               </size>
-              </property>
               <property name="text">
                <string>500</string>
               </property>
@@ -133,12 +121,6 @@
             </item>
             <item row="2" column="0" colspan="2">
              <widget class="QCheckBox" name="smooth">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
               <property name="text">
                <string>smooth coloring</string>
               </property>
@@ -149,12 +131,6 @@
             </item>
             <item row="3" column="0" colspan="2">
              <widget class="QCheckBox" name="displayInfo">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
               <property name="text">
                <string>display scale</string>
               </property>
@@ -252,12 +228,6 @@
            <widget class="QProgressBar" name="backgroundProgress">
             <property name="enabled">
              <bool>true</bool>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
             </property>
             <property name="maximum">
              <number>1</number>

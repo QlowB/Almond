@@ -90,6 +90,8 @@ ExportVideoInfo ExportVideoMenu::getInfo(void) const
 
     evi.start.adjustAspectRatio(evi.mi.bWidth, evi.mi.bHeight);
     evi.end.adjustAspectRatio(evi.mi.bWidth, evi.mi.bHeight);
+
+    return evi;
 }
 
 

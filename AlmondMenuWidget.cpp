@@ -1,20 +1,25 @@
 #include "AlmondMenuWidget.h"
 #include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QResizeEvent>
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
 
 AlmondMenuWidget::AlmondMenuWidget(QWidget* parent) :
-    QWidget{ parent },
+    QFrame{ parent },
     mainMenu{ nullptr }
 {
-    QVBoxLayout* layout = new QVBoxLayout(this);
-    layout->setMargin(0);
-
+    this->setContentsMargins(0, 0, 0, 0);
     rightWidget = new QWidget(this);
-    subMenuContainer = new QStackedWidget(this);
-    rightOK = new QPushButton("OK", this);
-    rightCancel = new QPushButton("Cancel", this);
+    subMenuContainer = new QStackedWidget(rightWidget);
+    rightOK = new QPushButton("OK", rightWidget);
+    rightCancel = new QPushButton("Cancel", rightWidget);
     subMenuContainer->setContentsMargins(0, 0, 0, 0);
+    subMenuContainer->setLayout(new QVBoxLayout());
+
+    leftWidget = new QWidget(this);
+    QVBoxLayout* mainLayout = new QVBoxLayout(leftWidget);
+    mainLayout->setMargin(0);
 
     QVBoxLayout* smlayout = new QVBoxLayout(rightWidget);
     smlayout->addWidget(subMenuContainer, 1);
@@ -26,8 +31,24 @@ AlmondMenuWidget::AlmondMenuWidget(QWidget* parent) :
     connect(rightCancel, &QPushButton::clicked,
             this, &AlmondMenuWidget::clickedRightCancel);
 
-    layout->addWidget(rightWidget);
-    rightWidget->hide();
+    //layout->addWidget(rightWidget);
+    //layout->addWidget(leftWidget);
+    rightWidget->setVisible(false);
+
+    /*states = new QStateMachine(this);
+    QState* mainMenuShow = new QState(states);
+    QState* subMenuShow = new QState(states);
+
+    mainMenuShow->assignProperty(leftWidget, "visible", true);
+    mainMenuShow->assignProperty(rightWidget, "visible", false);
+
+    subMenuShow->assignProperty(leftWidget, "visible", false);
+    subMenuShow->assignProperty(leftWidget, "pos", QPoint(100, 100));
+    subMenuShow->assignProperty(rightWidget, "visible", true);
+
+    mainMenuShow->addTransition(this, SIGNAL(showLeft()), subMenuShow);
+    subMenuShow->addTransition(this, SIGNAL(showRight()), mainMenuShow);
+    states->start();*/
 }
 
 
@@ -35,7 +56,7 @@ void AlmondMenuWidget::setMainMenu(QWidget* mainMenu)
 {
     //mainMenu->setParent(this);
     this->mainMenu = mainMenu;
-    this->layout()->addWidget(mainMenu);
+    leftWidget->layout()->addWidget(mainMenu);
 }
 
 
@@ -49,8 +70,7 @@ void AlmondMenuWidget::addSubMenu(QWidget* subMenu)
 QSize AlmondMenuWidget::sizeHint(void) const
 {
     QSize hint{ 0, 0 };
-    if (mainMenu)
-        hint = mainMenu->sizeHint();
+    hint = leftWidget->sizeHint();
     for (auto& widget : subMenus) {
         QSize widgetHint = widget->sizeHint();
         if (hint.width() < widgetHint.width())
@@ -65,8 +85,7 @@ QSize AlmondMenuWidget::sizeHint(void) const
 QSize AlmondMenuWidget::minimumSizeHint(void) const
 {
     QSize hint{ 0, 0 };
-    if (mainMenu)
-        hint = mainMenu->minimumSizeHint();
+    hint = leftWidget->minimumSizeHint();
     for (auto& widget : subMenus) {
         QSize widgetHint = widget->minimumSizeHint();
         if (hint.width() < widgetHint.width())
@@ -75,6 +94,17 @@ QSize AlmondMenuWidget::minimumSizeHint(void) const
             hint.setHeight(widgetHint.height());
     }
     return hint;
+}
+
+
+void AlmondMenuWidget::resizeEvent(QResizeEvent* event)
+{
+    QRect leftGeom = contentsRect();
+    QRect rightGeom = contentsRect();
+    //leftGeom.setSize(event->size());
+    //rightGeom.setSize(event->size());
+    leftWidget->setGeometry(leftGeom);
+    rightWidget->setGeometry(rightGeom);
 }
 
 
@@ -87,22 +117,24 @@ void AlmondMenuWidget::clickedRightOK(void)
 void AlmondMenuWidget::clickedRightCancel(void)
 {
     emit submenuCancel(subMenuContainer->currentIndex());
+    //submenuCancel(0);
 }
 
 
 void AlmondMenuWidget::showMainMenu(void)
 {
+    emit showLeft();
     if (!mainMenu)
         return;
     QParallelAnimationGroup* ag = new QParallelAnimationGroup(this);
-    QPropertyAnimation* mm = new QPropertyAnimation(mainMenu, "geometry", this);
+    QPropertyAnimation* mm = new QPropertyAnimation(leftWidget, "geometry", this);
     QPropertyAnimation* rw = new QPropertyAnimation(rightWidget, "geometry", this);
 
-    mm->setStartValue(rightWidget->geometry().adjusted(-width(), 0, -width(), 0));
-    mm->setEndValue(rightWidget->geometry());
+    mm->setStartValue(contentsRect().adjusted(-width(), 0, -width(), 0));
+    mm->setEndValue(contentsRect());
 
-    rw->setEndValue(rightWidget->geometry().adjusted(width(), 0, width(), 0));
-    rw->setStartValue(rightWidget->geometry());
+    rw->setEndValue(contentsRect().adjusted(width(), 0, width(), 0));
+    rw->setStartValue(contentsRect());
 
     mm->setEasingCurve(QEasingCurve::InOutSine);
     rw->setEasingCurve(QEasingCurve::InOutSine);
@@ -112,27 +144,45 @@ void AlmondMenuWidget::showMainMenu(void)
     ag->addAnimation(mm);
     ag->addAnimation(rw);
 
-    connect(ag, &QParallelAnimationGroup::finished, [this] () { emit rightWidget->hide(); });
+    connect(ag, &QParallelAnimationGroup::finished, [this] () {
+        emit rightWidget->hide();
+        leftWidget->setGeometry(contentsRect());
+    });
 
-    mainMenu->setGeometry(rightWidget->geometry().adjusted(-width(), 0, -width(), 0));
-    emit mainMenu->show();
-    emit ag->start();
+    leftWidget->setGeometry(rightWidget->geometry().adjusted(-width(), 0, -width(), 0));
+    emit leftWidget->show();
+    emit ag->start(QAbstractAnimation::DeleteWhenStopped);
 }
 
 
 void AlmondMenuWidget::showSubMenu(int index)
 {
+    subMenuContainer->setCurrentIndex(index);
+    /*while (subMenuContainer->layout()->count() > 0)
+        subMenuContainer->layout()->takeAt(0);
+    subMenuContainer->layout()->update();
+    rightWidget->setGeometry(leftWidget->geometry().adjusted(width(), 0, width(), 0));
+    //subMenuContainer->layout()->addWidget(subMenus.at(index));
+    subMenuContainer->layout()->update();*/
+
+    showSubMenu();
+}
+
+
+void AlmondMenuWidget::showSubMenu(void)
+{
+    emit showRight();
     if (!mainMenu)
-        return;
+    return;
     QParallelAnimationGroup* ag = new QParallelAnimationGroup(this);
-    QPropertyAnimation* mm = new QPropertyAnimation(mainMenu, "geometry", this);
+    QPropertyAnimation* mm = new QPropertyAnimation(leftWidget, "geometry", this);
     QPropertyAnimation* rw = new QPropertyAnimation(rightWidget, "geometry", this);
 
-    mm->setStartValue(mainMenu->geometry());
-    mm->setEndValue(mainMenu->geometry().adjusted(-width(), 0, -width(), 0));
+    mm->setStartValue(contentsRect());
+    mm->setEndValue(contentsRect().adjusted(-width(), 0, -width(), 0));
 
-    rw->setStartValue(mainMenu->geometry().adjusted(width(), 0, width(), 0));
-    rw->setEndValue(mainMenu->geometry());
+    rw->setStartValue(contentsRect().adjusted(width(), 0, width(), 0));
+    rw->setEndValue(contentsRect());
 
     mm->setEasingCurve(QEasingCurve::InOutSine);
     rw->setEasingCurve(QEasingCurve::InOutSine);
@@ -142,11 +192,12 @@ void AlmondMenuWidget::showSubMenu(int index)
     ag->addAnimation(mm);
     ag->addAnimation(rw);
 
-    connect(ag, &QParallelAnimationGroup::finished, [this] () { mainMenu->hide(); });
-
-    subMenuContainer->setCurrentIndex(index);
+    connect(ag, &QParallelAnimationGroup::finished, [this] () {
+        leftWidget->hide();
+        rightWidget->setGeometry(contentsRect());
+    });
 
     rightWidget->setGeometry(mainMenu->geometry().adjusted(width(), 0, width(), 0));
     emit rightWidget->setVisible(true);
-    emit ag->start();
+    emit ag->start(QAbstractAnimation::DeleteWhenStopped);
 }

@@ -46,7 +46,7 @@ Almond::Almond(QWidget* parent) :
     amw->addSubMenu(evm);
     ui.dockWidget_2->setWidget(amw);
 
-    connect(amw, &AlmondMenuWidget::submenuCancel, [this] (int) {amw->showMainMenu();});
+    connect(amw, &AlmondMenuWidget::submenuCancel, [this] (int) { amw->showMainMenu(); });
     connect(amw, &AlmondMenuWidget::submenuOK, this, &Almond::submenuOK);
             
 
@@ -268,7 +268,7 @@ void Almond::on_chooseGradient_clicked()
 void Almond::on_exportVideo_clicked()
 {
     evm->setEndViewport(mw->getViewport());
-    this->amw->showSubMenu(1);
+    emit this->amw->showSubMenu(1);
     return;
     ExportVideoInfo evi;
     evi.start = mnd::MandelViewport::standardView();

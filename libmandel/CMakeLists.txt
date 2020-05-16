@@ -4,7 +4,11 @@ include(CheckCXXCompilerFlag)
 
 project(mandel VERSION 1.0.0 DESCRIPTION "library for mandelbrot calculations")
 
-set(MANDEL_TARGET_ARCHITECTURE ${CMAKE_SYSTEM_PROCESSOR} CACHE STRING "Target Architecture")
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "aarch64")
+    set(MANDEL_TARGET_ARCHITECTURE "aarch64" CACHE STRING "Target Architecture")
+else()
+    set(MANDEL_TARGET_ARCHITECTURE "x86_64" CACHE STRING "Target Architecture")
+endif()
 option(MANDEL_AVX512 "generate code that can make use of avx-512-instructions" ON)
 option(MANDEL_ASMJIT "use just-in-time-compilation library asmjit" ON)
 option(MANDEL_BUILD_NATIVE

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>253</width>
+    <width>328</width>
     <height>543</height>
    </rect>
   </property>
@@ -31,14 +31,14 @@
    <item>
     <widget class="QToolBox" name="toolBox">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
        <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
+       <verstretch>1</verstretch>
       </sizepolicy>
      </property>
      <widget class="QWidget" name="toolBoxPage1">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -54,10 +54,24 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="maxIterTxt">
+         <property name="text">
+          <string>5000</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="0">
         <widget class="QLabel" name="widthLbl">
          <property name="text">
           <string>Video Width</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="widthTxt">
+         <property name="text">
+          <string>1920</string>
          </property>
         </widget>
        </item>
@@ -66,6 +80,34 @@
          <property name="text">
           <string>Video Height</string>
          </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="heightTxt">
+         <property name="text">
+          <string>1080</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" colspan="2">
+        <widget class="QGroupBox" name="groupBox">
+         <property name="title">
+          <string>Start View</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_2">
+          <item row="1" column="0">
+           <widget class="QLineEdit" name="startX"/>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLineEdit" name="startW"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QLineEdit" name="startY"/>
+          </item>
+          <item row="0" column="1">
+           <widget class="QLineEdit" name="startH"/>
+          </item>
+         </layout>
         </widget>
        </item>
        <item row="4" column="0" colspan="2">
@@ -99,51 +141,17 @@
        <item row="5" column="1">
         <widget class="QLineEdit" name="pathTxt"/>
        </item>
-       <item row="3" column="0" colspan="2">
-        <widget class="QGroupBox" name="groupBox">
-         <property name="title">
-          <string>Start View</string>
-         </property>
-         <layout class="QGridLayout" name="gridLayout_2">
-          <item row="1" column="0">
-           <widget class="QLineEdit" name="startX"/>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLineEdit" name="startW"/>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="startY"/>
-          </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="startH"/>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="heightTxt">
-         <property name="text">
-          <string>1080</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="widthTxt">
-         <property name="text">
-          <string>1920</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLineEdit" name="maxIterTxt">
-         <property name="text">
-          <string>5000</string>
-         </property>
-        </widget>
-       </item>
       </layout>
      </widget>
      <widget class="QWidget" name="toolBoxPage2">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>310</width>
+        <height>442</height>
+       </rect>
+      </property>
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
         <horstretch>0</horstretch>

@@ -3,14 +3,14 @@
 
 #include <QWidget>
 #include <QLinearGradient>
-
-#include <utility>
+#include <QVector>
+#include <QPair>
 
 class GradientWidget :
     public QWidget
 {
     Q_OBJECT
-    QVector<std::pair<float, QColor>> points;
+    QVector<QPair<float, QColor>> points;
 
     bool dragging;
     int selectedHandle;
@@ -18,13 +18,15 @@ class GradientWidget :
 
     int mouseOver;
 
-    int handleWidth = 60;
-    int handleHeight = 30;
+    int handleWidth = 40;
+    int handleHeight = 24;
 public:
     explicit GradientWidget(QWidget *parent = nullptr);
 
-    const QVector<std::pair<float, QColor>>& getGradient(void) const;
-    void setGradient(QVector<std::pair<float, QColor>>);
+    const QVector<QPair<float, QColor>>& getGradient(void) const;
+    void setGradient(QVector<QPair<float, QColor>>);
+
+    QColor colorAtY(float y);
 
     void paintEvent(QPaintEvent* e) override;
 

@@ -193,6 +193,33 @@ void Almond::videoExportOk(void)
 
 void Almond::gradientEditOk(void)
 {
+    const auto& points = gradientMenu->getGradient();
+
+    // convert from QVector<QPair<float, QColor>> to
+    //           -> std::vector<std::pair<RGBColor, float>>
+    std::vector<std::pair<RGBColor, float>> np;
+    std::transform(points.begin(), points.end(), std::back_inserter(np),
+        [](auto& qp) -> std::pair<RGBColor, float> {
+        auto& [pos, col] = qp;
+        return { RGBColor{ uint8_t(col.red()), uint8_t(col.green()), uint8_t(col.blue()) },
+            pos };
+    });
+    std::sort(np.begin(), np.end(), [](auto& a, auto& b) { return a.second > b.second; });
+    if (!np.empty()) {
+        auto& first = np.at(0);
+        if (first.second > 0) {
+            np.insert(np.begin(), { first.first, 0.0f });
+        }
+        auto& last = np.at(np.size() - 1);
+        if (last.second < 1) {
+            np.insert(np.begin(), { last.first, 1.0f });
+        }
+    }
+
+    std::for_each(np.begin(), np.end(), [](auto& x) { x.second *= 100; });
+
+    Gradient g{ np, true };
+    mw->setGradient(std::move(g));
     amw->showMainMenu();
 }
 

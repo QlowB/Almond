@@ -7,14 +7,21 @@ GradientMenu::GradientMenu(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->gradientWidget->setGradient(
-    {
-                    {0.1, QColor{10, 200, 20}},
-                    {0.7, QColor{100, 20, 120}}
-    }
+        {
+            { 0.1, QColor{ 10, 200, 20 } },
+            { 0.7, QColor{ 100, 20, 120 } }
+        }
     );
 }
+
 
 GradientMenu::~GradientMenu()
 {
     delete ui;
+}
+
+
+const QVector<QPair<float, QColor>>& GradientMenu::getGradient(void)
+{
+    return ui->gradientWidget->getGradient();
 }

@@ -20,14 +20,13 @@ GradientWidget::GradientWidget(QWidget* parent) :
 }
 
 
-const QVector<std::pair<float, QColor>>&
-GradientWidget::getGradient(void) const
+const QVector<QPair<float, QColor>>& GradientWidget::getGradient(void) const
 {
     return points;
 }
 
 
-void GradientWidget::setGradient(QVector<std::pair<float, QColor>> vec)
+void GradientWidget::setGradient(QVector<QPair<float, QColor>> vec)
 {
     points = std::move(vec);
 }
@@ -64,18 +63,36 @@ QColor lerp(const QColor& a, const QColor& b, float v)
     return QColor{ int(255 * nr), int(255 * ng), int(255 * nb) };
 }
 
+
+QColor GradientWidget::colorAtY(float y)
+{
+    float v = handleYToGradVal(y);
+    QColor up = QColor(QColor::Invalid);
+    QColor down = QColor(QColor::Invalid);
+    float upv = 0;
+    float downv = 1;
+    for (const auto& [val, color] : points) {
+        if (val >= upv && val < v) {
+            upv = val;
+            up = color;
+        }
+        if (val <= downv && val > v) {
+            downv = val;
+            down = color;
+        }
+    }
+
+    if (!up.isValid())
+        return down;
+    if (!down.isValid())
+        return up;
+    return lerp(up, down, (v - upv) / (downv - upv));
+}
+
 void GradientWidget::paintEvent(QPaintEvent* e)
 {
     QPainter painter{ this };
 
-    std::vector<int> orderedIndices(points.size());
-    for (int i = 0; i < points.size(); i++)
-        orderedIndices.push_back(i);
-
-    std::sort(orderedIndices.begin(), orderedIndices.end(),
-        [this] (int l, int r) {
-            return points[l].first < points[r].first;
-        });
 
     QRect gradientRect = getGradientRect();
     QStyleOption frameOptions;
@@ -100,12 +117,24 @@ void GradientWidget::paintEvent(QPaintEvent* e)
     gradientRect.adjust(fhmargins, fvmargins, -fhmargins, -fvmargins);
     float lastPoint = 0;
     QColor lastColor = QColor{ 0, 0, 0 };
+
+
+
+    std::vector<int> orderedIndices(points.size());
+    for (int i = 0; i < points.size(); i++)
+        orderedIndices.push_back(i);
+
+    std::sort(orderedIndices.begin(), orderedIndices.end(),
+        [this] (int l, int r) {
+        return points[l].first < points[r].first;
+    });
+
     // traverse gradient in order and interpolate in linear
     // RGB space to avoid interpolating in sRGB
     for (int i = 0; i < orderedIndices.size(); i++) {
         int index = orderedIndices[i];
         auto& [point, color] = points[index];
-        int m = 5;
+        int m = 17;
         if (i > 0) {
             for (int i = 0; i < m; i++) {
                 float v = float(i) / m;
@@ -117,26 +146,29 @@ void GradientWidget::paintEvent(QPaintEvent* e)
         lastPoint = point;
         lastColor = color;
     }
+
     QBrush brush{ gradient };
     painter.fillRect(gradientRect, brush);
 
-    QStyleOption so;
-    so.init(this);
     int index = 0;
     for (auto& [point, color] : points) {
         QRect r = getHandleRect(index);
+        QStyleOptionButton so;
+        so.init(this);
         so.rect = r;
         if (dragging && selectedHandle == index)
             so.state |= QStyle::State_Sunken;
+        else if (selectedHandle == index)
+            so.state |= QStyle::State_HasFocus;
         else
-            so.state &= ~QStyle::State_Sunken;
+            so.state &= ~QStyle::State_Sunken & ~QStyle::State_HasFocus;
         if (mouseOver == index)
             so.state |= QStyle::State_MouseOver;
         else
             so.state &= ~QStyle::State_MouseOver;
+        
         so.palette.setColor(QPalette::ColorRole::Button, color);
-        so.palette.setColor(QPalette::ColorRole::Background, color);
-        style()->drawPrimitive(QStyle::PrimitiveElement::PE_PanelButtonTool, &so, &painter, this);
+        style()->drawControl(QStyle::ControlElement::CE_PushButton, &so, &painter, this);
         index++;
     }
     /*for (auto&[point, color] : points) {
@@ -188,7 +220,6 @@ void GradientWidget::mouseReleaseEvent(QMouseEvent* e)
 {
     if (dragging) {
         dragging = false;
-        selectedHandle = -1;
         update();
         e->accept();
     }
@@ -222,6 +253,7 @@ void GradientWidget::mouseMoveEvent(QMouseEvent* e)
 
 void GradientWidget::mouseDoubleClickEvent(QMouseEvent* e)
 {
+    QRect handleArea = getHandleArea();
     int handle = handleAtPos(e->pos());
     if (handle != -1) {
         QColor current = points.at(handle).second;
@@ -232,6 +264,13 @@ void GradientWidget::mouseDoubleClickEvent(QMouseEvent* e)
             points[handle].second = newColor;
             update();
         }
+        e->accept();
+    }
+    else if (handleArea.contains(e->pos())) {
+        float v = handleYToGradVal(e->pos().y());
+        points.append({ v, colorAtY(e->pos().y()) });
+        e->accept();
+        update();
     }
     else {
         e->ignore();

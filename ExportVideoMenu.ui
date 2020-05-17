@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>328</width>
+    <width>614</width>
     <height>543</height>
    </rect>
   </property>
@@ -14,6 +14,18 @@
    <string>Frame</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item>
     <widget class="QLabel" name="titleLbl">
      <property name="font">
@@ -37,6 +49,14 @@
       </sizepolicy>
      </property>
      <widget class="QWidget" name="toolBoxPage1">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>586</width>
+        <height>640</height>
+       </rect>
+      </property>
       <property name="sizePolicy">
        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
         <horstretch>0</horstretch>
@@ -148,8 +168,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>310</width>
-        <height>442</height>
+        <width>614</width>
+        <height>373</height>
        </rect>
       </property>
       <property name="sizePolicy">

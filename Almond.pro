@@ -34,6 +34,7 @@ SOURCES += \
         ExportImageMenu.cpp \
         ExportVideoMenu.cpp \
         Gradient.cpp \
+        GradientMenu.cpp \
         GradientWidget.cpp \
         MandelWidget.cpp \
         choosegenerators.cpp \
@@ -52,6 +53,7 @@ HEADERS += \
         ExportImageMenu.h \
         ExportVideoMenu.h \
         Gradient.h \
+        GradientMenu.h \
         GradientWidget.h \
         MandelWidget.h \
         choosegenerators.h \
@@ -64,6 +66,7 @@ FORMS += \
         Almond.ui \
         ExportImageMenu.ui \
         ExportVideoMenu.ui \
+        GradientMenu.ui \
         choosegenerators.ui \
         customgenerator.ui \
         exportimagedialog.ui \

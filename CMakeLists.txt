@@ -24,10 +24,12 @@ FILE(GLOB AlmondHeaders *.h)
 
 
 IF (WIN32)
-    add_executable(Almond WIN32 ${AlmondSources} Almond.qrc splash.qrc icon.rc)
+    add_executable(Almond WIN32 ${AlmondSources} Almond.qrc splash.qrc icon.rc ${AlmondHeaders})
 ELSE()
-    add_executable(Almond ${AlmondSources} Almond.qrc splash.qrc)
+    add_executable(Almond ${AlmondSources} Almond.qrc splash.qrc ${AlmondHeaders})
 ENDIF()
+
+target_include_directories(Almond PUBLIC .)
 
 add_subdirectory(libalmond)
 

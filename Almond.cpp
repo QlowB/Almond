@@ -42,13 +42,18 @@ Almond::Almond(QWidget* parent) :
     amw->setMainMenu(ui.dockWidgetContents_2);
     eim = new ExportImageMenu();
     evm = new ExportVideoMenu();
-    amw->addSubMenu(eim);
-    amw->addSubMenu(evm);
+    gradientMenu = new GradientMenu();
+    AlmondSubMenu* imageSm = amw->addSubMenu(eim);
+    AlmondSubMenu* videoSm = amw->addSubMenu(evm);
+    AlmondSubMenu* gradientSm = amw->addSubMenu(gradientMenu);
     ui.dockWidget_2->setWidget(amw);
 
     connect(amw, &AlmondMenuWidget::submenuCancel, [this] (int) { amw->showMainMenu(); });
-    connect(amw, &AlmondMenuWidget::submenuOK, this, &Almond::submenuOK);
-            
+    //connect(amw, &AlmondMenuWidget::submenuOK, this, &Almond::submenuOK);
+    connect(imageSm, &AlmondSubMenu::accepted, this, &Almond::imageExportOk);
+    connect(videoSm, &AlmondSubMenu::accepted, this, &Almond::videoExportOk);
+    connect(gradientSm, &AlmondSubMenu::accepted, this, &Almond::gradientEditOk);
+
 
     /*QStatusBar* bar = new QStatusBar(this);
     bar->addWidget(new QLabel("ayay"));
@@ -130,7 +135,6 @@ void Almond::submenuOK(int smIndex)
         emit videoExportOk();
         break;
     }
-    amw->showMainMenu();
 }
 
 void Almond::imageExportOk(void)
@@ -158,16 +162,20 @@ void Almond::imageExportOk(void)
     iei.path = eim->getPath().toStdString();
     iei.options.jpegQuality = 95;
     submitBackgroundTask(new ImageExportTask(iei, [this] () { return stoppingBackgroundTasks; }));
+    amw->showMainMenu();
 }
 
 
 void Almond::videoExportOk(void)
 {
-    ExportVideoInfo evi;// = evm->getInfo();
-    evi.start = mnd::MandelViewport::standardView();
-    evi.end = mw->getViewport();
+    ExportVideoInfo evi = evm->getInfo();
     evi.gradient = mw->getGradient();
-    evi.mi = mw->getMandelInfo();
+    evi.mi.smooth = mw->getSmoothColoring();
+    if (currentView == JULIA) {
+        evi.mi.julia = mw->getMandelInfo().julia;
+        evi.mi.juliaX = mw->getMandelInfo().juliaX;
+        evi.mi.juliaY = mw->getMandelInfo().juliaY;
+    }
     if (evi.path == "") {
         QMessageBox errMsg = QMessageBox(QMessageBox::Icon::Critical, "Error", "No path specified.");
         errMsg.exec();
@@ -175,8 +183,17 @@ void Almond::videoExportOk(void)
     else {
         MandelVideoGenerator mvg(evi);
         mnd::MandelGenerator& g = *mw->getGenerator();
+        printf("wii: %ld\n", evi.mi.bWidth);
+        fflush(stdout);
         submitBackgroundTask(new VideoExportTask(std::move(mvg), g));
+        amw->showMainMenu();
     }
+}
+
+
+void Almond::gradientEditOk(void)
+{
+    amw->showMainMenu();
 }
 
 
@@ -213,6 +230,8 @@ void Almond::backgroundTaskFinished(bool succ, QString message)
 
     ui.backgroundProgress->setFormat(tr("Export Progress"));
     ui.backgroundProgress->setEnabled(false);
+    ui.backgroundProgress->setRange(0, 100);
+    ui.backgroundProgress->setValue(0);
     ui.cancelProgress->setEnabled(false);
     stoppingBackgroundTasks = false;
 }
@@ -258,10 +277,11 @@ void Almond::on_maxIterations_editingFinished()
 
 void Almond::on_chooseGradient_clicked()
 {
-    gcd.exec();
-    auto gradient = gcd.getGradient();
-    if (gradient)
-        mw->setGradient(std::move(*gradient));
+    emit this->amw->showSubMenu(2);
+    //gcd.exec();
+    //auto gradient = gcd.getGradient();
+    //if (gradient)
+    //    mw->setGradient(std::move(*gradient));
 }
 
 

@@ -3,7 +3,6 @@
 #include <QPixmap>
 #include <QScreen>
 #include <QSplashScreen>
-//#include <QStyleFactory>
 #include <cmath>
 
 int main(int argc, char *argv[])

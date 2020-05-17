@@ -16,6 +16,7 @@
 #include "AlmondMenuWidget.h"
 #include "ExportImageMenu.h"
 #include "ExportVideoMenu.h"
+#include "GradientMenu.h"
 
 
 #include <memory>
@@ -46,6 +47,7 @@ private:
     AlmondMenuWidget* amw;
     ExportImageMenu* eim;
     ExportVideoMenu* evm;
+    GradientMenu* gradientMenu;
 
     bool fullscreenMode = false;
     QWidget* cw;
@@ -79,6 +81,7 @@ public:
     void submenuOK(int smIndex);
     void imageExportOk(void);
     void videoExportOk(void);
+    void gradientEditOk(void);
 public slots:
     void toggleFullscreen(void);
 private slots:

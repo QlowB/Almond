@@ -7,7 +7,23 @@
 #include <QPushButton>
 #include <QStateMachine>
 
-class AlmondMenuWidget : public QFrame
+class AlmondSubMenu :
+    public QObject
+{
+    Q_OBJECT
+
+    QWidget* w;
+public:
+    AlmondSubMenu(QWidget* widget);
+    QWidget* widget(void);
+
+signals:
+    void accepted(void);
+    void cancelled(void);
+};
+
+class AlmondMenuWidget :
+    public QFrame
 {
     Q_OBJECT
         
@@ -17,13 +33,14 @@ class AlmondMenuWidget : public QFrame
     QPushButton* rightOK;
     QPushButton* rightCancel;
     QStackedWidget* subMenuContainer;
-    QList<QWidget*> subMenus;
+    QList<AlmondSubMenu*> subMenus;
     QStateMachine* states;
 public:
     AlmondMenuWidget(QWidget* parent = nullptr);
+    ~AlmondMenuWidget(void);
 
     void setMainMenu(QWidget* mainMenu);
-    void addSubMenu(QWidget* subMenu);
+    AlmondSubMenu* addSubMenu(QWidget* subMenu);
 
     virtual QSize sizeHint(void) const override;
     virtual QSize minimumSizeHint(void) const override;

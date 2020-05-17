@@ -20,7 +20,10 @@ void ImageExportTask::run(void)
         alm::exportImage(iei, [this](float percentage) {
             emit progress(percentage);
         }, stopCallback);
-        emit finished(true, "Image successfully exported.");
+        if (!stopCallback())
+            emit finished(true, "Image successfully exported.");
+        else
+            emit finished(false, "Image export cancelled.");
     }
     catch (alm::ImageExportException& ex) {
         emit finished(false, QString("Error during image export: ") + ex.what());
@@ -46,7 +49,10 @@ void VideoExportTask::run(void)
             emit progress(mvpi.progress);
         });
         mvg.generate(generator);
-        emit finished(true, "Video successfully exported.");
+        if (!stopCallback())
+            emit finished(true, "Video successfully exported.");
+        else
+            emit finished(false, "Video export cancelled.");
     }
     catch (alm::VideoExportException& ex) {
         emit finished(false, QString("Error during video export: ") + ex.what());

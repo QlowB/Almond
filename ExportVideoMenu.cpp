@@ -2,6 +2,7 @@
 #include "ui_ExportVideoMenu.h"
 #include <QIntValidator>
 #include <QDoubleValidator>
+#include <QFileDialog>
 
 ExportVideoMenu::ExportVideoMenu(QWidget *parent) :
     QWidget{ parent },
@@ -112,3 +113,11 @@ void ExportVideoMenu::setEndViewport(const mnd::MandelViewport& mv)
     ui->endH->setText(QString::fromStdString(mnd::toString(mv.height)));
 }
 
+
+void ExportVideoMenu::on_pathBtn_clicked()
+{
+    QString saveAs = QFileDialog::getSaveFileName(this,
+            tr("Save exported image"), "",
+            tr("AVI video (*.avi);;MP4 video (*.mp4);;All Files (*)"));
+    ui->pathTxt->setText(saveAs);
+}

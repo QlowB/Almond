@@ -21,6 +21,9 @@ public:
     ExportVideoInfo getInfo(void) const;
     void setStartViewport(const mnd::MandelViewport& mv);
     void setEndViewport(const mnd::MandelViewport& mv);
+private slots:
+    void on_pathBtn_clicked();
+
 private:
     Ui::ExportVideoMenu *ui;
 };

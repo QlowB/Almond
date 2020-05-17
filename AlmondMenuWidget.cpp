@@ -5,21 +5,32 @@
 #include <QPropertyAnimation>
 #include <QParallelAnimationGroup>
 
+AlmondSubMenu::AlmondSubMenu(QWidget* widget) :
+    w{ widget }
+{
+}
+
+
+QWidget* AlmondSubMenu::widget(void)
+{
+    return w;
+}
+
+
 AlmondMenuWidget::AlmondMenuWidget(QWidget* parent) :
     QFrame{ parent },
     mainMenu{ nullptr }
 {
-    this->setContentsMargins(0, 0, 0, 0);
     rightWidget = new QWidget(this);
     subMenuContainer = new QStackedWidget(rightWidget);
+    subMenuContainer->setContentsMargins(0, 0, 0, 0);
     rightOK = new QPushButton("OK", rightWidget);
     rightCancel = new QPushButton("Cancel", rightWidget);
-    subMenuContainer->setContentsMargins(0, 0, 0, 0);
-    subMenuContainer->setLayout(new QVBoxLayout());
 
     leftWidget = new QWidget(this);
     QVBoxLayout* mainLayout = new QVBoxLayout(leftWidget);
     mainLayout->setMargin(0);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
 
     QVBoxLayout* smlayout = new QVBoxLayout(rightWidget);
     smlayout->addWidget(subMenuContainer, 1);
@@ -52,6 +63,14 @@ AlmondMenuWidget::AlmondMenuWidget(QWidget* parent) :
 }
 
 
+AlmondMenuWidget::~AlmondMenuWidget(void)
+{
+    for (auto& a : subMenus) {
+        delete a;
+    }
+}
+
+
 void AlmondMenuWidget::setMainMenu(QWidget* mainMenu)
 {
     //mainMenu->setParent(this);
@@ -60,10 +79,12 @@ void AlmondMenuWidget::setMainMenu(QWidget* mainMenu)
 }
 
 
-void AlmondMenuWidget::addSubMenu(QWidget* subMenu)
+AlmondSubMenu* AlmondMenuWidget::addSubMenu(QWidget* subMenu)
 {
     subMenuContainer->addWidget(subMenu);
-    this->subMenus.append(subMenu);
+    AlmondSubMenu* almsm = new AlmondSubMenu(subMenu);
+    this->subMenus.append(almsm);
+    return almsm;
 }
 
 
@@ -71,7 +92,8 @@ QSize AlmondMenuWidget::sizeHint(void) const
 {
     QSize hint{ 0, 0 };
     hint = leftWidget->sizeHint();
-    for (auto& widget : subMenus) {
+    for (auto& subMenu : subMenus) {
+        const auto& widget = subMenu->widget();
         QSize widgetHint = widget->sizeHint();
         if (hint.width() < widgetHint.width())
             hint.setWidth(widgetHint.width());
@@ -86,7 +108,8 @@ QSize AlmondMenuWidget::minimumSizeHint(void) const
 {
     QSize hint{ 0, 0 };
     hint = leftWidget->minimumSizeHint();
-    for (auto& widget : subMenus) {
+    for (auto& subMenu : subMenus) {
+        const auto& widget = subMenu->widget();
         QSize widgetHint = widget->minimumSizeHint();
         if (hint.width() < widgetHint.width())
             hint.setWidth(widgetHint.width());
@@ -110,14 +133,17 @@ void AlmondMenuWidget::resizeEvent(QResizeEvent* event)
 
 void AlmondMenuWidget::clickedRightOK(void)
 {
-    emit submenuOK(subMenuContainer->currentIndex());
+    int index = subMenuContainer->currentIndex();
+    emit submenuOK(index);
+    emit subMenus.at(index)->accepted();
 }
 
 
 void AlmondMenuWidget::clickedRightCancel(void)
 {
+    int index = subMenuContainer->currentIndex();
     emit submenuCancel(subMenuContainer->currentIndex());
-    //submenuCancel(0);
+    emit subMenus.at(index)->cancelled();
 }
 
 

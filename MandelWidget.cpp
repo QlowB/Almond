@@ -2,6 +2,9 @@
 #include <cmath>
 #include <sstream>
 
+#include <QStyle>
+#include <QStyleOption>
+
 using namespace mnd;
 
 #include <cstdio>
@@ -757,6 +760,8 @@ void MandelWidget::drawRubberband(void)
     rubberbandPainter.setPen(pen);
 
     rubberbandPainter.drawRect(rubberband);
+    //QStyleOption so;
+    //style()->drawControl(QStyle::CE_RubberBand, &so, &rubberbandPainter, this);
 }
 
 

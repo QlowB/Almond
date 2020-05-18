@@ -231,10 +231,10 @@ __kernel void iterate(__global float* A, const int width,
         double4 aa = sq(a);
         double4 bb = sq(b);
         double4 ab = mul(a, b);
-        if (aa.s0 + bb.s0 > 16) break;
         double4 minusbb = (double4)(-bb.s0, -bb.s1, -bb.s2, -bb.s3);
         a = add(add(aa, minusbb), ca);
         b = add(add(ab, ab), cb);
+        if (aa.s0 + bb.s0 > 16) break;
         n++;
     }
 

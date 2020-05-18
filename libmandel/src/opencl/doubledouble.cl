@@ -76,10 +76,10 @@ __kernel void iterate(__global float* A, const int width,
         double2 aa = mul(a, a);
         double2 bb = mul(b, b);
         double2 ab = mul(a, b);
-        if (aa.s0 + bb.s0 > 16) break;
         double2 minusbb = (double2)(-bb.s0, -bb.s1);
         a = add(add(aa, minusbb), ca);
         b = add(add(ab, ab), cb);
+        if (aa.s0 + bb.s0 > 16) break;
         n++;
     }
 

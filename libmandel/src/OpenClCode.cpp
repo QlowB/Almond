@@ -12,36 +12,36 @@
 
 namespace mnd
 {
-    const char* getFloat_cl() {
-        return (char*) float_cl;
+    std::string getFloat_cl() {
+        return std::string{ (char*) float_cl, float_cl_len };
     }
 
-    const char* getDouble_cl() {
-        return (char*) double_cl;
+    std::string getDouble_cl() {
+        return std::string{ (char*) double_cl, double_cl_len };
     }
 
-    const char* getDoubleFloat_cl() {
-        return (char*) doublefloat_cl;
+    std::string getDoubleFloat_cl() {
+        return std::string{ (char*) doublefloat_cl, doublefloat_cl_len };
     }
 
-    const char* getDoubleDouble_cl() {
-        return (char*) doubledouble_cl;
+    std::string getDoubleDouble_cl() {
+        return std::string{ (char*) doubledouble_cl, doubledouble_cl_len };
     }
 
-    const char* getQuadDouble_cl() {
-        return (char*) quaddouble_cl;
+    std::string getQuadDouble_cl() {
+        return std::string{ (char*) quaddouble_cl, quaddouble_cl_len };
     }
 
-    const char* getFixed64_cl() {
-        return (char*) fixed64_cl;
+    std::string getFixed64_cl() {
+        return std::string{ (char*) fixed64_cl, fixed64_cl_len };
     }
 
-    const char* getFixed128_cl() {
-        return (char*) fixed128_cl;
+    std::string getFixed128_cl() {
+        return std::string{ (char*) fixed128_cl, fixed128_cl_len };
     }
 
-    const char* getFixed512_cl() {
-        return (char*) fixed512_cl;
+    std::string getFixed512_cl() {
+        return std::string{ (char*) fixed512_cl, fixed512_cl_len };
     }
 }
 

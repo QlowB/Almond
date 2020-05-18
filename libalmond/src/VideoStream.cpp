@@ -86,11 +86,6 @@ VideoStream::VideoStream(int width, int height, const std::string& filename, int
     if (avformat_write_header(formatContext, nullptr) < 0) {
         throw VideoExportException{ "error writing header" };
     }
-    /*file = fopen(filename.c_str(), "wb");
-    if (!file) {
-        fprintf(stderr, "could not open %s\n", filename.c_str());
-        exit(1);
-    }*/
 
     picture = av_frame_alloc();
     if (!picture)

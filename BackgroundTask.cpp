@@ -1,13 +1,14 @@
 #include "BackgroundTask.h"
 
-BackgroundTask::BackgroundTask(const std::string& shortDescription) :
-    shortDescription{ shortDescription }
+BackgroundTask::BackgroundTask(const std::string& shortDescription, std::function<bool(void)> stopCallback) :
+    shortDescription{ shortDescription },
+    stopCallback{ std::move(stopCallback) }
 {
 }
 
 
-ImageExportTask::ImageExportTask(const alm::ImageExportInfo& iei) :
-    BackgroundTask{ "Exporting Image" },
+ImageExportTask::ImageExportTask(const alm::ImageExportInfo& iei, std::function<bool(void)> stopCallback) :
+    BackgroundTask{ "Exporting Image", std::move(stopCallback) },
     iei{ iei }
 {
 }
@@ -16,10 +17,13 @@ ImageExportTask::ImageExportTask(const alm::ImageExportInfo& iei) :
 void ImageExportTask::run(void)
 {
     try {
-        alm::exportPng(iei, [this](float percentage) {
+        alm::exportImage(iei, [this](float percentage) {
             emit progress(percentage);
-        });
-        emit finished(true, "Image successfully exported.");
+        }, stopCallback);
+        if (!stopCallback())
+            emit finished(true, "Image successfully exported.");
+        else
+            emit finished(false, "Image export cancelled.");
     }
     catch (alm::ImageExportException& ex) {
         emit finished(false, QString("Error during image export: ") + ex.what());
@@ -45,7 +49,10 @@ void VideoExportTask::run(void)
             emit progress(mvpi.progress);
         });
         mvg.generate(generator);
-        emit finished(true, "Video successfully exported.");
+        if (!stopCallback())
+            emit finished(true, "Video successfully exported.");
+        else
+            emit finished(false, "Video export cancelled.");
     }
     catch (alm::VideoExportException& ex) {
         emit finished(false, QString("Error during video export: ") + ex.what());

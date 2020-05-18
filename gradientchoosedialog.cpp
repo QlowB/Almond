@@ -23,7 +23,7 @@ GradientChooseDialog::GradientChooseDialog()
 
 void GradientChooseDialog::on_buttonBox_accepted()
 {
-    chosenGradient = std::make_unique<Gradient>(Gradient::readXml(gcd.plainTextEdit->toPlainText()));
+    //chosenGradient = std::make_unique<Gradient>(Gradient::readXml(gcd.plainTextEdit->toPlainText()));
 }
 
 

@@ -23,6 +23,7 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, 
             return a.second < b.second;
         });
 
+    points = colors;
     max = colors.at(colors.size() - 1).second;
 
     std::vector<std::pair<RGBColorf, float>> linearColors;
@@ -40,9 +41,9 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, 
     std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(bs),
                    [] (auto p) { return std::pair{ p.second, p.first.b }; });
 
-    CubicSpline rsp(rs, false);
-    CubicSpline gsp(gs, false);
-    CubicSpline bsp(bs, false);
+    CubicSpline rsp(rs, true, true);
+    CubicSpline gsp(gs, true, true);
+    CubicSpline bsp(bs, true, true);
 
     if(precalcSteps <= 0) {
         precalcSteps = int(max * 15) + 10;
@@ -57,6 +58,12 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, 
         };
         this->colors.push_back(at);
     }
+}
+
+
+const std::vector<std::pair<RGBColor, float>>& Gradient::getPoints(void) const
+{
+    return points;
 }
 
 

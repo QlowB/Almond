@@ -2,6 +2,9 @@
 #include <cmath>
 #include <sstream>
 
+#include <QStyle>
+#include <QStyleOption>
+
 using namespace mnd;
 
 #include <cstdio>
@@ -45,15 +48,6 @@ Texture::Texture(Texture&& other) :
     gl{ other.gl }
 {
     other.id = 0;
-}
-
-
-Texture& Texture::operator=(Texture&& other)
-{
-    this->id = other.id;
-    this->gl = other.gl;
-    other.id = 0;
-    return *this;
 }
 
 
@@ -766,6 +760,8 @@ void MandelWidget::drawRubberband(void)
     rubberbandPainter.setPen(pen);
 
     rubberbandPainter.drawRect(rubberband);
+    //QStyleOption so;
+    //style()->drawControl(QStyle::CE_RubberBand, &so, &rubberbandPainter, this);
 }
 
 

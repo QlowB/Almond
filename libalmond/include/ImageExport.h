@@ -4,15 +4,30 @@
 #include "Mandel.h"
 #include "Gradient.h"
 #include <functional>
+#include <vector>
 #include <stdexcept>
 
 namespace alm
 {
+    enum class ImageFormat
+    {
+        BMP,
+        PNG,
+        JPEG
+    };
+    bool supportsImageFormat(ImageFormat imgf);
+
+    struct ImageOptions
+    {
+        int jpegQuality = 80;
+    };
+
     struct ImageExportInfo
     {
         mnd::MandelInfo drawInfo;
         mnd::MandelGenerator* generator;
         Gradient gradient;
+        ImageOptions options;
         std::string path;
     };
 
@@ -23,15 +38,18 @@ namespace alm
     };
 
     /**
-     * \brief generates and saves a fractal image in png format.
+     * \brief generates and saves a fractal image. The format
+     *        will be guessed by the file extension
      * 
      * \param iei               info to generate the image
      * \param progressCallback  optional function that is called to
      *                          report progress; the float parameter
      *                          contains a value from 0 to 100
      */
-    void exportPng(const ImageExportInfo& iei,
-        std::function<void(float)> progressCallback = [](float){});
+    void exportImage(const ImageExportInfo& iei,
+        std::function<void(float)> progressCallback = [](float){},
+        std::function<bool(void)> cancelCallback = [](void){ return false; }
+        );
 }
 
 

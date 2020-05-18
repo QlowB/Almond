@@ -72,6 +72,8 @@ void CpuGenerator<float, mnd::X86_SSE2, parallel>::generate(const mnd::MandelInf
             __m128 resulta2 = { 0, 0, 0, 0 };
             __m128 resultb2 = { 0, 0, 0, 0 };
 
+            __m128 cmp = _mm_cmple_ps(threshold, threshold);
+            __m128 cmp2 = _mm_cmple_ps(threshold, threshold);
             for (int k = 0; k < info.maxIter; k++) {
                 __m128 aa = _mm_mul_ps(a, a);
                 __m128 aa2 = _mm_mul_ps(a2, a2);
@@ -83,14 +85,14 @@ void CpuGenerator<float, mnd::X86_SSE2, parallel>::generate(const mnd::MandelInf
                 b = _mm_add_ps(abab, cy);
                 a2 = _mm_add_ps(_mm_sub_ps(aa2, bb2), cx2);
                 b2 = _mm_add_ps(abab2, cy);
-                __m128 cmp = _mm_cmple_ps(_mm_add_ps(aa, bb), threshold);
-                __m128 cmp2 = _mm_cmple_ps(_mm_add_ps(aa2, bb2), threshold);
                 if (info.smooth) {
                     resulta = _mm_or_ps(_mm_andnot_ps(cmp, resulta), _mm_and_ps(cmp, a));
                     resultb = _mm_or_ps(_mm_andnot_ps(cmp, resultb), _mm_and_ps(cmp, b));
                     resulta2 = _mm_or_ps(_mm_andnot_ps(cmp2, resulta2), _mm_and_ps(cmp2, a2));
                     resultb2 = _mm_or_ps(_mm_andnot_ps(cmp2, resultb2), _mm_and_ps(cmp2, b2));
                 }
+                cmp = _mm_cmple_ps(_mm_add_ps(aa, bb), threshold);
+                cmp2 = _mm_cmple_ps(_mm_add_ps(aa2, bb2), threshold);
                 adder = _mm_and_ps(adder, cmp);
                 counter = _mm_add_ps(counter, adder);
                 adder2 = _mm_and_ps(adder2, cmp2);
@@ -121,11 +123,11 @@ void CpuGenerator<float, mnd::X86_SSE2, parallel>::generate(const mnd::MandelInf
             _mm_store_ps(resb + 4, resultb2);
             for (int k = 0; k < 8 && i + k < info.bWidth; k++) {
                 if (info.smooth)
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter :
                     ftRes[k] >= info.maxIter ? info.maxIter :
                     ((float)ftRes[k]) + 1 - ::logf(::logf(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::logf(2.0f);
                 else
-                    data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+                    data[i + k + j * info.bWidth] = ftRes[k] >= 0 ? float(ftRes[k]) : info.maxIter;
             }
         }
     }
@@ -177,17 +179,19 @@ void CpuGenerator<double, mnd::X86_SSE2, parallel>::generate(const mnd::MandelIn
             __m128d cx = xs;
             __m128d cy = ys;
             __m128d cx2 = xs2;
-	    if (info.julia) {
-		cx = juliaX;
-		cx2 = juliaX;
-		cy = juliaY;
-	    }
+	        if (info.julia) {
+		        cx = juliaX;
+		        cx2 = juliaX;
+		        cy = juliaY;
+	        }
 
             __m128d resulta = { 0, 0 };
             __m128d resultb = { 0, 0 };
             __m128d resulta2 = { 0, 0 };
             __m128d resultb2 = { 0, 0 };
 
+            __m128d cmp = _mm_cmple_pd(threshold, threshold);
+            __m128d cmp2 = _mm_cmple_pd(threshold, threshold);
             for (int k = 0; k < info.maxIter; k++) {
                 __m128d aa = _mm_mul_pd(a, a);
                 __m128d aa2 = _mm_mul_pd(a2, a2);
@@ -199,14 +203,14 @@ void CpuGenerator<double, mnd::X86_SSE2, parallel>::generate(const mnd::MandelIn
                 b = _mm_add_pd(abab, cy);
                 a2 = _mm_add_pd(_mm_sub_pd(aa2, bb2), cx2);
                 b2 = _mm_add_pd(abab2, cy);
-                __m128d cmp = _mm_cmple_pd(_mm_add_pd(aa, bb), threshold);
-                __m128d cmp2 = _mm_cmple_pd(_mm_add_pd(aa2, bb2), threshold);
                 if (info.smooth) {
                     resulta = _mm_or_pd(_mm_andnot_pd(cmp, resulta), _mm_and_pd(cmp, a));
                     resultb = _mm_or_pd(_mm_andnot_pd(cmp, resultb), _mm_and_pd(cmp, b));
                     resulta2 = _mm_or_pd(_mm_andnot_pd(cmp2, resulta2), _mm_and_pd(cmp2, a2));
                     resultb2 = _mm_or_pd(_mm_andnot_pd(cmp2, resultb2), _mm_and_pd(cmp2, b2));
                 }
+                cmp = _mm_cmple_pd(_mm_add_pd(aa, bb), threshold);
+                cmp2 = _mm_cmple_pd(_mm_add_pd(aa2, bb2), threshold);
                 adder = _mm_and_pd(adder, cmp);
                 counter = _mm_add_pd(counter, adder);
                 adder2 = _mm_and_pd(adder2, cmp2);
@@ -229,11 +233,11 @@ void CpuGenerator<double, mnd::X86_SSE2, parallel>::generate(const mnd::MandelIn
             _mm_storeu_pd(resb + 2, resultb2);
             for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
                 if (info.smooth)
-                    data[i + k + j * info.bWidth] = ftRes[k] <= 0 ? info.maxIter :
+                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter :
                     ftRes[k] >= info.maxIter ? info.maxIter :
                     ((float)ftRes[k]) + 1 - ::logf(::logf(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::logf(2.0f);
                 else
-                    data[i + k + j * info.bWidth] = ftRes[k] > 0 ? float(ftRes[k]) : info.maxIter;
+                    data[i + k + j * info.bWidth] = ftRes[k] >= 0 ? float(ftRes[k]) : info.maxIter;
             }
         }
     }

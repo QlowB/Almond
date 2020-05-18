@@ -45,7 +45,7 @@ public:
     Texture& operator=(const Texture& other) = delete;
 
     Texture(Texture&& other);
-    Texture& operator=(Texture&& other);
+    Texture& operator=(Texture&& other) = delete;
 
 private:
     void bind(void) const;

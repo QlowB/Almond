@@ -44,7 +44,7 @@ float CubicSpline::interpolateAt(float x)
         auto& right = *(it + 1);
         float xleft = std::get<0>(left);
         float xright = std::get<0>(right);
-        if (xleft < x && xright >= x) {
+        if (xleft <= x && xright >= x) {
             float w = (xright - xleft);
             float t = (x - xleft) / w;
             float yleft = std::get<1>(left);

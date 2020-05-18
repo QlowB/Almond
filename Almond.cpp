@@ -204,7 +204,7 @@ void Almond::gradientEditOk(void)
         return { RGBColor{ uint8_t(col.red()), uint8_t(col.green()), uint8_t(col.blue()) },
             pos };
     });
-    std::sort(np.begin(), np.end(), [](auto& a, auto& b) { return a.second > b.second; });
+    std::sort(np.begin(), np.end(), [](auto& a, auto& b) { return a.second < b.second; });
     if (!np.empty()) {
         auto& first = np.at(0);
         if (first.second > 0) {

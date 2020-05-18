@@ -11,7 +11,7 @@ class CubicSpline
     std::vector<std::tuple<float, float, float>> points;
     bool useSlopes;
 public:
-    CubicSpline(const std::vector<std::pair<float, float>>& dataPoints, bool useSlopes);
+    CubicSpline(const std::vector<std::pair<float, float>>& dataPoints, bool useSlopes, bool minSlopes);
 
     float interpolateAt(float x);
 };

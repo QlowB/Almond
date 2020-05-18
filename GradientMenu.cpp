@@ -25,3 +25,8 @@ const QVector<QPair<float, QColor>>& GradientMenu::getGradient(void)
 {
     return ui->gradientWidget->getGradient();
 }
+
+void GradientMenu::setGradient(QVector<QPair<float, QColor>> grad)
+{
+    ui->gradientWidget->setGradient(std::move(grad));
+}

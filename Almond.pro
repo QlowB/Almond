@@ -33,7 +33,6 @@ SOURCES += \
         CubicSpline.cpp \
         ExportImageMenu.cpp \
         ExportVideoMenu.cpp \
-        Gradient.cpp \
         GradientMenu.cpp \
         GradientWidget.cpp \
         MandelWidget.cpp \
@@ -52,7 +51,6 @@ HEADERS += \
         CubicSpline.h \
         ExportImageMenu.h \
         ExportVideoMenu.h \
-        Gradient.h \
         GradientMenu.h \
         GradientWidget.h \
         MandelWidget.h \

@@ -216,7 +216,7 @@ void Almond::gradientEditOk(void)
         }
     }
 
-    std::for_each(np.begin(), np.end(), [](auto& x) { x.second *= 100; });
+    std::for_each(np.begin(), np.end(), [](auto& x) { x.second *= 300; });
 
     Gradient g{ np, true };
     mw->setGradient(std::move(g));
@@ -304,6 +304,17 @@ void Almond::on_maxIterations_editingFinished()
 
 void Almond::on_chooseGradient_clicked()
 {
+    const auto& gradient = mw->getGradient();
+    auto points = gradient.getPoints();
+    std::for_each(points.begin(), points.end(), [](auto& x) { x.second /= 300; });
+
+    QVector<QPair<float, QColor>> np;
+    std::transform(points.begin(), points.end(), std::back_inserter(np),
+        [](auto& qp) -> QPair<float, QColor> {
+        auto& [col, pos] = qp;
+        return { pos, QColor{ (col.r), (col.g), (col.b) } };
+    });
+    this->gradientMenu->setGradient(std::move(np));
     emit this->amw->showSubMenu(2);
     //gcd.exec();
     //auto gradient = gcd.getGradient();

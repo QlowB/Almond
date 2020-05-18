@@ -1,6 +1,7 @@
 #include "CubicSpline.h"
+#include <cmath>
 
-CubicSpline::CubicSpline(const std::vector<std::pair<float, float> >& dataPoints, bool useSlopes) :
+CubicSpline::CubicSpline(const std::vector<std::pair<float, float> >& dataPoints, bool useSlopes, bool minSlopes) :
     useSlopes{ useSlopes }
 {
     if (dataPoints.size() < 2) {
@@ -24,8 +25,15 @@ CubicSpline::CubicSpline(const std::vector<std::pair<float, float> >& dataPoints
         float s1 = h1 / w1;
         float s2 = h2 / w2;
 
-        float avgSlope = (s1 + s2) / 2;
-        points.push_back({ dp2.first, dp2.second, avgSlope });
+        float slope;
+        if (minSlopes) {
+            if (fabs(s1) > fabs(s2))
+                slope = s2;
+            else
+                slope = s1;
+        } else
+            slope = (s1 + s2) / 2;
+        points.push_back({ dp2.first, dp2.second, slope });
     }
     points.push_back({ dataPoints[dataPoints.size() - 1].first, dataPoints[dataPoints.size() - 1].second,
                        (dataPoints[dataPoints.size() - 2].second - dataPoints[dataPoints.size() - 1].second) /

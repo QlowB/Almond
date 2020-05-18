@@ -18,6 +18,7 @@ public:
     ~GradientMenu(void);
 
     const QVector<QPair<float, QColor>>& getGradient(void);
+    void setGradient(QVector<QPair<float, QColor>> grad);
 
 private:
     Ui::GradientMenu *ui;

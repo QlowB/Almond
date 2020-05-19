@@ -490,8 +490,7 @@ GridElement* MandelView::searchUnder(int level, GridIndex i, GridIndex j, int re
 
 
 void MandelView::paint(const mnd::MandelViewport& mvp, QPainter& qp)
-{
-    mnd::Real dpp = mvp.width / width;
+{    mnd::Real dpp = mvp.width / width;
     int level = getLevel(dpp) - 1;
     auto& grid = getGrid(level);
     mnd::Real gw = getDpp(level) * chunkSize;
@@ -727,8 +726,8 @@ void MandelWidget::paintGL(void)
 
 void MandelWidget::updateAnimations(void)
 {
-    if (mnd::abs(currentViewport.width / targetViewport.width - 1.0) < 0.1e-5
-            && mnd::abs(currentViewport.height / targetViewport.height - 1.0) < 0.1e-5) {
+    if (mnd::abs(currentViewport.width / targetViewport.width - 1.0) < 1e-3
+            && mnd::abs(currentViewport.height / targetViewport.height - 1.0) < 1e-3) {
         // animation finished
         currentViewport = targetViewport;
     }
@@ -891,7 +890,7 @@ void MandelWidget::mousePressEvent(QMouseEvent* me)
     if (me->button() == Qt::RightButton) {
         rubberbanding = true;
         rubberband.setCoords(me->x(), me->y(), me->x(), me->y());
-        emit repaint();
+        update();
         me->accept();
     }
     else if (me->button() == Qt::LeftButton) {
@@ -916,12 +915,12 @@ void MandelWidget::mouseMoveEvent(QMouseEvent* me)
         else
             rect.setWidth(rect.height() * aspect);
 
-        emit repaint();
+        update();
     }
     else if (selectingPoint) {
         pointX = me->x();
         pointY = me->y();
-        emit repaint();
+        update();
     }
     else if (dragging) {
         double deltaX = me->x() - dragX;
@@ -932,7 +931,7 @@ void MandelWidget::mouseMoveEvent(QMouseEvent* me)
         targetViewport = currentViewport;
         dragX = me->x(); dragY = me->y();
 
-        emit repaint();
+        update();
     }
     me->accept();
 }
@@ -962,7 +961,7 @@ void MandelWidget::mouseReleaseEvent(QMouseEvent* me)
         mnd::Real x = currentViewport.x + currentViewport.width * mnd::convert<mnd::Real>(float(me->x()) / width());
         mnd::Real y = currentViewport.y + currentViewport.height * mnd::convert<mnd::Real>(float(me->y()) / height());
         emit pointSelected(x, y);
-        emit repaint();
+        update();
     }
     dragging = false;
 

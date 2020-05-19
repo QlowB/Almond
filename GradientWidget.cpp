@@ -153,7 +153,7 @@ void GradientWidget::paintEvent(QPaintEvent* e)
     int index = 0;
     for (auto& [point, color] : points) {
         QRect r = getHandleRect(index);
-        QStyleOptionButton so;
+        /*QStyleOptionButton so;
         so.init(this);
         so.rect = r;
         if (dragging && selectedHandle == index)
@@ -168,7 +168,15 @@ void GradientWidget::paintEvent(QPaintEvent* e)
             so.state &= ~QStyle::State_MouseOver;
         
         so.palette.setColor(QPalette::ColorRole::Button, color);
-        style()->drawControl(QStyle::ControlElement::CE_PushButton, &so, &painter, this);
+        style()->drawControl(QStyle::ControlElement::CE_PushButton, &so, &painter, this);*/
+        int hs = HandleState::HANDLE_NORMAL;
+        if (dragging && selectedHandle == index)
+            hs |= HANDLE_DOWN;
+        if (mouseOver == index)
+            hs |= HANDLE_MOUSEOVER;
+        if (selectedHandle == index)
+            hs |= HANDLE_SELECTED;
+        paintHandle(painter, r, color, hs);
         index++;
     }
     /*for (auto&[point, color] : points) {
@@ -195,6 +203,39 @@ void GradientWidget::paintEvent(QPaintEvent* e)
     painter.fillRect(QRect(0, 0, width(), height()), QColor{ 100, 20, 20 });
     qDebug(std::to_string(width()).c_str());
     */
+}
+
+
+void GradientWidget::paintHandle(QPainter& painter, const QRectF& pos,
+                                 QColor c, int handleState)
+{
+    const float lineWidth = 2;
+    QPainterPath qpp = createSlideHandle(pos.width() - lineWidth, pos.height() - lineWidth);
+    qpp.translate(pos.x() + lineWidth / 2, pos.y() + lineWidth / 2);
+    if (handleState & HANDLE_SELECTED) {
+        QColor absLighter;
+        absLighter.setHsvF(c.hueF(), c.saturationF(), c.valueF() > 0.3 ? c.valueF() : 0.3);
+        painter.setPen(QPen(QBrush(absLighter.lighter(130)), lineWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    } else
+        painter.setPen(QPen(QBrush(c.darker(200)), lineWidth / 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+
+    painter.setRenderHint(QPainter::Antialiasing);
+    QLinearGradient bevel{ 0, pos.top(), 0, pos.bottom() }; // top down linear gradient
+
+    if (handleState & HANDLE_DOWN) {
+        bevel.setColorAt(0, c.darker(120));
+        bevel.setColorAt(1, c.lighter(120));
+    }
+    else if (handleState & HANDLE_MOUSEOVER) {
+        bevel.setColorAt(0, c.lighter(130));
+        bevel.setColorAt(1, c.darker(110));
+    }
+    else {
+        bevel.setColorAt(0, c.lighter(120));
+        bevel.setColorAt(1, c.darker(120));
+    }
+    painter.fillPath(qpp, QBrush(bevel));
+    painter.drawPath(qpp);
 }
 
 
@@ -373,5 +414,23 @@ float GradientWidget::gradValToHandleY(float v) const
 {
     QRect area = getHandleArea();
     return area.top() + v * area.height();
+}
+
+
+QPainterPath GradientWidget::createSlideHandle(float w, float h)
+{
+    const float rounding = 4;
+    QPainterPath qpp;
+    QPolygonF qpf;
+    qpf << QPointF{ 0, 0.5 * h }
+        << QPointF{ 0.3 * w, h };
+    qpp.moveTo(0, 0.5 * h);
+    qpp.lineTo(0.3 * w, h);
+    qpp.arcTo(w - rounding, h - rounding, rounding, rounding, -90, 90);
+    qpp.arcTo(w - rounding, 0, rounding, rounding, 0, 90);
+    qpp.lineTo(0.3 * w, 0);
+    qpp.lineTo(0, 0.5 * h);
+
+    return qpp;
 }
 

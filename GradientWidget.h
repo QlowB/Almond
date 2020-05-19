@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QLinearGradient>
+#include <QPainterPath>
 #include <QVector>
 #include <QPair>
 
@@ -21,6 +22,16 @@ class GradientWidget :
     int handleWidth = 40;
     int handleHeight = 24;
 public:
+
+    enum HandleState
+    {
+        HANDLE_NORMAL = 0x00,
+        HANDLE_MOUSEOVER = 0x01,
+        HANDLE_DOWN = 0x02,
+        HANDLE_SELECTED = 0x04
+    };
+
+
     explicit GradientWidget(QWidget *parent = nullptr);
 
     const QVector<QPair<float, QColor>>& getGradient(void) const;
@@ -28,12 +39,13 @@ public:
 
     QColor colorAtY(float y);
 
-    void paintEvent(QPaintEvent* e) override;
+    virtual void paintEvent(QPaintEvent* e) override;
+    virtual void paintHandle(QPainter& painter, const QRectF &pos, QColor c, int handleState);
 
-    void mousePressEvent(QMouseEvent* e) override;
-    void mouseReleaseEvent(QMouseEvent* e) override;
-    void mouseMoveEvent(QMouseEvent* e) override;
-    void mouseDoubleClickEvent(QMouseEvent* e) override;
+    virtual void mousePressEvent(QMouseEvent* e) override;
+    virtual void mouseReleaseEvent(QMouseEvent* e) override;
+    virtual void mouseMoveEvent(QMouseEvent* e) override;
+    virtual void mouseDoubleClickEvent(QMouseEvent* e) override;
 
     QSize minimumSizeHint(void) const override;
     QSize sizeHint(void) const override;
@@ -53,6 +65,9 @@ protected:
 
     float handleYToGradVal(float y) const;
     float gradValToHandleY(float v) const;
+
+private:
+    static QPainterPath createSlideHandle(float w, float h);
 signals:
 
 };

@@ -30,7 +30,6 @@ SOURCES += \
         AlmondMenuWidget.cpp \
         BackgroundTask.cpp \
         Color.cpp \
-        CubicSpline.cpp \
         ExportImageMenu.cpp \
         ExportVideoMenu.cpp \
         GradientMenu.cpp \
@@ -48,7 +47,6 @@ HEADERS += \
         AlmondMenuWidget.h \
         BackgroundTask.h \
         Color.h \
-        CubicSpline.h \
         ExportImageMenu.h \
         ExportVideoMenu.h \
         GradientMenu.h \
@@ -88,8 +86,8 @@ else:unix:QMAKE_LFLAGS+= -fopenmp
 LIBS += -fopenmp
 unix:LIBS += -lm -latomic
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
+win32:CONFIG(release, debug|profile|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
+else:win32:CONFIG(debug, debug|profile|release): LIBS += -L$$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/ -lavcodec
 else:unix: LIBS += -lavcodec
 
 win32:FFMPEGPATH = $$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/lib/
@@ -98,6 +96,9 @@ win32:DEPENDPATH += $$PWD/../libs/ffmpeg-20200216-8578433-win64-dev/include
 
 win32:INCLUDEPATH += ../libs/boost_1_72_0
 DEFINES += WITH_BOOST=1
+
+win32:LIBS += -L$$PWD/../libs/libjpeg-turbo-2.0.4/libjpeg-turbo-2.0.4/build/Release
+win32:INCLUDEPATH += $$PWD/../libs/libjpeg-turbo-2.0.4/libjpeg-turbo-2.0.4
 
 #win32:CONFIG(release, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL
 #else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/'../../../../../Program Files (x86)/AMD APP SDK/3.0/lib/x86/' -lOpenCL

@@ -30,7 +30,6 @@ SOURCES += \
         AlmondMenuWidget.cpp \
         BackgroundTask.cpp \
         Color.cpp \
-        CubicSpline.cpp \
         ExportImageMenu.cpp \
         ExportVideoMenu.cpp \
         GradientMenu.cpp \
@@ -48,7 +47,6 @@ HEADERS += \
         AlmondMenuWidget.h \
         BackgroundTask.h \
         Color.h \
-        CubicSpline.h \
         ExportImageMenu.h \
         ExportVideoMenu.h \
         GradientMenu.h \

@@ -7,6 +7,7 @@
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 #include <QOpenGLFunctions_2_0>
+#include <QOpenGLShaderProgram>
 #include <QMutex>
 #include <QPainter>
 //#include <qopengl.h>
@@ -37,8 +38,8 @@ class Texture
 {
     GLuint id;
 public:
-    QOpenGLFunctions_2_0& gl;
-    Texture(QOpenGLFunctions_2_0& gl, const Bitmap<RGBColor>& pict, GLint param = GL_LINEAR);
+    QOpenGLFunctions_3_0& gl;
+    Texture(QOpenGLFunctions_3_0& gl, const Bitmap<RGBColor>& pict, GLint param = GL_LINEAR);
     ~Texture(void);
 
     Texture(const Texture& other) = delete;
@@ -302,6 +303,8 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> lastAnimUpdate;
 
     std::unique_ptr<MandelView> mandelView;
+
+    QOpenGLShaderProgram* program;
 public:
     MandelWidget(mnd::MandelContext& ctxt, mnd::MandelGenerator* generator, QWidget* parent = nullptr);
     ~MandelWidget(void) override;

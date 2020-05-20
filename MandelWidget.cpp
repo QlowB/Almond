@@ -5,14 +5,14 @@
 #include <QStyle>
 #include <QStyleOption>
 #include <QOpenGLShader>
-#include <QOpenGLShaderProgram>
+#include <QOpenGLFunctions_3_0>
 
 using namespace mnd;
 
 #include <cstdio>
 
 
-Texture::Texture(QOpenGLFunctions_2_0& gl, const Bitmap<RGBColor>& bitmap, GLint param) :
+Texture::Texture(QOpenGLFunctions_3_0& gl, const Bitmap<RGBColor>& bitmap, GLint param) :
     gl{ gl }
 {
     gl.glGenTextures(1, &id);
@@ -90,6 +90,7 @@ TextureClip::~TextureClip(void)
 
 void TextureClip::drawRect(float x, float y, float width, float height)
 {
+    /*
     auto& gl = texture->gl;
     gl.glColor3ub(255, 255, 255);
     gl.glEnable(GL_TEXTURE_2D);
@@ -104,7 +105,18 @@ void TextureClip::drawRect(float x, float y, float width, float height)
     gl.glTexCoord2f(tx + tw, ty + th);
     gl.glVertex2f(x + width, y + height);
     gl.glEnd();
-    gl.glDisable(GL_TEXTURE_2D);
+    gl.glDisable(GL_TEXTURE_2D);*/
+
+    int vertexLocation = program->attributeLocation("vertex");
+    program->enableAttributeArray(vertexLocation);
+    program->setAttributeArray(vertexLocation, triangleVertices, 3);
+    program->setUniformValue(matrixLocation, pmvMatrix);
+    program->setUniformValue(colorLocation, color);
+
+    auto& gl3 = *QOpenGLContext::currentContext()->functions();
+    gl3.glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    program->disableAttributeArray(vertexLocation);
 }
 
 
@@ -492,7 +504,8 @@ GridElement* MandelView::searchUnder(int level, GridIndex i, GridIndex j, int re
 
 
 void MandelView::paint(const mnd::MandelViewport& mvp, QPainter& qp)
-{    mnd::Real dpp = mvp.width / width;
+{    
+    mnd::Real dpp = mvp.width / width;
     int level = getLevel(dpp) - 1;
     auto& grid = getGrid(level);
     mnd::Real gw = getDpp(level) * chunkSize;
@@ -564,7 +577,7 @@ MandelWidget::MandelWidget(mnd::MandelContext& ctxt, mnd::MandelGenerator* gener
     generator{ generator },
     gradient{ Gradient::defaultGradient() }
 {
-    this->setContentsMargins(0, 0, 0, 0);
+    //this->setContentsMargins(0, 0, 0, 0);
     this->setSizePolicy(QSizePolicy::Expanding,
         QSizePolicy::Expanding);
     qRegisterMetaType<GridIndex>("GridIndex");
@@ -654,7 +667,6 @@ void MandelWidget::initializeGL(void)
 {
     auto& gl = *this->context()->functions();
     gl.glClearColor(0, 0, 0, 0);
-    this->context()->makeCurrent(nullptr);
 
     gl.glDisable(GL_DEPTH_TEST);
 
@@ -664,22 +676,22 @@ void MandelWidget::initializeGL(void)
     //glShadeModel(GL_SMOOTH);
 
 
-    QOpenGLShaderProgram program(this->context());
-    program.addShaderFromSourceCode(QOpenGLShader::Vertex,
+    program = new QOpenGLShaderProgram{ this->context() };
+    bool vert = program->addShaderFromSourceCode(QOpenGLShader::Vertex,
     "attribute highp vec4 vertex;\n"
     "uniform highp mat4 matrix;\n"
     "void main(void)\n"
     "{\n"
     "   gl_Position = matrix * vertex;\n"
     "}");
-    program.addShaderFromSourceCode(QOpenGLShader::Fragment,
+    bool frag = program->addShaderFromSourceCode(QOpenGLShader::Fragment,
     "uniform mediump vec4 color;\n"
     "void main(void)\n"
     "{\n"
-    "   gl_FragColor = asd afd  asfd vec4(1, 1, 1, 2) - color;\n"
+    "   gl_FragColor = color;\n"
     "}");
-    program.link();
-    program.bind();
+    //program.link();
+    bool bound = program->bind();
 
     mandelView = nullptr;
     requestRecalc();
@@ -704,12 +716,15 @@ void MandelWidget::resizeGL(int w, int h)
 
 void MandelWidget::paintGL(void)
 {
-    auto& gl = *QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_0>();
+    //auto& gl = *QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_2_0>();
     if (mandelView == nullptr) {
         mandelView = std::make_unique<MandelView>(generator, *this);
         QObject::connect(mandelView.get(), &MandelView::redrawRequested, this, static_cast<void(QOpenGLWidget::*)(void)>(&QOpenGLWidget::update));
     }
+    //if (program)
+        //program->bind();
 
+    /*
     int width = this->width();
     int height = this->height();
     float pixelRatio = this->devicePixelRatioF();
@@ -722,7 +737,7 @@ void MandelWidget::paintGL(void)
 #ifdef QT_OPENGL_ES_1
     gl.glOrthof(0, width * pixelRatio, height * pixelRatio, 0, -1.0, 1.0);
 #else
-    gl.glOrtho(0, width * pixelRatio, height * pixelRatio, 0, -1.0, 1.0);
+    gl.glOrtho(0, double(width) * pixelRatio, double(height) * pixelRatio, 0, -1.0, 1.0);
 #endif
     gl.glMatrixMode(GL_MODELVIEW);
     gl.glLoadIdentity();
@@ -740,7 +755,31 @@ void MandelWidget::paintGL(void)
     if (displayInfo)
         drawInfo();
     if (selectingPoint)
-        drawPoint();
+        drawPoint();*/
+
+    static GLfloat const triangleVertices[] = {
+        0.0,  20,  0.0f,
+        49, 50, 0.0f,
+        -60,  70, 0.0f
+    };
+
+    QColor color(0, 255, 0);
+
+    QMatrix4x4 pmvMatrix;
+    pmvMatrix.ortho(rect());
+
+    int vertexLocation = program->attributeLocation("vertex");
+    int matrixLocation = program->uniformLocation("matrix");
+    int colorLocation = program->uniformLocation("color");
+    program->enableAttributeArray(vertexLocation);
+    program->setAttributeArray(vertexLocation, triangleVertices, 3);
+    program->setUniformValue(matrixLocation, pmvMatrix);
+    program->setUniformValue(colorLocation, color);
+    
+    auto& gl3 = *QOpenGLContext::currentContext()->functions();
+    gl3.glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    program->disableAttributeArray(vertexLocation);
 }
 
 

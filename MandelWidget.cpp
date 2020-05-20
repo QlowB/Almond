@@ -4,6 +4,8 @@
 
 #include <QStyle>
 #include <QStyleOption>
+#include <QOpenGLShader>
+#include <QOpenGLShaderProgram>
 
 using namespace mnd;
 
@@ -660,6 +662,24 @@ void MandelWidget::initializeGL(void)
     gl.glEnable(GL_FRAMEBUFFER_SRGB);
 
     //glShadeModel(GL_SMOOTH);
+
+
+    QOpenGLShaderProgram program(this->context());
+    program.addShaderFromSourceCode(QOpenGLShader::Vertex,
+    "attribute highp vec4 vertex;\n"
+    "uniform highp mat4 matrix;\n"
+    "void main(void)\n"
+    "{\n"
+    "   gl_Position = matrix * vertex;\n"
+    "}");
+    program.addShaderFromSourceCode(QOpenGLShader::Fragment,
+    "uniform mediump vec4 color;\n"
+    "void main(void)\n"
+    "{\n"
+    "   gl_FragColor = asd afd  asfd vec4(1, 1, 1, 2) - color;\n"
+    "}");
+    program.link();
+    program.bind();
 
     mandelView = nullptr;
     requestRecalc();

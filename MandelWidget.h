@@ -36,10 +36,12 @@ class MandelWidget;
 
 class Texture
 {
+protected:
     GLuint id;
+    QOpenGLFunctions& gl;
+    inline Texture(QOpenGLFunctions& gl) : gl{ gl } {}
 public:
-    QOpenGLFunctions_3_0& gl;
-    Texture(QOpenGLFunctions_3_0& gl, const Bitmap<RGBColor>& pict, GLint param = GL_LINEAR);
+    Texture(QOpenGLFunctions& gl, const Bitmap<RGBColor>& pict, GLint param = GL_LINEAR);
     ~Texture(void);
 
     Texture(const Texture& other) = delete;
@@ -53,7 +55,39 @@ private:
 public:
     inline GLuint getId(void) const { return id; }
 
-    void drawRect(float x, float y, float width, float height);
+    void drawRect(QOpenGLShaderProgram* program,
+                  float x, float y, float width, float height,
+                  float tx = 0.0f, float ty = 0.0f,
+                  float tw = 1.0f, float th = 1.0f);
+};
+
+
+///
+/// \brief The FloatTexture class
+///
+class FloatTexture
+{
+    GLuint id;
+    QOpenGLFunctions& gl;
+public:
+    FloatTexture(QOpenGLFunctions& gl, const Bitmap<float>& pict, GLint param = GL_LINEAR);
+    ~Texture(void);
+
+    Texture(const Texture& other) = delete;
+    Texture& operator=(const Texture& other) = delete;
+
+    Texture(Texture&& other);
+    Texture& operator=(Texture&& other) = delete;
+
+private:
+    void bind(void) const;
+public:
+    inline GLuint getId(void) const { return id; }
+
+    void drawRect(QOpenGLShaderProgram* program,
+                  float x, float y, float width, float height,
+                  float tx = 0.0f, float ty = 0.0f,
+                  float tw = 1.0f, float th = 1.0f);
 };
 
 
@@ -65,7 +99,8 @@ public:
     CellImage(const CellImage& b) = delete;
     virtual ~CellImage(void);
 
-    virtual void drawRect(float x, float y, float width, float height) = 0;
+    virtual void drawRect(QOpenGLShaderProgram* program,
+                          float x, float y, float width, float height) = 0;
     virtual std::shared_ptr<CellImage> clip(short i, short j) = 0;
     virtual int getRecalcPriority(void) const = 0;
 };
@@ -91,11 +126,12 @@ public:
 
     virtual ~TextureClip(void);
 
-    void drawRect(float x, float y, float width, float height);
+    void drawRect(QOpenGLShaderProgram* program,
+                  float x, float y, float width, float height) override;
 
     TextureClip clip(float x, float y, float w, float h);
-    std::shared_ptr<CellImage> clip(short i, short j);
-    int getRecalcPriority(void) const;
+    std::shared_ptr<CellImage> clip(short i, short j) override;
+    int getRecalcPriority(void) const override;
 };
 
 
@@ -115,9 +151,10 @@ public:
 
     virtual ~QuadImage(void);
 
-    void drawRect(float x, float y, float width, float height);
-    std::shared_ptr<CellImage> clip(short i, short j);
-    int getRecalcPriority(void) const;
+    void drawRect(QOpenGLShaderProgram* program,
+                  float x, float y, float width, float height) override;
+    std::shared_ptr<CellImage> clip(short i, short j) override;
+    int getRecalcPriority(void) const override;
 };
 
 
@@ -267,7 +304,7 @@ public:
     void garbageCollect(int level, GridIndex i, GridIndex j);
     GridElement* searchAbove(int level, GridIndex i, GridIndex j, int recursionLevel);
     GridElement* searchUnder(int level, GridIndex i, GridIndex j, int recursionLevel);
-    void paint(const mnd::MandelViewport& mvp, QPainter& qp);
+    void paint(const mnd::MandelViewport& mvp);
 public slots:
     void cellReady(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
 signals:
@@ -278,6 +315,8 @@ signals:
 class MandelWidget : public QOpenGLWidget
 {
     Q_OBJECT
+
+    friend class MandelView;
 private:
     mnd::MandelContext& mndContext;
     mnd::MandelGenerator* generator;

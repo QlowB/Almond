@@ -19,7 +19,8 @@ Texture::Texture(QOpenGLFunctions& gl, const Bitmap<float>& bitmap, GLint param)
     gl.glActiveTexture(GL_TEXTURE0);
     gl.glBindTexture(GL_TEXTURE_2D, id);
 
-    Bitmap<float> copy = bitmap.map<float>([](float x) { return x / 500; });
+    Bitmap<float> copy = bitmap.map<float>([](float x) { return x / 200; });
+    Bitmap<RGBColor> rgbs = bitmap.map<RGBColor>([](float x) { return RGBColor{ 100, uint8_t(::sin(x * 0.01) * 127 + 127), 20 }; });
 
     //int lineLength = (bitmap.width * 3 + 3) & ~3;
 
@@ -33,11 +34,12 @@ Texture::Texture(QOpenGLFunctions& gl, const Bitmap<float>& bitmap, GLint param)
             pixels[index + 2] = c.b;
         }
     }*/
-    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, int(bitmap.width), int(bitmap.height), 0, GL_RED, GL_FLOAT, copy.pixels.get());
+    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, int(bitmap.width), int(bitmap.height), 0, GL_RGB, GL_UNSIGNED_BYTE, rgbs.pixels.get());
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, param);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, param);
+    gl.glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 
@@ -101,13 +103,14 @@ void Texture::drawRect(QOpenGLShaderProgram* program,
     gl3.glEnable(GL_TEXTURE_2D);
 
     gl3.glUniform1i(texLoc, GL_TEXTURE0);
-    gl3.glUniform1i(gradLoc, GL_TEXTURE1);
+    gl3.glUniform1i(gradLoc, GL_TEXTURE2);
 
     gl3.glActiveTexture(GL_TEXTURE0);
     gl3.glBindTexture(GL_TEXTURE_2D, id);
 
-    //gl3.glActiveTexture(GL_TEXTURE1);
-    //gl3.glBindTexture(GL_TEXTURE_2D, gradId);
+    gl3.glActiveTexture(GL_TEXTURE2);
+    gl3.glBindTexture(GL_TEXTURE_2D, gradId);
+    gl3.glActiveTexture(GL_TEXTURE0);
 
     gl3.glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
@@ -595,7 +598,7 @@ void MandelView::paint(const mnd::MandelViewport& mvp)
             if (t != nullptr) {
 
                 auto& gl3 = *QOpenGLContext::currentContext()->functions();
-                gl3.glActiveTexture(GL_TEXTURE1);
+                gl3.glActiveTexture(GL_TEXTURE2);
                 gl3.glBindTexture(GL_TEXTURE_2D, owner.gradientTexture);
                 t->img->drawRect(this->owner.program,float(x), float(y), float(w), float(w));
                 /*glBegin(GL_LINE_LOOP);
@@ -673,16 +676,17 @@ void MandelWidget::setGradient(Gradient g)
 
     GLuint id;
     gl.glEnable(GL_TEXTURE_2D);
-    gl.glActiveTexture(GL_TEXTURE1);
+    gl.glActiveTexture(GL_TEXTURE2);
     gl.glGenTextures(1, &id);
     gl.glBindTexture(GL_TEXTURE_2D, id);
 
     gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 3, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<char*> (pix));
-    gl.glUniform1i(this->program->uniformLocation("gradient"), GL_TEXTURE1);
+    gl.glUniform1i(this->program->uniformLocation("gradient"), GL_TEXTURE2);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl.glBindTexture(GL_TEXTURE_2D, 0);
 
 
     gradientTexture = id;
@@ -785,8 +789,8 @@ void MandelWidget::initializeGL(void)
     "void main(void)\n"
     "{\n"
     "   float v = texture2D(tex, texc).r;\n"
-    "   gl_FragColor = texture2D(gradient, vec2(v, 0.0));\n"
-//    "   gl_FragColor = texture2D(tex, texc);\n"
+    "   gl_FragColor = texture2D(gradient, texc);\n"
+//    "   gl_FragColor = gl_FragColor * texture2D(tex, texc);\n"
 //    "   float v = texture2D(tex, texc).r;\n"
 //    "   gl_FragColor = vec4(v, 1.0 - v, v*v, 1);\n"
 //    "   gl_FragColor.g = 0.3;\n"

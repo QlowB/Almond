@@ -89,6 +89,12 @@ Gradient Gradient::defaultGradient(void)
 }
 
 
+float Gradient::getMax(void) const
+{
+    return this->max;
+}
+
+
 RGBColor Gradient::get(float x) const
 {
     if (colors.empty() || std::isnan(x) || std::isinf(x))

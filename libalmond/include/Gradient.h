@@ -26,11 +26,20 @@ public:
 
     //static Gradient readXml(const std::string& xml);
 
-    /*!
-     * \brief get a color at a specific position in this gradient
-     * \param x the position
-     * \return the color in sRGB format
-     */
+    ///
+    /// \brief get the maximum value this gradient accepts
+    ///
+    /// If \link Gradient::get(float) is called with a value
+    /// greater than the one returned by this function, the
+    /// value will either get clamped or wrapped around.
+    ///
+    float getMax(void) const;
+
+    ///
+    /// \brief get a color at a specific position in this gradient
+    /// \param x the position
+    /// \return the color in sRGB format
+    ///
     RGBColor get(float x) const;
 private:
     static RGBColorf lerpColors(RGBColorf a, RGBColorf b, float val);

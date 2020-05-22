@@ -41,7 +41,7 @@ protected:
     QOpenGLFunctions& gl;
     inline Texture(QOpenGLFunctions& gl) : gl{ gl } {}
 public:
-    Texture(QOpenGLFunctions& gl, const Bitmap<RGBColor>& pict, GLint param = GL_LINEAR);
+    Texture(QOpenGLFunctions& gl, const Bitmap<float>& pict, GLint param = GL_LINEAR);
     ~Texture(void);
 
     Texture(const Texture& other) = delete;
@@ -241,7 +241,7 @@ public:
 
     void run() override;
 signals:
-    void done(int level, GridIndex i, GridIndex j, long calcState, Bitmap<RGBColor>* bmp);
+    void done(int level, GridIndex i, GridIndex j, long calcState, Bitmap<float>* bmp);
 };
 
 
@@ -269,9 +269,9 @@ public slots:
     void calc(TexGrid& grid, int level, GridIndex i, GridIndex j, int priority);
     void setCurrentLevel(int level);
     void notFinished(int level, GridIndex i, GridIndex j);
-    void redirect(int level, GridIndex i, GridIndex j, long calcState, Bitmap<RGBColor>* bmp);
+    void redirect(int level, GridIndex i, GridIndex j, long calcState, Bitmap<float>* bmp);
 signals:
-    void done(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
+    void done(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
 };
 
 
@@ -306,7 +306,7 @@ public:
     GridElement* searchUnder(int level, GridIndex i, GridIndex j, int recursionLevel);
     void paint(const mnd::MandelViewport& mvp);
 public slots:
-    void cellReady(int level, GridIndex i, GridIndex j, Bitmap<RGBColor>* bmp);
+    void cellReady(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
 signals:
     void redrawRequested(void);
 };
@@ -344,6 +344,7 @@ private:
     std::unique_ptr<MandelView> mandelView;
 
     QOpenGLShaderProgram* program;
+    GLuint gradientTexture;
 public:
     MandelWidget(mnd::MandelContext& ctxt, mnd::MandelGenerator* generator, QWidget* parent = nullptr);
     ~MandelWidget(void) override;
@@ -378,9 +379,9 @@ public:
 private:
     void updateAnimations(void);
 
-    void drawRubberband(void);
-    void drawInfo(void);
-    void drawPoint(void);
+    void drawRubberband(QPainter& p);
+    void drawInfo(QPainter& p);
+    void drawPoint(QPainter& p);
 public:
 
     void zoom(float scale, float x = 0.5f, float y = 0.5f);

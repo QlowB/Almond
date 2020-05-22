@@ -65,7 +65,7 @@ public:
 ///
 /// \brief The FloatTexture class
 ///
-class FloatTexture
+/*class FloatTexture
 {
     GLuint id;
     QOpenGLFunctions& gl;
@@ -88,7 +88,7 @@ public:
                   float x, float y, float width, float height,
                   float tx = 0.0f, float ty = 0.0f,
                   float tw = 1.0f, float th = 1.0f);
-};
+};*/
 
 
 class CellImage

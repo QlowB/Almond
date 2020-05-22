@@ -369,7 +369,9 @@ const int MandelView::chunkSize = 256;
 MandelView::MandelView(mnd::MandelGenerator* generator, MandelWidget& owner) :
     generator{ generator },
     calcer{ generator, owner },
-    owner{ owner }
+    owner{ owner },
+    width{ 0 },
+    height{ 0 }
 {
     /*Bitmap<RGBColor> emp(8, 8);
     for(auto i = 0; i < emp.width; i++) {
@@ -794,12 +796,16 @@ void MandelWidget::paintGL(void)
     mandelView->paint(this->currentViewport, painter);
 
     if (rubberbanding)
-        drawRubberband();
+    drawRubberband();
     if (displayInfo)
-        drawInfo();
+    drawInfo();
     if (selectingPoint)
-        drawPoint();*/
+    drawPoint();*/
     //QPainter painter{ this };
+
+
+    QPainter painter{ this };
+    painter.beginNativePainting();
     updateAnimations();
     mandelView->paint(this->currentViewport);
 
@@ -826,6 +832,14 @@ void MandelWidget::paintGL(void)
     gl3.glDrawArrays(GL_TRIANGLES, 0, 3);
 
     program->disableAttributeArray(vertexLocation);
+
+    painter.endNativePainting();
+    if (rubberbanding)
+        drawRubberband();
+    if (displayInfo)
+        drawInfo();
+    if (selectingPoint)
+        drawPoint();
 }
 
 

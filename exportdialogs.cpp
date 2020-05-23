@@ -146,6 +146,7 @@ const ExportVideoInfo& ExportVideoDialog::getExportVideoInfo(void) const
 
 void ExportVideoDialog::on_buttonBox_accepted()
 {
+    /*
     if (evd.savePath->text() == "") {
         QMessageBox* msgBox = new QMessageBox;
         msgBox->setText("Please specify a path.");
@@ -176,13 +177,14 @@ void ExportVideoDialog::on_buttonBox_accepted()
         evd.endW->text().toDouble(),
         evd.endH->text().toDouble(),
     };*/
-
+    /*
     evi.start.adjustAspectRatio(evi.mi.bWidth, evi.mi.bHeight);
     evi.end.adjustAspectRatio(evi.mi.bWidth, evi.mi.bHeight);
     evi.gradient = almond->mw->getGradient();
-
+    */
     //}
 }
+
 
 void ExportVideoDialog::on_pushButton_clicked()
 {

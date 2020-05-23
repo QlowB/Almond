@@ -1,10 +1,20 @@
 #ifndef FRACTALWIDGETUTILS_H
 #define FRACTALWIDGETUTILS_H
 
-#include "Mandel.h"
 #include "EscapeTimeVisualWidget.h"
+#include "Mandel.h"
+#include "Bitmap.h"
 #include <unordered_map>
 #include <QMetaType>
+#include <QObject>
+#include <QRunnable>
+
+#include <utility>
+
+
+class SliceGrid;
+class FractalZoomWidget;
+
 
 using GridIndex = mnd::Integer;
 Q_DECLARE_METATYPE(GridIndex)
@@ -80,6 +90,49 @@ struct GridElement
         enoughResolution{ enoughResolution },
         img{ std::move(img) }
     {}
+};
+
+
+class CalcJob : public QObject, public QRunnable
+{
+    Q_OBJECT
+public:
+    FractalZoomWidget& owner;
+    mnd::MandelGenerator* generator;
+    SliceGrid* grid;
+    int level;
+    GridIndex i, j;
+    long calcState = 0;
+
+    inline CalcJob(FractalZoomWidget& owner,
+        mnd::MandelGenerator* generator,
+        SliceGrid* grid, int level,
+        GridIndex i, GridIndex j,
+        long calcState) :
+        owner{ owner },
+        generator{ generator },
+        grid{ grid },
+        level{ level },
+        i{ i }, j{ j },
+        calcState{ calcState }
+    {}
+
+    void run() override;
+signals:
+    void done(Bitmap<float>* bmp);
+    void failed(QString err);
+};
+
+
+struct IndexPairHash
+{
+    size_t operator()(const std::pair<GridIndex, GridIndex>& p) const;
+};
+
+
+struct IndexTripleHash
+{
+    size_t operator()(const std::tuple<int, GridIndex, GridIndex>& p) const;
 };
 
 #endif // FRACTALWIDGETUTILS_H

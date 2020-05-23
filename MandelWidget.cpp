@@ -1,3 +1,5 @@
+#if 0
+
 #include "MandelWidget.h"
 #include <cmath>
 #include <sstream>
@@ -621,6 +623,7 @@ void MandelView::paint(const mnd::MandelViewport& mvp)
     }
 }
 
+
 void MandelView::cellReady(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp)
 {
     auto& gl = *QOpenGLContext::currentContext()->functions();
@@ -1166,3 +1169,5 @@ void MandelWidget::wheelEvent(QWheelEvent* we)
         emit repaint();
     }
 }*/
+
+#endif

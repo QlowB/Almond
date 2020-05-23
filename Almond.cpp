@@ -17,23 +17,24 @@ Almond::Almond(QWidget* parent) :
     mandelContext{ mnd::initializeContext() }
 {
     ui.setupUi(this);
-    mw = std::make_unique<MandelWidget>(mandelContext,
-                                        &mandelContext.getDefaultGenerator(),
-                                        ui.centralWidget);
-    etvw = new EscapeTimeVisualWidget(this);
+    //mw = std::make_unique<MandelWidget>(mandelContext,
+    //                                    &mandelContext.getDefaultGenerator(),
+    //                                    ui.centralWidget);
+    fractalWidget = new FractalZoomWidget(this);
+    fractalWidget->setGenerator(&mandelContext.getDefaultGenerator());
     customGeneratorDialog = std::make_unique<CustomGenerator>(mandelContext);
     customGenerator = nullptr;
     customViewSave = mnd::MandelViewport::centerView();
 
     on_maxIterations_editingFinished();
-    mw->setSmoothColoring(ui.smooth->isChecked());
+    // TODO update mw->setSmoothColoring(ui.smooth->isChecked());
 
     currentView = MANDELBROT;
     mandelGenerator = &mandelContext.getDefaultGenerator();
-    mandelViewSave = mw->getViewport();
+    // TODO update mandelViewSave = mw->getViewport();
 
-    QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
-    ui.mandel_container->addWidget(etvw);
+    //QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
+    ui.mandel_container->addWidget(fractalWidget);
     //ui.mandel_container->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
 
@@ -143,33 +144,35 @@ void Almond::imageExportOk(void)
 {
     mnd::MandelInfo mi;
     mi.maxIter = eim->getMaxIterations();
-    mi.view = mw->getViewport();
+    mi.view = mnd::MandelViewport{};// mw->getViewport(); // TODO update
     mi.bWidth = eim->getWidth();
     mi.bHeight = eim->getHeight();
     mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-    mi.smooth = mw->getSmoothColoring();
-    if (currentView == JULIA) {
+    mi.smooth = true; // TODO update
+    /*if (currentView == JULIA) {
         mi.julia = mw->getMandelInfo().julia;
         mi.juliaX = mw->getJuliaX();
         mi.juliaY = mw->getJuliaY();
-    }
+    }*/
 
-    mnd::MandelGenerator* currentGenerator = mw->getGenerator();
+    mnd::MandelGenerator* currentGenerator = nullptr;// mw->getGenerator();// TODO update
     mnd::MandelGenerator& g = currentGenerator ? *currentGenerator : mandelContext.getDefaultGenerator();
 
     alm::ImageExportInfo iei;
     iei.drawInfo = mi;
     iei.generator = &g;
-    iei.gradient = mw->getGradient();
+    iei.gradient = Gradient::defaultGradient(); // mw->getGradient();// TODO update
     iei.path = eim->getPath().toStdString();
     iei.options.jpegQuality = 95;
     submitBackgroundTask(new ImageExportTask(iei, [this] () { return stoppingBackgroundTasks; }));
+    
     amw->showMainMenu();
 }
 
 
 void Almond::videoExportOk(void)
 {
+    /*
     ExportVideoInfo evi = evm->getInfo();
     evi.gradient = mw->getGradient();
     evi.mi.smooth = mw->getSmoothColoring();
@@ -190,6 +193,7 @@ void Almond::videoExportOk(void)
         submitBackgroundTask(new VideoExportTask(std::move(mvg), g));
         amw->showMainMenu();
     }
+    */
 }
 
 
@@ -221,13 +225,14 @@ void Almond::gradientEditOk(void)
     std::for_each(np.begin(), np.end(), [](auto& x) { x.second *= 300; });
 
     Gradient g{ np, true };
-    mw->setGradient(std::move(g));
+    //mw->setGradient(std::move(g)); // TODO update
     amw->showMainMenu();
 }
 
 
 void Almond::toggleFullscreen(void)
 {
+    /*
     if (fullscreenMode) {
         auto* m = this->takeCentralWidget();
         ui.mandel_container->addWidget(m);
@@ -241,6 +246,7 @@ void Almond::toggleFullscreen(void)
         emit this->showFullScreen();
         fullscreenMode = true;
     }
+    */
 }
 
 
@@ -286,13 +292,13 @@ void Almond::backgroundTaskProgress(float percentage)
 
 void Almond::on_zoom_out_clicked()
 {
-    mw->zoom(2);
+    // TODO update mw->zoom(2);
 }
 
 
 void Almond::on_zoom_in_clicked()
 {
-    mw->zoom(0.5);
+    // TODO update mw->zoom(0.5);
 }
 
 
@@ -300,13 +306,14 @@ void Almond::on_maxIterations_editingFinished()
 {
     QString text = ui.maxIterations->text();
     int maxIter = text.toInt();
-    mw->setMaxIterations(maxIter);
+    // TODO update mw->setMaxIterations(maxIter);
 }
 
 
 void Almond::on_chooseGradient_clicked()
 {
-    const auto& gradient = mw->getGradient();
+    /*
+    const auto& gradient = mw->getGradient(); // TODO update
     auto points = gradient.getPoints();
     std::for_each(points.begin(), points.end(), [](auto& x) { x.second /= 300; });
 
@@ -316,7 +323,7 @@ void Almond::on_chooseGradient_clicked()
         auto& [col, pos] = qp;
         return { pos, QColor{ (col.r), (col.g), (col.b) } };
     });
-    this->gradientMenu->setGradient(std::move(np));
+    this->gradientMenu->setGradient(std::move(np));*/
     emit this->amw->showSubMenu(2);
     //gcd.exec();
     //auto gradient = gcd.getGradient();
@@ -327,6 +334,8 @@ void Almond::on_chooseGradient_clicked()
 
 void Almond::on_exportVideo_clicked()
 {
+    // TODO update
+    /*
     evm->setEndViewport(mw->getViewport());
     emit this->amw->showSubMenu(1);
     return;
@@ -345,26 +354,13 @@ void Almond::on_exportVideo_clicked()
         mnd::MandelGenerator& g = *mw->getGenerator();
         submitBackgroundTask(new VideoExportTask(std::move(mvg), g));
         //if (exportVideo(evi)) {
-
-        //Video
-        /*mi.maxIter = dialog.getMaxIterations();
-        mi.view = mw->getViewport();
-        mi.bWidth = dialog.getWidth();
-        mi.bHeight = dialog.getHeight();
-        mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        mnd::Generator& g = mandelContext.getDefaultGenerator();
-        auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
-        g.generate(mi, fmap.pixels.get());
-        auto bitmap = fmap.map<RGBColor>([](float i) { return i < 0 ? RGBColor{ 0,0,0 } : RGBColor{ uint8_t(cos(i * 0.015f) * 127 + 127), uint8_t(sin(i * 0.01f) * 127 + 127), uint8_t(i) }; });//uint8_t(::sin(i * 0.01f) * 100 + 100), uint8_t(i) }; });
-        QImage img((unsigned char*)bitmap.pixels.get(), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
-        img.save(dialog.getPath());*/
-    }
+    }*/
 }
 
 
 void Almond::on_smooth_stateChanged(int checked)
 {
-    this->mw->setSmoothColoring(checked != Qt::Unchecked);
+    // TODO update this->mw->setSmoothColoring(checked != Qt::Unchecked);
 }
 
 
@@ -372,66 +368,23 @@ void Almond::on_exportImage_clicked()
 {
     this->amw->showSubMenu(0);
     return;
-
-    ExportImageDialog dialog(this);
-    dialog.setMaxIterations(mw->getMaxIterations());
-    //dialog.show();
-    auto response = dialog.exec();
-    if (response == 1) {
-        mnd::MandelInfo mi;
-        mi.maxIter = dialog.getMaxIterations();
-        mi.view = mw->getViewport();
-        mi.bWidth = dialog.getWidth();
-        mi.bHeight = dialog.getHeight();
-        mi.view.adjustAspectRatio(mi.bWidth, mi.bHeight);
-        mi.smooth = mw->getSmoothColoring();
-        if (currentView == JULIA) {
-            mi.julia = mw->getMandelInfo().julia;
-            mi.juliaX = mw->getJuliaX();
-            mi.juliaY = mw->getJuliaY();
-        }
-        mnd::MandelGenerator* currentGenerator = mw->getGenerator();
-        mnd::MandelGenerator& g = currentGenerator ? *currentGenerator : mandelContext.getDefaultGenerator();
-
-        alm::ImageExportInfo iei;
-        iei.drawInfo = mi;
-        iei.generator = &g;
-        iei.gradient = mw->getGradient();
-        iei.path = dialog.getPath().toStdString();
-        iei.options.jpegQuality = 95;
-        submitBackgroundTask(new ImageExportTask(iei, [this] () { return stoppingBackgroundTasks; }));
-
-        /*auto exprt = [iei, path = dialog.getPath().toStdString()]() {
-            alm::exportPng(path, iei);
-        };
-
-        submitBackgroundTask();*/
-        
-        /*auto fmap = Bitmap<float>(mi.bWidth, mi.bHeight);
-        g.generate(mi, fmap.pixels.get());
-        auto bitmap = fmap.map<RGBColor>([&mi, this] (float i) {
-            return i >= mi.maxIter ? RGBColor{ 0,0,0 } : mw->getGradient().get(i);
-        });
-        QImage img(reinterpret_cast<unsigned char*>(bitmap.pixels.get()), bitmap.width, bitmap.height, bitmap.width * 3, QImage::Format_RGB888);
-        img.save(dialog.getPath());*/
-    }
 }
 
 
 void Almond::on_resetZoom_clicked()
 {
     if (currentView == MANDELBROT) {
-        mw->setViewport(mnd::MandelViewport::standardView());
+        // TODO update mw->setViewport(mnd::MandelViewport::standardView());
     }
     else {
-        mw->setViewport(mnd::MandelViewport::centerView());
+        // TODO update mw->setViewport(mnd::MandelViewport::centerView());
     }
 }
 
 
 void Almond::on_displayInfo_stateChanged(int checked)
 {
-    this->mw->setDisplayInfo(checked != Qt::Unchecked);
+    // TODO update this->mw->setDisplayInfo(checked != Qt::Unchecked);
 }
 
 
@@ -456,7 +409,7 @@ void Almond::on_chooseGenerator_clicked()
             customGenerator = gen.get();
         }
         currentGenerator = gen.get();
-        this->mw->setGenerator(currentGenerator);
+        // TODO update this->mw->setGenerator(currentGenerator);
         adjustedGenerators.push_back(std::move(gen));
     }
     else {
@@ -472,10 +425,12 @@ void Almond::pointSelected(mnd::Real x, mnd::Real y)
 {
     if (currentView != JULIA) {
         saveView();
+        // TODO update
+        /*
         this->mw->setViewport(mnd::MandelViewport::centerView());
         this->mw->setJuliaPos(x, y);
         this->mw->getMandelInfo().julia = true;
-        this->mw->clearAll();
+        this->mw->clearAll();*/
     }
     currentView = JULIA;
 }
@@ -490,14 +445,16 @@ void Almond::on_wMandel_clicked()
 void Almond::saveView()
 {
     if (currentView == MANDELBROT)
-        mandelViewSave = mw->getViewport();
+        ; // TODO update mandelViewSave = mw->getViewport();
     else if (currentView == CUSTOM)
-        customViewSave = mw->getViewport();
+        ; // TODO update customViewSave = mw->getViewport();
 }
 
 
 void Almond::setViewType(ViewType v)
 {
+    // TODO update
+    /*
     saveView();
     if (v == MANDELBROT) {
         currentGenerator = mandelGenerator;
@@ -536,6 +493,7 @@ void Almond::setViewType(ViewType v)
             emit this->mw->selectPoint();
         }
     }
+    */
 }
 
 

@@ -217,7 +217,7 @@ namespace mnd
     template<>
     inline Fixed64 convert<Fixed64, Real>(const Real& x)
     {
-        return static_cast<int64_t>(x * 0xFFFFFFFFFFFFLL);
+        return Fixed64{ static_cast<int64_t>(x * 0xFFFFFFFFFFFFLL), true };
     }
 
     template<>

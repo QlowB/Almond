@@ -1,4 +1,5 @@
 #pragma once
+#if 0
 
 #include <QGLWidget>
 #include <QOpenGLWidget>
@@ -403,3 +404,4 @@ signals:
     void pointSelected(mnd::Real x, mnd::Real y);
 };
 
+#endif

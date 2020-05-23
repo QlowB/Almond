@@ -1,4 +1,6 @@
 #include "FractalWidgetUtils.h"
+#include "FractalZoomWidget.h"
+
 
 
 CellImage::~CellImage(void)
@@ -61,13 +63,11 @@ QuadImage::~QuadImage(void)
 }
 
 
-void QuadImage::drawRect(QOpenGLShaderProgram* program,
-        float x, float y, float width, float height)
+void QuadImage::drawRect(float x, float y, float width, float height)
 {
     for (int i = 0; i < 2; i++) {
         for (int j = 0; j < 2; j++) {
-            this->cells[i][j]->drawRect(program,
-                                        x + i * 0.5f * width,
+            this->cells[i][j]->drawRect(x + i * 0.5f * width,
                                         y + j * 0.5f * height,
                                         width * 0.5f,
                                         height * 0.5f);
@@ -85,4 +85,49 @@ std::shared_ptr<CellImage> QuadImage::clip(short i, short j)
 int QuadImage::getRecalcPriority() const
 {
     return 1;
+}
+
+
+void CalcJob::run(void)
+{
+    auto [absX, absY] = grid->getPositions(i, j);
+    mnd::Real gw = grid->dpp * FractalZoomWidget::chunkSize;
+
+    Bitmap<float> f{ FractalZoomWidget::chunkSize, FractalZoomWidget::chunkSize };
+    mnd::MandelInfo mi = owner.getMandelInfo();
+    mi.view.x = absX;
+    mi.view.y = absY;
+    mi.view.width = mi.view.height = gw;
+    mi.bWidth = mi.bHeight = FractalZoomWidget::chunkSize;
+    try {
+        generator->generate(mi, f.pixels.get());
+        emit done(new Bitmap<float>(std::move(f)));
+    }
+    catch(std::exception& ex) {
+        emit failed(ex.what());
+    }
+    catch(...) {
+        emit failed(tr("unknown error"));
+    }
+}
+
+
+size_t IndexPairHash::operator()(const std::pair<GridIndex, GridIndex>& p) const
+{
+    const auto& [a, b] = p;
+    size_t truncA = static_cast<size_t>(a);
+    size_t truncB = static_cast<size_t>(b);
+    boost::hash_combine(truncA, truncB);
+    return truncA;
+}
+
+
+size_t IndexTripleHash::operator()(const std::tuple<int, GridIndex, GridIndex>& p) const
+{
+    const auto& [i, a, b] = p;
+    size_t truncA = static_cast<size_t>(a);
+    size_t truncB = static_cast<size_t>(b);
+    boost::hash_combine(truncA, truncB);
+    boost::hash_combine(truncA, i);
+    return truncA;
 }

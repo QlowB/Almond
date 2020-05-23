@@ -13,7 +13,7 @@
 #include "choosegenerators.h"
 #include "customgenerator.h"
 
-#include "EscapeTimeVisualWidget.h"
+#include "FractalZoomWidget.h"
 
 #include "AlmondMenuWidget.h"
 #include "ExportImageMenu.h"
@@ -54,8 +54,7 @@ private:
     bool fullscreenMode = false;
     QWidget* cw;
 public:
-    std::unique_ptr<MandelWidget> mw;
-    EscapeTimeVisualWidget* etvw;
+    FractalZoomWidget* fractalWidget;
 private:
     //std::unique_ptr<BenchmarkDialog> benchmarkDialog;
     std::unique_ptr<CustomGenerator> customGeneratorDialog;

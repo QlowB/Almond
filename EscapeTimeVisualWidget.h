@@ -34,9 +34,9 @@ class EscapeTimeVisualWidget :
 public:
     EscapeTimeVisualWidget(QWidget* parent = nullptr);
 
-    void initializeGL(void) override;
-    void resizeGL(int w, int h) override;
-    void paintGL(void) override;
+    virtual void initializeGL(void) override;
+    virtual void resizeGL(int w, int h) override;
+    virtual void paintGL(void) override;
 };
 
 #endif // ESCAPETIMEVISUALWIDGET_H

@@ -20,6 +20,7 @@ Almond::Almond(QWidget* parent) :
     mw = std::make_unique<MandelWidget>(mandelContext,
                                         &mandelContext.getDefaultGenerator(),
                                         ui.centralWidget);
+    etvw = new EscapeTimeVisualWidget(this);
     customGeneratorDialog = std::make_unique<CustomGenerator>(mandelContext);
     customGenerator = nullptr;
     customViewSave = mnd::MandelViewport::centerView();
@@ -32,7 +33,8 @@ Almond::Almond(QWidget* parent) :
     mandelViewSave = mw->getViewport();
 
     QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
-    ui.mandel_container->addWidget(mw.get());
+    ui.mandel_container->addWidget(etvw);
+    //ui.mandel_container->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
 
     ui.backgroundProgress->setEnabled(false);

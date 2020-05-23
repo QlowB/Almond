@@ -30,8 +30,11 @@ SOURCES += \
         AlmondMenuWidget.cpp \
         BackgroundTask.cpp \
         Color.cpp \
+        EscapeTimeVisualWidget.cpp \
         ExportImageMenu.cpp \
         ExportVideoMenu.cpp \
+        FractalWidgetUtils.cpp \
+        FractalZoomWidget.cpp \
         GradientMenu.cpp \
         GradientWidget.cpp \
         MandelWidget.cpp \
@@ -47,8 +50,11 @@ HEADERS += \
         AlmondMenuWidget.h \
         BackgroundTask.h \
         Color.h \
+        EscapeTimeVisualWidget.h \
         ExportImageMenu.h \
         ExportVideoMenu.h \
+        FractalWidgetUtils.h \
+        FractalZoomWidget.h \
         GradientMenu.h \
         GradientWidget.h \
         MandelWidget.h \

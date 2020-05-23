@@ -13,6 +13,8 @@
 #include "choosegenerators.h"
 #include "customgenerator.h"
 
+#include "EscapeTimeVisualWidget.h"
+
 #include "AlmondMenuWidget.h"
 #include "ExportImageMenu.h"
 #include "ExportVideoMenu.h"
@@ -53,6 +55,7 @@ private:
     QWidget* cw;
 public:
     std::unique_ptr<MandelWidget> mw;
+    EscapeTimeVisualWidget* etvw;
 private:
     //std::unique_ptr<BenchmarkDialog> benchmarkDialog;
     std::unique_ptr<CustomGenerator> customGeneratorDialog;

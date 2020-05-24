@@ -20,8 +20,9 @@ Almond::Almond(QWidget* parent) :
     //mw = std::make_unique<MandelWidget>(mandelContext,
     //                                    &mandelContext.getDefaultGenerator(),
     //                                    ui.centralWidget);
-    fractalWidget = new FractalZoomWidget(this);
+    fractalWidget = new FractalWidget(this);
     fractalWidget->setGenerator(&mandelContext.getDefaultGenerator());
+    fractalWidget->setGradient(Gradient::defaultGradient());
     customGeneratorDialog = std::make_unique<CustomGenerator>(mandelContext);
     customGenerator = nullptr;
     customViewSave = mnd::MandelViewport::centerView();
@@ -56,6 +57,35 @@ Almond::Almond(QWidget* parent) :
     connect(imageSm, &AlmondSubMenu::accepted, this, &Almond::imageExportOk);
     connect(videoSm, &AlmondSubMenu::accepted, this, &Almond::videoExportOk);
     connect(gradientSm, &AlmondSubMenu::accepted, this, &Almond::gradientEditOk);
+
+
+    connect(gradientMenu, &GradientMenu::gradientChanged, [this] () {
+
+        std::vector<std::pair<RGBColor, float>> np;
+        const auto& points = gradientMenu->getGradient();
+        std::transform(points.begin(), points.end(), std::back_inserter(np),
+            [](auto& qp) -> std::pair<RGBColor, float> {
+            auto& [pos, col] = qp;
+            return { RGBColor{ uint8_t(col.red()), uint8_t(col.green()), uint8_t(col.blue()) },
+                pos };
+        });
+        std::sort(np.begin(), np.end(), [](auto& a, auto& b) { return a.second < b.second; });
+        if (!np.empty()) {
+            auto& first = np.at(0);
+            if (first.second > 0) {
+                np.insert(np.begin(), { first.first, 0.0f });
+            }
+            auto& last = np.at(np.size() - 1);
+            if (last.second < 1) {
+                np.insert(np.begin(), { last.first, 1.0f });
+            }
+        }
+
+        std::for_each(np.begin(), np.end(), [](auto& x) { x.second *= 300; });
+
+        Gradient grad{ np, true };
+        fractalWidget->setGradient(grad);
+    });
 
 
     /*QStatusBar* bar = new QStatusBar(this);
@@ -225,7 +255,7 @@ void Almond::gradientEditOk(void)
     std::for_each(np.begin(), np.end(), [](auto& x) { x.second *= 300; });
 
     Gradient g{ np, true };
-    //mw->setGradient(std::move(g)); // TODO update
+    fractalWidget->setGradient(std::move(g));
     amw->showMainMenu();
 }
 
@@ -292,13 +322,13 @@ void Almond::backgroundTaskProgress(float percentage)
 
 void Almond::on_zoom_out_clicked()
 {
-    // TODO update mw->zoom(2);
+    fractalWidget->zoom(2);
 }
 
 
 void Almond::on_zoom_in_clicked()
 {
-    // TODO update mw->zoom(0.5);
+    fractalWidget->zoom(0.5);
 }
 
 
@@ -312,8 +342,7 @@ void Almond::on_maxIterations_editingFinished()
 
 void Almond::on_chooseGradient_clicked()
 {
-    /*
-    const auto& gradient = mw->getGradient(); // TODO update
+    const auto& gradient = fractalWidget->getGradient(); // TODO update
     auto points = gradient.getPoints();
     std::for_each(points.begin(), points.end(), [](auto& x) { x.second /= 300; });
 
@@ -323,7 +352,7 @@ void Almond::on_chooseGradient_clicked()
         auto& [col, pos] = qp;
         return { pos, QColor{ (col.r), (col.g), (col.b) } };
     });
-    this->gradientMenu->setGradient(std::move(np));*/
+    this->gradientMenu->setGradient(std::move(np));
     emit this->amw->showSubMenu(2);
     //gcd.exec();
     //auto gradient = gcd.getGradient();
@@ -374,10 +403,10 @@ void Almond::on_exportImage_clicked()
 void Almond::on_resetZoom_clicked()
 {
     if (currentView == MANDELBROT) {
-        // TODO update mw->setViewport(mnd::MandelViewport::standardView());
+        fractalWidget->setViewport(mnd::MandelViewport::standardView());
     }
     else {
-        // TODO update mw->setViewport(mnd::MandelViewport::centerView());
+        fractalWidget->setViewport(mnd::MandelViewport::centerView());
     }
 }
 
@@ -409,7 +438,7 @@ void Almond::on_chooseGenerator_clicked()
             customGenerator = gen.get();
         }
         currentGenerator = gen.get();
-        // TODO update this->mw->setGenerator(currentGenerator);
+        this->fractalWidget->setGenerator(currentGenerator);
         adjustedGenerators.push_back(std::move(gen));
     }
     else {

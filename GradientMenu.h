@@ -13,6 +13,7 @@ class GradientMenu : public QWidget
 {
     Q_OBJECT
 
+    Ui::GradientMenu *ui;
 public:
     explicit GradientMenu(QWidget *parent = nullptr);
     ~GradientMenu(void);
@@ -20,8 +21,8 @@ public:
     const QVector<QPair<float, QColor>>& getGradient(void);
     void setGradient(QVector<QPair<float, QColor>> grad);
 
-private:
-    Ui::GradientMenu *ui;
+signals:
+    void gradientChanged(void);
 };
 
 #endif // GRADIENTMENU_H

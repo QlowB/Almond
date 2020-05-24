@@ -6,9 +6,11 @@
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
 
+#include <vector>
 
 
-ETVImage::ETVImage(EscapeTimeVisualWidget& owner) :
+ETVImage::ETVImage(EscapeTimeVisualWidget& owner,
+                   const Bitmap<float>& img) :
     owner{ owner }
 {
     auto& gl = *owner.context()->functions();
@@ -16,18 +18,20 @@ ETVImage::ETVImage(EscapeTimeVisualWidget& owner) :
     gl.glActiveTexture(GL_TEXTURE0);
     gl.glBindTexture(GL_TEXTURE_2D, textureId);
 
-    Bitmap<float> img{512, 512};
-    for (int i = 0; i < img.width; i++) {
-        for (int j = 0; j < img.height; j++) {
-            img.get(i, j) = (i ^ j);
+    {
+    /*Bitmap<float> img2 = img.map<float>([](float x) { return x; });
+    for (int i = 0; i < img2.width; i++) {
+        for (int j = 0; j < img2.height; j++) {
+            img2.get(i, j) = img.get(i, j) * i + j;
         }
-    }
+    }*/
     gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, int(img.width), int(img.height), 0, GL_RED, GL_FLOAT, img.pixels.get());
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     gl.glBindTexture(GL_TEXTURE_2D, 0);
+    }
 }
 
 
@@ -89,8 +93,23 @@ void ETVImage::draw(float x, float y, float w, float h,
 
 
 EscapeTimeVisualWidget::EscapeTimeVisualWidget(QWidget* parent) :
-    QOpenGLWidget{ parent }
+    QOpenGLWidget{ parent },
+    gradientNeedsUpdate{ false }
 {
+}
+
+
+void EscapeTimeVisualWidget::setGradient(Gradient newGradient)
+{
+    this->gradient = newGradient;
+    gradientNeedsUpdate = true;
+    update();
+}
+
+
+const Gradient& EscapeTimeVisualWidget::getGradient(void)
+{
+    return gradient;
 }
 
 
@@ -158,10 +177,17 @@ void EscapeTimeVisualWidget::resizeGL(int w, int h)
 {
     auto& gl = *this->context()->functions();
     float pixelRatio = this->devicePixelRatioF();
-    gl.glViewport(0, 0, w * pixelRatio, h * pixelRatio);
+
+    float newW = w * pixelRatio;
+    float newH = h * pixelRatio;
+
+    setResolutionX(newW);
+    setResolutionY(newH);
+
+    gl.glViewport(0, 0, newW, newH);
 
     QMatrix4x4 pmvMatrix;
-    pmvMatrix.ortho(QRectF{ 0, 0, w * pixelRatio, h * pixelRatio });
+    pmvMatrix.ortho(QRectF{ 0, 0, newW, newH });
     int matrixLocation = program->uniformLocation("matrix");
     program->setUniformValue(matrixLocation, pmvMatrix);
 }
@@ -169,11 +195,65 @@ void EscapeTimeVisualWidget::resizeGL(int w, int h)
 
 void EscapeTimeVisualWidget::paintGL(void)
 {
-    ETVImage etvi{ *this };
+    if (gradientNeedsUpdate)
+        updateGradient();
+    /*ETVImage etvi{ *this };
 
     auto& gl = *this->context()->functions();
     gl.glClearColor(0.0, 0.2, 0.0, 1.0);
     gl.glClear(GL_COLOR_BUFFER_BIT);
 
-    etvi.draw(100, 100, 700, 700);
+    etvi.draw(100, 100, 700, 700);*/
+}
+
+
+void EscapeTimeVisualWidget::updateGradient(void)
+{
+    auto& gl = *this->context()->functions();
+
+    const int len = 512;
+    std::unique_ptr<uint8_t[]> pixels = std::make_unique<uint8_t[]>(len * 3);
+
+    for (int i = 0; i < len; i++) {
+        RGBColor c = gradient.get(gradient.getMax() * i / len);
+        pixels[i * 3] = c.r;
+        pixels[i * 3 + 1] = c.g;
+        pixels[i * 3 + 2] = c.b;
+    }
+
+    gl.glEnable(GL_TEXTURE_2D);
+    gl.glBindTexture(GL_TEXTURE_2D, gradientTextureId);
+
+    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, len, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<unsigned char*> (pixels.get()));
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl.glBindTexture(GL_TEXTURE_2D, 0);
+
+    gradientNeedsUpdate = false;
+}
+
+
+void EscapeTimeVisualWidget::setResolutionX(int w)
+{
+    resolutionX = w;
+}
+
+
+void EscapeTimeVisualWidget::setResolutionY(int h)
+{
+    resolutionY = h;
+}
+
+
+int EscapeTimeVisualWidget::getResolutionX(void) const
+{
+    return resolutionX;
+}
+
+
+int EscapeTimeVisualWidget::getResolutionY(void) const
+{
+    return resolutionY;
 }

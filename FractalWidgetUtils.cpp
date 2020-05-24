@@ -101,13 +101,13 @@ void CalcJob::run(void)
     mi.bWidth = mi.bHeight = FractalZoomWidget::chunkSize;
     try {
         generator->generate(mi, f.pixels.get());
-        emit done(new Bitmap<float>(std::move(f)));
+        emit done(level, i, j, new Bitmap<float>(std::move(f)));
     }
     catch(std::exception& ex) {
-        emit failed(ex.what());
+        emit failed(level, i, j, ex.what());
     }
     catch(...) {
-        emit failed(tr("unknown error"));
+        emit failed(level, i, j, tr("unknown error"));
     }
 }
 
@@ -115,8 +115,8 @@ void CalcJob::run(void)
 size_t IndexPairHash::operator()(const std::pair<GridIndex, GridIndex>& p) const
 {
     const auto& [a, b] = p;
-    size_t truncA = static_cast<size_t>(a);
-    size_t truncB = static_cast<size_t>(b);
+    size_t truncA = std::hash<GridIndex>{}(a);
+    size_t truncB = std::hash<GridIndex>{}(b);
     boost::hash_combine(truncA, truncB);
     return truncA;
 }
@@ -125,8 +125,8 @@ size_t IndexPairHash::operator()(const std::pair<GridIndex, GridIndex>& p) const
 size_t IndexTripleHash::operator()(const std::tuple<int, GridIndex, GridIndex>& p) const
 {
     const auto& [i, a, b] = p;
-    size_t truncA = static_cast<size_t>(a);
-    size_t truncB = static_cast<size_t>(b);
+    size_t truncA = std::hash<GridIndex>{}(a);
+    size_t truncB = std::hash<GridIndex>{}(b);
     boost::hash_combine(truncA, truncB);
     boost::hash_combine(truncA, i);
     return truncA;

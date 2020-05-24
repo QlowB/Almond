@@ -41,9 +41,9 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, 
     std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(bs),
                    [] (auto p) { return std::pair{ p.second, p.first.b }; });
 
-    CubicSpline rsp(rs, true, true);
-    CubicSpline gsp(gs, true, true);
-    CubicSpline bsp(bs, true, true);
+    CubicSpline rsp(rs, false, true);
+    CubicSpline gsp(gs, false, true);
+    CubicSpline bsp(bs, false, true);
 
     if(precalcSteps <= 0) {
         precalcSteps = int(max * 15) + 10;

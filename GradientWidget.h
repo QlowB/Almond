@@ -69,7 +69,7 @@ protected:
 private:
     static QPainterPath createSlideHandle(float w, float h);
 signals:
-
+    void gradientChanged(void);
 };
 
 #endif // GRADIENTWIDGET_H

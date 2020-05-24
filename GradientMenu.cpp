@@ -12,6 +12,7 @@ GradientMenu::GradientMenu(QWidget *parent) :
             { 0.7, QColor{ 100, 20, 120 } }
         }
     );
+    connect(ui->gradientWidget, &GradientWidget::gradientChanged, this, &GradientMenu::gradientChanged);
 }
 
 

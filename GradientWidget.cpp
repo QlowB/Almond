@@ -277,6 +277,7 @@ void GradientWidget::mouseMoveEvent(QMouseEvent* e)
         newVal = std::clamp(newVal, 0.0f, 1.0f);
         points[selectedHandle].first = newVal;
         update();
+        emit gradientChanged();
         e->accept();
     }
     else {
@@ -304,6 +305,7 @@ void GradientWidget::mouseDoubleClickEvent(QMouseEvent* e)
         if (newColor.isValid()) {
             points[handle].second = newColor;
             update();
+            emit gradientChanged();
         }
         e->accept();
     }

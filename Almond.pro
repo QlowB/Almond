@@ -33,6 +33,7 @@ SOURCES += \
         EscapeTimeVisualWidget.cpp \
         ExportImageMenu.cpp \
         ExportVideoMenu.cpp \
+        FractalWidget.cpp \
         FractalWidgetUtils.cpp \
         FractalZoomWidget.cpp \
         GradientMenu.cpp \
@@ -53,6 +54,7 @@ HEADERS += \
         EscapeTimeVisualWidget.h \
         ExportImageMenu.h \
         ExportVideoMenu.h \
+        FractalWidget.h \
         FractalWidgetUtils.h \
         FractalZoomWidget.h \
         GradientMenu.h \

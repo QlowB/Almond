@@ -119,8 +119,8 @@ public:
 
     void run() override;
 signals:
-    void done(Bitmap<float>* bmp);
-    void failed(QString err);
+    void done(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
+    void failed(int level, GridIndex i, GridIndex j, QString err);
 };
 
 

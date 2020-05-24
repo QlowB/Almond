@@ -59,8 +59,8 @@ public slots:
     void calc(SliceGrid& grid, int level, GridIndex i, GridIndex j, int priority);
     void setCurrentLevel(int level);
     void notFinished(int level, GridIndex i, GridIndex j);
-    void jobFailed(void);
-    void redirect(Bitmap<float>* bmp);
+    void jobFailed(int level, GridIndex i, GridIndex j);
+    void redirect(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
 signals:
     void done(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
 };
@@ -77,20 +77,48 @@ class FractalZoomWidget :
     mnd::MandelGenerator* generator;
     Calcer calcer;
 
+    ETVImage* emptyImage;
+protected:
     mnd::MandelInfo mandelInfo;
 
 public:
-    static const int chunkSize = 256;
+    static const int chunkSize;
 
     FractalZoomWidget(QWidget* parent = nullptr);
 
-    mnd::Real getDpp(int level);
+    Q_PROPERTY(mnd::MandelViewport viewport READ getViewport WRITE setViewport)
+    virtual void setViewport(const mnd::MandelViewport& viewport);
+    virtual const mnd::MandelViewport& getViewport(void) const;
+
+    int getLevel(const mnd::Real& dpp) const;
+    mnd::Real getDpp(int level) const;
+    SliceGrid& getGrid(int level);
+
+    void clearCells(void);
+
+    void garbageCollect(int level,
+         const GridIndex& i, const GridIndex& j);
+
+    GridElement* searchAbove(int level,
+                 const GridIndex& i, const GridIndex& j,
+                 int recursionLevel);
+    GridElement* searchUnder(int level,
+                 const GridIndex& i, const GridIndex& j,
+                 int recursionLevel);
+
     const mnd::MandelInfo& getMandelInfo(void) const;
 
     void setGenerator(mnd::MandelGenerator*);
     mnd::MandelGenerator* getGenerator(void) const;
 
-    void paintGL(void) override;
+    virtual void zoom(float factor);
+
+    virtual void initializeGL(void) override;
+    virtual void resizeGL(int w, int h) override;
+    virtual void paintGL(void) override;
+protected slots:
+
+    void cellReady(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
 };
 
 #endif // FRACTALZOOMWIDGET_H

@@ -18,20 +18,12 @@ ETVImage::ETVImage(EscapeTimeVisualWidget& owner,
     gl.glActiveTexture(GL_TEXTURE0);
     gl.glBindTexture(GL_TEXTURE_2D, textureId);
 
-    {
-    /*Bitmap<float> img2 = img.map<float>([](float x) { return x; });
-    for (int i = 0; i < img2.width; i++) {
-        for (int j = 0; j < img2.height; j++) {
-            img2.get(i, j) = img.get(i, j) * i + j;
-        }
-    }*/
     gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, int(img.width), int(img.height), 0, GL_RED, GL_FLOAT, img.pixels.get());
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     gl.glBindTexture(GL_TEXTURE_2D, 0);
-    }
 }
 
 
@@ -136,22 +128,47 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "   gl_Position = matrix * vertex;\n"
     "   texc = texCoord;\n"
     "}");
+
+    // TODO rewrite this monster
     bool frag = program->addShaderFromSourceCode(QOpenGLShader::Fragment,
+    "#version 400\n"
     "uniform sampler2D gradient;\n"
     "uniform sampler2D tex;\n"
     "uniform mediump vec4 color;\n"
+    "uniform highp float gradientScaler;\n"
     "varying highp vec2 texc;\n"
     "void main(void)\n"
     "{\n"
     "   float v = texture2D(tex, texc).r;\n"
+    "   vec2 size = textureSize(tex, 0);\n"
+    //"   size = vec2(256.0, 256.0);\n"
+    "   vec2 accPoint = texc * size;\n"
+    "   vec2 ip = floor(accPoint);\n"
+    "   vec2 fp = fract(accPoint);\n"
+    "   vec4 inter = textureGather(tex, ip / size, 0);\n"
+    "   vec4 col1 = texture2D(gradient, vec2(inter.x*0.005, 0.0));\n"
+    "   vec4 col2 = texture2D(gradient, vec2(inter.y*0.005, 0.0));\n"
+    "   vec4 col3 = texture2D(gradient, vec2(inter.z*0.005, 0.0));\n"
+    "   vec4 col4 = texture2D(gradient, vec2(inter.w*0.005, 0.0));\n"
+    "   vec4 col = mix(mix(col4, col3, fp.x), mix(col1, col2, fp.x), fp.y);\n"
     "   gl_FragColor = texture2D(gradient, vec2(v*0.005, 0.0));\n"
+    "   gl_FragColor = col;\n"
 //    "   gl_FragColor = gl_FragColor * texture2D(tex, texc);\n"
 //    "   float v = texture2D(tex, texc).r;\n"
 //    "   gl_FragColor = vec4(v, 1.0 - v, v*v, 1);\n"
 //    "   gl_FragColor.g = 0.3;\n"
     "}");
+    
     //program.link();
     bool bound = program->bind();
+
+    int vertexLoc = program->attributeLocation("vertex");
+    int texCoordsLoc = program->attributeLocation("texCoord");
+    int colorLocation = program->uniformLocation("color");
+    int texLoc = program->uniformLocation("tex");
+    int gradLoc = program->uniformLocation("gradient");
+    int gradientScaler = program->uniformLocation("gradientScaler");
+
 
     unsigned char pix[] = { 255, 0, 0, 0, 255, 0, 0, 0, 255 };
 
@@ -177,6 +194,7 @@ void EscapeTimeVisualWidget::resizeGL(int w, int h)
 {
     auto& gl = *this->context()->functions();
     float pixelRatio = this->devicePixelRatioF();
+    //pixelRatio = 1.0 / 32;
 
     float newW = w * pixelRatio;
     float newH = h * pixelRatio;

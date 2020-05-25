@@ -32,12 +32,16 @@ class EscapeTimeVisualWidget :
 
     friend class ETVImage;
     QOpenGLShaderProgram* program;
+    QOpenGLShaderProgram* renderTextures;
     GLuint gradientTextureId;
     Gradient gradient;
     bool gradientNeedsUpdate;
 
     float resolutionX;
     float resolutionY;
+
+    GLuint tileFramebuffer;
+    GLuint tileTexture;
 
 public:
     EscapeTimeVisualWidget(QWidget* parent = nullptr);

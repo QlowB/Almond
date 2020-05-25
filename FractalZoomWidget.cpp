@@ -173,13 +173,19 @@ const mnd::MandelViewport& FractalZoomWidget::getViewport(void) const
 
 int FractalZoomWidget::getLevel(const mnd::Real& dpp) const
 {
-    return int(mnd::log2(dpp / chunkSize));
+    int exponent = (dpp / chunkSize).backend().exponent();
+    // replace log2 with cheaper operation
+    //return int(mnd::log2(dpp / chunkSize));
+    return exponent + 1;
 }
 
 
 mnd::Real FractalZoomWidget::getDpp(int level) const
 {
-    return mnd::pow(mnd::Real(2), mnd::Real(level)) * chunkSize;
+    mnd::Real a = 1;
+    a.backend().exponent() += level;
+    return a * chunkSize;
+    // return mnd::pow(mnd::Real(2), mnd::Real(level)) * chunkSize;
 }
 
 

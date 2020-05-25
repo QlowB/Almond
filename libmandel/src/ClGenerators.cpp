@@ -116,6 +116,8 @@ ClGeneratorFloat::ClGeneratorFloat(mnd::MandelDevice& device, const std::string&
 {
     const cl::Device& dev = device.getClDevice().device;
     useVec = dev.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() >= 4;
+    // often still slower than non-vec variation
+    useVec = false;
     kernel = Kernel(program, useVec ? "iterate_vec4" : "iterate");
 }
 

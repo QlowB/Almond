@@ -34,6 +34,8 @@ class EscapeTimeVisualWidget :
     QOpenGLShaderProgram* program;
     QOpenGLShaderProgram* renderTextures;
     GLuint gradientTextureId;
+    float gradientTextureMax;
+    float maxIterations;
     Gradient gradient;
     bool gradientNeedsUpdate;
 
@@ -52,6 +54,8 @@ public:
     virtual void initializeGL(void) override;
     virtual void resizeGL(int w, int h) override;
     virtual void paintGL(void) override;
+
+    void setMaxIterationCutoff(float maxIter);
 
     void setResolutionX(int w);
     void setResolutionY(int h);

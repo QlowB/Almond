@@ -28,7 +28,7 @@ Almond::Almond(QWidget* parent) :
     customViewSave = mnd::MandelViewport::centerView();
 
     on_maxIterations_editingFinished();
-    // TODO update mw->setSmoothColoring(ui.smooth->isChecked());
+    fractalWidget->setSmoothColoring(ui.smooth->isChecked());
 
     currentView = MANDELBROT;
     mandelGenerator = &mandelContext.getDefaultGenerator();
@@ -336,7 +336,7 @@ void Almond::on_maxIterations_editingFinished()
 {
     QString text = ui.maxIterations->text();
     int maxIter = text.toInt();
-    // TODO update mw->setMaxIterations(maxIter);
+    fractalWidget->setMaxIterations(maxIter);
 }
 
 
@@ -389,7 +389,7 @@ void Almond::on_exportVideo_clicked()
 
 void Almond::on_smooth_stateChanged(int checked)
 {
-    // TODO update this->mw->setSmoothColoring(checked != Qt::Unchecked);
+    fractalWidget->setSmoothColoring(checked != Qt::Unchecked);
 }
 
 

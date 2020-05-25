@@ -135,7 +135,7 @@ void Calcer::redirect(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp)
     jobsMutex.lock();
     jobs.erase({ level, i, j });
     jobsMutex.unlock();
-    if (this->calcState == calcState) {
+    if (this->calcState == calcState) { // TODO remove invalid results correctly
         emit done(level, i, j, bmp);
     }
     else {
@@ -153,7 +153,7 @@ FractalZoomWidget::FractalZoomWidget(QWidget* parent) :
 {
     qMetaTypeId<GridIndex>();
     connect(&calcer, &Calcer::done, this, &FractalZoomWidget::cellReady);
-    mandelInfo.maxIter = 250;
+    setMaxIterations(250);
 }
 
 
@@ -341,6 +341,27 @@ void FractalZoomWidget::zoom(float factor)
 {
     mandelInfo.view.zoomCenter(factor);
     update();
+}
+
+
+void FractalZoomWidget::setSmoothColoring(bool smooth)
+{
+    if (mandelInfo.smooth != smooth) {
+        mandelInfo.smooth = smooth;
+        clearCells();
+        update();
+    }
+}
+
+
+void FractalZoomWidget::setMaxIterations(int maxIterations)
+{
+    if (mandelInfo.maxIter != maxIterations) {
+        mandelInfo.maxIter = maxIterations;
+        EscapeTimeVisualWidget::setMaxIterationCutoff(float(maxIterations));
+        clearCells();
+        update();
+    }
 }
 
 

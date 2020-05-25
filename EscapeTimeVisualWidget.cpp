@@ -7,6 +7,7 @@
 #include <QOpenGLFunctions>
 #include <QOpenGLExtraFunctions>
 #include <QOpenGLFunctions_3_0>
+#include <QOpenGLFunctions_4_0_Core>
 
 #include <vector>
 
@@ -78,24 +79,30 @@ void ETVImage::draw(float x, float y, float w, float h,
     int colorLocation = program->uniformLocation("color");
     int texLoc = program->uniformLocation("tex");
     int gradLoc = program->uniformLocation("gradient");
-    program->setAttributeArray(vertexLoc, fbVertices, 3);
+    int gradientScaler = program->uniformLocation("gradientScaler");
+    int maxIterations = program->uniformLocation("maxIterations");
+    program->setAttributeArray(vertexLoc, vertices, 3);
     program->setAttributeArray(texCoordsLoc, texCoords, 2);
     program->enableAttributeArray(vertexLoc);
     program->enableAttributeArray(texCoordsLoc);
     program->setUniformValue(colorLocation, color);
+    program->setUniformValue(gradientScaler, 1.0f / float(owner.gradientTextureMax));
+    program->setUniformValue(maxIterations, float(owner.maxIterations));
 
     gl.glEnable(GL_TEXTURE_2D);
     owner.program->bind();
 
     //GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
     //gle.glDrawBuffers(1, drawBuffers);
+    gl.glBindFramebuffer(GL_FRAMEBUFFER, owner.tileFramebuffer);
+    gl.glDisable(GL_DEPTH_TEST);
     if(gl.glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         printf("error intitializing framebuffer\n");
     }
-    gl.glBindFramebuffer(GL_FRAMEBUFFER, owner.tileFramebuffer);
     gl.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, owner.tileTexture, 0);
     //gl.glViewport(0, 0, 256, 256);
 
+    gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);
     gl.glUniform1i(texLoc, 0);
     gl.glUniform1i(gradLoc, 2);
 
@@ -108,7 +115,7 @@ void ETVImage::draw(float x, float y, float w, float h,
     program->disableAttributeArray(vertexLoc);
     program->disableAttributeArray(texCoordsLoc);
 
-    owner.renderTextures->bind();
+    /*owner.renderTextures->bind();
     gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //gl.glViewport(0, 0, owner.getResolutionX(), owner.getResolutionY());
     int rtVertexLoc = owner.renderTextures->attributeLocation("vertex");
@@ -122,15 +129,19 @@ void ETVImage::draw(float x, float y, float w, float h,
     owner.renderTextures->enableAttributeArray(rtVertexLoc);
     owner.renderTextures->enableAttributeArray(rtTexCoordsLoc);
     gl.glBindTexture(GL_TEXTURE_2D, owner.tileTexture);
-    gl.glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    //if (rand() % 2)
+    //gl.glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     owner.renderTextures->disableAttributeArray(rtVertexLoc);
     owner.renderTextures->disableAttributeArray(rtTexCoordsLoc);
+    */
     gl.glActiveTexture(GL_TEXTURE0);
 }
 
 
 EscapeTimeVisualWidget::EscapeTimeVisualWidget(QWidget* parent) :
     QOpenGLWidget{ parent },
+    gradientTextureId{ 0 },
+    gradientTextureMax{ 1.0f },
     gradientNeedsUpdate{ false }
 {
 }
@@ -198,34 +209,65 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "}");
 
     // TODO rewrite this monster
-    bool frag = program->addShaderFromSourceCode(QOpenGLShader::Fragment,
-    "#version 110\n"
-    "uniform sampler2D gradient;\n"
-    "uniform sampler2D tex;\n"
-    "uniform mediump vec4 color;\n"
-    "uniform highp float gradientScaler;\n"
-    "varying highp vec2 texc;\n"
-    "void main(void)\n"
-    "{\n"
-    "   float v = texture2D(tex, texc).r;\n"
-    /*"   vec2 size = textureSize(tex, 0);\n"
-    "   size = vec2(256.0, 256.0);\n"
-    "   vec2 accPoint = texc * size;\n"
-    "   vec2 ip = floor(accPoint);\n"
-    "   vec2 fp = fract(accPoint);\n"
-    "   vec4 inter = textureGather(tex, ip / size, 0);\n"
-    "   vec4 col1 = texture2D(gradient, vec2(inter.x*0.005, 0.0));\n"
-    "   vec4 col2 = texture2D(gradient, vec2(inter.y*0.005, 0.0));\n"
-    "   vec4 col3 = texture2D(gradient, vec2(inter.z*0.005, 0.0));\n"
-    "   vec4 col4 = texture2D(gradient, vec2(inter.w*0.005, 0.0));\n"
-    "   vec4 col = mix(mix(col4, col3, fp.x), mix(col1, col2, fp.x), fp.y);\n"*/
-    "   gl_FragColor = texture2D(gradient, vec2(v*0.005, 0.0));\n"
-    //"   gl_FragColor = col;\n"
-//    "   gl_FragColor = gl_FragColor * texture2D(tex, texc);\n"
-//    "   float v = texture2D(tex, texc).r;\n"
-//    "   gl_FragColor = vec4(v, 1.0 - v, v*v, 1);\n"
-//    "   gl_FragColor.g = 0.3;\n"
-    "}");
+    if (context()->versionFunctions<QOpenGLFunctions_4_0_Core>() != nullptr) {
+        bool frag = program->addShaderFromSourceCode(QOpenGLShader::Fragment,
+        "#version 400\n"
+        "uniform sampler2D gradient;\n"
+        "uniform sampler2D tex;\n"
+        "uniform mediump vec4 color;\n"
+        "uniform highp float gradientScaler;\n"
+        "uniform highp float maxIterations;\n"
+        "varying highp vec2 texc;\n"
+        "vec4 colorize(float pos) {\n"
+        "    if (pos >= maxIterations) {\n"
+        "        return vec4(0.0, 0.0, 0.0, 1.0);\n"
+        "    } else {\n"
+        "        return texture2D(gradient, vec2(pos * gradientScaler, 0.0));\n"
+        "    }\n"
+        "}\n"
+        "void main(void)\n"
+        "{\n"
+        "   vec2 size = textureSize(tex, 0);\n"
+        "   size = vec2(256.0, 256.0);\n"
+        "   vec2 accPoint = texc * size;\n"
+        "   vec2 ip = floor(accPoint);\n"
+        "   vec2 fp = fract(accPoint);\n"
+        "   vec4 inter = textureGather(tex, ip / size, 0);\n"
+        "   vec4 col1 = colorize(inter.x);\n"
+        "   vec4 col2 = colorize(inter.y);\n"
+        "   vec4 col3 = colorize(inter.z);\n"
+        "   vec4 col4 = colorize(inter.w);\n"
+        "   vec4 col = mix(mix(col4, col3, fp.x), mix(col1, col2, fp.x), fp.y);\n"
+        "   gl_FragColor = col;\n"
+    //    "   gl_FragColor = gl_FragColor * texture2D(tex, texc);\n"
+    //    "   float v = texture2D(tex, texc).r;\n"
+    //    "   gl_FragColor = vec4(v, 1.0 - v, v*v, 1);\n"
+    //    "   gl_FragColor.g = 0.3;\n"
+        "}");
+    }
+    else {
+        bool frag = program->addShaderFromSourceCode(QOpenGLShader::Fragment,
+        "#version 110\n"
+        "uniform sampler2D gradient;\n"
+        "uniform sampler2D tex;\n"
+        "uniform mediump vec4 color;\n"
+        "uniform highp float gradientScaler;\n"
+        "uniform highp float maxIterations;\n"
+        "varying highp vec2 texc;\n"
+        "void main(void)\n"
+        "{\n"
+        "   float v = texture2D(tex, texc).r;\n"
+        "   if (v >= maxIterations) {\n"
+        "       gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n"
+        "   } else {\n"
+        "       gl_FragColor = texture2D(gradient, vec2(v * gradientScaler, 0.0));\n"
+        "   }\n"
+    //    "   gl_FragColor = gl_FragColor * texture2D(tex, texc);\n"
+    //    "   float v = texture2D(tex, texc).r;\n"
+    //    "   gl_FragColor = vec4(v, 1.0 - v, v*v, 1);\n"
+    //    "   gl_FragColor.g = 0.3;\n"
+        "}");
+    }
     
     //program.link();
     bool bound = program->bind();
@@ -237,6 +279,9 @@ void EscapeTimeVisualWidget::initializeGL(void)
     int texLoc = program->uniformLocation("tex");
     int gradLoc = program->uniformLocation("gradient");
     int gradientScaler = program->uniformLocation("gradientScaler");
+    int maxIterations = program->uniformLocation("maxIterations");
+    program->setUniformValue(gradientScaler, 0.005f);
+    program->setUniformValue(maxIterations, 250.0f);
 
     auto& gle = *this->context()->extraFunctions();
 
@@ -245,6 +290,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
     gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 256, 256, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    gl.glBindTexture(GL_TEXTURE_2D, 0);
 
     gl.glGenFramebuffers(1, &tileFramebuffer);
     gl.glBindFramebuffer(GL_FRAMEBUFFER, tileFramebuffer);
@@ -254,6 +300,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
     if(gl.glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
         printf("error intitializing framebuffer\n");
     }
+    gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     unsigned char pix[] = { 255, 0, 0, 0, 255, 0, 0, 0, 255 };
 
@@ -314,11 +361,17 @@ void EscapeTimeVisualWidget::paintGL(void)
 }
 
 
+void EscapeTimeVisualWidget::setMaxIterationCutoff(float maxIter)
+{
+    this->maxIterations = maxIter;
+}
+
+
 void EscapeTimeVisualWidget::updateGradient(void)
 {
     auto& gl = *this->context()->functions();
 
-    const int len = 512;
+    const int len = 1024;
     std::unique_ptr<uint8_t[]> pixels = std::make_unique<uint8_t[]>(len * 3);
 
     for (int i = 0; i < len; i++) {
@@ -337,6 +390,7 @@ void EscapeTimeVisualWidget::updateGradient(void)
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     gl.glBindTexture(GL_TEXTURE_2D, 0);
+    this->gradientTextureMax = gradient.getMax();
 
     gradientNeedsUpdate = false;
 }

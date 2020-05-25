@@ -113,6 +113,9 @@ public:
 
     virtual void zoom(float factor);
 
+    virtual void setSmoothColoring(bool smooth);
+    virtual void setMaxIterations(int maxIterations);
+
     virtual void initializeGL(void) override;
     virtual void resizeGL(int w, int h) override;
     virtual void paintGL(void) override;

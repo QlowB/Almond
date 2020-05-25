@@ -47,6 +47,15 @@ float CubicSpline::interpolateAt(float x)
     const static auto h01 = [] (float t) { return t * t * (3 - 2 * t); };
     const static auto h10 = [] (float t) { return t * (1 - t) * (1 - t); };
     const static auto h11 = [] (float t) { return t * t * (t - 1); };
+
+    if (points.empty()) {
+        return 0.0f;
+    }
+
+    if(std::get<0>(points[0]) > x) {
+        return std::get<1>(points[0]);
+    }
+
     for (auto it = points.begin(); it != points.end() && (it + 1) != points.end(); ++it) {
         auto& left = *it;
         auto& right = *(it + 1);

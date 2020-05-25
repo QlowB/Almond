@@ -27,6 +27,8 @@ class FractalWidget :
     bool selectingPoint = false;
     float pointX, pointY;
 
+    bool displayInfo = false;
+
     /// the target of an ongoing animation
     mnd::MandelViewport targetViewport;
     std::chrono::time_point<std::chrono::high_resolution_clock> lastAnimUpdate;
@@ -44,8 +46,12 @@ public:
     virtual void setViewport(const mnd::MandelViewport& viewport) override;
     virtual const mnd::MandelViewport& getViewport(void) const override;
 
+    void setDisplayInfo(bool displayInfo);
+
     virtual void resizeGL(int w, int h) override;
     virtual void paintGL(void) override;
+
+    void drawDisplayInfo(void);
 
 private:
     void newAnimation(void);

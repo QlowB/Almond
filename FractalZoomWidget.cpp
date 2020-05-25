@@ -383,7 +383,7 @@ void FractalZoomWidget::initializeGL(void)
 void FractalZoomWidget::resizeGL(int w, int h)
 {
     EscapeTimeVisualWidget::resizeGL(w, h);
-    mandelInfo.view.adjustAspectRatio(w, h);
+    mandelInfo.view.height = mandelInfo.view.width * h / w;
 }
 
 
@@ -441,17 +441,15 @@ void FractalZoomWidget::paintGL(void)
             }
 
             if (t != nullptr) {
-                t->img->drawRect(float(x), float(y), float(w), float(w));
-                /*glBegin(GL_LINE_LOOP);
-                glVertex2f(float(x), float(y));
-                glVertex2f(float(x) + float(w), float(y));
-                glVertex2f(float(x) + float(w), float(y) + float(w));
-                glVertex2f(float(x), float(y) + float(w));
-                glEnd();*/
-
                 if (!t->enoughResolution) {
+                    auto under = searchUnder(level, i, j, 1);
+                    if (under) {
+                        t = under;
+                    }
                     calcer.calc(grid, level, i, j, t->img->getRecalcPriority());
                 }
+
+                t->img->drawRect(float(x), float(y), float(w), float(w));
             }
             else {
                 calcer.calc(grid, level, i, j, 1000);

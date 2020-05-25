@@ -16,19 +16,32 @@ GradientWidget::GradientWidget(QWidget* parent) :
     selectedHandle = -1;
     mouseOver = -1;
 
+    maxValue = 1.0f;
+
+    colorPicker = new QColorDialog(this);
+    colorPicker->setOption(QColorDialog::NoButtons);
+    connect(colorPicker, &QColorDialog::currentColorChanged, this, &GradientWidget::selectedColorChanged);
+
     setMouseTracking(true);
 }
 
 
-const QVector<QPair<float, QColor>>& GradientWidget::getGradient(void) const
+/*const QVector<QPair<float, QColor>>& GradientWidget::getGradient(void) const
 {
     return points;
+}*/
+
+const Gradient& GradientWidget::getGradient(void) const
+{
+    return gradient;
 }
 
 
-void GradientWidget::setGradient(QVector<QPair<float, QColor>> vec)
+void GradientWidget::setGradient(Gradient gr)
 {
-    points = std::move(vec);
+    gradient = std::move(gr);
+    points = gradient.getPoints();
+    maxValue = gradient.getMax();
 }
 
 
@@ -64,6 +77,12 @@ QColor lerp(const QColor& a, const QColor& b, float v)
 }
 
 
+void GradientWidget::updateGradient(void)
+{
+    gradient = Gradient{ points, maxValue };
+}
+
+
 QColor GradientWidget::colorAtY(float y)
 {
     float v = handleYToGradVal(y);
@@ -71,14 +90,14 @@ QColor GradientWidget::colorAtY(float y)
     QColor down = QColor(QColor::Invalid);
     float upv = 0;
     float downv = 1;
-    for (const auto& [val, color] : points) {
+    for (const auto& [color, val] : points) {
         if (val >= upv && val < v) {
             upv = val;
-            up = color;
+            up = QColor(color.r, color.g, color.b);
         }
         if (val <= downv && val > v) {
             downv = val;
-            down = color;
+            down = QColor(color.r, color.g, color.b);
         }
     }
 
@@ -89,10 +108,10 @@ QColor GradientWidget::colorAtY(float y)
     return lerp(up, down, (v - upv) / (downv - upv));
 }
 
+
 void GradientWidget::paintEvent(QPaintEvent* e)
 {
     QPainter painter{ this };
-
 
     QRect gradientRect = getGradientRect();
     QStyleOption frameOptions;
@@ -108,9 +127,19 @@ void GradientWidget::paintEvent(QPaintEvent* e)
         fhmargins = fvmargins = 3;
     }
 
-    QLinearGradient gradient;
-    gradient.setStart(0, gradientRect.top());
-    gradient.setFinalStop(0, gradientRect.bottom());
+    QLinearGradient linGrad;
+    linGrad.setStart(0, gradientRect.top());
+    linGrad.setFinalStop(0, gradientRect.bottom());
+
+    const int stops = this->height() / 5;
+    /*for (int i = 0; i < stops; i++) {
+        auto col = gradient.get(float(i) / stops * gradient.getMax());
+        linGrad.setColorAt(float(i) / stops, QColor{ col.r, col.g, col.b });
+    }*/
+
+    for (const auto& [col, at] : points) {
+        linGrad.setColorAt(at / maxValue, QColor{ col.r, col.g, col.b });
+    }
 
     // adjust rect to have small margins, so the frame
     // around the gradient is visible
@@ -120,7 +149,7 @@ void GradientWidget::paintEvent(QPaintEvent* e)
 
 
 
-    std::vector<int> orderedIndices(points.size());
+    /*std::vector<int> orderedIndices(points.size());
     for (int i = 0; i < points.size(); i++)
         orderedIndices.push_back(i);
 
@@ -145,13 +174,13 @@ void GradientWidget::paintEvent(QPaintEvent* e)
         gradient.setColorAt(point, color);
         lastPoint = point;
         lastColor = color;
-    }
+    }*/
 
-    QBrush brush{ gradient };
+    QBrush brush{ linGrad };
     painter.fillRect(gradientRect, brush);
 
     int index = 0;
-    for (auto& [point, color] : points) {
+    for (auto& [color, point] : points) {
         QRect r = getHandleRect(index);
         /*QStyleOptionButton so;
         so.init(this);
@@ -176,7 +205,7 @@ void GradientWidget::paintEvent(QPaintEvent* e)
             hs |= HANDLE_MOUSEOVER;
         if (selectedHandle == index)
             hs |= HANDLE_SELECTED;
-        paintHandle(painter, r, color, hs);
+        paintHandle(painter, r, fromRGB(color), hs);
         index++;
     }
     /*for (auto&[point, color] : points) {
@@ -247,7 +276,7 @@ void GradientWidget::mousePressEvent(QMouseEvent* e)
         selectedHandle = handle;
         dragging = true;
         selectOffsetY = e->y() - gradValToHandleY(
-                    points[handle].first);
+                    points[handle].second);
         update();
         e->accept();
     }
@@ -274,8 +303,9 @@ void GradientWidget::mouseMoveEvent(QMouseEvent* e)
 {
     if (dragging) {
         float newVal = handleYToGradVal(e->y() - selectOffsetY);
-        newVal = std::clamp(newVal, 0.0f, 1.0f);
-        points[selectedHandle].first = newVal;
+        newVal = std::clamp(newVal, 0.0f, maxValue);
+        points[selectedHandle].second = newVal;
+        updateGradient();
         update();
         emit gradientChanged();
         e->accept();
@@ -295,24 +325,33 @@ void GradientWidget::mouseMoveEvent(QMouseEvent* e)
 
 void GradientWidget::mouseDoubleClickEvent(QMouseEvent* e)
 {
+    auto torgb = [](const QColor& c) {
+        return RGBColor{
+            uint8_t(c.red()), uint8_t(c.green()), uint8_t(c.blue())
+        };
+    };
     QRect handleArea = getHandleArea();
     int handle = handleAtPos(e->pos());
     if (handle != -1) {
-        QColor current = points.at(handle).second;
-        QColor newColor = QColorDialog::getColor(current,
+        RGBColor current = points.at(handle).first;
+        /*QColor newColor = QColorDialog::getColor(current,
                                                  this,
-                                                 tr("Pick Color"));
-        if (newColor.isValid()) {
-            points[handle].second = newColor;
+                                                 tr("Pick Color"));*/
+        selectedHandle = handle;
+        colorPicker->setCurrentColor(fromRGB(current));
+        colorPicker->exec();
+        /*if (newColor.isValid()) {
+            points[handle].first = torgb(newColor);
             update();
             emit gradientChanged();
-        }
+        }*/
         e->accept();
     }
     else if (handleArea.contains(e->pos())) {
         float v = handleYToGradVal(e->pos().y());
-        points.append({ v, colorAtY(e->pos().y()) });
+        points.emplace_back(torgb(colorAtY(e->pos().y())), v);
         e->accept();
+        updateGradient();
         update();
     }
     else {
@@ -349,10 +388,29 @@ QSize GradientWidget::sizeHint(void) const
 }
 
 
+void GradientWidget::selectedColorChanged(const QColor& newColor)
+{
+    if (points.size() > selectedHandle) {
+        points.at(selectedHandle).first = RGBColor {
+            uint8_t(newColor.red()),
+            uint8_t(newColor.green()),
+            uint8_t(newColor.blue())
+        };
+        updateGradient();
+        update();
+        emit gradientChanged();
+    }
+}
+
+
 QRect GradientWidget::getGradientRect(void) const
 {
-    int left, top, right, bottom;
-    getContentsMargins(&left, &top, &right, &bottom);
+    QMargins cm = contentsMargins();
+    int top = cm.top();
+    int bottom = cm.bottom();
+    int left = cm.left();
+    int right = cm.right();
+
     int spacing = this->style()->pixelMetric(
                 QStyle::PM_LayoutHorizontalSpacing);
     if (spacing == -1) {
@@ -372,7 +430,7 @@ QRect GradientWidget::getGradientRect(void) const
 QRect GradientWidget::getHandleRect(int index) const
 {
     QRect handleArea = getHandleArea();
-    float y = handleArea.top() + points.at(index).first * handleArea.height();
+    float y = handleArea.top() + points.at(index).second / maxValue * handleArea.height();
     return QRect {
         handleArea.x(), int(y - handleHeight / 2),
         handleWidth, handleHeight
@@ -382,8 +440,12 @@ QRect GradientWidget::getHandleRect(int index) const
 
 QRect GradientWidget::getHandleArea(void) const
 {
-    int left, top, right, bottom;
-    getContentsMargins(&left, &top, &right, &bottom);
+    QMargins cm = contentsMargins();
+    int top = cm.top();
+    int bottom = cm.bottom();
+    int left = cm.left();
+    int right = cm.right();
+
     top += handleHeight / 2;
     bottom += handleHeight / 2;
     float y = top;
@@ -408,14 +470,14 @@ int GradientWidget::handleAtPos(QPoint pos) const
 float GradientWidget::handleYToGradVal(float y) const
 {
     QRect area = getHandleArea();
-    return (y - area.top()) / area.height();
+    return maxValue * (y - area.top()) / area.height();
 }
 
 
 float GradientWidget::gradValToHandleY(float v) const
 {
     QRect area = getHandleArea();
-    return area.top() + v * area.height();
+    return area.top() + v / maxValue * area.height();
 }
 
 

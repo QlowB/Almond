@@ -5,6 +5,8 @@
 #include <QVector>
 #include <QPair>
 
+#include "Gradient.h"
+
 namespace Ui {
 class GradientMenu;
 }
@@ -14,12 +16,14 @@ class GradientMenu : public QWidget
     Q_OBJECT
 
     Ui::GradientMenu *ui;
+    Gradient before;
 public:
     explicit GradientMenu(QWidget *parent = nullptr);
     ~GradientMenu(void);
 
-    const QVector<QPair<float, QColor>>& getGradient(void);
-    void setGradient(QVector<QPair<float, QColor>> grad);
+    const Gradient& getGradient(void);
+    const Gradient& getGradientBefore(void) const;
+    void setGradient(Gradient grad);
 
 signals:
     void gradientChanged(void);

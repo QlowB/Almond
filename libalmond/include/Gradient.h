@@ -19,6 +19,7 @@ class Gradient
 public:
     Gradient(void);
     Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat = false, int precalcSteps = -1);
+    Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxValue, bool repeat = false, int precalcSteps = -1);
 
     const std::vector<std::pair<RGBColor, float>>& getPoints(void) const;
 

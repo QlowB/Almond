@@ -2,6 +2,9 @@
 #include <QMouseEvent>
 
 
+#include <QPainter>
+
+
 
 Q_DECLARE_METATYPE(mnd::MandelViewport)
 
@@ -172,10 +175,19 @@ const mnd::MandelViewport& FractalWidget::getViewport(void) const
 }
 
 
+void FractalWidget::setDisplayInfo(bool displayInfo)
+{
+    if (displayInfo != this->displayInfo) {
+        this->displayInfo = displayInfo;
+        update();
+    }
+}
+
+
 void FractalWidget::resizeGL(int w, int h)
 {
     FractalZoomWidget::resizeGL(w, h);
-    targetViewport.adjustAspectRatio(w, h);
+    targetViewport.height = targetViewport.width * h / w;
 }
 
 
@@ -183,6 +195,54 @@ void FractalWidget::paintGL(void)
 {
     FractalZoomWidget::paintGL();
     updateAnimations();
+
+    if (displayInfo)
+        drawDisplayInfo();
+}
+
+
+void FractalWidget::drawDisplayInfo(void)
+{
+    QPainter infoPainter{ this };
+
+    const float DIST_FROM_BORDER = 15;
+    float maxWidth = this->width() - 2 * DIST_FROM_BORDER;
+    mnd::Real distPerPixel = getViewport().width / this->width();
+    float log10 = (mnd::convert<float>(mnd::log(distPerPixel)) + ::logf(maxWidth)) / ::logf(10);
+    mnd::Real displayDist = mnd::pow(mnd::Real(10), ::floor(log10));
+    float pixels = mnd::convert<float>(displayDist / distPerPixel);
+    int factor = 1;
+    for (int i = 9; i > 1; i--) {
+        if (pixels * i < maxWidth) {
+            factor *= i;
+            pixels *= i;
+            displayDist *= i;
+            break;
+        }
+    }
+
+    std::stringstream dis;
+    if (::abs(log10) < 3) {
+        dis << mnd::convert<float>(displayDist);
+    }
+    else {
+        dis << factor << "e" << int(::floor(log10));
+    }
+
+    if (maxWidth > 400) {
+        dis << "; per pixel: " << distPerPixel;
+    }
+
+    float lineY = this->height() - DIST_FROM_BORDER;
+    float lineXEnd = DIST_FROM_BORDER + pixels;
+
+    infoPainter.setPen(Qt::white);
+    infoPainter.setFont(QFont("Arial", 12));
+    infoPainter.drawLine(QPointF{ DIST_FROM_BORDER, lineY }, QPointF{ lineXEnd, lineY });
+    infoPainter.drawLine(QPointF{ DIST_FROM_BORDER, lineY }, QPointF{ DIST_FROM_BORDER, lineY - 5 });
+    infoPainter.drawLine(QPointF{ lineXEnd, lineY }, QPointF{ lineXEnd, lineY - 5 });
+    infoPainter.drawText(int(DIST_FROM_BORDER), int(lineY - 20), int(lineXEnd - DIST_FROM_BORDER), 20,
+                         Qt::AlignCenter, QString::fromStdString(dis.str()));
 }
 
 

@@ -7,9 +7,9 @@ GradientMenu::GradientMenu(QWidget *parent) :
 {
     ui->setupUi(this);
     ui->gradientWidget->setGradient(
-        {
-            { 0.1, QColor{ 10, 200, 20 } },
-            { 0.7, QColor{ 100, 20, 120 } }
+        std::vector<std::pair<RGBColor, float>> {
+            { RGBColor{ 10, 200, 20 }, 0.1 },
+            { RGBColor{ 100, 20, 120 }, 0.7 }
         }
     );
     connect(ui->gradientWidget, &GradientWidget::gradientChanged, this, &GradientMenu::gradientChanged);
@@ -22,12 +22,20 @@ GradientMenu::~GradientMenu()
 }
 
 
-const QVector<QPair<float, QColor>>& GradientMenu::getGradient(void)
+const Gradient& GradientMenu::getGradient(void)
 {
     return ui->gradientWidget->getGradient();
 }
 
-void GradientMenu::setGradient(QVector<QPair<float, QColor>> grad)
+
+const Gradient& GradientMenu::getGradientBefore(void) const
 {
+    return before;
+}
+
+
+void GradientMenu::setGradient(Gradient grad)
+{
+    before = grad;
     ui->gradientWidget->setGradient(std::move(grad));
 }

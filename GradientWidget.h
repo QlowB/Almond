@@ -2,16 +2,23 @@
 #define GRADIENTWIDGET_H
 
 #include <QWidget>
-#include <QLinearGradient>
 #include <QPainterPath>
+#include <QColorDialog>
 #include <QVector>
 #include <QPair>
+
+#include "Gradient.h"
 
 class GradientWidget :
     public QWidget
 {
     Q_OBJECT
-    QVector<QPair<float, QColor>> points;
+
+    std::vector<std::pair<RGBColor, float>> points;
+    Gradient gradient;
+    float maxValue;
+
+    QColorDialog* colorPicker;
 
     bool dragging;
     int selectedHandle;
@@ -34,8 +41,16 @@ public:
 
     explicit GradientWidget(QWidget *parent = nullptr);
 
-    const QVector<QPair<float, QColor>>& getGradient(void) const;
-    void setGradient(QVector<QPair<float, QColor>>);
+    const Gradient& getGradient(void) const;
+    void setGradient(Gradient gradient);
+
+private:
+    void updateGradient(void);
+    inline QColor fromRGB(const RGBColor& rgb)
+    {
+        return QColor{ rgb.r, rgb.g, rgb.b };
+    }
+public:
 
     QColor colorAtY(float y);
 
@@ -49,6 +64,9 @@ public:
 
     QSize minimumSizeHint(void) const override;
     QSize sizeHint(void) const override;
+
+public slots:
+    void selectedColorChanged(const QColor& newColor);
 
 protected:
     /// \brief the area in which the gradient is displayed

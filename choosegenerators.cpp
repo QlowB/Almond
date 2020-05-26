@@ -401,9 +401,9 @@ void ChooseGenerators::on_buttonBox_accepted()
                 chosenGenerator->addGenerator(precision, *generator);
         }*/
         for (int i = 0; i < ui->table->rowCount(); i++) {
-            QLineEdit* precItem = dynamic_cast<QLineEdit*>(ui->table->cellWidget(i, 0));
+            QLineEdit* precItem = qobject_cast<QLineEdit*>(ui->table->cellWidget(i, 0));
             QWidget* genWidget = ui->table->cellWidget(i, 1);
-            QComboBox* genItem = dynamic_cast<QComboBox*>(genWidget);
+            QComboBox* genItem = qobject_cast<QComboBox*>(genWidget);
             if (precItem && genItem) {
                 QString precString = precItem->text();
                 QString genString = genItem->currentText();

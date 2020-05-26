@@ -16,11 +16,19 @@ ETVImage::ETVImage(EscapeTimeVisualWidget& owner,
                    const Bitmap<float>& img) :
     owner{ owner }
 {
-    auto& gl = *owner.context()->functions();
+    auto& gl = *QOpenGLContext::currentContext()->functions();
     gl.glGenTextures(1, &textureId);
     gl.glActiveTexture(GL_TEXTURE0);
     gl.glBindTexture(GL_TEXTURE_2D, textureId);
 
+// workaround to weird bug appearing on OS X that the first time
+// a texture is displayed, it seems to display arbitrary graphics data
+// (e.g. parts of other windows or even old mandelbrot textures)
+//
+// bug doesn't appear if glTexImage2D is called twice with the image data
+#ifdef __APPLE__
+    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, int(img.width), int(img.height), 0, GL_RED, GL_FLOAT, img.pixels.get());
+#endif // __APPLE__
     gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, int(img.width), int(img.height), 0, GL_RED, GL_FLOAT, img.pixels.get());
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -242,7 +250,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "        if (aa + bb >= 16.0) break;\n"
     "        k = k + 1;\n"
     "    }\n"
-    "    return float(k) + 1 - log2(log(a * a + b * b) * 0.5);\n"
+    "    return float(k) + 1.0 - log2(log(a * a + b * b) * 0.5);\n"
     "}\n"
     "void main(void)\n"
     "{\n"

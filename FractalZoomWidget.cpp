@@ -475,5 +475,5 @@ void FractalZoomWidget::cellReady(int level, GridIndex i, GridIndex j, Bitmap<fl
     this->getGrid(level).setCell(i, j,
         std::make_unique<GridElement>(true, std::make_shared<ImageClip>(std::make_shared<ETVImage>(*this, *bmp))));
     delete bmp;
-    update();
+    emit update();
 }

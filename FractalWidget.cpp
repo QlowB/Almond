@@ -24,6 +24,7 @@ void FractalWidget::mousePressEvent(QMouseEvent* me)
     }
     else if (me->button() == Qt::LeftButton) {
         dragging = true;
+        didDrag = false;
         dragX = me->x();
         dragY = me->y();
         me->accept();
@@ -45,11 +46,6 @@ void FractalWidget::mouseMoveEvent(QMouseEvent* me)
 
         update();
     }
-    else if (selectingPoint) {
-        pointX = me->x();
-        pointY = me->y();
-        update();
-    }
     else if (dragging) {
         double deltaX = me->x() - dragX;
         double deltaY = me->y() - dragY;
@@ -59,9 +55,18 @@ void FractalWidget::mouseMoveEvent(QMouseEvent* me)
         viewport.y -= deltaY * viewport.height / this->height();
         targetViewport = viewport;
         dragX = me->x(); dragY = me->y();
+        didDrag = true;
 
         update();
     }
+
+
+    if (selectingPoint) {
+        pointX = me->x();
+        pointY = me->y();
+        update();
+    }
+
     me->accept();
 }
 
@@ -87,7 +92,7 @@ void FractalWidget::mouseReleaseEvent(QMouseEvent* me)
         update();
         rubberbanding = false;
     }
-    else if (selectingPoint) {
+    else if (selectingPoint && !didDrag) {
         selectingPoint = false;
         this->setMouseTracking(false);
         const auto& vp = getViewport();
@@ -192,11 +197,27 @@ void FractalWidget::paintGL(void)
     EscapeTimeVisualWidget::juliaPreviewer->bind();
 
     if (selectingPoint) {
+        drawSelectingPoint();
+
         const auto& vp = getViewport();
         float jx = float(vp.x) + float(vp.width) * pointX / this->width();
         float jy = float(vp.y) + float(vp.height) * pointY / this->height();
-        EscapeTimeVisualWidget::drawJulia(jx, jy);
-        drawSelectingPoint();
+
+        float minRes = getResolutionX();
+        if (getResolutionY() < minRes)
+            minRes = getResolutionY();
+        QRectF area{
+            60, 60,
+            minRes * 0.3, minRes * 0.3
+        };
+
+        EscapeTimeVisualWidget::drawJulia(jx, jy, area);
+
+        QPainter framePainter{ this };
+        QPen pen{ QColor{ 255, 255, 255 } };
+        pen.setWidth(2);
+        framePainter.setPen(pen);
+        framePainter.drawRect(area);
     }
     if (rubberbanding)
         drawRubberband();

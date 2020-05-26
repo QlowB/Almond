@@ -73,6 +73,7 @@ void ETVImage::draw(float x, float y, float w, float h,
 
     QColor color{ 255, 255, 255 };
     auto& program = owner.program;
+    program->bind();
     int vertexLoc = program->attributeLocation("vertex");
     int texCoordsLoc = program->attributeLocation("texCoord");
     int colorLocation = program->uniformLocation("color");
@@ -95,7 +96,6 @@ void ETVImage::draw(float x, float y, float w, float h,
     program->setUniformValue(matrixLocation, pmvMatrix);
 
     gl.glEnable(GL_TEXTURE_2D);
-    owner.program->bind();
 
     //GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
     //gle.glDrawBuffers(1, drawBuffers);
@@ -173,6 +173,9 @@ void EscapeTimeVisualWidget::initializeGL(void)
 
     gl.glDisable(GL_DEPTH_TEST);
 
+    fprintf(stdout, "version: %s\n", gl.glGetString(GL_VERSION));
+    fflush(stdout);
+
     // looks not even better
     //gl.glEnable(GL_FRAMEBUFFER_SRGB);
 
@@ -190,7 +193,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
         "   texc = texCoord;\n"
         "}");
     renderTextures->addShaderFromSourceCode(QOpenGLShader::Fragment,
-        "#version 110\n"
+//        "#version 110\n"
         "uniform sampler2D tex;\n"
         "varying highp vec2 texc;\n"
         "void main(void)\n"
@@ -212,10 +215,10 @@ void EscapeTimeVisualWidget::initializeGL(void)
         "   texc = texCoord;\n"
         "}");
     juliaPreviewer->addShaderFromSourceCode(QOpenGLShader::Fragment,
-    "#version 110\n"
+//    "#version 110\n"
     "uniform sampler2D gradient;\n"
     "uniform highp float gradientScaler;\n"
-    "uniform highp float maxIterations;\n"
+    "const highp float maxIterations = 350.0;\n"
     "varying highp vec2 texc;\n"
     "uniform highp float juliaX;\n"
     "uniform highp float juliaY;\n"
@@ -223,32 +226,35 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "const highp float right = 1.5;\n"
     "const highp float top = -1.5;\n"
     "const highp float bottom = 1.5;\n"
-    "float map(float a, float b, float v) {\n"
+    "highp float map(highp float a, highp float b, highp float v) {\n"
     "    return (1.0 - v) * a + b * v;\n"
     "}\n"
-    "float iterate(float x, float y, float ca, float cb) {\n"
+    "highp float iterate(highp float x, highp float y, highp float ca, highp float cb) {\n"
     "    int k = 0;\n"
-    "    float a = x;\n"
-    "    float b = y;\n"
-    "    while(k <= 250) {\n"
-    "        float aa = a * a;\n"
-    "        float bb = b * b;\n"
-    "        float abab = 2.0 * a * b;\n"
+    "    highp float a = x;\n"
+    "    highp float b = y;\n"
+    "    while(k <= int(maxIterations)) {\n"
+    "        highp float aa = a * a;\n"
+    "        highp float bb = b * b;\n"
+    "        highp float abab = 2.0 * a * b;\n"
     "        a = aa - bb + ca;\n"
     "        b = abab + cb;\n"
     "        if (aa + bb >= 16.0) break;\n"
     "        k = k + 1;\n"
     "    }\n"
-    "    return float(k);\n"
+    "    return float(k) + 1 - log2(log(a * a + b * b) * 0.5);\n"
     "}\n"
     "void main(void)\n"
     "{\n"
-    "    float x = map(left, right, texc.x);\n"
-    "    float y = map(top, bottom, texc.y);\n"
-    "    float v = iterate(x, y, juliaX, juliaY);\n"
-//    "    if (v >= maxIterations) { v = 0.0; }\n"
-    "    float vnorm = v * gradientScaler;\n"
-    "    gl_FragColor = texture2D(gradient, vec2(vnorm, 0.0));\n"
+    "    highp float x = map(left, right, texc.x);\n"
+    "    highp float y = map(top, bottom, texc.y);\n"
+    "    highp float v = iterate(x, y, juliaX, juliaY);\n"
+    "    if (v >= maxIterations) {\n"
+    "        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n"
+    "    } else {\n"
+    "        highp float vnorm = v * gradientScaler;\n"
+    "        gl_FragColor = texture2D(gradient, vec2(vnorm, 0.0));\n"
+    "    }\n"
     //"    gl_FragColor = vec4(vnorm, 0.0, 0.0, 0.0);\n"
     "}");
     juliaPreviewer->link();
@@ -266,7 +272,8 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "}");
 
     // TODO rewrite this monster
-    if (context()->versionFunctions<QOpenGLFunctions_4_0_Core>() != nullptr) {
+    if (!context()->isOpenGLES() &&
+        context()->versionFunctions<QOpenGLFunctions_4_0_Core>() != nullptr) {
         bool frag = program->addShaderFromSourceCode(QOpenGLShader::Fragment,
         "#version 400\n"
         "uniform sampler2D gradient;\n"
@@ -304,7 +311,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
     }
     else {
         bool frag = program->addShaderFromSourceCode(QOpenGLShader::Fragment,
-        "#version 110\n"
+//        "#version 110\n"
         "uniform sampler2D gradient;\n"
         "uniform sampler2D tex;\n"
         "uniform mediump vec4 color;\n"
@@ -313,7 +320,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
         "varying highp vec2 texc;\n"
         "void main(void)\n"
         "{\n"
-        "   float v = texture2D(tex, texc).r;\n"
+        "   highp float v = texture2D(tex, texc).r;\n"
         "   if (v >= maxIterations) {\n"
         "       gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n"
         "   } else {\n"
@@ -420,8 +427,9 @@ void EscapeTimeVisualWidget::paintGL(void)
 }
 
 
-void EscapeTimeVisualWidget::drawJulia(float jx, float jy)
+void EscapeTimeVisualWidget::drawJulia(float jx, float jy, QRectF area)
 {
+    juliaPreviewer->bind();
     int gradLoc = juliaPreviewer->uniformLocation("gradient");
     int gradientScaler = juliaPreviewer->uniformLocation("gradientScaler");
     int juliaX = juliaPreviewer->uniformLocation("juliaX");
@@ -430,10 +438,10 @@ void EscapeTimeVisualWidget::drawJulia(float jx, float jy)
     int texCoordsLoc = juliaPreviewer->attributeLocation("texCoord");
     int maxIterLoc = juliaPreviewer->attributeLocation("maxIterations");
 
-    const float x = 100;
-    const float y = 100;
-    const float w = 200;
-    const float h = 200;
+    const float x = area.x();
+    const float y = area.y();
+    const float w = area.width();
+    const float h = area.height();
     GLfloat const vertices[] = {
         x, y,  0.0f,
         x, y + h, 0.0f,
@@ -460,7 +468,6 @@ void EscapeTimeVisualWidget::drawJulia(float jx, float jy)
     juliaPreviewer->setUniformValue(juliaX, float(jx));
     juliaPreviewer->setUniformValue(juliaY, float(jy));
 
-    juliaPreviewer->bind();
     gl.glUniform1i(gradLoc, 0);
 
     gl.glActiveTexture(GL_TEXTURE0);
@@ -485,7 +492,13 @@ void EscapeTimeVisualWidget::updateGradient(void)
 {
     auto& gl = *this->context()->functions();
 
-    const int len = 1024;
+    int len = 512;
+    if (gradient.getPoints().size() > 25) {
+        len = 2048;
+    }
+    else if (gradient.getPoints().size() > 7) {
+        len = 1024;
+    }
     std::unique_ptr<uint8_t[]> pixels = std::make_unique<uint8_t[]>(len * 3);
 
     for (int i = 0; i < len; i++) {

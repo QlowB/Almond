@@ -15,6 +15,7 @@ class FractalWidget :
     QRectF rubberband;
 
     bool dragging = false;
+    bool didDrag = false;
     float dragX, dragY;
 
     bool selectingPoint = false;

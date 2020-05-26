@@ -5,19 +5,12 @@
 #include <QPropertyAnimation>
 #include <chrono>
 
-class ViewportAnimation :
-    public QPropertyAnimation
-{
-public:
-    ViewportAnimation(QObject* parent = nullptr);
-
-    QVariant interpolated(const QVariant& from, const QVariant& to,
-                          qreal progress) const override;
-};
 
 class FractalWidget :
     public FractalZoomWidget
 {
+    Q_OBJECT
+
     bool rubberbanding = false;
     QRectF rubberband;
 
@@ -48,10 +41,18 @@ public:
 
     void setDisplayInfo(bool displayInfo);
 
+    void selectJuliaPoint(void);
+    void stopSelectingPoint(void);
+
     virtual void resizeGL(int w, int h) override;
     virtual void paintGL(void) override;
 
     void drawDisplayInfo(void);
+    void drawSelectingPoint(void);
+    void drawRubberband(void);
+
+signals:
+    void pointSelected(mnd::Real x, mnd::Real y);
 
 private:
     void newAnimation(void);

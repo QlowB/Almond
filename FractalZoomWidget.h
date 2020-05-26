@@ -107,6 +107,7 @@ public:
                  int recursionLevel);
 
     const mnd::MandelInfo& getMandelInfo(void) const;
+    mnd::MandelInfo& getMandelInfo(void);
 
     void setGenerator(mnd::MandelGenerator*);
     mnd::MandelGenerator* getGenerator(void) const;

@@ -26,11 +26,6 @@ GradientWidget::GradientWidget(QWidget* parent) :
 }
 
 
-/*const QVector<QPair<float, QColor>>& GradientWidget::getGradient(void) const
-{
-    return points;
-}*/
-
 const Gradient& GradientWidget::getGradient(void) const
 {
     return gradient;
@@ -45,38 +40,6 @@ void GradientWidget::setGradient(Gradient gr)
 }
 
 
-QColor lerp(const QColor& a, const QColor& b, float v)
-{
-    float ar = a.redF();
-    float ag = a.greenF();
-    float ab = a.blueF();
-
-    float br = b.redF();
-    float bg = b.greenF();
-    float bb = b.blueF();
-
-    const float gamma = 2.2;
-
-    ar = std::pow(ar, gamma);
-    ag = std::pow(ag, gamma);
-    ab = std::pow(ab, gamma);
-
-    br = std::pow(br, gamma);
-    bg = std::pow(bg, gamma);
-    bb = std::pow(bb, gamma);
-
-    float nr = br * v + (1 - v) * ar;
-    float ng = bg * v + (1 - v) * ag;
-    float nb = bb * v + (1 - v) * ab;
-
-    nr = std::pow(nr, 1/gamma);
-    ng = std::pow(ng, 1/gamma);
-    nb = std::pow(nb, 1/gamma);
-
-    return QColor{ int(255 * nr), int(255 * ng), int(255 * nb) };
-}
-
-
 void GradientWidget::updateGradient(void)
 {
     gradient = Gradient{ points, maxValue };
@@ -86,6 +49,8 @@ void GradientWidget::updateGradient(void)
 QColor GradientWidget::colorAtY(float y)
 {
     float v = handleYToGradVal(y);
+    return fromRGB(gradient.get(v));
+    /*float v = handleYToGradVal(y);
     QColor up = QColor(QColor::Invalid);
     QColor down = QColor(QColor::Invalid);
     float upv = 0;
@@ -105,7 +70,7 @@ QColor GradientWidget::colorAtY(float y)
         return down;
     if (!down.isValid())
         return up;
-    return lerp(up, down, (v - upv) / (downv - upv));
+    return lerp(up, down, (v - upv) / (downv - upv));*/
 }
 
 

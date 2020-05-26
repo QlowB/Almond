@@ -6,31 +6,6 @@
 
 
 
-Q_DECLARE_METATYPE(mnd::MandelViewport)
-
-
-ViewportAnimation::ViewportAnimation(QObject* parent) :
-    QPropertyAnimation{ parent }
-{
-}
-
-
-QVariant ViewportAnimation::interpolated(const QVariant& from, const QVariant& to,
-                      qreal progress) const
-{
-    const mnd::MandelViewport& a = from.value<mnd::MandelViewport>();
-    const mnd::MandelViewport& b = to.value<mnd::MandelViewport>();
-
-    auto retVal = mnd::MandelViewport {
-        a.x * (1 - progress) + b.x * progress,
-        a.y * (1 - progress) + b.y * progress,
-        a.width * (1 - progress) + b.width * progress,
-        a.height * (1 - progress) + b.height * progress,
-    };
-
-    return QVariant::fromValue(retVal);
-}
-
 
 FractalWidget::FractalWidget(QWidget* parent) :
     FractalZoomWidget{ parent }
@@ -115,13 +90,15 @@ void FractalWidget::mouseReleaseEvent(QMouseEvent* me)
     else if (selectingPoint) {
         selectingPoint = false;
         this->setMouseTracking(false);
-        /*mnd::Real x = currentViewport.x + currentViewport.width * mnd::convert<mnd::Real>(float(me->x()) / width());
-        mnd::Real y = currentViewport.y + currentViewport.height * mnd::convert<mnd::Real>(float(me->y()) / height());
-        emit pointSelected(x, y);*/
+        const auto& vp = getViewport();
+        mnd::Real x = vp.x + vp.width * (float(me->pos().x()) / this->width());
+        mnd::Real y = vp.y + vp.height * (float(me->pos().y()) / this->height());
+        emit pointSelected(x, y);
         update();
     }
     dragging = false;
 }
+
 
 void FractalWidget::wheelEvent(QWheelEvent* we)
 {
@@ -184,6 +161,22 @@ void FractalWidget::setDisplayInfo(bool displayInfo)
 }
 
 
+void FractalWidget::selectJuliaPoint(void)
+{
+    this->selectingPoint = true;
+    this->setMouseTracking(true);
+    update();
+}
+
+
+void FractalWidget::stopSelectingPoint(void)
+{
+    this->selectingPoint = false;
+    this->setMouseTracking(false);
+    update();
+}
+
+
 void FractalWidget::resizeGL(int w, int h)
 {
     FractalZoomWidget::resizeGL(w, h);
@@ -193,9 +186,19 @@ void FractalWidget::resizeGL(int w, int h)
 
 void FractalWidget::paintGL(void)
 {
-    FractalZoomWidget::paintGL();
     updateAnimations();
+    FractalZoomWidget::paintGL();
+    EscapeTimeVisualWidget::drawJulia(0.3, 0.2);
 
+    if (selectingPoint) {
+        const auto& vp = getViewport();
+        float jx = float(vp.x) + float(vp.width) * pointX / this->width();
+        float jy = float(vp.y) + float(vp.height) * pointY / this->height();
+        EscapeTimeVisualWidget::drawJulia(jx, jy);
+        drawSelectingPoint();
+    }
+    if (rubberbanding)
+        drawRubberband();
     if (displayInfo)
         drawDisplayInfo();
 }
@@ -243,6 +246,28 @@ void FractalWidget::drawDisplayInfo(void)
     infoPainter.drawLine(QPointF{ lineXEnd, lineY }, QPointF{ lineXEnd, lineY - 5 });
     infoPainter.drawText(int(DIST_FROM_BORDER), int(lineY - 20), int(lineXEnd - DIST_FROM_BORDER), 20,
                          Qt::AlignCenter, QString::fromStdString(dis.str()));
+}
+
+
+void FractalWidget::drawSelectingPoint(void)
+{
+    QPainter pointPainter{ this };
+    pointPainter.setPen(QColor{ 255, 255, 255 });
+    pointPainter.drawLine(0, pointY, width(), pointY);
+    pointPainter.drawLine(pointX, 0, pointX, height());
+}
+
+
+void FractalWidget::drawRubberband(void)
+{
+    QPainter rubberbandPainter{ this };
+    rubberbandPainter.fillRect(rubberband, QColor{ 125, 140, 225, 120 });
+
+    QPen pen{ QColor{ 100, 115, 200 } };
+    pen.setWidth(2);
+    rubberbandPainter.setPen(pen);
+
+    rubberbandPainter.drawRect(rubberband);
 }
 
 

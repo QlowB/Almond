@@ -22,6 +22,8 @@ Almond::Almond(QWidget* parent) :
     fractalWidget->setGradient(Gradient::defaultGradient());
     fractalWidget->setSmoothColoring(ui.smooth->isChecked());
 
+    connect(fractalWidget, &FractalWidget::pointSelected, this, &Almond::pointSelected);
+
     customGeneratorDialog = std::make_unique<CustomGenerator>(mandelContext);
     customGenerator = nullptr;
     customViewSave = mnd::MandelViewport::centerView();
@@ -30,9 +32,8 @@ Almond::Almond(QWidget* parent) :
 
     currentView = MANDELBROT;
     mandelGenerator = &mandelContext.getDefaultGenerator();
-    // TODO update mandelViewSave = mw->getViewport();
+    mandelViewSave = fractalWidget->getViewport();
 
-    //QObject::connect(mw.get(), &MandelWidget::pointSelected, this, &Almond::pointSelected);
     ui.mandel_container->addWidget(fractalWidget);
     //ui.mandel_container->addWidget(mw.get());
     ui.maxIterations->setValidator(new QIntValidator(1, 1000000000, this));
@@ -291,48 +292,15 @@ void Almond::on_maxIterations_editingFinished()
 
 void Almond::on_chooseGradient_clicked()
 {
-    /*const auto& gradient = fractalWidget->getGradient(); // TODO update
-    auto points = gradient.getPoints();
-    std::for_each(points.begin(), points.end(), [](auto& x) { x.second /= 300; });
-
-    QVector<QPair<float, QColor>> np;
-    std::transform(points.begin(), points.end(), std::back_inserter(np),
-        [](auto& qp) -> QPair<float, QColor> {
-        auto& [col, pos] = qp;
-        return { pos, QColor{ (col.r), (col.g), (col.b) } };
-    });*/
     this->gradientMenu->setGradient(fractalWidget->getGradient());
     emit this->amw->showSubMenu(2);
-    //gcd.exec();
-    //auto gradient = gcd.getGradient();
-    //if (gradient)
-    //    mw->setGradient(std::move(*gradient));
 }
 
 
 void Almond::on_exportVideo_clicked()
 {
-    // TODO update
-    /*
-    evm->setEndViewport(mw->getViewport());
+    evm->setEndViewport(fractalWidget->getViewport());
     emit this->amw->showSubMenu(1);
-    return;
-    ExportVideoInfo evi;
-    evi.start = mnd::MandelViewport::standardView();
-    evi.end = mw->getViewport();
-    evi.gradient = mw->getGradient();
-    ExportVideoDialog dialog(this, evi);
-    //dialog.show();
-    auto response = dialog.exec();
-    printf("dialog executed\n"); fflush(stdout);
-    if (response == 1) {
-        mnd::MandelInfo mi;
-        evi = dialog.getExportVideoInfo();
-        MandelVideoGenerator mvg(evi);
-        mnd::MandelGenerator& g = *mw->getGenerator();
-        submitBackgroundTask(new VideoExportTask(std::move(mvg), g));
-        //if (exportVideo(evi)) {
-    }*/
 }
 
 
@@ -403,12 +371,11 @@ void Almond::pointSelected(mnd::Real x, mnd::Real y)
 {
     if (currentView != JULIA) {
         saveView();
-        // TODO update
-        /*
-        this->mw->setViewport(mnd::MandelViewport::centerView());
-        this->mw->setJuliaPos(x, y);
-        this->mw->getMandelInfo().julia = true;
-        this->mw->clearAll();*/
+        this->fractalWidget->setViewport(mnd::MandelViewport::centerView());
+        this->fractalWidget->getMandelInfo().julia = true;
+        this->fractalWidget->getMandelInfo().juliaX = x;
+        this->fractalWidget->getMandelInfo().juliaY = y;
+        this->fractalWidget->clearCells();
     }
     currentView = JULIA;
 }
@@ -423,34 +390,32 @@ void Almond::on_wMandel_clicked()
 void Almond::saveView()
 {
     if (currentView == MANDELBROT)
-        ; // TODO update mandelViewSave = mw->getViewport();
+        mandelViewSave = fractalWidget->getViewport();
     else if (currentView == CUSTOM)
-        ; // TODO update customViewSave = mw->getViewport();
+        customViewSave = fractalWidget->getViewport();
 }
 
 
 void Almond::setViewType(ViewType v)
 {
-    // TODO update
-    /*
     saveView();
     if (v == MANDELBROT) {
         currentGenerator = mandelGenerator;
-        emit this->mw->stopSelectingPoint();
-        this->mw->setViewport(mandelViewSave);
-        this->mw->setGenerator(currentGenerator);
-        this->mw->getMandelInfo().julia = false;
-        this->mw->clearAll();
+        emit this->fractalWidget->stopSelectingPoint();
+        this->fractalWidget->setViewport(mandelViewSave);
+        this->fractalWidget->setGenerator(currentGenerator);
+        this->fractalWidget->getMandelInfo().julia = false;
+        this->fractalWidget->clearCells();
         currentView = MANDELBROT;
     }
     else if (v == CUSTOM) {
         if (customGenerator != nullptr) {
             currentGenerator = customGenerator;
-            this->mw->setGenerator(currentGenerator);
-            emit this->mw->stopSelectingPoint();
-            this->mw->setViewport(customViewSave);
-            this->mw->getMandelInfo().julia = false;
-            this->mw->clearAll();
+            this->fractalWidget->setGenerator(currentGenerator);
+            emit this->fractalWidget->stopSelectingPoint();
+            this->fractalWidget->setViewport(customViewSave);
+            this->fractalWidget->getMandelInfo().julia = false;
+            this->fractalWidget->clearCells();
             currentView = CUSTOM;
         }
         else {
@@ -459,19 +424,18 @@ void Almond::setViewType(ViewType v)
     }
     else if (v == JULIA) {
         if (currentView == MANDELBROT) {
-            emit this->mw->selectPoint();
+            emit this->fractalWidget->selectJuliaPoint();
         }
         else {
             currentView = MANDELBROT;
             currentGenerator = mandelGenerator;
-            this->mw->setGenerator(currentGenerator);
-            this->mw->setViewport(mandelViewSave);
-            this->mw->getMandelInfo().julia = false;
-            this->mw->clearAll();
-            emit this->mw->selectPoint();
+            this->fractalWidget->setGenerator(currentGenerator);
+            this->fractalWidget->setViewport(mandelViewSave);
+            this->fractalWidget->getMandelInfo().julia = false;
+            this->fractalWidget->clearCells();
+            emit this->fractalWidget->selectJuliaPoint();
         }
     }
-    */
 }
 
 

@@ -132,7 +132,7 @@ Gradient Gradient::defaultGradient(void)
         { RGBColor{ 20, 30, 180 }, 210.0f },
         { RGBColor{ 20, 190, 30 }, 240.0f },
         { RGBColor{ 120, 240, 120 }, 270.0f },
-        { RGBColor{ 40, 40, 40 }, 300.0f },
+        { RGBColor{ 0, 0, 0 }, 300.0f },
     }, true);
 }
 

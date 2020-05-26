@@ -33,6 +33,7 @@ class EscapeTimeVisualWidget :
     friend class ETVImage;
     QOpenGLShaderProgram* program;
     QOpenGLShaderProgram* renderTextures;
+    QOpenGLShaderProgram* juliaPreviewer;
     GLuint gradientTextureId;
     float gradientTextureMax;
     float maxIterations;
@@ -54,8 +55,10 @@ public:
     virtual void initializeGL(void) override;
     virtual void resizeGL(int w, int h) override;
     virtual void paintGL(void) override;
+    void drawJulia(float jx, float jy);
 
     void setMaxIterationCutoff(float maxIter);
+
 
     void setResolutionX(int w);
     void setResolutionY(int h);

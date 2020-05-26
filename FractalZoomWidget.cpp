@@ -207,6 +207,9 @@ void FractalZoomWidget::clearCells(void)
     for(auto& [level, grid] : this->levels) {
         grid.clearCells();
     }
+    calcer.changeState();
+    calcer.clearAll();
+    update();
 }
 
 
@@ -317,6 +320,12 @@ GridElement* FractalZoomWidget::searchUnder(int level,
 
 
 const mnd::MandelInfo& FractalZoomWidget::getMandelInfo(void) const
+{
+    return mandelInfo;
+}
+
+
+mnd::MandelInfo& FractalZoomWidget::getMandelInfo(void)
 {
     return mandelInfo;
 }

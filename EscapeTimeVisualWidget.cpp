@@ -71,7 +71,6 @@ void ETVImage::draw(float x, float y, float w, float h,
         1, 1,
     };
 
-
     QColor color{ 255, 255, 255 };
     auto& program = owner.program;
     int vertexLoc = program->attributeLocation("vertex");
@@ -175,26 +174,78 @@ void EscapeTimeVisualWidget::initializeGL(void)
 
     renderTextures = new QOpenGLShaderProgram{ this->context() };
     renderTextures->addShaderFromSourceCode(QOpenGLShader::Vertex,
-    "attribute highp vec4 vertex;\n"
-    "attribute highp vec2 texCoord;\n"
-    "uniform highp mat4 matrix;\n"
-    "varying highp vec2 texc;\n"
-    "void main(void)\n"
-    "{\n"
-    "   gl_Position = matrix * vertex;\n"
-    "   texc = texCoord;\n"
-    "}");
+        "attribute highp vec4 vertex;\n"
+        "attribute highp vec2 texCoord;\n"
+        "uniform highp mat4 matrix;\n"
+        "varying highp vec2 texc;\n"
+        "void main(void)\n"
+        "{\n"
+        "   gl_Position = matrix * vertex;\n"
+        "   texc = texCoord;\n"
+        "}");
     renderTextures->addShaderFromSourceCode(QOpenGLShader::Fragment,
-    "#version 110\n"
-    "uniform sampler2D tex;\n"
-    "varying highp vec2 texc;\n"
-    "void main(void)\n"
-    "{\n"
-    "    gl_FragColor = texture2D(tex, texc);\n"
-    "}");
+        "#version 110\n"
+        "uniform sampler2D tex;\n"
+        "varying highp vec2 texc;\n"
+        "void main(void)\n"
+        "{\n"
+        "    gl_FragColor = texture2D(tex, texc);\n"
+        "}");
 
     renderTextures->link();
 
+    juliaPreviewer = new QOpenGLShaderProgram{ this->context() };
+    juliaPreviewer->addShaderFromSourceCode(QOpenGLShader::Vertex,
+        "attribute highp vec4 vertex;\n"
+        "attribute highp vec2 texCoord;\n"
+        "uniform highp mat4 matrix;\n"
+        "varying highp vec2 texc;\n"
+        "void main(void)\n"
+        "{\n"
+        "   gl_Position = matrix * vertex;\n"
+        "   texc = texCoord;\n"
+        "}");
+    juliaPreviewer->addShaderFromSourceCode(QOpenGLShader::Fragment,
+    "#version 110\n"
+    "uniform sampler2D gradient;\n"
+    "uniform highp float gradientScaler;\n"
+    "uniform highp float maxIterations;\n"
+    "varying highp vec2 texc;\n"
+    "uniform highp float juliaX;\n"
+    "uniform highp float juliaY;\n"
+    "const highp float left = -1.5;\n"
+    "const highp float right = 1.5;\n"
+    "const highp float top = -1.5;\n"
+    "const highp float bottom = 1.5;\n"
+    "float map(float a, float b, float v) {\n"
+    "    return (1.0 - v) * a + b * v;\n"
+    "}\n"
+    "float iterate(float x, float y, float ca, float cb) {\n"
+    "    int k = 0;\n"
+    "    float a = x;\n"
+    "    float b = y;\n"
+    "    while(k <= 250) {\n"
+    "        float aa = a * a;\n"
+    "        float bb = b * b;\n"
+    "        float abab = 2 * a * b;\n"
+    "        a = aa - bb + ca;\n"
+    "        b = abab + cb;\n"
+    "        if (aa + bb >= 16.0f) break;\n"
+    "        k = k + 1;\n"
+    "    }\n"
+    "    return float(k);\n"
+    "}\n"
+    "void main(void)\n"
+    "{\n"
+    "    float x = map(left, right, texc.x);\n"
+    "    float y = map(top, bottom, texc.y);\n"
+    "    float v = iterate(x, y, juliaX, juliaY);\n"
+//    "    if (v >= maxIterations) { v = 0.0; }\n"
+    "    float vnorm = v * gradientScaler;\n"
+    "    gl_FragColor = texture2D(gradient, vec2(vnorm, 0.0));\n"
+    //"    gl_FragColor = vec4(vnorm, 0.0, 0.0, 0.0);\n"
+    "}");
+    juliaPreviewer->link();
 
     program = new QOpenGLShaderProgram{ this->context() };
     bool vert = program->addShaderFromSourceCode(QOpenGLShader::Vertex,
@@ -268,7 +319,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
     //    "   gl_FragColor.g = 0.3;\n"
         "}");
     }
-    
+
     //program.link();
     bool bound = program->bind();
     bound = renderTextures->bind();
@@ -341,8 +392,10 @@ void EscapeTimeVisualWidget::resizeGL(int w, int h)
     pmvMatrix.ortho(QRectF{ 0, 0, newW, newH });
     int matrixLocation = program->uniformLocation("matrix");
     int rtMatrixLocation = renderTextures->uniformLocation("matrix");
+    int jMatrixLocation = juliaPreviewer->uniformLocation("matrix");
     program->setUniformValue(matrixLocation, pmvMatrix);
     renderTextures->setUniformValue(rtMatrixLocation, pmvMatrix);
+    juliaPreviewer->setUniformValue(jMatrixLocation, pmvMatrix);
 }
 
 
@@ -358,6 +411,61 @@ void EscapeTimeVisualWidget::paintGL(void)
     gl.glClear(GL_COLOR_BUFFER_BIT);
 
     etvi.draw(100, 100, 700, 700);*/
+}
+
+
+void EscapeTimeVisualWidget::drawJulia(float jx, float jy)
+{
+    int gradLoc = juliaPreviewer->uniformLocation("gradient");
+    int gradientScaler = juliaPreviewer->uniformLocation("gradientScaler");
+    int juliaX = juliaPreviewer->uniformLocation("juliaX");
+    int juliaY = juliaPreviewer->uniformLocation("juliaY");
+    int vertexLoc = juliaPreviewer->attributeLocation("vertex");
+    int texCoordsLoc = juliaPreviewer->attributeLocation("texCoord");
+    int maxIterLoc = juliaPreviewer->attributeLocation("maxIterations");
+
+    const float x = 100;
+    const float y = 100;
+    const float w = 200;
+    const float h = 200;
+    GLfloat const vertices[] = {
+        x, y,  0.0f,
+        x, y + h, 0.0f,
+        x + w, y, 0.0f,
+        x + w, y + h, 0.0f,
+    };
+
+    GLfloat const texCoords[] = {
+        0, 0,
+        0, 1,
+        1, 0,
+        1, 1,
+    };
+
+    auto& gl = *this->context()->functions();
+    gl.glEnable(GL_TEXTURE_2D);
+    gl.glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    juliaPreviewer->setAttributeArray(vertexLoc, vertices, 3);
+    juliaPreviewer->setAttributeArray(texCoordsLoc, texCoords, 2);
+    juliaPreviewer->enableAttributeArray(vertexLoc);
+    juliaPreviewer->enableAttributeArray(texCoordsLoc);
+    juliaPreviewer->setUniformValue(gradientScaler, 1.0f / float(gradientTextureMax));
+    juliaPreviewer->setUniformValue(maxIterLoc, float(250));
+    juliaPreviewer->setUniformValue(juliaX, float(jx));
+    juliaPreviewer->setUniformValue(juliaY, float(jy));
+
+    juliaPreviewer->bind();
+    gl.glUniform1i(gradLoc, 0);
+
+    gl.glActiveTexture(GL_TEXTURE0);
+    gl.glBindTexture(GL_TEXTURE_2D, gradientTextureId);
+
+    gl.glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+    juliaPreviewer->disableAttributeArray(vertexLoc);
+    juliaPreviewer->disableAttributeArray(texCoordsLoc);
+    //juliaPreviewer->release();
+    //program->bind();
 }
 
 

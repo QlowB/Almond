@@ -31,6 +31,7 @@ class EscapeTimeVisualWidget :
     Q_OBJECT
 
     friend class ETVImage;
+protected:
     QOpenGLShaderProgram* program;
     QOpenGLShaderProgram* renderTextures;
     QOpenGLShaderProgram* juliaPreviewer;

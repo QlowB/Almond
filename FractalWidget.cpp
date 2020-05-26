@@ -1,7 +1,7 @@
 #include "FractalWidget.h"
 #include <QMouseEvent>
 
-
+#include <QOpenGLShaderProgram>
 #include <QPainter>
 
 
@@ -187,8 +187,9 @@ void FractalWidget::resizeGL(int w, int h)
 void FractalWidget::paintGL(void)
 {
     updateAnimations();
+    EscapeTimeVisualWidget::program->bind();
     FractalZoomWidget::paintGL();
-    EscapeTimeVisualWidget::drawJulia(0.3, 0.2);
+    EscapeTimeVisualWidget::juliaPreviewer->bind();
 
     if (selectingPoint) {
         const auto& vp = getViewport();

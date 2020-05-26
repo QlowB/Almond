@@ -88,6 +88,12 @@ void ETVImage::draw(float x, float y, float w, float h,
     program->setUniformValue(gradientScaler, 1.0f / float(owner.gradientTextureMax));
     program->setUniformValue(maxIterations, float(owner.maxIterations));
 
+
+    QMatrix4x4 pmvMatrix;
+    pmvMatrix.ortho(QRect{ 0, 0, owner.getResolutionX(), owner.getResolutionY() });
+    int matrixLocation = program->uniformLocation("matrix");
+    program->setUniformValue(matrixLocation, pmvMatrix);
+
     gl.glEnable(GL_TEXTURE_2D);
     owner.program->bind();
 
@@ -227,10 +233,10 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "    while(k <= 250) {\n"
     "        float aa = a * a;\n"
     "        float bb = b * b;\n"
-    "        float abab = 2 * a * b;\n"
+    "        float abab = 2.0 * a * b;\n"
     "        a = aa - bb + ca;\n"
     "        b = abab + cb;\n"
-    "        if (aa + bb >= 16.0f) break;\n"
+    "        if (aa + bb >= 16.0) break;\n"
     "        k = k + 1;\n"
     "    }\n"
     "    return float(k);\n"

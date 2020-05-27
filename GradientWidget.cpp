@@ -374,6 +374,7 @@ void GradientWidget::removeSelectedHandle(void)
         points.erase(points.begin() + selectedHandle);
         selectedHandle = -1;
         updateGradient();
+        update();
     }
 }
 

@@ -10,6 +10,7 @@
 
 class FractalZoomWidget;
 
+Q_DECLARE_METATYPE(std::shared_ptr<ETVImage>)
 
 
 ///
@@ -66,6 +67,23 @@ signals:
 };
 
 
+class TextureUploader :
+    public QThread
+{
+    Q_OBJECT
+
+    QOpenGLContext* context;
+    EscapeTimeVisualWidget& owner;
+public:
+    TextureUploader(EscapeTimeVisualWidget& shareWith, QObject* parent = nullptr);
+
+public slots:
+    void upload(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
+signals:
+    void uploaded(int level, GridIndex i, GridIndex j, std::shared_ptr<ETVImage>);
+};
+
+
 class FractalZoomWidget :
     public EscapeTimeVisualWidget
 {
@@ -78,6 +96,11 @@ class FractalZoomWidget :
     Calcer calcer;
 
     ETVImage* emptyImage;
+
+    const bool useUploadThread = true;
+    TextureUploader* uploader;
+    QThread* uploadeThread;
+
 protected:
     mnd::MandelInfo mandelInfo;
 
@@ -120,9 +143,10 @@ public:
     virtual void initializeGL(void) override;
     virtual void resizeGL(int w, int h) override;
     virtual void paintGL(void) override;
-protected slots:
 
+protected slots:
     void cellReady(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
+    void cellReadyTex(int level, GridIndex i, GridIndex j, std::shared_ptr<ETVImage> img);
 };
 
 #endif // FRACTALZOOMWIDGET_H

@@ -144,6 +144,27 @@ void Calcer::redirect(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp)
 }
 
 
+TextureUploader::TextureUploader(EscapeTimeVisualWidget& shareWith, QObject* parent) :
+    QThread{ parent },
+    owner{ shareWith }
+{
+    this->context = new QOpenGLContext(this);
+    this->context->setFormat(owner.context()->format());
+    this->context->setScreen(owner.context()->screen());
+    this->context->setShareContext(owner.context());
+    bool created = this->context->create();
+}
+
+
+void TextureUploader::upload(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp)
+{
+    auto etvImg = std::make_shared<ETVImage>(owner, *bmp);
+    delete bmp;
+    bmp = nullptr;
+    uploaded(level, i, j, std::move(etvImg));
+}
+
+
 const int FractalZoomWidget::chunkSize = 256;
 
 
@@ -152,8 +173,10 @@ FractalZoomWidget::FractalZoomWidget(QWidget* parent) :
     calcer{ *this }
 {
     qMetaTypeId<GridIndex>();
-    connect(&calcer, &Calcer::done, this, &FractalZoomWidget::cellReady);
     setMaxIterations(250);
+
+    uploader = nullptr;
+    uploadeThread = nullptr;
 }
 
 
@@ -386,6 +409,19 @@ void FractalZoomWidget::initializeGL(void)
     Bitmap<float> empty{ 1, 1 };
     empty.get(0, 0) = 0.0f;
     emptyImage = new ETVImage(*this, empty);
+
+
+    if (useUploadThread) {
+        uploader = new TextureUploader(*this, this);
+        uploadeThread = new QThread(this);
+        uploader->moveToThread(uploadeThread);
+        uploadeThread->start();
+        connect(&calcer, &Calcer::done, uploader, &TextureUploader::upload);
+        connect(uploader, &TextureUploader::uploaded, this, &FractalZoomWidget::cellReadyTex);
+    }
+    else {
+        connect(&calcer, &Calcer::done, this, &FractalZoomWidget::cellReady);
+    }
 }
 
 
@@ -475,5 +511,14 @@ void FractalZoomWidget::cellReady(int level, GridIndex i, GridIndex j, Bitmap<fl
     this->getGrid(level).setCell(i, j,
         std::make_unique<GridElement>(true, std::make_shared<ImageClip>(std::make_shared<ETVImage>(*this, *bmp))));
     delete bmp;
+    emit update();
+}
+
+
+
+void FractalZoomWidget::cellReadyTex(int level, GridIndex i, GridIndex j, std::shared_ptr<ETVImage> img)
+{
+    this->getGrid(level).setCell(i, j,
+        std::make_unique<GridElement>(true, std::make_shared<ImageClip>(std::move(img))));
     emit update();
 }

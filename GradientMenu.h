@@ -27,6 +27,8 @@ public:
 
 signals:
     void gradientChanged(void);
+private slots:
+    void on_removeBtn_clicked();
 };
 
 #endif // GRADIENTMENU_H

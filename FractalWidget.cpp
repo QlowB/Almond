@@ -206,12 +206,15 @@ void FractalWidget::paintGL(void)
         float minRes = getResolutionX();
         if (getResolutionY() < minRes)
             minRes = getResolutionY();
+        float offset = minRes * 0.1;
+        if (offset < 30)
+            offset = 30;
         QRectF area{
             60, 60,
             minRes * 0.3, minRes * 0.3
         };
 
-        EscapeTimeVisualWidget::drawJulia(jx, jy, area);
+        EscapeTimeVisualWidget::drawJulia(jx, jy, area, mandelInfo.smooth);
 
         QPainter framePainter{ this };
         QPen pen{ QColor{ 255, 255, 255 } };

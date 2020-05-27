@@ -368,6 +368,16 @@ void GradientWidget::selectedColorChanged(const QColor& newColor)
 }
 
 
+void GradientWidget::removeSelectedHandle(void)
+{
+    if (selectedHandle >= 0 && selectedHandle < points.size()) {
+        points.erase(points.begin() + selectedHandle);
+        selectedHandle = -1;
+        updateGradient();
+    }
+}
+
+
 QRect GradientWidget::getGradientRect(void) const
 {
     QMargins cm = contentsMargins();

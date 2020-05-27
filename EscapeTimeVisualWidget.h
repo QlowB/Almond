@@ -56,7 +56,7 @@ public:
     virtual void initializeGL(void) override;
     virtual void resizeGL(int w, int h) override;
     virtual void paintGL(void) override;
-    void drawJulia(float jx, float jy, QRectF area);
+    void drawJulia(float jx, float jy, QRectF area, bool drawSmooth);
 
     void setMaxIterationCutoff(float maxIter);
 

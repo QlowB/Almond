@@ -230,6 +230,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "varying highp vec2 texc;\n"
     "uniform highp float juliaX;\n"
     "uniform highp float juliaY;\n"
+    "uniform int smooth;\n"
     "const highp float left = -1.5;\n"
     "const highp float right = 1.5;\n"
     "const highp float top = -1.5;\n"
@@ -250,7 +251,11 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "        if (aa + bb >= 16.0) break;\n"
     "        k = k + 1;\n"
     "    }\n"
-    "    return float(k) + 1.0 - log2(log(a * a + b * b) * 0.5);\n"
+//    "    if (smooth != 0) {\n"
+    "        return float(k) + 1.0 - log2(log(a * a + b * b) * 0.5);\n"
+//    "    } else {\n"
+//    "        return float(k);\n"
+//    "    }\n"
     "}\n"
     "void main(void)\n"
     "{\n"
@@ -263,7 +268,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "        highp float vnorm = v * gradientScaler;\n"
     "        gl_FragColor = texture2D(gradient, vec2(vnorm, 0.0));\n"
     "    }\n"
-    //"    gl_FragColor = vec4(vnorm, 0.0, 0.0, 0.0);\n"
+    "    gl_FragColor.g = 0.3;\n"
     "}");
     juliaPreviewer->link();
 
@@ -435,7 +440,7 @@ void EscapeTimeVisualWidget::paintGL(void)
 }
 
 
-void EscapeTimeVisualWidget::drawJulia(float jx, float jy, QRectF area)
+void EscapeTimeVisualWidget::drawJulia(float jx, float jy, QRectF area, bool drawSmooth)
 {
     juliaPreviewer->bind();
     int gradLoc = juliaPreviewer->uniformLocation("gradient");
@@ -445,6 +450,12 @@ void EscapeTimeVisualWidget::drawJulia(float jx, float jy, QRectF area)
     int vertexLoc = juliaPreviewer->attributeLocation("vertex");
     int texCoordsLoc = juliaPreviewer->attributeLocation("texCoord");
     int maxIterLoc = juliaPreviewer->attributeLocation("maxIterations");
+    int smooth = juliaPreviewer->uniformLocation("smooth");
+    int matrixLocation = juliaPreviewer->uniformLocation("matrix");
+
+    QMatrix4x4 pmvMatrix;
+    pmvMatrix.ortho(QRect{ 0, 0, getResolutionX(), getResolutionY() });
+    juliaPreviewer->setUniformValue(matrixLocation, pmvMatrix);
 
     const float x = area.x();
     const float y = area.y();
@@ -475,6 +486,7 @@ void EscapeTimeVisualWidget::drawJulia(float jx, float jy, QRectF area)
     juliaPreviewer->setUniformValue(maxIterLoc, float(250));
     juliaPreviewer->setUniformValue(juliaX, float(jx));
     juliaPreviewer->setUniformValue(juliaY, float(jy));
+    juliaPreviewer->setUniformValue(smooth, int(drawSmooth ? 1 : 0));
 
     gl.glUniform1i(gradLoc, 0);
 

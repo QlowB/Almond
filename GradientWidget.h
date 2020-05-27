@@ -67,6 +67,7 @@ public:
 
 public slots:
     void selectedColorChanged(const QColor& newColor);
+    void removeSelectedHandle(void);
 
 protected:
     /// \brief the area in which the gradient is displayed

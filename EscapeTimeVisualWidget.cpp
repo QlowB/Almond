@@ -14,9 +14,17 @@
 
 ETVImage::ETVImage(EscapeTimeVisualWidget& owner,
                    const Bitmap<float>& img) :
+    ETVImage{ owner, owner.context(), img }
+{
+}
+
+
+ETVImage::ETVImage(EscapeTimeVisualWidget& owner,
+                   QOpenGLContext* context,
+                   const Bitmap<float>& img) :
     owner{ owner }
 {
-    auto& gl = *QOpenGLContext::currentContext()->functions();
+    auto& gl = *context->functions();
     gl.glGenTextures(1, &textureId);
     gl.glActiveTexture(GL_TEXTURE0);
     gl.glBindTexture(GL_TEXTURE_2D, textureId);

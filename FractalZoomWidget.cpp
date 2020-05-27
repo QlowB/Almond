@@ -149,16 +149,24 @@ TextureUploader::TextureUploader(EscapeTimeVisualWidget& shareWith, QObject* par
     owner{ shareWith }
 {
     this->context = new QOpenGLContext(this);
+    this->surface = new QOffscreenSurface(owner.context()->screen(), this);
+    surface->create();
     this->context->setFormat(owner.context()->format());
     this->context->setScreen(owner.context()->screen());
     this->context->setShareContext(owner.context());
     bool created = this->context->create();
+    printf("is created: %d\n", created);
 }
 
 
 void TextureUploader::upload(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp)
 {
-    auto etvImg = std::make_shared<ETVImage>(owner, *bmp);
+    bool isCurrent = context->makeCurrent(surface);
+    if (!isCurrent) {
+        printf("texture redirected");
+        return;
+    }
+    auto etvImg = std::make_shared<ETVImage>(owner, context, *bmp);
     delete bmp;
     bmp = nullptr;
     uploaded(level, i, j, std::move(etvImg));
@@ -412,10 +420,10 @@ void FractalZoomWidget::initializeGL(void)
 
 
     if (useUploadThread) {
-        uploader = new TextureUploader(*this, this);
+        uploader = new TextureUploader(*this);
         uploadeThread = new QThread(this);
-        uploader->moveToThread(uploadeThread);
         uploadeThread->start();
+        uploader->moveToThread(uploadeThread);
         connect(&calcer, &Calcer::done, uploader, &TextureUploader::upload);
         connect(uploader, &TextureUploader::uploaded, this, &FractalZoomWidget::cellReadyTex);
     }

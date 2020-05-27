@@ -7,6 +7,7 @@
 
 #include <QThreadPool>
 #include <QMutex>
+#include <QOffscreenSurface>
 
 class FractalZoomWidget;
 
@@ -73,6 +74,7 @@ class TextureUploader :
     Q_OBJECT
 
     QOpenGLContext* context;
+    QOffscreenSurface* surface;
     EscapeTimeVisualWidget& owner;
 public:
     TextureUploader(EscapeTimeVisualWidget& shareWith, QObject* parent = nullptr);
@@ -97,7 +99,7 @@ class FractalZoomWidget :
 
     ETVImage* emptyImage;
 
-    const bool useUploadThread = true;
+    const bool useUploadThread = false;
     TextureUploader* uploader;
     QThread* uploadeThread;
 

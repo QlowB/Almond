@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(Almond VERSION 1.0.0 DESCRIPTION "Fractal Viewer")
+project(Almond VERSION 1.1.0 DESCRIPTION "Fractal Viewer")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
 

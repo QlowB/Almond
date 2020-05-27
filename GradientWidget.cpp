@@ -375,6 +375,7 @@ void GradientWidget::removeSelectedHandle(void)
         selectedHandle = -1;
         updateGradient();
         update();
+        emit gradientChanged();
     }
 }
 

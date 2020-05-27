@@ -230,7 +230,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "varying highp vec2 texc;\n"
     "uniform highp float juliaX;\n"
     "uniform highp float juliaY;\n"
-    "uniform int smooth;\n"
+    "uniform int smoothB;\n"
     "const highp float left = -1.5;\n"
     "const highp float right = 1.5;\n"
     "const highp float top = -1.5;\n"
@@ -251,11 +251,11 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "        if (aa + bb >= 16.0) break;\n"
     "        k = k + 1;\n"
     "    }\n"
-//    "    if (smooth != 0) {\n"
+    "    if (smoothB != 0) {\n"
     "        return float(k) + 1.0 - log2(log(a * a + b * b) * 0.5);\n"
-//    "    } else {\n"
-//    "        return float(k);\n"
-//    "    }\n"
+    "    } else {\n"
+    "        return float(k);\n"
+    "    }\n"
     "}\n"
     "void main(void)\n"
     "{\n"
@@ -268,7 +268,6 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "        highp float vnorm = v * gradientScaler;\n"
     "        gl_FragColor = texture2D(gradient, vec2(vnorm, 0.0));\n"
     "    }\n"
-    "    gl_FragColor.g = 0.3;\n"
     "}");
     juliaPreviewer->link();
 
@@ -450,7 +449,7 @@ void EscapeTimeVisualWidget::drawJulia(float jx, float jy, QRectF area, bool dra
     int vertexLoc = juliaPreviewer->attributeLocation("vertex");
     int texCoordsLoc = juliaPreviewer->attributeLocation("texCoord");
     int maxIterLoc = juliaPreviewer->attributeLocation("maxIterations");
-    int smooth = juliaPreviewer->uniformLocation("smooth");
+    int smooth = juliaPreviewer->uniformLocation("smoothB");
     int matrixLocation = juliaPreviewer->uniformLocation("matrix");
 
     QMatrix4x4 pmvMatrix;

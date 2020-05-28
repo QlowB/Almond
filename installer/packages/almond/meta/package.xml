@@ -3,7 +3,7 @@
     <DisplayName>Almond</DisplayName>
     <Description>Almond Fractal Generator</Description>
     <Version>1.0.0</Version>
-    <ReleaseDate>2020-05-04</ReleaseDate>
+    <ReleaseDate>2020-05-28</ReleaseDate>
     <Licenses>
         <License name="zlib/libpng License" file="zlib.txt" />
     </Licenses>

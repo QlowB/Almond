@@ -17,6 +17,9 @@ class ETVImage
 public:
     ETVImage(EscapeTimeVisualWidget& owner,
              const Bitmap<float>& img);
+    ETVImage(EscapeTimeVisualWidget& owner,
+             QOpenGLContext* context,
+             const Bitmap<float>& img);
     ~ETVImage(void);
 
     void draw(float x, float y, float w, float h,

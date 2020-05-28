@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>org.winfor.Almond</id>
+  <launchable type="desktop-id">
+    Almond.desktop
+  </launchable>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Zlib</project_license>
+  <name>Almond</name>
+  <summary>Almond, a smooth fractal viewer</summary>
+  <description>
+    <p>
+      Almond is a free application that lets you explore the depths
+      of the most beautiful fractals.
+    </p>
+  </description>
+  <releases>
+    <release version="1.1.0" date="2020-05-27">
+      <description>
+        <p>
+          Added a new gradient editor.
+        </p>
+      </description>
+    </release>
+  </releases>
+  <provides>
+  </provides>
+  <translation type="qt" />
+  <content_rating type="oars-1.0" />
+</component>

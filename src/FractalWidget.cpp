@@ -6,7 +6,6 @@
 
 
 
-
 FractalWidget::FractalWidget(QWidget* parent) :
     FractalZoomWidget{ parent }
 {

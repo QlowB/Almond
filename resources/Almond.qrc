@@ -2,6 +2,8 @@
     <qresource prefix="/icons">
         <file alias="icon">Almond.png</file>
         <file alias="icon@2x">Almond.png</file>
+        <file alias="zoom_in">icons/zoom_in.svg</file>
+        <file alias="zoom_out">icons/zoom_out.svg</file>
     </qresource>
     <qresource prefix="/gradients">
         <file alias="default">gradients/default.xml</file>

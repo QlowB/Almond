@@ -178,7 +178,8 @@ const int FractalZoomWidget::chunkSize = 256;
 
 FractalZoomWidget::FractalZoomWidget(QWidget* parent) :
     EscapeTimeVisualWidget{ parent },
-    calcer{ *this }
+    calcer{ *this },
+    emptyImage{ nullptr }
 {
     qMetaTypeId<GridIndex>();
     setMaxIterations(250);
@@ -416,9 +417,11 @@ void FractalZoomWidget::initializeGL(void)
     EscapeTimeVisualWidget::initializeGL();
     Bitmap<float> empty{ 1, 1 };
     empty.get(0, 0) = 0.0f;
-    emptyImage = new ETVImage(*this, empty);
+    emptyImage = std::make_unique<ETVImage>(*this, empty);
 
 
+    // disconnect calcer from everything and reconnect
+    disconnect(&calcer, &Calcer::done, nullptr, nullptr);
     if (useUploadThread) {
         uploader = new TextureUploader(*this);
         uploadeThread = new QThread(this);

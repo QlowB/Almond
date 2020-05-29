@@ -97,7 +97,7 @@ class FractalZoomWidget :
     mnd::MandelGenerator* generator;
     Calcer calcer;
 
-    ETVImage* emptyImage;
+    std::unique_ptr<ETVImage> emptyImage;
 
     const bool useUploadThread = false;
     TextureUploader* uploader;

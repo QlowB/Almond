@@ -6,7 +6,7 @@
 #include <QStatusBar>
 #include <QGradient>
 #include <QWindow>
-#include "gradientchoosedialog.h"
+#include <QKeyEvent>
 
 #include "GridFlowLayout.h"
 
@@ -212,21 +212,23 @@ void Almond::gradientEditOk(void)
 
 void Almond::toggleFullscreen(void)
 {
-    /*
     if (fullscreenMode) {
         auto* m = this->takeCentralWidget();
         ui.mandel_container->addWidget(m);
         this->setCentralWidget(cw);
-        emit this->showNormal();
+        if (maximizedBeforeFullscreen)
+            this->showMaximized();
+        else
+            this->showNormal();
         fullscreenMode = false;
     }
     else {
         cw = this->takeCentralWidget();
-        this->setCentralWidget(mw.get());
+        this->setCentralWidget(fractalWidget);
+        maximizedBeforeFullscreen = this->isMaximized();
         emit this->showFullScreen();
         fullscreenMode = true;
     }
-    */
 }
 
 

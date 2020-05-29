@@ -6,10 +6,7 @@
 #include "ui_Almond.h"
 
 #include <Mandel.h>
-#include "MandelWidget.h"
 #include "BackgroundTask.h"
-#include "exportdialogs.h"
-#include "gradientchoosedialog.h"
 #include "choosegenerators.h"
 #include "customgenerator.h"
 
@@ -52,13 +49,13 @@ private:
     GradientMenu* gradientMenu;
 
     bool fullscreenMode = false;
+    bool maximizedBeforeFullscreen = true;
     QWidget* cw;
 public:
     FractalWidget* fractalWidget;
 private:
     //std::unique_ptr<BenchmarkDialog> benchmarkDialog;
     std::unique_ptr<CustomGenerator> customGeneratorDialog;
-    GradientChooseDialog gcd;
 
     std::vector<std::unique_ptr<FractalDef>> customGenerators;
     FractalDef* currentCustom;

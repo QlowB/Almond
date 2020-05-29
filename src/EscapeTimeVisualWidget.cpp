@@ -388,19 +388,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
 
     unsigned char pix[] = { 255, 0, 0, 0, 255, 0, 0, 0, 255 };
 
-    GLuint id;
-    gl.glEnable(GL_TEXTURE_2D);
-    gl.glGenTextures(1, &id);
-    gl.glBindTexture(GL_TEXTURE_2D, id);
-
-    gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 3, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<char*> (pix));
-    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    gl.glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    gl.glBindTexture(GL_TEXTURE_2D, 0);
-
-    gradientTextureId = id;
+    updateGradient();
 
     gl.glDisable(GL_DEPTH_TEST);
     //gl3.glBindSampler(0, id);
@@ -536,6 +524,9 @@ void EscapeTimeVisualWidget::updateGradient(void)
     }
 
     gl.glEnable(GL_TEXTURE_2D);
+    if (gradientTextureId == 0)
+        gl.glGenTextures(1, &gradientTextureId);
+
     gl.glBindTexture(GL_TEXTURE_2D, gradientTextureId);
 
     gl.glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, len, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, reinterpret_cast<unsigned char*> (pixels.get()));

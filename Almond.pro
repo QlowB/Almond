@@ -39,11 +39,8 @@ SOURCES += \
         src/FractalZoomWidget.cpp \
         src/GradientMenu.cpp \
         src/GradientWidget.cpp \
-        src/MandelWidget.cpp \
         src/choosegenerators.cpp \
         src/customgenerator.cpp \
-        src/exportdialogs.cpp \
-        src/gradientchoosedialog.cpp \
         src/GridFlowLayout.cpp \
         src/main.cpp
 
@@ -60,12 +57,9 @@ HEADERS += \
         include/FractalZoomWidget.h \
         include/GradientMenu.h \
         include/GradientWidget.h \
-        include/MandelWidget.h \
         include/choosegenerators.h \
         include/customgenerator.h \
-        include/exportdialogs.h \
-        include/GridFlowLayout.h \
-        include/gradientchoosedialog.h
+        include/GridFlowLayout.h
 
 FORMS += \
         ui/Almond.ui \
@@ -73,10 +67,7 @@ FORMS += \
         ui/ExportVideoMenu.ui \
         ui/GradientMenu.ui \
         ui/choosegenerators.ui \
-        ui/customgenerator.ui \
-        ui/exportimagedialog.ui \
-        ui/exportvideodialog.ui \
-        ui/gradientchooser.ui
+        ui/customgenerator.ui
 
 INCLUDEPATH += include
 

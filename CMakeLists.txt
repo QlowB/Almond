@@ -19,18 +19,25 @@ find_package(FFmpeg COMPONENTS AVCODEC AVDEVICE AVFORMAT AVUTIL SWSCALE REQUIRED
 
 set(CMAKE_CXX_STANDARD 17)
 
-FILE(GLOB AlmondSources *.cpp)
-FILE(GLOB AlmondHeaders *.h)
+FILE(GLOB AlmondSources src/*.cpp)
+FILE(GLOB AlmondHeaders include/*.h)
 
 
 IF (WIN32)
-    add_executable(Almond WIN32 ${AlmondSources} Almond.qrc splash.qrc icon.rc ${AlmondHeaders})
+    add_executable(Almond WIN32 ${AlmondSources}
+                   resources/Almond.qrc
+                   resources/splash.qrc
+                   resources/icon.rc
+                   ${AlmondHeaders})
 ELSE()
-    add_executable(Almond ${AlmondSources} Almond.qrc splash.qrc ${AlmondHeaders})
+    add_executable(Almond ${AlmondSources}
+                   resources/Almond.qrc
+                   resources/splash.qrc
+                   ${AlmondHeaders})
     set_target_properties(Almond PROPERTIES OUTPUT_NAME "almond")
 ENDIF()
 
-target_include_directories(Almond PUBLIC .)
+target_include_directories(Almond PUBLIC include)
 
 add_subdirectory(libalmond)
 
@@ -40,10 +47,10 @@ target_link_libraries(Almond PUBLIC libalmond)
 target_link_libraries(Almond PUBLIC Qt5::Core Qt5::Widgets Qt5::OpenGL Qt5::Xml Qt5::Concurrent)
 target_link_libraries(Almond PUBLIC ${FFMPEG_LIBRARIES})
 
+set_property(TARGET Almond PROPERTY AUTOUIC_SEARCH_PATHS "ui")
 set_property(TARGET Almond PROPERTY AUTOMOC ON)
 set_property(TARGET Almond PROPERTY AUTORCC ON)
 set_property(TARGET Almond PROPERTY AUTOUIC ON)
-
 
 
 if(Boost_FOUND)
@@ -72,8 +79,8 @@ IF (WIN32)
 
 ELSEIF (UNIX AND NOT APPLE)
     install(TARGETS Almond RUNTIME DESTINATION "bin")
-    install(FILES Almond.desktop DESTINATION "share/applications")
-    install(FILES Almond.png DESTINATION "share/pixmaps")
+    install(FILES debian/Almond.desktop DESTINATION "share/applications")
+    install(FILES resources/Almond.png DESTINATION "share/pixmaps")
     install(FILES debian/copyright DESTINATION "share/doc/almond/" RENAME "copyright")
     install(FILES debian/Almond.appdata.xml DESTINATION "share/metainfo/" RENAME "org.winfor.Almond.appdata.xml")
     set(CPACK_GENERATOR "DEB")

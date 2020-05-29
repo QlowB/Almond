@@ -27,58 +27,58 @@ CONFIG += c++17
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
 
 SOURCES += \
-        Almond.cpp \
-        AlmondMenuWidget.cpp \
-        BackgroundTask.cpp \
-        Color.cpp \
-        EscapeTimeVisualWidget.cpp \
-        ExportImageMenu.cpp \
-        ExportVideoMenu.cpp \
-        FractalWidget.cpp \
-        FractalWidgetUtils.cpp \
-        FractalZoomWidget.cpp \
-        GradientMenu.cpp \
-        GradientWidget.cpp \
-        MandelWidget.cpp \
-        choosegenerators.cpp \
-        customgenerator.cpp \
-        exportdialogs.cpp \
-        gradientchoosedialog.cpp \
-        GridFlowLayout.cpp \
-        main.cpp
+        src/Almond.cpp \
+        src/AlmondMenuWidget.cpp \
+        src/BackgroundTask.cpp \
+        src/Color.cpp \
+        src/EscapeTimeVisualWidget.cpp \
+        src/ExportImageMenu.cpp \
+        src/ExportVideoMenu.cpp \
+        src/FractalWidget.cpp \
+        src/FractalWidgetUtils.cpp \
+        src/FractalZoomWidget.cpp \
+        src/GradientMenu.cpp \
+        src/GradientWidget.cpp \
+        src/MandelWidget.cpp \
+        src/choosegenerators.cpp \
+        src/customgenerator.cpp \
+        src/exportdialogs.cpp \
+        src/gradientchoosedialog.cpp \
+        src/GridFlowLayout.cpp \
+        src/main.cpp
 
 HEADERS += \
-        Almond.h \
-        AlmondMenuWidget.h \
-        BackgroundTask.h \
-        Color.h \
-        EscapeTimeVisualWidget.h \
-        ExportImageMenu.h \
-        ExportVideoMenu.h \
-        FractalWidget.h \
-        FractalWidgetUtils.h \
-        FractalZoomWidget.h \
-        GradientMenu.h \
-        GradientWidget.h \
-        MandelWidget.h \
-        choosegenerators.h \
-        customgenerator.h \
-        exportdialogs.h \
-        GridFlowLayout.h \
-        gradientchoosedialog.h
+        include/Almond.h \
+        include/AlmondMenuWidget.h \
+        include/BackgroundTask.h \
+        include/Color.h \
+        include/EscapeTimeVisualWidget.h \
+        include/ExportImageMenu.h \
+        include/ExportVideoMenu.h \
+        include/FractalWidget.h \
+        include/FractalWidgetUtils.h \
+        include/FractalZoomWidget.h \
+        include/GradientMenu.h \
+        include/GradientWidget.h \
+        include/MandelWidget.h \
+        include/choosegenerators.h \
+        include/customgenerator.h \
+        include/exportdialogs.h \
+        include/GridFlowLayout.h \
+        include/gradientchoosedialog.h
 
 FORMS += \
-        Almond.ui \
-        ExportImageMenu.ui \
-        ExportVideoMenu.ui \
-        GradientMenu.ui \
-        choosegenerators.ui \
-        customgenerator.ui \
-        exportimagedialog.ui \
-        exportvideodialog.ui \
-        gradientchooser.ui
+        ui/Almond.ui \
+        ui/ExportImageMenu.ui \
+        ui/ExportVideoMenu.ui \
+        ui/GradientMenu.ui \
+        ui/choosegenerators.ui \
+        ui/customgenerator.ui \
+        ui/exportimagedialog.ui \
+        ui/exportvideodialog.ui \
+        ui/gradientchooser.ui
 
-
+INCLUDEPATH += include
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -142,8 +142,9 @@ unix|win32: LIBS += -L$FFMPEGPATH -lswscale
 #INCLUDEPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 #DEPENDPATH += $$PWD/../libs/ffmpeg-4.1.1-win32-dev/include
 
-RESOURCES += Almond.qrc \
-    splash.qrc
+RESOURCES += \
+    resources/Almond.qrc \
+    resources/splash.qrc
 
 win32:LIBS += -llibpng16_static -lzlibstatic -ljpeg
 unix|win32: LIBS += -L$$PWD/libmandel/ -L$$PWD/libalmond/ -lmandel -lqd -lasmjit -lalmond

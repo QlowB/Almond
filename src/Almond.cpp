@@ -21,6 +21,9 @@ Almond::Almond(QWidget* parent) :
     fractalWidget->setGenerator(&mandelContext.getDefaultGenerator());
     fractalWidget->setGradient(Gradient::defaultGradient());
     fractalWidget->setSmoothColoring(ui.smooth->isChecked());
+    QSizePolicy fsp{ QSizePolicy::Expanding, QSizePolicy::Expanding };
+    fsp.setHorizontalStretch(2);
+    fractalWidget->setSizePolicy(fsp);
 
     connect(fractalWidget, &FractalWidget::pointSelected, this, &Almond::pointSelected);
 
@@ -215,6 +218,8 @@ void Almond::toggleFullscreen(void)
     if (fullscreenMode) {
         auto* m = this->takeCentralWidget();
         ui.mandel_container->addWidget(m);
+        ui.mainContainer->setStretch(0, 2);
+        ui.mainContainer->setStretch(1, 2);
         this->setCentralWidget(cw);
         if (maximizedBeforeFullscreen)
             this->showMaximized();

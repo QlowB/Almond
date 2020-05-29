@@ -10,6 +10,7 @@
 FractalWidget::FractalWidget(QWidget* parent) :
     FractalZoomWidget{ parent }
 {
+    setMinimumSize(200, 200);
 }
 
 

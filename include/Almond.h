@@ -16,6 +16,7 @@
 #include "ExportImageMenu.h"
 #include "ExportVideoMenu.h"
 #include "GradientMenu.h"
+#include "About.h"
 
 
 #include <memory>
@@ -46,6 +47,7 @@ private:
     AlmondMenuWidget* amw;
     ExportImageMenu* eim;
     ExportVideoMenu* evm;
+    About* about;
     GradientMenu* gradientMenu;
 
     bool fullscreenMode = false;
@@ -112,6 +114,8 @@ private slots:
     void on_radioButton_2_toggled(bool checked);
     void on_createCustom_clicked();
     void on_cancelProgress_clicked();
+
+    void on_aboutBtn_clicked();
 
 private:
     Ui::AlmondClass ui;

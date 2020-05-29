@@ -48,10 +48,13 @@ Almond::Almond(QWidget* parent) :
     amw->setMainMenu(ui.dockWidgetContents_2);
     eim = new ExportImageMenu();
     evm = new ExportVideoMenu();
+    about = new About(this);
     gradientMenu = new GradientMenu();
     AlmondSubMenu* imageSm = amw->addSubMenu(eim);
     AlmondSubMenu* videoSm = amw->addSubMenu(evm);
     AlmondSubMenu* gradientSm = amw->addSubMenu(gradientMenu);
+    AlmondSubMenu* aboutSm = amw->addSubMenu(about);
+
     ui.dockWidget_2->setWidget(amw);
 
     connect(amw, &AlmondMenuWidget::submenuCancel, [this] (int) { amw->showMainMenu(); });
@@ -65,6 +68,9 @@ Almond::Almond(QWidget* parent) :
     connect(gradientMenu, &GradientMenu::gradientChanged, [this] () {
         fractalWidget->setGradient(gradientMenu->getGradient());
     });
+
+    connect(aboutSm, &AlmondSubMenu::accepted, [] () {});
+    connect(aboutSm, &AlmondSubMenu::cancelled, [] () {});
 
 
     /*QStatusBar* bar = new QStatusBar(this);
@@ -495,4 +501,10 @@ void Almond::on_createCustom_clicked()
 void Almond::on_cancelProgress_clicked()
 {
     stopBackgroundTask();
+}
+
+
+void Almond::on_aboutBtn_clicked()
+{
+    amw->showSubMenu(3);
 }

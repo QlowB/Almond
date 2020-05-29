@@ -27,6 +27,7 @@ CONFIG += c++17
 QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.12
 
 SOURCES += \
+        src/About.cpp \
         src/Almond.cpp \
         src/AlmondMenuWidget.cpp \
         src/BackgroundTask.cpp \
@@ -45,6 +46,7 @@ SOURCES += \
         src/main.cpp
 
 HEADERS += \
+        include/About.h \
         include/Almond.h \
         include/AlmondMenuWidget.h \
         include/BackgroundTask.h \
@@ -62,6 +64,7 @@ HEADERS += \
         include/GridFlowLayout.h
 
 FORMS += \
+        ui/About.ui \
         ui/Almond.ui \
         ui/ExportImageMenu.ui \
         ui/ExportVideoMenu.ui \

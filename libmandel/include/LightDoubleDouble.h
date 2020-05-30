@@ -53,13 +53,13 @@ namespace mnd
             return { p, e };
         }
 
-        template<typename T>
+        /*template<typename T>
         inline Pair<T> twoProdFma(T a, T b)
         {
             T p = a * b;
             T e = std::fma(a, b, -p);
             return { p, e };
-        }
+        }*/
     }
 }
 

@@ -124,6 +124,8 @@ namespace mnd
             return "double";
         case Precision::DOUBLE_DOUBLE:
             return "double-double";
+        case Precision::TRIPLE_DOUBLE:
+            return "triple-double";
         case Precision::FLOAT128:
             return "float128";
         case Precision::FLOAT256:

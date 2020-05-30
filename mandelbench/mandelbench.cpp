@@ -12,41 +12,43 @@ mnd::MandelViewport benchViewport(void)
     return mnd::MandelViewport{ -1.250000598933854152929, 0.0001879894057291665530, 0.0000003839916666666565, 0.0000003839916666666565 };
 }
 
-const std::vector<mnd::MandelInfo> benches {
-    mnd::MandelInfo{ benchViewport(), 100, 100, 1000 },
-    mnd::MandelInfo{ benchViewport(), 100, 200, 1000 },
-    mnd::MandelInfo{ benchViewport(), 200, 200, 1000 },
-    mnd::MandelInfo{ benchViewport(), 200, 200, 2000 },
-    mnd::MandelInfo{ benchViewport(), 200, 400, 2000 },
-    mnd::MandelInfo{ benchViewport(), 400, 400, 2000 },
-    mnd::MandelInfo{ benchViewport(), 400, 400, 4000 },
-    mnd::MandelInfo{ benchViewport(), 400, 800, 4000 },
-    mnd::MandelInfo{ benchViewport(), 800, 800, 4000 },
-    mnd::MandelInfo{ benchViewport(), 800, 800, 8000 },
-    mnd::MandelInfo{ benchViewport(), 800, 800, 16000 },
-    mnd::MandelInfo{ benchViewport(), 800, 1600, 16000 },
-    mnd::MandelInfo{ benchViewport(), 1600, 1600, 16000 },
-    mnd::MandelInfo{ benchViewport(), 1600, 1600, 32000 },
-    mnd::MandelInfo{ benchViewport(), 1600, 1600, 64000 },
-    mnd::MandelInfo{ benchViewport(), 1600, 3200, 64000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 64000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 128000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 256000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 512000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 1024000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 3200, 2048000 },
-    mnd::MandelInfo{ benchViewport(), 3200, 6400, 2048000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 2048000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 4096000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 8192000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 16384000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 32768000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 65536000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 131072000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 262144000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 524288000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 1048576000 },
-    mnd::MandelInfo{ benchViewport(), 6400, 6400, 2097152000 },
+const std::vector<mnd::MandelInfo> benches = {
+    mnd::MandelInfo{ benchViewport(), 32, 32, 15, false },
+    mnd::MandelInfo{ benchViewport(), 32, 32, 25, false },
+    mnd::MandelInfo{ benchViewport(), 32, 32, 75, false },
+    mnd::MandelInfo{ benchViewport(), 32, 32, 125, false },
+    mnd::MandelInfo{ benchViewport(), 32, 32, 250, false },
+    mnd::MandelInfo{ benchViewport(), 64, 32, 250, false },
+    mnd::MandelInfo{ benchViewport(), 64, 64, 250, false },
+    mnd::MandelInfo{ benchViewport(), 64, 64, 500, false },
+    mnd::MandelInfo{ benchViewport(), 64, 128, 500, false },
+    mnd::MandelInfo{ benchViewport(), 128, 128, 500, false },
+    mnd::MandelInfo{ benchViewport(), 128, 128, 1000, false },
+    mnd::MandelInfo{ benchViewport(), 128, 256, 1000, false },
+    mnd::MandelInfo{ benchViewport(), 256, 256, 1000, false },
+    mnd::MandelInfo{ benchViewport(), 256, 256, 2000, false },
+    mnd::MandelInfo{ benchViewport(), 256, 512, 2000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 2000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 4000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 8000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 16000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 32000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 64000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 128000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 256000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 512000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 1024000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 2048000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 4096000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 8192000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 16384000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 32768000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 65536000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 131072000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 262144000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 524288000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 1048576000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 2097152000, false },
 };
 
 std::pair<long long, std::chrono::nanoseconds> measureMips(const std::function<std::pair<float*, long>()>& bench)
@@ -88,7 +90,7 @@ double benchmark(mnd::MandelGenerator& generator)
         auto [iters, time] = measureMips([&generator, &mi, &data]() { generator.generate(mi, data.get()); return std::make_pair(data.get(), mi.bWidth * mi.bHeight);  });
         //printf("benchmark lvl %d, time %d ms\n", i, time.count() / 1000 / 1000);
         //fflush(stdout);
-        if (time > std::chrono::milliseconds(1000)) {
+        if (time > std::chrono::milliseconds(200)) {
             testIndex = i + 2;
             break;
         }
@@ -106,44 +108,28 @@ double benchmark(mnd::MandelGenerator& generator)
 }
 
 #define REPORT_PERFORMANCE(name, performance) \
-do { std::cout << std::setw(30) << name << std::setw(10) << std::right << std::showbase << std::fixed << std::setprecision(2) << performance << std::endl; } while(0)
+do { std::cout << std::setw(30) << (name) << std::setw(10) << std::right << std::showbase << std::fixed << std::setprecision(2) << performance << std::endl; } while(0)
 
 int main()
 {
-    Fixed128 a = 5.2;
-    Fixed128 b = 2.0;
-
-    Fixed128 c = a / b;
-
-    std::cout << "val: " << double(c) << std::endl;
-
     mnd::MandelContext mc = mnd::initializeContext();
 
     std::cout << "Benchmarking CPU [" << mc.getCpuInfo().getBrand() << "]" << std::endl;
 
-    REPORT_PERFORMANCE("float [MIps]: ", benchmark(*mc.getCpuGenerator(mnd::GeneratorType::FLOAT)));
-    REPORT_PERFORMANCE("double [MIps]: ", benchmark(*mc.getCpuGenerator(mnd::GeneratorType::DOUBLE)));
-    REPORT_PERFORMANCE("fixed-point 128 bit [MIps]: ", benchmark(*mc.getCpuGenerator(mnd::GeneratorType::FIXED128)));
-    
-
-    for (auto& device : mc.getDevices()) {
-        std::cout << "Benchmarking Device [" << device.getName() << "]" << std::endl;
-        if (mnd::MandelGenerator* gpuf; gpuf = device.getGenerator(mnd::GeneratorType::FLOAT)) {
-            REPORT_PERFORMANCE("float [MIps]: ", benchmark(*gpuf));
-        }
-        if (mnd::MandelGenerator* gpud; gpud = device.getGenerator(mnd::GeneratorType::DOUBLE)) {
-            REPORT_PERFORMANCE("double [MIps]: ", benchmark(*gpud));
-        }
-        if (mnd::MandelGenerator* gpu128; gpu128 = device.getGenerator(mnd::GeneratorType::FIXED128)) {
-            REPORT_PERFORMANCE("fixed-point 128 bit [MIps]: ", benchmark(*gpu128));
-        }
+    auto types = mc.getSupportedTypes();
+    for (auto type : types) {
+        REPORT_PERFORMANCE(mnd::getGeneratorName(type) + " [MIps]: ", benchmark(*mc.getCpuGenerator(type)));
     }
+    
+    std::cout << std::endl;
+    for (auto& device : mc.getDevices()) {
+        std::cout << "Benchmarking Device [" << device->getVendor() << " " << device->getName() << "]" << std::endl;
 
-
-    /*
-    std::cout << std::setw(30) << "float [MIps]: " << std::setw(10) << std::right << std::showbase << std::fixed << std::setprecision(2) << benchmark(mc.getCpuGeneratorFloat()) << std::endl;
-    std::cout << std::setw(30) << "double [MIps]: " << std::setw(10) << std::right << std::showbase << std::fixed << std::setprecision(2) << benchmark(mc.getCpuGeneratorDouble()) << std::endl;
-    std::cout << std::setw(30) << "fixed-point 128 bit [MIps]: " << std::setw(10) << std::right << std::showbase << std::fixed << std::setprecision(2) << benchmark(mc.getCpuGenerator128()) << std::endl;
-    */
+        auto types = device->getSupportedTypes();
+        for (auto type : types) {
+            REPORT_PERFORMANCE(mnd::getGeneratorName(type) + " [MIps]: ", benchmark(*device->getGenerator(type)));
+        }
+        std::cout << std::endl;
+    }
 }
 

@@ -210,6 +210,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
     auto* floatGen = getCpuGenerator(GeneratorType::FLOAT);
     auto* doubleGen = getCpuGenerator(GeneratorType::DOUBLE);
     auto* doubleDoubleGen = getCpuGenerator(GeneratorType::DOUBLE_DOUBLE);
+    auto* tripleDoubleGen = getCpuGenerator(GeneratorType::TRIPLE_DOUBLE);
     auto* quadDoubleGen = getCpuGenerator(GeneratorType::QUAD_DOUBLE);
     auto* f256Gen = getCpuGenerator(GeneratorType::FLOAT256);
     auto* fix512 = getCpuGenerator(GeneratorType::FIXED512);
@@ -244,6 +245,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
         auto* fGen = device->getGenerator(GeneratorType::FLOAT);
         auto* dGen = device->getGenerator(GeneratorType::DOUBLE);
         auto* ddGen = device->getGenerator(GeneratorType::DOUBLE_DOUBLE);
+        auto* tdGen = device->getGenerator(GeneratorType::TRIPLE_DOUBLE);
         auto* qdGen = device->getGenerator(GeneratorType::QUAD_DOUBLE);
 
         if (fGen)
@@ -252,6 +254,8 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
             doubleGen = dGen;
         if (ddGen)
             doubleDoubleGen = ddGen;
+        if (tdGen)
+            tripleDoubleGen = tdGen;
         if (qdGen)
             quadDoubleGen = qdGen;
     }
@@ -260,6 +264,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
     ag->addGenerator(getPrecision<float>(), *floatGen);
     ag->addGenerator(getPrecision<double>(), *doubleGen);
     ag->addGenerator(getPrecision<DoubleDouble>(), *doubleDoubleGen);
+    ag->addGenerator(getPrecision<TripleDouble>(), *tripleDoubleGen);
     ag->addGenerator(getPrecision<QuadDouble>(), *quadDoubleGen);
     ag->addGenerator(getPrecision<Float256>(), *f256Gen);
     ag->addGenerator(Precision::INF_PREC, *fix512);
@@ -330,6 +335,7 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
                 try {
                     md.mandelGenerators.insert({ GeneratorType::DOUBLE, std::make_unique<ClGeneratorDouble>(md) });
                     md.mandelGenerators.insert({ GeneratorType::DOUBLE_DOUBLE, std::make_unique<ClGeneratorDoubleDouble>(md) });
+                    md.mandelGenerators.insert({ GeneratorType::TRIPLE_DOUBLE, std::make_unique<ClGeneratorTripleDouble>(md) });
                     md.mandelGenerators.insert({ GeneratorType::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(md) });
                 }
                 catch (const std::string& err) {

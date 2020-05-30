@@ -174,7 +174,7 @@ namespace mnd
             { Precision::DOUBLE_FLOAT, Real("4.0e-15") },
             { Precision::DOUBLE, getPrecision<double>() },
             { Precision::DOUBLE_DOUBLE, Real("1.0e-29") },
-            { Precision::TRIPLE_DOUBLE, Real("1.0e-45") },
+            { Precision::TRIPLE_DOUBLE, Real("1.0e-47") },
             { Precision::QUAD_DOUBLE, Real("1.0e-56") },
             { Precision::FIXED64, Real("3.5e-15") },
             { Precision::FIXED128, Real("1.317e-29") },
@@ -247,7 +247,7 @@ namespace mnd
     }
     template<>
     Real getPrecision<TripleDouble>() {
-        return Real("1.0e-46");
+        return Real("1.0e-47");
     }
     template<>
     Real getPrecision<QuadDouble>() {

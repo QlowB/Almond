@@ -17,6 +17,7 @@ using mnd::ClGeneratorFloat;
 using mnd::ClGeneratorDoubleFloat;
 using mnd::ClGeneratorDouble;
 using mnd::ClGeneratorDoubleDouble;
+using mnd::ClGeneratorTripleDouble;
 using mnd::ClGeneratorQuadDouble;
 using mnd::ClGenerator128;
 using mnd::ClGenerator64;
@@ -379,6 +380,63 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
 std::string ClGeneratorDoubleDouble::getKernelCode(bool smooth) const
 {
     return getDoubleDouble_cl();
+}
+
+
+ClGeneratorTripleDouble::ClGeneratorTripleDouble(mnd::MandelDevice& device) :
+    ClGenerator{ device, getTripleDouble_cl(), mnd::Precision::TRIPLE_DOUBLE }
+{
+    kernel = Kernel(program, "iterate");
+}
+
+
+void ClGeneratorTripleDouble::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+
+    mnd::TripleDouble x = mnd::convert<mnd::TripleDouble>(info.view.x);
+    mnd::TripleDouble y = mnd::convert<mnd::TripleDouble>(info.view.y);
+
+    mnd::TripleDouble psx = mnd::convert<mnd::TripleDouble>(info.view.width / info.bWidth);
+    mnd::TripleDouble psy = mnd::convert<mnd::TripleDouble>(info.view.height / info.bHeight);
+
+    mnd::TripleDouble juliaX = mnd::convert<mnd::TripleDouble>(info.juliaX);
+    mnd::TripleDouble juliaY = mnd::convert<mnd::TripleDouble>(info.juliaY);
+
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, x.x[0]);
+    kernel.setArg(3, x.x[1]);
+    kernel.setArg(4, x.x[2]);
+    kernel.setArg(5, y.x[0]);
+    kernel.setArg(6, y.x[1]);
+    kernel.setArg(7, y.x[2]);
+    kernel.setArg(8, psx.x[0]);
+    kernel.setArg(9, psx.x[1]);
+    kernel.setArg(10, psx.x[2]);
+    kernel.setArg(11, psy.x[0]);
+    kernel.setArg(12, psy.x[1]);
+    kernel.setArg(13, psy.x[2]);
+    kernel.setArg(14, int(info.maxIter));
+    kernel.setArg(15, int(info.smooth ? 1 : 0));
+    kernel.setArg(16, info.julia ? 1 : 0);
+    kernel.setArg(17, juliaX.x[0]);
+    kernel.setArg(18, juliaX.x[1]);
+    kernel.setArg(19, juliaX.x[2]);
+    kernel.setArg(20, juliaY.x[0]);
+    kernel.setArg(21, juliaY.x[1]);
+    kernel.setArg(22, juliaY.x[2]);
+
+    cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+
+std::string ClGeneratorTripleDouble::getKernelCode(bool smooth) const
+{
+    return getTripleDouble_cl();
 }
 
 

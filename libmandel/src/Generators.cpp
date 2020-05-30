@@ -212,6 +212,7 @@ namespace mnd
         case GeneratorType::DOUBLE_DOUBLE_AVX_FMA:
             return getPrecision<DoubleDouble>();
         case GeneratorType::TRIPLE_DOUBLE:
+        case GeneratorType::TRIPLE_DOUBLE_AVX:
             return getPrecision<TripleDouble>();
         case GeneratorType::QUAD_DOUBLE:
             return getPrecision<QuadDouble>();

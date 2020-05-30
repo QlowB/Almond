@@ -48,6 +48,7 @@ static const std::map<mnd::GeneratorType, std::string> typeNames =
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX_FMA, "double double AVX+FMA" },
     { mnd::GeneratorType::DOUBLE_DOUBLE_NEON, "double double NEON" },
     { mnd::GeneratorType::TRIPLE_DOUBLE, "triple double" },
+    { mnd::GeneratorType::TRIPLE_DOUBLE_AVX, "triple double AVX" },
     { mnd::GeneratorType::QUAD_DOUBLE, "quad double" },
     { mnd::GeneratorType::QUAD_DOUBLE_AVX_FMA, "quad double AVX+FMA" },
     { mnd::GeneratorType::FLOAT128, "float128" },
@@ -130,18 +131,20 @@ MandelContext::MandelContext(void)
 #   if defined(WITH_AVX512)
     if (cpuInfo.hasAvx512()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX_512, true>>();
-        auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX_512, true>>();
+        //auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX_512, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_AVX512, std::move(fl) });
-        cpuGenerators.insert({ GeneratorType::DOUBLE_AVX512, std::move(db) });
+        //cpuGenerators.insert({ GeneratorType::DOUBLE_AVX512, std::move(db) });
     }
 #   endif
     if (cpuInfo.hasAvx()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX, true>>();
         auto ddb = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX, true>>();
+        auto tdb = std::make_unique<CpuGenerator<TripleDouble, mnd::X86_AVX, true>>();
         cpuGenerators.insert({ GeneratorType::FLOAT_AVX, std::move(fl) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_AVX, std::move(db) });
         cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE_AVX, std::move(ddb) });
+        cpuGenerators.insert({ GeneratorType::TRIPLE_DOUBLE_AVX, std::move(tdb) });
     }
     if (cpuInfo.hasAvx2() && cpuInfo.hasFma()) {
         auto favxfma = std::make_unique<CpuGenerator<float, mnd::X86_AVX_FMA, true>>();

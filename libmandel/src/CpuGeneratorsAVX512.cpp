@@ -1,48 +1,34 @@
-#include "CpuGenerators.h"
-
 #include <immintrin.h>
 #include <omp.h>
 
-#include <memory>
+#include "FloatLog.h"
 
-using mnd::CpuGenerator;
 
-namespace mnd
-{
-    template class CpuGenerator<float, mnd::X86_AVX_512, false>;
-    template class CpuGenerator<float, mnd::X86_AVX_512, true>;
-
-    template class CpuGenerator<double, mnd::X86_AVX_512, false>;
-    template class CpuGenerator<double, mnd::X86_AVX_512, true>;
-}
-
-template<bool parallel>
-void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::MandelInfo& info, float* data)
+void generateFloatAvx512(long width, long height, float* data, bool parallel,
+                         float vx, float vy, float vw, float vh, int maxIter, bool smooth,
+                         bool julia, float jX, float jY)
 {
     using T = float;
-    const MandelViewport& view = info.view;
 
-    const float dppf = float(view.width / info.bWidth);
-    const float viewxf = float(view.x);
+    const float dppf = float(vw / width);
+    const float viewxf = float(vx);
     __m512 viewx = _mm512_set1_ps(viewxf);
     __m512 dpp = _mm512_set1_ps(dppf);
     __m512 enumerate = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     __m512 two = _mm512_set1_ps(2);
 
-    T jX = mnd::convert<T>(info.juliaX);
-    T jY = mnd::convert<T>(info.juliaY);
     __m512 juliaX = _mm512_set1_ps(jX);
     __m512 juliaY = _mm512_set1_ps(jY);
 
 #if defined(_OPENMP)
-    if constexpr(parallel)
+    if (parallel)
         omp_set_num_threads(omp_get_num_procs());
 #pragma omp parallel for schedule(static, 1) if (parallel)
 #endif
-    for (long j = 0; j < info.bHeight; j++) {
-        T y = T(view.y + double(j) * view.height / info.bHeight);
+    for (long j = 0; j < height; j++) {
+        T y = vy + float(j) * vh / height;
         __m512 ys = _mm512_set1_ps(y);
-        for (long i = 0; i < info.bWidth; i += 2 * 16) {
+        for (long i = 0; i < width; i += 2 * 16) {
             __m512 pixc0 = _mm512_add_ps(_mm512_set1_ps(float(i)), enumerate);
             __m512 pixc1 = _mm512_add_ps(_mm512_set1_ps(float(i + 16)), enumerate);
             //__m512 pixc2 = _mm512_add_ps(_mm512_set1_ps(float(i + 32)), enumerate);
@@ -68,11 +54,11 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
             __m512 cx0 = xs0;
             __m512 cx1 = xs1;
             __m512 cy = ys;
-	    if (info.julia) {
-		cx0 = juliaX;
-		cx1 = juliaX;
-		cy = juliaY;
-	    }
+	        if (julia) {
+		        cx0 = juliaX;
+		        cx1 = juliaX;
+		        cy = juliaY;
+	        }
 
             __m512 a0 = xs0;
             __m512 a1 = xs1;
@@ -81,10 +67,10 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
             __m512 b1 = ys;
             //__m512 b2 = ys;
 
-            if (info.smooth) {
+            if (smooth) {
                 __mmask16 cmp0 = 0xFFFF;
                 __mmask16 cmp1 = 0xFFFF;
-                for (int k = 0; k < info.maxIter; k++) {
+                for (int k = 0; k < maxIter; k++) {
                     __m512 aa0 = _mm512_mul_ps(a0, a0);
                     __m512 aa1 = _mm512_mul_ps(a1, a1);
                     //__m512 aa2 = _mm512_mul_ps(a2, a2);
@@ -119,7 +105,7 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
                 }
             }
             else {
-                for (int k = 0; k < info.maxIter; k++) {
+                for (int k = 0; k < maxIter; k++) {
                     __m512 aa0 = _mm512_mul_ps(a0, a0);
                     __m512 aa1 = _mm512_mul_ps(a1, a1);
                     //__m512 aa2 = _mm512_mul_ps(a2, a2);
@@ -144,43 +130,36 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
                 }
             }
 
-            auto alignVec = [](float* data) -> float* {
-                void* aligned = data;
-                ::size_t length = 3 * 64 * sizeof(float);
-                std::align(64, 48 * sizeof(float), aligned, length);
-                return static_cast<float*>(aligned);
-            };
-
             float resData[3 * 64];
-            float* ftRes = alignVec(resData);
-            float* resa = ftRes + 3 * 16;
-            float* resb = ftRes + 6 * 16;
-            _mm512_store_ps(ftRes, counter0);
-            _mm512_store_ps(ftRes + 16, counter1);
+            float* ftRes = resData;
+            float* resa = resData + 3 * 16;
+            float* resb = resData + 6 * 16;
+            _mm512_storeu_ps(ftRes, counter0);
+            _mm512_storeu_ps(ftRes + 16, counter1);
             //_mm512_store_ps(ftRes + 32, counter2);
-            if (info.smooth) {
-                _mm512_store_ps(resa, resultsa0);
-                _mm512_store_ps(resa + 16, resultsa1);
+            if (smooth) {
+                _mm512_storeu_ps(resa, resultsa0);
+                _mm512_storeu_ps(resa + 16, resultsa1);
                 //_mm512_store_ps(resa + 32, resultsa2);
-                _mm512_store_ps(resb, resultsb0);
-                _mm512_store_ps(resb + 16, resultsb1);
+                _mm512_storeu_ps(resb, resultsb0);
+                _mm512_storeu_ps(resb + 16, resultsb1);
                 //_mm512_store_ps(resb + 32, resultsb2);
             }
-            for (int k = 0; k < 2 * 16 && i + k < info.bWidth; k++) {
-                if (info.smooth) {
-                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter :
-                        ftRes[k] >= info.maxIter ? info.maxIter :
-                        ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
+            for (int k = 0; k < 2 * 16 && i + k < width; k++) {
+                if (smooth) {
+                    data[i + k + j * width] = ftRes[k] < 0 ? maxIter :
+                        ftRes[k] >= maxIter ? maxIter :
+                        ((float)ftRes[k]) + 1 - floatLog2(floatLog(resa[k] * resa[k] + resb[k] * resb[k]) * 0.5);
                 }
                 else {
-                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter : ftRes[k];
+                    data[i + k + j * width] = ftRes[k] < 0 ? maxIter : ftRes[k];
                 }
             }
         }
     }
 }
 
-
+/*
 
 template<bool parallel>
 void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::MandelInfo& info, float* data)
@@ -286,5 +265,5 @@ void CpuGenerator<double, mnd::X86_AVX_512, parallel>::generate(const mnd::Mande
         }
     }
 }
-
+*/
 

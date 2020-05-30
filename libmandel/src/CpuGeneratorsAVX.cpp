@@ -1,51 +1,41 @@
-#include "CpuGenerators.h"
-#include "LightDoubleDouble.h"
+#include "FloatLog.h"
 
 #include <immintrin.h>
 #include <omp.h>
-#include <cmath>
 
-#include <utility>
-#include <memory>
-
-using mnd::CpuGenerator;
-
-namespace mnd
+///
+/// \brief unique namespace just to be a little more sure we do not
+///        accidentally compile a function used somewhere else and use
+///        avx instructions in there.
+///
+namespace avx_private
 {
-    template class CpuGenerator<float, mnd::X86_AVX, false>;
-    template class CpuGenerator<float, mnd::X86_AVX, true>;
-
-    template class CpuGenerator<double, mnd::X86_AVX, false>;
-    template class CpuGenerator<double, mnd::X86_AVX, true>;
-    
-    template class CpuGenerator<DoubleDouble, mnd::X86_AVX, false>;
-    template class CpuGenerator<DoubleDouble, mnd::X86_AVX, true>;
+#include "LightDoubleDouble.h"
+#include "TripleDouble.h"
 }
 
-template<bool parallel>
-void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo& info, float* data)
+
+void generateFloatAvx(long width, long height, float* data, bool parallel,
+    float vx, float vy, float vw, float vh, int maxIter, bool smooth,
+    bool julia, float jX, float jY)
 {
     using T = float;
-    const MandelViewport& view = info.view;
-    const float dppf = float(view.width / info.bWidth);
-    const float viewxf = float(view.x);
-    __m256 viewx = _mm256_set1_ps(viewxf);
+    const float dppf = float(vw / width);
+    __m256 viewx = _mm256_set1_ps(vx);
     __m256 dpp = _mm256_set1_ps(dppf);
 
-    T jX = mnd::convert<T>(info.juliaX);
-    T jY = mnd::convert<T>(info.juliaY);
     __m256 juliaX = { jX, jX, jX, jX, jX, jX, jX, jX };
     __m256 juliaY = { jY, jY, jY, jY, jY, jY, jY, jY };
 
 #if defined(_OPENMP)
-    if constexpr(parallel)
+    if (parallel)
         omp_set_num_threads(omp_get_num_procs());
 #   pragma omp parallel for schedule(static, 1) if (parallel)
 #endif
-    for (long j = 0; j < info.bHeight; j++) {
-        T y = T(view.y) + T(j) * T(view.height / info.bHeight);
+    for (long j = 0; j < height; j++) {
+        T y = vy + T(j) * vw / height;
         __m256 ys = _mm256_set1_ps(y);
-        for (long i = 0; i < info.bWidth; i += 16) {
+        for (long i = 0; i < width; i += 16) {
             __m256 pixc = { float(i), float(i + 1), float(i + 2), float(i + 3), float(i + 4), float(i + 5), float(i + 6), float(i + 7) };
             __m256 pixc2 = { float(i + 8), float(i + 9), float(i + 10), float(i + 11), float(i + 12), float(i + 13), float(i + 14), float(i + 15) };
 
@@ -65,19 +55,19 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
             __m256 b = ys;
             __m256 b2 = ys;
 
-            __m256 cx = info.julia ? juliaX : xs;
-            __m256 cx2 = info.julia ? juliaX : xs2;
-            __m256 cy = info.julia ? juliaY : ys;
+            __m256 cx = julia ? juliaX : xs;
+            __m256 cx2 = julia ? juliaX : xs2;
+            __m256 cy = julia ? juliaY : ys;
 
             __m256 resultsa = a;
             __m256 resultsb = b;
             __m256 resultsa2 = a2;
             __m256 resultsb2 = b2;
 
-            if (info.smooth) {
+            if (smooth) {
                 __m256 cmp = _mm256_cmp_ps(a, a, _CMP_LE_OQ);
                 __m256 cmp2 = _mm256_cmp_ps(a, a, _CMP_LE_OQ);
-                for (int k = 0; k < info.maxIter; k++) {
+                for (int k = 0; k < maxIter; k++) {
                     __m256 aa = _mm256_mul_ps(a, a);
                     __m256 aa2 = _mm256_mul_ps(a2, a2);
                     __m256 bb = _mm256_mul_ps(b, b);
@@ -104,7 +94,7 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
                 }
             }
             else {
-                for (int k = 0; k < info.maxIter; k++) {
+                for (int k = 0; k < maxIter; k++) {
                     __m256 aa = _mm256_mul_ps(a, a);
                     __m256 aa2 = _mm256_mul_ps(a2, a2);
                     __m256 bb = _mm256_mul_ps(b, b);
@@ -127,33 +117,25 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
                 }
             }
 
-
-            auto alignVec = [](float* data) -> float* {
-                void* aligned = data;
-                ::size_t length = 64;
-                std::align(32, 8 * sizeof(float), aligned, length);
-                return static_cast<float*>(aligned);
-            };
-
             float resData[64];
-            float* ftRes = alignVec(resData);
+            float* ftRes = resData;
             float* resa = ftRes + 16;
             float* resb = resa + 16;
 
-            _mm256_store_ps(ftRes, counter);
-            _mm256_store_ps(ftRes + 8, counter2);
-            _mm256_store_ps(resa, resultsa);
-            _mm256_store_ps(resa + 8, resultsa2);
-            _mm256_store_ps(resb, resultsb);
-            _mm256_store_ps(resb + 8, resultsb2);
-            for (int k = 0; k < 16 && i + k < info.bWidth; k++) {
-                if (info.smooth) {
-                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter :
-                        ftRes[k] >= info.maxIter ? info.maxIter :
-                        ((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f);
+            _mm256_storeu_ps(ftRes, counter);
+            _mm256_storeu_ps(ftRes + 8, counter2);
+            _mm256_storeu_ps(resa, resultsa);
+            _mm256_storeu_ps(resa + 8, resultsa2);
+            _mm256_storeu_ps(resb, resultsb);
+            _mm256_storeu_ps(resb + 8, resultsb2);
+            for (int k = 0; k < 16 && i + k < width; k++) {
+                if (smooth) {
+                    data[i + k + j * width] = ftRes[k] < 0 ? maxIter :
+                        ftRes[k] >= maxIter ? maxIter :
+                        ((float)ftRes[k]) + 1 - floatLog2(floatLog(resa[k] * resa[k] + resb[k] * resb[k]) * 0.5f);
                 }
                 else {
-                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? info.maxIter : ftRes[k];
+                    data[i + k + j * width] = ftRes[k] < 0 ? maxIter : ftRes[k];
                 }
             }
         }
@@ -161,31 +143,28 @@ void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo
 }
 
 
-template<bool parallel>
-void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo& info, float* data)
+void generateDoubleAvx(long width, long height, float* data, bool parallel,
+    double vx, double vy, double vw, double vh, int maxIter, bool smooth,
+    bool julia, double jX, double jY)
 {
     using T = double;
-    const MandelViewport& view = info.view;
 
-    const double dppf = double(view.width / info.bWidth);
-    const double viewxf = double(view.x);
-    __m256d viewx = { viewxf, viewxf, viewxf, viewxf };
+    const double dppf = double(vw / width);
+    __m256d viewx = { vx, vx, vx, vx };
     __m256d dpp = { dppf, dppf, dppf, dppf };
 
-    T jX = mnd::convert<T>(info.juliaX);
-    T jY = mnd::convert<T>(info.juliaY);
     __m256d juliaX = { jX, jX, jX, jX };
     __m256d juliaY = { jY, jY, jY, jY };
 
 #if defined(_OPENMP)
-    if constexpr(parallel)
+    if (parallel)
         omp_set_num_threads(omp_get_num_procs());
 #   pragma omp parallel for schedule(static, 1) if (parallel)
 #endif
-    for (long j = 0; j < info.bHeight; j++) {
-        T y = T(view.y + T(j) * view.height / info.bHeight);
+    for (long j = 0; j < height; j++) {
+        T y = vy + T(j) * vh / height;
         __m256d ys = { y, y, y, y };
-        for (long i = 0; i < info.bWidth; i += 8) {
+        for (long i = 0; i < width; i += 8) {
             __m256d pixc = { double(i), double(i + 1), double(i + 2), double(i + 3) };
             __m256d pixc2 = { double(i + 4), double(i + 5), double(i + 6), double(i + 7) };
             __m256d xs = _mm256_add_pd(_mm256_mul_pd(dpp, pixc), viewx);
@@ -209,14 +188,14 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
             __m256d a2 = xs2;
             __m256d b2 = ys;
 
-            __m256d cx = info.julia ? juliaX : xs;
-            __m256d cx2 = info.julia ? juliaX : xs2;
-            __m256d cy = info.julia ? juliaY : ys;
+            __m256d cx = julia ? juliaX : xs;
+            __m256d cx2 = julia ? juliaX : xs2;
+            __m256d cy = julia ? juliaY : ys;
 
-            if (info.smooth) {
+            if (smooth) {
                 __m256d cmp = _mm256_cmp_pd(a, a, _CMP_LE_OQ);
                 __m256d cmp2 = _mm256_cmp_pd(a, a, _CMP_LE_OQ);
-                for (int k = 0; k < info.maxIter; k++) {
+                for (int k = 0; k < maxIter; k++) {
                     __m256d aa = _mm256_mul_pd(a, a);
                     __m256d aa2 = _mm256_mul_pd(a2, a2);
                     __m256d bb = _mm256_mul_pd(b, b);
@@ -244,7 +223,7 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
                 }
             }
             else {
-                for (int k = 0; k < info.maxIter; k++) {
+                for (int k = 0; k < maxIter; k++) {
                     __m256d aa = _mm256_mul_pd(a, a);
                     __m256d aa2 = _mm256_mul_pd(a2, a2);
                     __m256d bb = _mm256_mul_pd(b, b);
@@ -266,41 +245,33 @@ void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInf
                         break;
                     }
                 }
-
             }
 
-            auto alignVec = [](double* data) -> double* {
-                void* aligned = data;
-                ::size_t length = 64;
-                std::align(32, 4 * sizeof(double), aligned, length);
-                return static_cast<double*>(aligned);
-            };
-
             double resData[8];
-            double* ftRes = alignVec(resData);
+            double* ftRes = resData;
             double* resa = (double*) &resultsa;
             double* resb = (double*) &resultsb;
-            _mm256_store_pd(ftRes, counter);
-            for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
-                if (info.smooth)
-                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? float(info.maxIter) :
-                        ftRes[k] >= info.maxIter ? float(info.maxIter) :
-                        float(((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f));
+            _mm256_storeu_pd(ftRes, counter);
+            for (int k = 0; k < 4 && i + k < width; k++) {
+                if (smooth)
+                    data[i + k + j * width] = ftRes[k] < 0 ? float(maxIter) :
+                        ftRes[k] >= maxIter ? float(maxIter) :
+                        float(((float)ftRes[k]) + 1 - floatLog2(floatLog(float(resa[k] * resa[k] + resb[k] * resb[k])) / 2));
                 else
-                    data[i + k + j * info.bWidth] = ftRes[k] >= 0 ? float(ftRes[k]) : info.maxIter;
+                    data[i + k + j * width] = ftRes[k] >= 0 ? float(ftRes[k]) : maxIter;
             }
 
             resa = (double*) &resultsa2;
             resb = (double*) &resultsb2;
-            _mm256_store_pd(ftRes, counter2);
+            _mm256_storeu_pd(ftRes, counter2);
             i += 4;
-            for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
-                if (info.smooth)
-                    data[i + k + j * info.bWidth] = ftRes[k] < 0 ? float(info.maxIter) :
-                        ftRes[k] >= info.maxIter ? float(info.maxIter) :
-                        float(((float)ftRes[k]) + 1 - ::log(::log(resa[k] * resa[k] + resb[k] * resb[k]) / 2) / ::log(2.0f));
+            for (int k = 0; k < 4 && i + k < width; k++) {
+                if (smooth)
+                    data[i + k + j * width] = ftRes[k] < 0 ? float(maxIter) :
+                        ftRes[k] >= maxIter ? float(maxIter) :
+                        float(((float)ftRes[k]) + 1 - floatLog2(floatLog(float(resa[k] * resa[k] + resb[k] * resb[k])) / 2));
                 else
-                    data[i + k + j * info.bWidth] = ftRes[k] >= 0 ? float(ftRes[k]) : info.maxIter;
+                    data[i + k + j * width] = ftRes[k] >= 0 ? float(ftRes[k]) : maxIter;
             }
             i -= 4;
         }
@@ -346,6 +317,14 @@ static inline VecPair twoDiff(__m256d a, __m256d b)
 }
 
 
+static inline VecPair threeTwoSum(__m256d a, __m256d b, __m256d c)
+{
+    auto[t1, t2] = twoSum(a, b);
+    auto[r0, t3] = twoSum(t1, c);
+    return { r0, _mm256_add_pd(t2, t3) };
+}
+
+
 static inline VecPair split(__m256d a)
 {
     /*
@@ -380,6 +359,7 @@ static inline VecPair twoProd(__m256d a, __m256d b)
     __m256d err = _mm256_add_pd(_mm256_add_pd(_mm256_sub_pd(_mm256_mul_pd(a_hi, b_hi), p), _mm256_add_pd(_mm256_mul_pd(a_hi, b_lo), _mm256_mul_pd(a_lo, b_hi))), _mm256_mul_pd(a_lo, b_lo));
     return { p, err };
 }
+
 
 struct AvxDoubleDouble
 {
@@ -421,33 +401,33 @@ struct AvxDoubleDouble
     }
 };
 
-template<bool parallel>
-void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo& info, float* data)
+
+void generateDoubleDoubleAvx(long width, long height, float* data, bool parallel,
+    double vx1, double vx2, double vy1, double vy2, double vw1, double vw2, double vh1, double vh2, int maxIter, bool smooth,
+    bool julia, double jX1, double jX2, double jY1, double jY2)
 {
-    const MandelViewport& view = info.view;
+    using namespace avx_private;
+    using T = mnd::LightDoubleDouble;
 
-    using T = LightDoubleDouble;
+    T viewx{ vx1, vx2 };
+    T viewy{ vy1, vy2 };
+    T wpp = T{ vw1, vw2 } * T(1.0 / width);
+    T hpp = T{ vh1, vh2 } * T(1.0 / height);
 
-    T viewx = mnd::convert<T>(view.x);
-    T viewy = mnd::convert<T>(view.y);
-    T wpp = mnd::convert<T>(view.width / info.bWidth);
-    T hpp = mnd::convert<T>(view.height / info.bHeight);
-
-
-    T jX = mnd::convert<T>(info.juliaX);
-    T jY = mnd::convert<T>(info.juliaY);
+    T jX{ jX1, jX2 };
+    T jY{ jY1, jY2 };
     AvxDoubleDouble juliaX = { jX[0], jX[1] };
     AvxDoubleDouble juliaY = { jY[0], jY[1] };
 
 #if defined(_OPENMP)
-    if constexpr(parallel)
+    if (parallel)
         omp_set_num_threads(omp_get_num_procs());
 #   pragma omp parallel for schedule(static, 1) if (parallel)
 #endif
-    for (long j = 0; j < info.bHeight; j++) {
+    for (long j = 0; j < height; j++) {
         T y = viewy + T(double(j)) * hpp;
         AvxDoubleDouble ys{ y[0], y[1] };
-        for (long i = 0; i < info.bWidth; i += 4) {
+        for (long i = 0; i < width; i += 4) {
             T x1 = viewx + T(double(i)) * wpp;
             T x2 = x1 + wpp;
             T x3 = x2 + wpp;
@@ -463,8 +443,8 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd
 
             AvxDoubleDouble xs{ x0s, x1s };
 
-            AvxDoubleDouble cx = info.julia ? juliaX : xs;
-            AvxDoubleDouble cy = info.julia ? juliaY : ys;
+            AvxDoubleDouble cx = julia ? juliaX : xs;
+            AvxDoubleDouble cy = julia ? juliaY : ys;
 
             int itRes[4] = { 0, 0, 0, 0 };
 
@@ -479,13 +459,13 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd
             __m256d resultsb = _mm256_set1_pd(0);
 
             __m256d cmp = _mm256_cmp_pd(threshold, threshold, _CMP_LE_OQ);
-            for (int k = 0; k < info.maxIter; k++) {
+            for (int k = 0; k < maxIter; k++) {
                 AvxDoubleDouble aa = a * a;
                 AvxDoubleDouble bb = b * b;
                 AvxDoubleDouble abab = a * b; abab = abab + abab;
                 a = aa - bb + cx;
                 b = abab + cy;
-                if (info.smooth) {
+                if (smooth) {
                     resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a.x[0]));
                     resultsb = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsb), _mm256_and_pd(cmp, b.x[0]));
                 }
@@ -497,30 +477,184 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd
                 }
             }
 
-            auto alignVec = [](double* data) -> double* {
-                void* aligned = data;
-                ::size_t length = 64;
-                std::align(32, 4 * sizeof(double), aligned, length);
-                return static_cast<double*>(aligned);
-            };
-
             double resData[8];
-            double* ftRes = alignVec(resData);
+            double* ftRes = resData;
             double* resa = (double*) &resultsa;
             double* resb = (double*) &resultsb;
-            _mm256_store_pd(ftRes, counter);
+            _mm256_storeu_pd(ftRes, counter);
 
-            for (int k = 0; k < 4 && i + k < info.bWidth; k++) {
-                if (info.smooth)
-                    data[i + k + j * info.bWidth] = float(ftRes[k] < 0 ? info.maxIter :
-                        ftRes[k] >= info.maxIter ? info.maxIter :
-                        ((float)ftRes[k]) + 1 - ::log(::log(float(resa[k] * resa[k] + resb[k] * resb[k])) / 2) / ::log(2.0f));
+            for (int k = 0; k < 4 && i + k < width; k++) {
+                if (smooth)
+                    data[i + k + j * width] = float(ftRes[k] < 0 ? maxIter :
+                        ftRes[k] >= maxIter ? maxIter :
+                        ((float)ftRes[k]) + 1 - floatLog2(::floatLog(float(resa[k] * resa[k] + resb[k] * resb[k])) / 2));
                 else
-                    data[i + k + j * info.bWidth] = ftRes[k] >= 0 ? float(ftRes[k]) : info.maxIter;
+                    data[i + k + j * width] = ftRes[k] >= 0 ? float(ftRes[k]) : maxIter;
             }
         }
     }
 }
 
+struct AvxTripleDouble
+{
+    __m256d x[3];
+
+    inline AvxTripleDouble(__m256d a, __m256d b, __m256d c) :
+        x{ a, b, c }
+    {}
+
+    inline AvxTripleDouble(double a, double b, double c) :
+        x{ _mm256_set1_pd(a), _mm256_set1_pd(b), _mm256_set1_pd(c) }
+    {}
+
+    inline AvxTripleDouble operator + (const AvxTripleDouble& b) const
+    {
+        const auto& a = *this;
+        auto[r0, t0] = twoSum(a.x[0], b.x[0]);
+        auto[t1, t2] = twoSum(a.x[1], b.x[1]);
+        auto[r1, t3] = twoSum(t0, t1);
+        auto r2 = _mm256_add_pd(_mm256_add_pd(t2, _mm256_add_pd(a.x[2], b.x[2])), t3);
+
+        auto[re1, t4] = quickTwoSum(r0, r1);
+        auto[re2, re3] = quickTwoSum(t4, r2);
+        return { re1, re2, re3 };
+    }
+
+    inline AvxTripleDouble operator - (const AvxTripleDouble& b) const
+    {
+        const auto& a = *this;
+        auto[r0, t0] = twoDiff(a.x[0], b.x[0]);
+        auto[t1, t2] = twoDiff(a.x[1], b.x[1]);
+        auto[r1, t3] = twoSum(t0, t1);
+        auto r2 = _mm256_add_pd(_mm256_add_pd(t2, _mm256_sub_pd(a.x[2], b.x[2])), t3);
+
+        auto[re1, t4] = quickTwoSum(r0, r1);
+        auto[re2, re3] = quickTwoSum(t4, r2);
+        return { re1, re2, re3 };
+    }
+
+    inline AvxTripleDouble operator * (const AvxTripleDouble& b) const
+    {
+        const auto& a = *this;
+        auto[p1_0, p2_0] = twoProd(a.x[0], b.x[0]);
+        auto[p2_1, p3_0] = twoProd(a.x[0], b.x[1]);
+        auto[p2_2, p3_1] = twoProd(a.x[1], b.x[0]);
+
+        auto[t2, tl3] = threeTwoSum(p2_0, p2_1, p2_2);
+        auto t3 = _mm256_add_pd(tl3,
+            _mm256_add_pd(
+                _mm256_add_pd(p3_0, p3_1),
+                _mm256_add_pd(
+                    _mm256_mul_pd(a.x[1], b.x[1]),
+                    _mm256_add_pd(
+                        _mm256_mul_pd(a.x[2], b.x[0]),
+                        _mm256_mul_pd(a.x[0], b.x[2])
+                    )
+                )
+            )
+            );
+        auto[re0, q2] = quickTwoSum(p1_0, t2);
+        auto[re1, re2] = quickTwoSum(q2, t3);
+        return { re0, re1, re2 };
+    }
+};
+
+
+void generateTripleDoubleAvx(long width, long height, float* data, bool parallel,
+    double vx1, double vx2, double vx3, double vy1, double vy2, double vy3,
+    double vw1, double vw2, double vw3, double vh1, double vh2, double vh3,
+    int maxIter, bool smooth, bool julia, double jX1,
+    double jX2, double jX3, double jY1, double jY2, double jY3)
+{
+    using namespace avx_private;
+    using T = mnd::TripleDouble;
+
+    T viewx{ vx1, vx2, vx3 };
+    T viewy{ vy1, vy2, vy2 };
+    T wpp = T{ vw1, vw2, vw3 } * T(1.0 / width);
+    T hpp = T{ vh1, vh2, vh3 } * T(1.0 / height);
+
+    T jX{ jX1, jX2, jX3 };
+    T jY{ jY1, jY2, jY3 };
+    AvxTripleDouble juliaX = { jX[0], jX[1], jX[2] };
+    AvxTripleDouble juliaY = { jY[0], jY[1], jY[2] };
+
+#if defined(_OPENMP)
+    if (parallel)
+        omp_set_num_threads(omp_get_num_procs());
+#   pragma omp parallel for schedule(static, 1) if (parallel)
+#endif
+    for (long j = 0; j < height; j++) {
+        T y = viewy + T(double(j)) * hpp;
+        AvxTripleDouble ys{ y[0], y[1], y[2] };
+        for (long i = 0; i < width; i += 4) {
+            T x1 = viewx + T(double(i)) * wpp;
+            T x2 = x1 + wpp;
+            T x3 = x2 + wpp;
+            T x4 = x3 + wpp;
+
+            __m256d x0s = {
+                x1[0], x2[0], x3[0], x4[0],
+            };
+            __m256d x1s = {
+                x1[1], x2[1], x3[1], x4[1],
+            };
+            __m256d x2s = {
+                x1[2], x2[2], x3[2], x4[2],
+            };
+
+            AvxTripleDouble xs{ x0s, x1s, x2s };
+
+            AvxTripleDouble cx = julia ? juliaX : xs;
+            AvxTripleDouble cy = julia ? juliaY : ys;
+
+            int itRes[4] = { 0, 0, 0, 0 };
+
+            __m256d threshold = { 16.0, 16.0, 16.0, 16.0 };
+            __m256d counter = { 0, 0, 0, 0 };
+            __m256d adder = { 1, 1, 1, 1 };
+
+            AvxTripleDouble a = xs;
+            AvxTripleDouble b = ys;
+
+            __m256d resultsa = _mm256_set1_pd(0);
+            __m256d resultsb = _mm256_set1_pd(0);
+
+            __m256d cmp = _mm256_cmp_pd(threshold, threshold, _CMP_LE_OQ);
+            for (int k = 0; k < maxIter; k++) {
+                AvxTripleDouble aa = a * a;
+                AvxTripleDouble bb = b * b;
+                AvxTripleDouble abab = a * b; abab = abab + abab;
+                a = aa - bb + cx;
+                b = abab + cy;
+                if (smooth) {
+                    resultsa = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsa), _mm256_and_pd(cmp, a.x[0]));
+                    resultsb = _mm256_or_pd(_mm256_andnot_pd(cmp, resultsb), _mm256_and_pd(cmp, b.x[0]));
+                }
+                cmp = _mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ);
+                adder = _mm256_and_pd(adder, cmp);
+                counter = _mm256_add_pd(counter, adder);
+                if (_mm256_testz_si256(_mm256_castpd_si256(cmp), _mm256_castpd_si256(cmp)) != 0) {
+                    break;
+                }
+            }
+
+            double resData[8];
+            double* ftRes = resData;
+            double* resa = (double*) &resultsa;
+            double* resb = (double*) &resultsb;
+            _mm256_storeu_pd(ftRes, counter);
+
+            for (int k = 0; k < 4 && i + k < width; k++) {
+                if (smooth)
+                    data[i + k + j * width] = float(ftRes[k] < 0 ? maxIter :
+                        ftRes[k] >= maxIter ? maxIter :
+                        ((float)ftRes[k]) + 1 - floatLog2(::floatLog(float(resa[k] * resa[k] + resb[k] * resb[k])) / 2));
+                else
+                    data[i + k + j * width] = ftRes[k] >= 0 ? float(ftRes[k]) : maxIter;
+            }
+        }
+    }
+}
 
 

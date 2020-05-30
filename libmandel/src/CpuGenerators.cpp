@@ -112,213 +112,149 @@ void CpuGenerator<T, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info,
     }
 }
 
+namespace mnd
+{
+    template class CpuGenerator<float, mnd::X86_AVX, false>;
+    template class CpuGenerator<float, mnd::X86_AVX, true>;
 
-/*
+    template class CpuGenerator<double, mnd::X86_AVX, false>;
+    template class CpuGenerator<double, mnd::X86_AVX, true>;
+
+    template class CpuGenerator<DoubleDouble, mnd::X86_AVX, false>;
+    template class CpuGenerator<DoubleDouble, mnd::X86_AVX, true>;
+
+    template class CpuGenerator<TripleDouble, mnd::X86_AVX, false>;
+    template class CpuGenerator<TripleDouble, mnd::X86_AVX, true>;
+}
+
+extern void generateFloatAvx(long width, long height, float* data, bool parallel,
+    float vx, float vy, float vw, float vh, int maxIter, bool smooth,
+    bool julia, float jX, float jY);
+
+extern void generateDoubleAvx(long width, long height, float* data, bool parallel,
+    double vx, double vy, double vw, double vh, int maxIter, bool smooth,
+    bool julia, double jX, double jY);
+
+extern void generateDoubleDoubleAvx(long width, long height, float* data, bool parallel,
+    double vx1, double vx2, double vy1, double vy2, double vw1, double vw2, double vh1, double vh2, int maxIter, bool smooth,
+    bool julia, double jX1, double jX2, double jY1, double jY2);
+
+extern void generateTripleDoubleAvx(long width, long height, float* data, bool parallel,
+    double vx1, double vx2, double vx3, double vy1, double vy2, double vy3,
+    double vw1, double vw2,  double vw3, double vh1, double vh2, double vh3,
+    int maxIter, bool smooth, bool julia,
+    double jX1, double jX2, double jX3, double jY1, double jY2, double jY3);
+
+
 template<bool parallel>
-void CpuGenerator<double, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info, float* data)
+void CpuGenerator<float, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
+    using T = float;
     const MandelViewport& view = info.view;
 
-    T viewx = mnd::convert<T>(view.x);
-    T viewy = mnd::convert<T>(view.y);
-    T wpp = mnd::convert<T>(view.width / info.bWidth);
-    T hpp = mnd::convert<T>(view.height / info.bHeight);
+    const T vx = mnd::convert<T>(view.x);
+    const T vy = mnd::convert<T>(view.y);
+    const T vw = mnd::convert<T>(view.width);
+    const T vh = mnd::convert<T>(view.height);
 
-    if constexpr (parallel)
-        omp_set_num_threads(omp_get_num_procs());
-#pragma omp parallel for schedule(static, 1) if (parallel)
-    for (long j = 0; j < info.bHeight; j++) {
-        T y = viewy + T(double(j)) * hpp;
-        long i = 0;
-        for (i; i < info.bWidth; i++) {
-            T x = viewx + T(double(i)) * wpp;
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
 
-            T a = x;
-            T b = y;
+    generateFloatAvx(info.bWidth, info.bHeight, data, parallel, vx, vy, vw, vh, info.maxIter, info.smooth, info.julia, jX, jY);
+}
 
-            int k = 0;
-            for (k = 0; k < info.maxIter; k++) {
-                T aa = a * a;
-                T bb = b * b;
-                T ab = a * b;
-                a = aa - bb + x;
-                b = ab + ab + y;
-                if (aa + bb > T(16.0)) {
-                    break;
-                }
-            }
-            if (info.smooth) {
-                if (k >= info.maxIter)
-                    data[i + j * info.bWidth] = float(info.maxIter);
-                else
-                    data[i + j * info.bWidth] = ((float) k) + 1 - ::logf(::logf(mnd::convert<float>(a * a + b * b)) / 2) / ::logf(2.0f);
-            }
-            else
-                data[i + j * info.bWidth] = k;
-        }
-    }
-}*/
 
-/*
-#if defined(WITH_BOOST) || 1
 template<bool parallel>
-void CpuGenerator<Fixed128, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info, float* data)
+void CpuGenerator<double, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
-    using T = Fixed128;
+    using T = double;
     const MandelViewport& view = info.view;
 
-    const auto fixedFromFloat = [] (const mnd::Float128& f) {
-        boost::multiprecision::int128_t frac = boost::multiprecision::int128_t(f * 4294967296.0 * 4294967296.0 * 4294967296.0);
-        std::vector<uint32_t> bits;
-        export_bits(frac, std::back_inserter(bits), 32);
-        bits.clear();
-        while (bits.size() < 4) bits.push_back(0);
-        return Fixed128{ bits[0], bits[1], bits[2], bits[3] };
-    };
+    const T vx = mnd::convert<T>(view.x);
+    const T vy = mnd::convert<T>(view.y);
+    const T vw = mnd::convert<T>(view.width);
+    const T vh = mnd::convert<T>(view.height);
 
-    if constexpr (parallel)
-        omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for if (parallel)
-    for (long j = 0; j < info.bHeight; j++) {
-        T y = fixedFromFloat(view.y + mnd::Real(j) * view.height / info.bHeight);
-        long i = 0;
-        for (i; i < info.bWidth; i++) {
-            T x = fixedFromFloat(view.x + mnd::Real(i) * view.width / info.bWidth);
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
 
-            T a = x;
-            T b = y;
-
-            int k = 0;
-            for (k = 0; k < info.maxIter; k++) {
-                T aa = a * a;
-                T bb = b * b;
-                T ab = a * b;
-                a = aa - bb + x;
-                b = ab + ab + y;
-                if (aa + bb > T(16)) {
-                    break;
-                }
-            }
-            if constexpr (smooth) {
-                if (k >= info.maxIter)
-                    data[i + j * info.bWidth] = info.maxIter;
-                else
-                    data[i + j * info.bWidth] = ((float) k) + 1 - ::logf(::logf(float(a * a + b * b)) / 2) / ::logf(2.0f);
-            }
-            else
-                data[i + j * info.bWidth] = k;
-        }
-    }
-}
-#endif // WITH_BOOST
-*/
-
-#ifdef WITH_MPFR
-template<unsigned int bits, bool parallel>
-void CpuGenerator<mnd::MpfrFloat<bits>, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info, float* data)
-{
-    const MandelViewport& view = info.view;
-    using T = mnd::MpfrFloat<bits>;
-
-#if defined(_OPENMP)
-    if constexpr (parallel)
-        omp_set_num_threads(2 * omp_get_num_procs());
-#   pragma omp parallel for if (parallel)
-#endif
-    for (long j = 0; j < info.bHeight; j++) {
-        T y = T(view.y) + T(j) * T(view.height / info.bHeight);
-        long i = 0;
-        for (i; i < info.bWidth; i++) {
-            T x = T(view.x + T(i) * T(view.width / info.bWidth));
-
-            T a = x;
-            T b = y;
-
-            int k = 0;
-            for (k = 0; k < info.maxIter; k++) {
-                T aa = a * a;
-                T bb = b * b;
-                T ab = a * b;
-                a = aa - bb + x;
-                b = ab + ab + y;
-                if (aa + bb > T(16)) {
-                    break;
-                }
-            }
-            if (info.smooth) {
-                if (k >= info.maxIter)
-                    data[i + j * info.bWidth] = info.maxIter;
-                else
-                    data[i + j * info.bWidth] = ((float) k) + 1 - ::log(::log(a * a + b * b) / 2) / ::log(2.0f);
-            }
-            else
-                data[i + j * info.bWidth] = k;
-        }
-    }
-}
-#endif // WITH_MPFR
-
-
-/*
-void CpuGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
-{
-    const MandelViewport& view = info.view;
-    omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for
-    for (long j = 0; j < info.bHeight; j++) {
-        double y = double(view.y) + double(j) * double(view.height / info.bHeight);
-        long i = 0;
-        for (i; i < info.bWidth; i++) {
-            double x = view.x + double(i) * view.width / info.bWidth;
-
-            double a = x;
-            double b = y;
-
-            int k = 0;
-            for (k = 0; k < info.maxIter; k++) {
-                double aa = a * a;
-                double bb = b * b;
-                double ab = a * b;
-                a = aa - bb + x;
-                b = ab + ab + y;
-                if (aa + bb > 16) {
-                    break;
-                }
-            }
-            data[i + j * info.bWidth] = k;
-        }
-    }
+    generateDoubleAvx(info.bWidth, info.bHeight, data, parallel, vx, vy, vw, vh, info.maxIter, info.smooth, info.julia, jX, jY);
 }
 
 
-void CpuGenerator128::generate(const mnd::MandelInfo& info, float* data)
+template<bool parallel>
+void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo& info, float* data)
 {
+    using T = mnd::DoubleDouble;
     const MandelViewport& view = info.view;
-    omp_set_num_threads(2 * omp_get_num_procs());
-#pragma omp parallel for
-    for (long j = 0; j < info.bHeight; j++) {
-        Fixed128 y = Fixed128(view.y) + Fixed128(j) * Fixed128(view.height / info.bHeight);
-        long i = 0;
-        for (i; i < info.bWidth; i++) {
-            Fixed128 x = view.x + Fixed128(i) * Fixed128(view.width / info.bWidth);
 
-            Fixed128 a = x;
-            Fixed128 b = y;
+    const T vx = mnd::convert<T>(view.x);
+    const T vy = mnd::convert<T>(view.y);
+    const T vw = mnd::convert<T>(view.width);
+    const T vh = mnd::convert<T>(view.height);
 
-            int k = 0;
-            for (k = 0; k < info.maxIter; k++) {
-                Fixed128 aa = a * a;
-                Fixed128 bb = b * b;
-                Fixed128 ab = a * b;
-                a = aa - bb + x;
-                b = ab + ab + y;
-                if (aa + bb > Fixed128(16)) {
-                    break;
-                }
-            }
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
 
-            data[i + j * info.bWidth] = k;
-        }
-    }
+    generateDoubleDoubleAvx(info.bWidth, info.bHeight, data, parallel,
+        vx.x[0], vx.x[1], vy.x[0], vy.x[1], vw.x[0], vw.x[1], vh.x[0], vh.x[1],
+        info.maxIter, info.smooth, info.julia, jX.x[0], jX.x[1], jY.x[0], jY.x[1]);
 }
-*/
+
+
+template<bool parallel>
+void CpuGenerator<mnd::TripleDouble, mnd::X86_AVX, parallel>::generate(const mnd::MandelInfo& info, float* data)
+{
+    using T = mnd::TripleDouble;
+    const MandelViewport& view = info.view;
+
+    const T vx = mnd::convert<T>(view.x);
+    const T vy = mnd::convert<T>(view.y);
+    const T vw = mnd::convert<T>(view.width);
+    const T vh = mnd::convert<T>(view.height);
+
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+
+    generateTripleDoubleAvx(info.bWidth, info.bHeight, data, parallel,
+        vx.x[0], vx.x[1], vx.x[2], vy.x[0], vy.x[1], vy.x[2],
+        vw.x[0], vw.x[1], vw.x[2], vh.x[0], vh.x[1], vh.x[2],
+        info.maxIter, info.smooth, info.julia,
+        jX.x[0], jX.x[1], jX.x[2], jY.x[0], jY.x[1], jY.x[2]);
+}
+
+
+#ifdef WITH_AVX512
+
+namespace mnd
+{
+    template class CpuGenerator<float, mnd::X86_AVX_512, false>;
+    template class CpuGenerator<float, mnd::X86_AVX_512, true>;
+
+    //template class CpuGenerator<double, mnd::X86_AVX_512, false>;
+    //template class CpuGenerator<double, mnd::X86_AVX_512, true>;
+}
+
+extern void generateFloatAvx512(long width, long height, float* data, bool parallel,
+    float vx, float vy, float vw, float vh, int maxIter, bool smooth,
+    bool julia, float jX, float jY);
+
+template<bool parallel>
+void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::MandelInfo& info, float* data)
+{
+    using T = float;
+    const MandelViewport& view = info.view;
+
+    const T vx = mnd::convert<T>(view.x);
+    const T vy = mnd::convert<T>(view.y);
+    const T vw = mnd::convert<T>(view.width);
+    const T vh = mnd::convert<T>(view.height);
+
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+
+    generateFloatAvx512(info.bWidth, info.bHeight, data, parallel, vx, vy, vw, vh, info.maxIter, info.smooth, info.julia, jX, jY);
+}
+
+#endif // WITH_AVX512
+

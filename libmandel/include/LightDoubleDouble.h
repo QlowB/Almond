@@ -1,8 +1,6 @@
 #ifndef MANDEL_LIGHTDOUBLEDOUBLE_H
 #define MANDEL_LIGHTDOUBLEDOUBLE_H
 
-#include <utility>
-
 namespace mnd
 {
     struct LightDoubleDouble;
@@ -11,7 +9,11 @@ namespace mnd
     namespace ldd
     {
         template<typename T>
-        using Pair = std::pair<T, T>;
+        struct Pair {
+            T first;
+            T second;
+        };
+
         using DoublePair = Pair<double>;
         using FloatPair = Pair<float>;
 

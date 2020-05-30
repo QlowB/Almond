@@ -47,6 +47,7 @@ static const std::map<mnd::GeneratorType, std::string> typeNames =
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX, "double double AVX" },
     { mnd::GeneratorType::DOUBLE_DOUBLE_AVX_FMA, "double double AVX+FMA" },
     { mnd::GeneratorType::DOUBLE_DOUBLE_NEON, "double double NEON" },
+    { mnd::GeneratorType::TRIPLE_DOUBLE, "triple double" },
     { mnd::GeneratorType::QUAD_DOUBLE, "quad double" },
     { mnd::GeneratorType::QUAD_DOUBLE_AVX_FMA, "quad double AVX+FMA" },
     { mnd::GeneratorType::FLOAT128, "float128" },
@@ -191,6 +192,9 @@ MandelContext::MandelContext(void)
     auto qd = std::make_unique<CpuGenerator<QuadDouble, mnd::NONE, true>>();
     cpuGenerators.insert({ GeneratorType::DOUBLE_DOUBLE, std::move(dd) });
     cpuGenerators.insert({ GeneratorType::QUAD_DOUBLE, std::move(qd) });
+
+    auto td = std::make_unique<CpuGenerator<TripleDouble, mnd::NONE, true>>();
+    cpuGenerators.insert({ GeneratorType::TRIPLE_DOUBLE, std::move(td) });
 
     auto fix512 = std::make_unique<CpuGenerator<Fixed512, mnd::NONE, true>>();
     cpuGenerators.insert({ GeneratorType::FIXED512, std::move(fix512) });

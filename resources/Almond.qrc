@@ -13,4 +13,7 @@
         <file alias="peach">gradients/peach.xml</file>
         <file alias="blue gold">gradients/blue_gold.xml</file>
     </qresource>
+    <qresource prefix="/about">
+        <file alias="about_en">about_en.html</file>
+    </qresource>
 </RCC>

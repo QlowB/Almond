@@ -48,6 +48,9 @@ namespace mnd
     template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, false>;
     template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, true>;
 
+    template class CpuGenerator<mnd::TripleDouble, mnd::NONE, false>;
+    template class CpuGenerator<mnd::TripleDouble, mnd::NONE, true>;
+
     template class CpuGenerator<mnd::QuadDouble, mnd::NONE, false>;
     template class CpuGenerator<mnd::QuadDouble, mnd::NONE, true>;
 #endif

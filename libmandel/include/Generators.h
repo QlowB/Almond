@@ -22,6 +22,7 @@ namespace mnd
         DOUBLE_FLOAT,
         DOUBLE,
         DOUBLE_DOUBLE,
+        TRIPLE_DOUBLE,
         FLOAT128,
         FLOAT256,
         FLOAT512,
@@ -55,6 +56,7 @@ namespace mnd
     template<> Real getPrecision<float>();
     template<> Real getPrecision<double>();
     template<> Real getPrecision<DoubleDouble>();
+    template<> Real getPrecision<TripleDouble>();
     template<> Real getPrecision<QuadDouble>();
     template<> Real getPrecision<Fixed64>();
     template<> Real getPrecision<Fixed128>();
@@ -68,6 +70,7 @@ namespace mnd
     template<> inline Precision getType<float>() { return Precision::FLOAT; }
     template<> inline Precision getType<double>() { return Precision::DOUBLE; }
     template<> inline Precision getType<DoubleDouble>() { return Precision::DOUBLE_DOUBLE; }
+    template<> inline Precision getType<TripleDouble>() { return Precision::TRIPLE_DOUBLE; }
     template<> inline Precision getType<QuadDouble>() { return Precision::QUAD_DOUBLE; }
     template<> inline Precision getType<Fixed64>() { return Precision::FIXED64; }
     template<> inline Precision getType<Fixed128>() { return Precision::FIXED128; }
@@ -100,6 +103,7 @@ enum class mnd::GeneratorType : int
     DOUBLE_DOUBLE_AVX,
     DOUBLE_DOUBLE_AVX_FMA,
     DOUBLE_DOUBLE_NEON,
+    TRIPLE_DOUBLE,
     QUAD_DOUBLE,
     QUAD_DOUBLE_AVX_FMA,
     FLOAT128,

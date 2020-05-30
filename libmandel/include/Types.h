@@ -23,6 +23,7 @@
 #include <qd/qd_real.h>
 
 #include "LightDoubleDouble.h"
+#include "TripleDouble.h"
 
 namespace mnd
 {
@@ -187,6 +188,35 @@ namespace mnd
     inline float convert<float, LightDoubleDouble>(const LightDoubleDouble& x)
     {
         return float(x[0] + x[1]);
+    }
+
+    template<>
+    inline Real convert<Real, LightDoubleDouble>(const LightDoubleDouble& x)
+    {
+        return Real{ x[0] } + x[1];
+    }
+
+    template<>
+    inline TripleDouble convert<TripleDouble, Real>(const Real& x)
+    {
+        double s = static_cast<double>(x);
+        Real tmp = x - s;
+        double e1 = static_cast<double>(tmp);
+        tmp = tmp - e1;
+        double e2 = static_cast<double>(tmp);
+        return TripleDouble { s, e1, e2 };
+    }
+
+    template<>
+    inline Real convert<Real, TripleDouble>(const TripleDouble& x)
+    {
+        return Real{ x[0] } + Real{ x[1] } + Real{ x[2] };
+    }
+
+    template<>
+    inline float convert<float, TripleDouble>(const TripleDouble& x)
+    {
+        return float(x.x[0] + x.x[1] + x.x[2]);
     }
 
     template<>

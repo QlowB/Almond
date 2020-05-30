@@ -172,6 +172,7 @@ namespace mnd
             { Precision::DOUBLE_FLOAT, Real("4.0e-15") },
             { Precision::DOUBLE, getPrecision<double>() },
             { Precision::DOUBLE_DOUBLE, Real("1.0e-29") },
+            { Precision::TRIPLE_DOUBLE, Real("1.0e-45") },
             { Precision::QUAD_DOUBLE, Real("1.0e-56") },
             { Precision::FIXED64, Real("3.5e-15") },
             { Precision::FIXED128, Real("1.317e-29") },
@@ -208,6 +209,8 @@ namespace mnd
         case GeneratorType::DOUBLE_DOUBLE_AVX:
         case GeneratorType::DOUBLE_DOUBLE_AVX_FMA:
             return getPrecision<DoubleDouble>();
+        case GeneratorType::TRIPLE_DOUBLE:
+            return getPrecision<TripleDouble>();
         case GeneratorType::QUAD_DOUBLE:
             return getPrecision<QuadDouble>();
         case GeneratorType::FLOAT128:
@@ -239,6 +242,10 @@ namespace mnd
     template<>
     Real getPrecision<DoubleDouble>() {
         return Real("1.0e-29");
+    }
+    template<>
+    Real getPrecision<TripleDouble>() {
+        return Real("1.0e-46");
     }
     template<>
     Real getPrecision<QuadDouble>() {

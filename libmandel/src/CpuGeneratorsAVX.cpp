@@ -279,6 +279,9 @@ void generateDoubleAvx(long width, long height, float* data, bool parallel,
 }
 
 
+namespace avx_private
+{
+
 struct VecPair
 {
     __m256d a;
@@ -402,6 +405,73 @@ struct AvxDoubleDouble
 };
 
 
+struct AvxTripleDouble
+{
+    __m256d x[3];
+
+    inline AvxTripleDouble(__m256d a, __m256d b, __m256d c) :
+        x{ a, b, c }
+    {}
+
+    inline AvxTripleDouble(double a, double b, double c) :
+        x{ _mm256_set1_pd(a), _mm256_set1_pd(b), _mm256_set1_pd(c) }
+    {}
+
+    inline AvxTripleDouble operator + (const AvxTripleDouble& b) const
+    {
+        const auto& a = *this;
+        auto[r0, t0] = twoSum(a.x[0], b.x[0]);
+        auto[t1, t2] = twoSum(a.x[1], b.x[1]);
+        auto[r1, t3] = twoSum(t0, t1);
+        auto r2 = _mm256_add_pd(_mm256_add_pd(t2, _mm256_add_pd(a.x[2], b.x[2])), t3);
+
+        auto[re1, t4] = quickTwoSum(r0, r1);
+        auto[re2, re3] = quickTwoSum(t4, r2);
+        return { re1, re2, re3 };
+    }
+
+    inline AvxTripleDouble operator - (const AvxTripleDouble& b) const
+    {
+        const auto& a = *this;
+        auto[r0, t0] = twoDiff(a.x[0], b.x[0]);
+        auto[t1, t2] = twoDiff(a.x[1], b.x[1]);
+        auto[r1, t3] = twoSum(t0, t1);
+        auto r2 = _mm256_add_pd(_mm256_add_pd(t2, _mm256_sub_pd(a.x[2], b.x[2])), t3);
+
+        auto[re1, t4] = quickTwoSum(r0, r1);
+        auto[re2, re3] = quickTwoSum(t4, r2);
+        return { re1, re2, re3 };
+    }
+
+    inline AvxTripleDouble operator * (const AvxTripleDouble& b) const
+    {
+        const auto& a = *this;
+        auto[p1_0, p2_0] = twoProd(a.x[0], b.x[0]);
+        auto[p2_1, p3_0] = twoProd(a.x[0], b.x[1]);
+        auto[p2_2, p3_1] = twoProd(a.x[1], b.x[0]);
+
+        auto[t2, tl3] = threeTwoSum(p2_0, p2_1, p2_2);
+        auto t3 = _mm256_add_pd(tl3,
+            _mm256_add_pd(
+                _mm256_add_pd(p3_0, p3_1),
+                _mm256_add_pd(
+                    _mm256_mul_pd(a.x[1], b.x[1]),
+                    _mm256_add_pd(
+                        _mm256_mul_pd(a.x[2], b.x[0]),
+                        _mm256_mul_pd(a.x[0], b.x[2])
+                    )
+                )
+            )
+            );
+        auto[re0, q2] = quickTwoSum(p1_0, t2);
+        auto[re1, re2] = quickTwoSum(q2, t3);
+        return { re0, re1, re2 };
+    }
+};
+
+} // namespace avx_private
+
+
 void generateDoubleDoubleAvx(long width, long height, float* data, bool parallel,
     double vx1, double vx2, double vy1, double vy2, double vw1, double vw2, double vh1, double vh2, int maxIter, bool smooth,
     bool julia, double jX1, double jX2, double jY1, double jY2)
@@ -494,71 +564,6 @@ void generateDoubleDoubleAvx(long width, long height, float* data, bool parallel
         }
     }
 }
-
-struct AvxTripleDouble
-{
-    __m256d x[3];
-
-    inline AvxTripleDouble(__m256d a, __m256d b, __m256d c) :
-        x{ a, b, c }
-    {}
-
-    inline AvxTripleDouble(double a, double b, double c) :
-        x{ _mm256_set1_pd(a), _mm256_set1_pd(b), _mm256_set1_pd(c) }
-    {}
-
-    inline AvxTripleDouble operator + (const AvxTripleDouble& b) const
-    {
-        const auto& a = *this;
-        auto[r0, t0] = twoSum(a.x[0], b.x[0]);
-        auto[t1, t2] = twoSum(a.x[1], b.x[1]);
-        auto[r1, t3] = twoSum(t0, t1);
-        auto r2 = _mm256_add_pd(_mm256_add_pd(t2, _mm256_add_pd(a.x[2], b.x[2])), t3);
-
-        auto[re1, t4] = quickTwoSum(r0, r1);
-        auto[re2, re3] = quickTwoSum(t4, r2);
-        return { re1, re2, re3 };
-    }
-
-    inline AvxTripleDouble operator - (const AvxTripleDouble& b) const
-    {
-        const auto& a = *this;
-        auto[r0, t0] = twoDiff(a.x[0], b.x[0]);
-        auto[t1, t2] = twoDiff(a.x[1], b.x[1]);
-        auto[r1, t3] = twoSum(t0, t1);
-        auto r2 = _mm256_add_pd(_mm256_add_pd(t2, _mm256_sub_pd(a.x[2], b.x[2])), t3);
-
-        auto[re1, t4] = quickTwoSum(r0, r1);
-        auto[re2, re3] = quickTwoSum(t4, r2);
-        return { re1, re2, re3 };
-    }
-
-    inline AvxTripleDouble operator * (const AvxTripleDouble& b) const
-    {
-        const auto& a = *this;
-        auto[p1_0, p2_0] = twoProd(a.x[0], b.x[0]);
-        auto[p2_1, p3_0] = twoProd(a.x[0], b.x[1]);
-        auto[p2_2, p3_1] = twoProd(a.x[1], b.x[0]);
-
-        auto[t2, tl3] = threeTwoSum(p2_0, p2_1, p2_2);
-        auto t3 = _mm256_add_pd(tl3,
-            _mm256_add_pd(
-                _mm256_add_pd(p3_0, p3_1),
-                _mm256_add_pd(
-                    _mm256_mul_pd(a.x[1], b.x[1]),
-                    _mm256_add_pd(
-                        _mm256_mul_pd(a.x[2], b.x[0]),
-                        _mm256_mul_pd(a.x[0], b.x[2])
-                    )
-                )
-            )
-            );
-        auto[re0, q2] = quickTwoSum(p1_0, t2);
-        auto[re1, re2] = quickTwoSum(q2, t3);
-        return { re0, re1, re2 };
-    }
-};
-
 
 void generateTripleDoubleAvx(long width, long height, float* data, bool parallel,
     double vx1, double vx2, double vx3, double vy1, double vy2, double vy3,

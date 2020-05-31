@@ -23,13 +23,14 @@ namespace mnd
         DOUBLE,
         DOUBLE_DOUBLE,
         TRIPLE_DOUBLE,
+        QUAD_DOUBLE,
+        HEX_DOUBLE,
         FLOAT128,
         FLOAT256,
         FLOAT512,
         FIXED64,
         FIXED128,
         FIXED512,
-        QUAD_DOUBLE,
         INF_PREC,
     };
 
@@ -57,6 +58,7 @@ namespace mnd
     template<> Real getPrecision<DoubleDouble>();
     template<> Real getPrecision<TripleDouble>();
     template<> Real getPrecision<QuadDouble>();
+    template<> Real getPrecision<HexDouble>();
     template<> Real getPrecision<Fixed64>();
     template<> Real getPrecision<Fixed128>();
     template<> Real getPrecision<Fixed512>();
@@ -71,6 +73,7 @@ namespace mnd
     template<> inline Precision getType<DoubleDouble>() { return Precision::DOUBLE_DOUBLE; }
     template<> inline Precision getType<TripleDouble>() { return Precision::TRIPLE_DOUBLE; }
     template<> inline Precision getType<QuadDouble>() { return Precision::QUAD_DOUBLE; }
+    template<> inline Precision getType<HexDouble>() { return Precision::HEX_DOUBLE; }
     template<> inline Precision getType<Fixed64>() { return Precision::FIXED64; }
     template<> inline Precision getType<Fixed128>() { return Precision::FIXED128; }
     template<> inline Precision getType<Fixed512>() { return Precision::FIXED512; }

@@ -6,6 +6,7 @@
 #include "opencl/doubledouble.h"
 #include "opencl/tripledouble.h"
 #include "opencl/quaddouble.h"
+#include "opencl/hexdouble.h"
 
 #include "opencl/fixed64.h"
 #include "opencl/fixed128.h"
@@ -35,6 +36,10 @@ namespace mnd
 
     std::string getQuadDouble_cl() {
         return std::string{ (char*) quaddouble_cl, quaddouble_cl_len };
+    }
+
+    std::string getHexDouble_cl() {
+        return std::string{ (char*) hexdouble_cl, hexdouble_cl_len };
     }
 
     std::string getFixed64_cl() {

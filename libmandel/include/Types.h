@@ -24,6 +24,7 @@
 
 #include "LightDoubleDouble.h"
 #include "TripleDouble.h"
+#include "HexDouble.h"
 
 namespace mnd
 {
@@ -235,7 +236,36 @@ namespace mnd
     template<>
     inline float convert<float, QuadDouble>(const QuadDouble& x)
     {
-        return float(x.x[0] + x.x[1] + x.x[2] + x.x[3]);
+        return float(x.x[0] + x.x[1]);
+    }
+
+    template<>
+    inline Real convert<Real, HexDouble>(const HexDouble& x)
+    {
+        return Real{ x[0] } + x[1] + x[2] + x[3] + x[4] + x[5];
+    }
+
+    template<>
+    inline HexDouble convert<HexDouble, Real>(const Real& x)
+    {
+        double s = static_cast<double>(x);
+        Real tmp = x - s;
+        double e1 = static_cast<double>(tmp);
+        tmp = tmp - e1;
+        double e2 = static_cast<double>(tmp);
+        tmp = tmp - e2;
+        double e3 = static_cast<double>(tmp);
+        tmp = tmp - e3;
+        double e4 = static_cast<double>(tmp);
+        tmp = tmp - e4;
+        double e5 = static_cast<double>(tmp);
+        return HexDouble { s, e1, e2, e3, e4, e5 };
+    }
+
+    template<>
+    inline float convert<float, HexDouble>(const HexDouble& x)
+    {
+        return float(x.x[0] + x.x[1]);
     }
 
     template<>

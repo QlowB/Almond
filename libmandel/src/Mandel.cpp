@@ -132,12 +132,14 @@ MandelContext::MandelContext(void)
 #endif // WITH_BOOST
 
     auto dd = std::make_unique<CpuGenerator<DoubleDouble, mnd::NONE, true>>();
-    auto qd = std::make_unique<CpuGenerator<QuadDouble, mnd::NONE, true>>();
-    cpuGenerators.insert({ { Precision::DOUBLE_DOUBLE, CpuExtension::NONE }, std::move(dd) });
-    cpuGenerators.insert({ { Precision::QUAD_DOUBLE, CpuExtension::NONE }, std::move(qd) });
-
     auto td = std::make_unique<CpuGenerator<TripleDouble, mnd::NONE, true>>();
+    auto qd = std::make_unique<CpuGenerator<QuadDouble, mnd::NONE, true>>();
+    auto hd = std::make_unique<CpuGenerator<HexDouble, mnd::NONE, true>>();
+    cpuGenerators.insert({ { Precision::DOUBLE_DOUBLE, CpuExtension::NONE }, std::move(dd) });
     cpuGenerators.insert({ { Precision::TRIPLE_DOUBLE, CpuExtension::NONE }, std::move(td) });
+    cpuGenerators.insert({ { Precision::QUAD_DOUBLE, CpuExtension::NONE }, std::move(qd) });
+    cpuGenerators.insert({ { Precision::HEX_DOUBLE, CpuExtension::NONE }, std::move(hd) });
+
 
     auto fix512 = std::make_unique<CpuGenerator<Fixed512, mnd::NONE, true>>();
     cpuGenerators.insert({ { Precision::FIXED512, CpuExtension::NONE }, std::move(fix512) });
@@ -158,8 +160,8 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
         Precision::DOUBLE_DOUBLE,
         Precision::TRIPLE_DOUBLE,
         Precision::QUAD_DOUBLE,
-        Precision::FLOAT256,
-        Precision::FLOAT512
+        Precision::HEX_DOUBLE,
+        Precision::FIXED512
     };
 
     auto ag = std::make_unique<AdaptiveGenerator>();
@@ -253,6 +255,7 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
                     md.mandelGenerators.insert({ Precision::DOUBLE_DOUBLE, std::make_unique<ClGeneratorDoubleDouble>(md) });
                     md.mandelGenerators.insert({ Precision::TRIPLE_DOUBLE, std::make_unique<ClGeneratorTripleDouble>(md) });
                     md.mandelGenerators.insert({ Precision::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(md) });
+                    md.mandelGenerators.insert({ Precision::HEX_DOUBLE, std::make_unique<ClGeneratorHexDouble>(md) });
                 }
                 catch (const std::string& err) {
                     printf("err: %s", err.c_str());

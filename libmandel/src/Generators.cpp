@@ -132,6 +132,10 @@ namespace mnd
             return "double-double";
         case Precision::TRIPLE_DOUBLE:
             return "triple-double";
+        case Precision::QUAD_DOUBLE:
+            return "quad-double";
+        case Precision::HEX_DOUBLE:
+            return "hex-double";
         case Precision::FLOAT128:
             return "float128";
         case Precision::FLOAT256:
@@ -144,8 +148,6 @@ namespace mnd
             return "fixed128";
         case Precision::FIXED512:
             return "fixed512";
-        case Precision::QUAD_DOUBLE:
-            return "quad-double";
         case Precision::INF_PREC:
             return "real";
         }
@@ -182,6 +184,7 @@ namespace mnd
             { Precision::DOUBLE_DOUBLE, Real("1.0e-29") },
             { Precision::TRIPLE_DOUBLE, Real("1.0e-47") },
             { Precision::QUAD_DOUBLE, Real("1.0e-56") },
+            { Precision::HEX_DOUBLE, Real("1.0e-94") },
             { Precision::FIXED64, Real("3.5e-15") },
             { Precision::FIXED128, Real("1.317e-29") },
             { Precision::FIXED512, Real("1.5e-130") },
@@ -213,6 +216,10 @@ namespace mnd
     template<>
     Real getPrecision<QuadDouble>() {
         return Real("3.0e-64");
+    }
+    template<>
+    Real getPrecision<HexDouble>() {
+        return Real("3.0e-94");
     }
     template<>
     Real getPrecision<Fixed64>() {

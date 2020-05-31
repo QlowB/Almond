@@ -1,10 +1,11 @@
 #include "../include/TripleDouble.h"
 #include "../include/Types.h"
+#include "../include/HexDouble.h"
 
 #include <vector>
 #include <boost/random.hpp>
 
-const int nTests = 1000;
+const int nTests = 10000;
 
 using namespace boost::multiprecision;
 using namespace boost::random;
@@ -12,7 +13,7 @@ using namespace boost::random;
 std::vector<mnd::Real> generateRandom(int len, int seed)
 {
     uniform_real_distribution<mnd::Real> dist(0, 1);
-    uniform_int_distribution<int> expDist(-30, 30);
+    uniform_int_distribution<int> expDist(-120, 120);
     independent_bits_engine<mt19937, std::numeric_limits<cpp_bin_float_50>::digits, cpp_int> gen(seed);
 
     std::vector<mnd::Real> numbers;
@@ -59,10 +60,19 @@ int main()
 
     mnd::Real tripleDoubleAdd = maxErr<mnd::TripleDouble>([] (const auto& a, const auto& b) { return a + b; });
     mnd::Real tripleDoubleMul = maxErr<mnd::TripleDouble>([] (const auto& a, const auto& b) { return a * b; });
+    mnd::Real tripleDoubleAABBA = maxErr<mnd::TripleDouble>([] (const auto& a, const auto& b) { return a * a - b * b + a; });
     std::cout << std::setprecision(10) << std::scientific;
     std::cout << "max triple double add error: " << tripleDoubleAdd << std::endl;
     std::cout << "max triple double mul error: " << tripleDoubleMul << std::endl;
+    std::cout << "max triple double aa - bb + a error: " << tripleDoubleAABBA << std::endl;
 
+    mnd::Real hexDoubleAdd = maxErr<mnd::HexDouble>([] (const auto& a, const auto& b) { return a + b; });
+    mnd::Real hexDoubleMul = maxErr<mnd::HexDouble>([] (const auto& a, const auto& b) { return a * b; });
+    mnd::Real hexDoubleAABBA = maxErr<mnd::HexDouble>([] (const auto& a, const auto& b) { return a * a - b * b + a; });
+    std::cout << std::setprecision(10) << std::scientific;
+    std::cout << "max hex double add error: " << hexDoubleAdd << std::endl;
+    std::cout << "max hex double mul error: " << hexDoubleMul << std::endl;
+    std::cout << "max hex double aa - bb + a error: " << hexDoubleAABBA << std::endl;
 
 }
 

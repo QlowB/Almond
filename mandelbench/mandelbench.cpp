@@ -90,8 +90,8 @@ double benchmark(mnd::MandelGenerator& generator)
         auto [iters, time] = measureMips([&generator, &mi, &data]() { generator.generate(mi, data.get()); return std::make_pair(data.get(), mi.bWidth * mi.bHeight);  });
         //printf("benchmark lvl %d, time %d ms\n", i, time.count() / 1000 / 1000);
         //fflush(stdout);
-        if (time > std::chrono::milliseconds(200)) {
-            testIndex = i + 2;
+        if (time > std::chrono::milliseconds(400)) {
+            testIndex = i + 1;
             break;
         }
     }

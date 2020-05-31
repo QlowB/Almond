@@ -84,7 +84,7 @@ target_link_libraries(mandel PUBLIC qd)
 
 if(MANDEL_ASMJIT)
     add_subdirectory(asmjit)
-    target_compile_definitions(mandel PUBLIC MANDEL_ASMJIT)
+    target_compile_definitions(mandel PUBLIC WITH_ASMJIT)
     target_link_libraries(mandel PUBLIC AsmJit::AsmJit)
 endif(MANDEL_ASMJIT)
 

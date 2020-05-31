@@ -48,7 +48,6 @@ namespace mnd
     std::string toString(CpuExtension);
 
     Real getPrecision(Precision p);
-    Real getPrecision(GeneratorType p);
     
     template<typename T>
     Real getPrecision(void);
@@ -82,7 +81,7 @@ namespace mnd
     class MandelDevice;
 }
 
-
+/*
 enum class mnd::GeneratorType : int
 {
     UNSPECIFIED,
@@ -113,6 +112,7 @@ enum class mnd::GeneratorType : int
     FIXED128,
     FIXED512
 };
+*/
 
 
 class mnd::MandelGenerator
@@ -175,6 +175,7 @@ public:
 
     void addGenerator(const Real& precision, MandelGenerator& generator);
     void addGenerator(Precision p, MandelGenerator& generator);
+    void addGenerator(MandelGenerator& generator);
     
     const std::map<Real, MandelGenerator*, std::greater<Real>>& getGenerators(void) const { return generators; }
     inline void clear(void) { generators.clear(); }

@@ -71,6 +71,12 @@ void AdaptiveGenerator::addGenerator(mnd::Precision p, MandelGenerator& generato
 }
 
 
+void AdaptiveGenerator::addGenerator(MandelGenerator& generator)
+{
+    generators.insert({ generator.getPrecision(), &generator });
+}
+
+
 void AdaptiveGenerator::generate(const mnd::MandelInfo& info, float* data)
 {
     Real pixelW = info.view.width / info.bWidth;
@@ -187,52 +193,6 @@ namespace mnd
 
         return precs.at(p);
     }
-
-    Real getPrecision(GeneratorType t)
-    {
-        switch(t) {
-        case GeneratorType::FLOAT:
-        case GeneratorType::FLOAT_SSE2:
-        case GeneratorType::FLOAT_AVX:
-        case GeneratorType::FLOAT_AVX_FMA:
-        case GeneratorType::FLOAT_AVX512:
-        case GeneratorType::FLOAT_NEON:
-            return getPrecision<float>();
-        case GeneratorType::DOUBLE_FLOAT:
-            return getPrecision(Precision::DOUBLE_FLOAT);
-        case GeneratorType::DOUBLE:
-        case GeneratorType::DOUBLE_SSE2:
-        case GeneratorType::DOUBLE_AVX:
-        case GeneratorType::DOUBLE_AVX_FMA:
-        case GeneratorType::DOUBLE_AVX512:
-        case GeneratorType::DOUBLE_NEON:
-            return getPrecision<double>();
-        case GeneratorType::DOUBLE_DOUBLE:
-        case GeneratorType::DOUBLE_DOUBLE_AVX:
-        case GeneratorType::DOUBLE_DOUBLE_AVX_FMA:
-            return getPrecision<DoubleDouble>();
-        case GeneratorType::TRIPLE_DOUBLE:
-        case GeneratorType::TRIPLE_DOUBLE_AVX:
-            return getPrecision<TripleDouble>();
-        case GeneratorType::QUAD_DOUBLE:
-            return getPrecision<QuadDouble>();
-        case GeneratorType::FLOAT128:
-            return getPrecision<Float128>();
-        case GeneratorType::FLOAT256:
-            return getPrecision<Float256>();
-        case GeneratorType::FIXED64:
-            return getPrecision<Fixed64>();
-        case GeneratorType::FIXED128:
-            return getPrecision<Fixed128>();
-        case GeneratorType::FIXED512:
-            return getPrecision<Fixed512>();
-
-        case GeneratorType::UNSPECIFIED:
-        default:
-            return Real(0);
-        }
-    }
-
 
     template<>
     Real getPrecision<float>() {

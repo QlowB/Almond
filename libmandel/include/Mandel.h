@@ -32,9 +32,6 @@ namespace mnd
     struct ClDeviceWrapper;
 
     extern MandelContext initializeContext(void);
-
-    const std::string& getGeneratorName(mnd::GeneratorType);
-    GeneratorType getTypeFromName(const std::string& name);
 }
 
 
@@ -49,7 +46,7 @@ private:
     std::string extensions;
     std::unique_ptr<ClDeviceWrapper> clDevice;
 
-    std::map<GeneratorType, std::unique_ptr<MandelGenerator>> mandelGenerators;
+    std::map<Precision, std::unique_ptr<MandelGenerator>> mandelGenerators;
 
 public:
     MandelDevice(ClDeviceWrapper, const std::string& platformName);
@@ -61,11 +58,11 @@ public:
     inline const std::string& getVendor(void) const { return vendor; }
     inline const std::string& getName(void) const { return name; }
 
-    MandelGenerator* getGenerator(GeneratorType type) const;
+    MandelGenerator* getGenerator(Precision type) const;
     inline ClDeviceWrapper& getClDevice(void) { return *clDevice; }
     inline const ClDeviceWrapper& getClDevice(void) const { return *clDevice; }
 
-    std::vector<GeneratorType> getSupportedTypes(void) const;
+    std::vector<Precision> getSupportedTypes(void) const;
     bool supportsDouble(void) const;
 };
 
@@ -74,6 +71,8 @@ class mnd::MandelContext
 {
 private:
     friend MandelContext mnd::initializeContext(void);
+
+    using GeneratorType = std::pair<Precision, CpuExtension>;
 
     CpuInfo cpuInfo;
     std::unique_ptr<asmjit::JitRuntime> jitRuntime;
@@ -100,8 +99,9 @@ public:
 
     asmjit::JitRuntime& getJitRuntime(void);
 
-    MandelGenerator* getCpuGenerator(mnd::GeneratorType type);
+    MandelGenerator* getCpuGenerator(mnd::Precision type, mnd::CpuExtension ex);
     std::vector<GeneratorType> getSupportedTypes(void) const;
+    std::vector<MandelGenerator*> getCpuGenerators(mnd::Precision prec) const;
 
     const CpuInfo& getCpuInfo(void) const { return cpuInfo; }
 };

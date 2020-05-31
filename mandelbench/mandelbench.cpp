@@ -117,8 +117,10 @@ int main()
     std::cout << "Benchmarking CPU [" << mc.getCpuInfo().getBrand() << "]" << std::endl;
 
     auto types = mc.getSupportedTypes();
-    for (auto type : types) {
-        REPORT_PERFORMANCE(mnd::getGeneratorName(type) + " [MIps]: ", benchmark(*mc.getCpuGenerator(type)));
+    for (auto [type, extension] : types) {
+        std::string extInfo = extension != mnd::CpuExtension::NONE ?
+            std::string(" ") + mnd::toString(extension) : "";
+        REPORT_PERFORMANCE(mnd::toString(type) + extInfo + " [MIps]: ", benchmark(*mc.getCpuGenerator(type, extension)));
     }
     
     std::cout << std::endl;
@@ -127,7 +129,7 @@ int main()
 
         auto types = device->getSupportedTypes();
         for (auto type : types) {
-            REPORT_PERFORMANCE(mnd::getGeneratorName(type) + " [MIps]: ", benchmark(*device->getGenerator(type)));
+            REPORT_PERFORMANCE(mnd::toString(type) + " [MIps]: ", benchmark(*device->getGenerator(type)));
         }
         std::cout << std::endl;
     }

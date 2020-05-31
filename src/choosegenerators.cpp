@@ -181,27 +181,18 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::AdaptiveGen
     QRegExp floatingpoint{ "^[-+]?(\\d*\\.?\\d+|\\d+\\.?\\d*)([eE][-+]\\d+)?$" };
     floatValidator = std::make_unique<QRegExpValidator>(floatingpoint, this);
 
-    for (auto genType : mndCtxt.getSupportedTypes()) {
-        const std::string& typeName = mnd::getGeneratorName(genType);
-        generators.insert({ QString::fromStdString(typeName), mndCtxt.getCpuGenerator(genType) });
+    for (auto [type, extension] : mndCtxt.getSupportedTypes()) {
+        const std::string& typeName = mnd::toString(type);
+        const std::string& extName = mnd::toString(extension);
+        const std::string& name = typeName + (extName != "" ? " " : "") + extName;
+        generators.insert({ QString::fromStdString(name), mndCtxt.getCpuGenerator(type, extension) });
     }
     for (auto& device : mndCtxt.getDevices()) {
         for (auto genType : device->getSupportedTypes()) {
-            const std::string& typeName = mnd::getGeneratorName(genType) + " [" + device->getName() + "]";
+            const std::string& typeName = mnd::toString(genType) + " [" + device->getName() + "]";
             generators.insert({ QString::fromStdString(typeName), device->getGenerator(genType) });
         }
     }
-
-    std::vector<mnd::MandelGenerator*> allGenerators;
-
-    /*for (auto genType : mndCtxt.getSupportedTypes()) {
-        allGenerators.push_back(mndCtxt.getCpuGenerator(genType));
-    }
-    for (auto& device : mndCtxt.getDevices()) {
-        for (auto genType : device.getSupportedTypes()) {
-            allGenerators.push_back(device.getGenerator(genType));
-        }
-    }*/
 
     initializeTables();
 

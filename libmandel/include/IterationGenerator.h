@@ -19,6 +19,7 @@ namespace mnd
     class CompiledGeneratorVec;
     class CompiledClGenerator;
     class CompiledClGeneratorDouble;
+    class CompiledClGeneratorDoubleDouble;
 
     // forward declaration
     struct ExecData;
@@ -96,6 +97,12 @@ class mnd::CompiledClGeneratorDouble : public mnd::ClGeneratorDouble
 {
 public:
     CompiledClGeneratorDouble(MandelDevice& device, const std::string& code);
+};
+
+class mnd::CompiledClGeneratorDoubleDouble : public mnd::ClGeneratorDoubleDouble
+{
+public:
+    CompiledClGeneratorDoubleDouble(MandelDevice& device, const std::string& code);
 };
 #endif // WITH_OPENCL
 

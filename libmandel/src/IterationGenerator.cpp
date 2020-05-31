@@ -258,6 +258,13 @@ CompiledClGeneratorDouble::CompiledClGeneratorDouble(mnd::MandelDevice& device, 
 {
 }
 
+
+CompiledClGeneratorDoubleDouble::CompiledClGeneratorDoubleDouble(mnd::MandelDevice& device, const std::string& code) :
+    ClGeneratorDoubleDouble{ device, code }
+{
+}
+
+
 #endif // WITH_OPENCL
 
 

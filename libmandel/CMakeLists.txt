@@ -42,6 +42,7 @@ SET(MandelSources
     src/IterationGenerator.cpp
     src/IterationFormula.cpp
     src/IterationCompiler.cpp
+    src/IterationCompilerCl.cpp
     src/IterationIR.cpp
     src/NaiveIRGenerator.cpp
     src/FloatLog.cpp

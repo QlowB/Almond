@@ -798,12 +798,6 @@ namespace mnd
 #endif // defined(__x86_64__) || defined(_M_X64)
 #endif // WITH_ASMJIT
 
-        //vec.push_back(std::make_unique<NaiveIRGenerator<mnd::DoubleDouble>>(irf));
-        //vec.push_back(std::make_unique<NaiveIRGenerator<mnd::QuadDouble>>(irf));
-        
-        //auto dg = std::make_unique<NaiveIRGenerator>(*irf, mnd::getPrecision<double>());
-
-        //vec.push_back(std::move(ng));
         return vec;
     }
 

@@ -570,7 +570,7 @@ void generateTripleDoubleAvx(long width, long height, float* data, bool parallel
     using T = mnd::TripleDouble;
 
     T viewx{ vx1, vx2, vx3 };
-    T viewy{ vy1, vy2, vy2 };
+    T viewy{ vy1, vy2, vy3 };
     T wpp = T{ vw1, vw2, vw3 } * T(1.0 / width);
     T hpp = T{ vh1, vh2, vh3 } * T(1.0 / height);
 

@@ -157,7 +157,7 @@ inline HexDouble mul(const __private HexDouble* a, const __private HexDouble* b)
 }
 
 
-HexDouble loadHd(const __global double* v) {
+HexDouble loadHd(const __constant double* v) {
     return (HexDouble) {
         v[0],
         v[1],
@@ -170,9 +170,9 @@ HexDouble loadHd(const __global double* v) {
 
 
 __kernel void iterate(__global float* A, const int width,
-                      __global double* x, __global double* y,
-                      __global double* pw, __global double* ph, int max, int smooth, int julia,
-                      __global double* jx, __global double* jy) {
+                      __constant double* x, __constant double* y,
+                      __constant double* pw, __constant double* ph, int max, int smooth, int julia,
+                      __constant double* jx, __constant double* jy) {
     int index = get_global_id(0);
     int px = index % width;
     int py = index / width;

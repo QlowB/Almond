@@ -3,6 +3,7 @@
 #include "Mandel.h"
 #include <thread>
 #include <cmath>
+#include <omp.h>
 
 MandelVideoGenerator::MandelVideoGenerator(const ExportVideoInfo& evi) :
     evi{ evi }
@@ -180,7 +181,11 @@ Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
     double innerHeight = outer.height * scale / oversizeFactor;
 
     auto before = std::chrono::high_resolution_clock::now();
-#pragma omp parallel for schedule(static, 32)
+
+#if defined(_OPENMP)
+    omp_set_num_threads(omp_get_num_procs());
+#   pragma omp parallel for
+#endif
     for (int i = 0; i < ret.height; i++) {
         for (int j = 0; j < ret.width; j++) {
             double newJ = outerLeft + outerWidth * j / ret.width;

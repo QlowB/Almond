@@ -219,6 +219,7 @@ void CompiledGeneratorVec::generate(const mnd::MandelInfo& info, float* data)
 #ifdef WITH_OPENCL
 using mnd::CompiledClGenerator;
 using mnd::CompiledClGeneratorDouble;
+using mnd::CompiledClGeneratorDoubleDouble;
 CompiledClGenerator::CompiledClGenerator(mnd::MandelDevice& device, const std::string& code) :
     ClGeneratorFloat{ device, code }
 {
@@ -260,7 +261,7 @@ CompiledClGeneratorDouble::CompiledClGeneratorDouble(mnd::MandelDevice& device, 
 
 
 CompiledClGeneratorDoubleDouble::CompiledClGeneratorDoubleDouble(mnd::MandelDevice& device, const std::string& code) :
-    ClGeneratorDoubleDouble{ device, code }
+    ClGeneratorDoubleDouble{ device } // TODO make this const take code as arg
 {
 }
 

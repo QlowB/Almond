@@ -14,6 +14,7 @@ add_subdirectory(../libmandel ./libmandel)
 #set(Boost_DEBUG 1)
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.65 REQUIRED)
+find_package(OpenMP)
 find_package(PNG)
 find_package (JPEG)
 
@@ -62,4 +63,7 @@ if (JPEG_FOUND AND LIBALMOND_LIBJPEG)
     target_compile_definitions(libalmond PUBLIC WITH_LIBJPEG)
 endif()
 
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(libalmond PUBLIC OpenMP::OpenMP_CXX)
+endif()
 

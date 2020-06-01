@@ -3,7 +3,9 @@
 #include "OpenClInternal.h"
 #include "OpenClCode.h"
 
-#ifdef WITH_OPENCL
+#include <CL/cl2.hpp>
+
+#if WITH_OPENCL
 
 #include <iostream>
 #include <iterator>
@@ -79,7 +81,32 @@ ClGenerator::ClGenerator(mnd::MandelDevice& device, const std::string& source, m
         throw std::string(program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(dev));
     }
 
+#if CL_HPP_TARGET_OPENCL_VERSION >= 200
+    /*cl_queue_properties qcp[] {
+        CL_QUEUE_PROPERTIES, 0,
+//        CL_QUEUE_PRIORITY_KHR, CL_QUEUE_PRIORITY_LOW_KHR,
+        0
+    };
+    int err = 0;
+    cl_command_queue dq = clCreateCommandQueueWithProperties(
+        this->context.get(),
+        dev.get(),
+        qcp,
+        &err
+    );
+    if (err == CL_SUCCESS) {
+        printf("queue success\n");
+        queue = CommandQueue(dq);
+    }
+    else {
+        printf("queue non-success\n");
+        queue = CommandQueue(context, dev);
+    }
+    */
     queue = CommandQueue(context, dev);
+#else
+    queue = CommandQueue(context, dev);
+#endif
 
     /*Platform p = getPlatform();
     device = getDevice(p, 0, true);

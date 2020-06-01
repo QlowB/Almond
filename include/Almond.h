@@ -77,6 +77,8 @@ public:
     void submitBackgroundTask(BackgroundTask* task);
     void stopBackgroundTask();
 
+    void closeEvent(QCloseEvent* ce) override;
+
     bool eventFilter(QObject *target, QEvent *event);
 
     void submenuOK(int smIndex);

@@ -101,7 +101,7 @@ void CalcJob::run(void)
     mi.bWidth = mi.bHeight = FractalZoomWidget::chunkSize;
     try {
         generator->generate(mi, f.pixels.get());
-        emit done(level, i, j, new Bitmap<float>(std::move(f)));
+        emit done(level, i, j, calcState, new Bitmap<float>(std::move(f)));
     }
     catch(std::exception& ex) {
         emit failed(level, i, j, ex.what());

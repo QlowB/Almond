@@ -132,6 +132,24 @@ void Almond::stopBackgroundTask(void)
     stoppingBackgroundTasks = true;
 }
 
+
+void Almond::closeEvent(QCloseEvent* ce)
+{
+    Q_UNUSED(ce);
+    if (!this->backgroundTasks.waitForDone(1)) {
+        int answer = QMessageBox::question(this, tr("Running Tasks"),
+                tr("There are unfinished background tasks. Do you really want to quit?"),
+                                QMessageBox::Yes | QMessageBox::No);
+        if (answer == QMessageBox::Yes) {
+            ce->accept();
+        }
+        else {
+            ce->ignore();
+        }
+    }
+}
+
+
 bool Almond::eventFilter(QObject *target, QEvent *event)
 {
     if (event->type() == QEvent::KeyPress) {

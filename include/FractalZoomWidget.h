@@ -62,7 +62,7 @@ public slots:
     void setCurrentLevel(int level);
     void notFinished(int level, GridIndex i, GridIndex j);
     void jobFailed(int level, GridIndex i, GridIndex j);
-    void redirect(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
+    void redirect(int level, GridIndex i, GridIndex j, int calcState, Bitmap<float>* bmp);
 signals:
     void done(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp);
 };

@@ -12,8 +12,8 @@
 
 #ifdef WITH_BOOST
 #   include <boost/multiprecision/cpp_bin_float.hpp>
-#   if defined(__GNUC__) || defined(__INTEL_COMPILER)
-//#       include <boost/multiprecision/float128.hpp>
+#   if (defined(__GNUC__) || defined(__INTEL_COMPILER)) && defined(WITH_QUADMATH)
+#       include <boost/multiprecision/float128.hpp>
 #   endif
 #   include <boost/multiprecision/cpp_int.hpp>
 #   include <boost/functional/hash.hpp>
@@ -29,9 +29,8 @@
 namespace mnd
 {
 
-
 #ifdef WITH_BOOST
-#   if 0//defined(__GNUC__) || defined(__INTEL_COMPILER)
+#   if (defined(__GNUC__) || defined(__INTEL_COMPILER)) && defined(WITH_QUADMATH)
     using Float128 = boost::multiprecision::float128;
 #   else
     using Float128 = boost::multiprecision::cpp_bin_float_quad;
@@ -53,7 +52,7 @@ namespace mnd
 
     using Float256 = boost::multiprecision::number<
         boost::multiprecision::backends::cpp_bin_float<
-            240, boost::multiprecision::backends::digit_base_2, void, boost::int16_t, -16382, 16383>,
+            237, boost::multiprecision::backends::digit_base_2, void, boost::int32_t, -262142, 262143>,
             boost::multiprecision::et_off>;
 
     //using Float256 = long double;

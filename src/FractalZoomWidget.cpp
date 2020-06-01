@@ -130,12 +130,12 @@ void Calcer::jobFailed(int level, GridIndex i, GridIndex j)
 }
 
 
-void Calcer::redirect(int level, GridIndex i, GridIndex j, Bitmap<float>* bmp)
+void Calcer::redirect(int level, GridIndex i, GridIndex j, int calcState, Bitmap<float>* bmp)
 {
     jobsMutex.lock();
     jobs.erase({ level, i, j });
     jobsMutex.unlock();
-    if (this->calcState == calcState) { // TODO remove invalid results correctly
+    if (this->calcState == calcState) {
         emit done(level, i, j, bmp);
     }
     else {

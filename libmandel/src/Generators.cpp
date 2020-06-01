@@ -137,9 +137,9 @@ namespace mnd
         case Precision::HEX_DOUBLE:
             return "hex-double";
         case Precision::FLOAT128:
-            return "float128";
+            return "IEEE 754 128-bit float";
         case Precision::FLOAT256:
-            return "float256";
+            return "IEEE 754 256-bit float";
         case Precision::FLOAT512:
             return "float512";
         case Precision::FIXED64:

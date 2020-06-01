@@ -37,12 +37,14 @@ void GradientWidget::setGradient(Gradient gr)
     gradient = std::move(gr);
     points = gradient.getPoints();
     maxValue = gradient.getMax();
+    updateGradient();
 }
 
 
 void GradientWidget::updateGradient(void)
 {
     gradient = Gradient{ points, maxValue };
+    update();
 }
 
 
@@ -271,7 +273,6 @@ void GradientWidget::mouseMoveEvent(QMouseEvent* e)
         newVal = std::clamp(newVal, 0.0f, maxValue);
         points[selectedHandle].second = newVal;
         updateGradient();
-        update();
         emit gradientChanged();
         e->accept();
     }
@@ -317,7 +318,6 @@ void GradientWidget::mouseDoubleClickEvent(QMouseEvent* e)
         points.emplace_back(torgb(colorAtY(e->pos().y())), v);
         e->accept();
         updateGradient();
-        update();
     }
     else {
         e->ignore();
@@ -362,7 +362,6 @@ void GradientWidget::selectedColorChanged(const QColor& newColor)
             uint8_t(newColor.blue())
         };
         updateGradient();
-        update();
         emit gradientChanged();
     }
 }
@@ -374,7 +373,6 @@ void GradientWidget::removeSelectedHandle(void)
         points.erase(points.begin() + selectedHandle);
         selectedHandle = -1;
         updateGradient();
-        update();
         emit gradientChanged();
     }
 }

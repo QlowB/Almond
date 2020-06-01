@@ -25,7 +25,7 @@ public:
 
     static Gradient defaultGradient(void);
 
-    //static Gradient readXml(const std::string& xml);
+    static Gradient fromXml(const std::string& xml);
 
     ///
     /// \brief get the maximum value this gradient accepts

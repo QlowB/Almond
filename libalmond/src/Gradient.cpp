@@ -2,6 +2,9 @@
 
 #include "CubicSpline.h"
 
+#include "../tinyxml2/tinyxml2.h"
+#include "XmlException.h"
+
 #include <cmath>
 #include <algorithm>
 #include <functional>
@@ -117,10 +120,6 @@ const std::vector<std::pair<RGBColor, float>>& Gradient::getPoints(void) const
 
 Gradient Gradient::defaultGradient(void)
 {
-    /*QFile res(":/gradients/default");
-    res.open(QIODevice::ReadOnly);
-    QString str = QString::fromUtf8(res.readAll());
-    return readXml(str);*/
     return Gradient({
         { RGBColor{ 0, 0, 0 }, 0.0f },
         { RGBColor{ 0, 255, 255 }, 30.0f },
@@ -134,6 +133,47 @@ Gradient Gradient::defaultGradient(void)
         { RGBColor{ 120, 240, 120 }, 270.0f },
         { RGBColor{ 0, 0, 0 }, 300.0f },
     }, true);
+}
+
+
+Gradient Gradient::fromXml(const std::string& xml)
+{
+    using tinyxml2::XMLDocument;
+    using tinyxml2::XMLError;
+    using tinyxml2::XMLNode;
+    using tinyxml2::XMLElement;
+    using tinyxml2::XML_SUCCESS;
+
+    XMLDocument xmlDoc;
+    XMLError err = xmlDoc.Parse(xml.c_str());
+    if (err != XML_SUCCESS)
+        throw alm::XmlException{ "error parsing gradient xml" };
+    XMLNode* rootNode = xmlDoc.FirstChild();
+    if (rootNode == nullptr)
+        throw alm::XmlException{ "invalid root node" };
+
+    bool repeat = false;
+    if (auto* re = dynamic_cast<XMLElement*>(rootNode))
+        repeat = re->BoolAttribute("repeat");
+
+    std::vector<std::pair<RGBColor, float>> points;
+
+    XMLElement* colorNode = rootNode->FirstChildElement("color");
+    while(colorNode != nullptr) {
+        int r = colorNode->IntAttribute("r");
+        int g = colorNode->IntAttribute("g");
+        int b = colorNode->IntAttribute("b");
+        float p = colorNode->FloatAttribute("p");
+        
+        uint8_t cr = uint8_t(std::clamp(r, 0, 255));
+        uint8_t cg = uint8_t(std::clamp(g, 0, 255));
+        uint8_t cb = uint8_t(std::clamp(b, 0, 255));
+        points.push_back(std::make_pair(RGBColor{ cr, cg, cb }, p));
+
+        colorNode = colorNode->NextSiblingElement("color");
+    }
+
+    return Gradient{ std::move(points), repeat };
 }
 
 

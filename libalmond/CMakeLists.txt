@@ -24,8 +24,11 @@ set(CMAKE_CXX_STANDARD 17)
 FILE(GLOB libalmondsources src/*.cpp)
 FILE(GLOB libalmondheaders include/*.h)
 
+list(APPEND libalmondsources tinyxml2/tinyxml2.cpp)
+list(APPEND libalmondheaders tinyxml2/tinyxml2.h)
+
 add_library(libalmond STATIC ${libalmondsources})
-target_include_directories(libalmond PUBLIC "include")
+target_include_directories(libalmond PUBLIC "include" "tinyxml2")
 target_link_libraries(libalmond PUBLIC mandel)
 set_target_properties(libalmond PROPERTIES OUTPUT_NAME almond)
 

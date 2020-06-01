@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Select Gradient</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1,0">
    <property name="leftMargin">
     <number>0</number>
    </property>
@@ -39,6 +39,9 @@
       <string>Select Gradient</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="presetCmb"/>
    </item>
    <item>
     <widget class="GradientWidget" name="gradientWidget" native="true"/>

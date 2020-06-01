@@ -17,6 +17,8 @@ class GradientMenu : public QWidget
 
     Ui::GradientMenu *ui;
     Gradient before;
+
+    static const QString presetNames[];
 public:
     explicit GradientMenu(QWidget *parent = nullptr);
     ~GradientMenu(void);
@@ -29,6 +31,7 @@ signals:
     void gradientChanged(void);
 private slots:
     void on_removeBtn_clicked();
+    void on_presetCmb_currentIndexChanged(int index);
 };
 
 #endif // GRADIENTMENU_H

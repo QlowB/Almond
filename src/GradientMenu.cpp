@@ -1,6 +1,17 @@
 #include "GradientMenu.h"
 #include "ui_GradientMenu.h"
 
+#include <QFile>
+
+const QString GradientMenu::presetNames[] = {
+    "blue gold",
+    "clouds",
+    "default",
+    "grayscale",
+    "peach",
+    "rainbow"
+};
+
 GradientMenu::GradientMenu(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::GradientMenu)
@@ -13,6 +24,10 @@ GradientMenu::GradientMenu(QWidget *parent) :
         },
         1.0f
     });
+
+    for (const auto& presetName : presetNames) {
+        ui->presetCmb->addItem(presetName);
+    }
     connect(ui->gradientWidget, &GradientWidget::gradientChanged, this, &GradientMenu::gradientChanged);
 }
 
@@ -44,4 +59,15 @@ void GradientMenu::setGradient(Gradient grad)
 void GradientMenu::on_removeBtn_clicked()
 {
     ui->gradientWidget->removeSelectedHandle();
+}
+
+void GradientMenu::on_presetCmb_currentIndexChanged(int index)
+{
+    QString presetName = presetNames[index];
+    QFile gradXml{ ":/gradients/" + presetName };
+    if (gradXml.open(QFile::ReadOnly)) {
+        QString xml = QString::fromUtf8(gradXml.readAll());
+        ui->gradientWidget->setGradient(Gradient::fromXml(xml.toStdString()));
+        gradXml.close();
+    }
 }

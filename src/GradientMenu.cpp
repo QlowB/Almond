@@ -134,3 +134,23 @@ void GradientMenu::on_maxValSpb_valueChanged(double maxVal)
     Gradient g = Gradient{ old.getPoints(), float(maxVal), old.isRepeat() };
     ui->gradientWidget->setGradient(std::move(g));
 }
+
+void GradientMenu::on_zoomOutBtn_clicked()
+{
+    QSize size = ui->scrollArea->size();
+    if (size.height() * 0.9 >= ui->gradientWidget->sizeHint().height()) {
+        ui->gradientWidget->resize(size.width(), int(size.height() * 0.9));
+    }
+    else {
+        ui->gradientWidget->resize(size.width(), ui->gradientWidget->sizeHint().height());
+    }
+    ui->scrollArea->updateGeometry();
+}
+
+void GradientMenu::on_zoomInBtn_clicked()
+{
+    QSize size = ui->gradientWidget->size();
+    if (size.height() < 16000)
+        ui->gradientWidget->resize(size.width(), int(size.height() * 1.1));
+    ui->scrollArea->updateGeometry();
+}

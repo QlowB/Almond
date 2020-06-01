@@ -292,6 +292,7 @@ void EscapeTimeVisualWidget::initializeGL(void)
     "}");
 
     // TODO rewrite this monster
+    // remove hardcoded 256 texture size
     if (!context()->isOpenGLES() &&
         context()->versionFunctions<QOpenGLFunctions_4_0_Core>() != nullptr) {
         bool frag = program->addShaderFromSourceCode(QOpenGLShader::Fragment,
@@ -314,8 +315,8 @@ void EscapeTimeVisualWidget::initializeGL(void)
         "   vec2 size = textureSize(tex, 0);\n"
         "   size = vec2(256.0, 256.0);\n"
         "   vec2 accPoint = texc * size;\n"
-        "   vec2 ip = floor(accPoint);\n"
-        "   vec2 fp = fract(accPoint);\n"
+        "   vec2 ip = floor(accPoint + 0.5);\n"
+        "   vec2 fp = fract(accPoint + 0.5);\n"
         "   vec4 inter = textureGather(tex, ip / size, 0);\n"
         "   vec4 col1 = colorize(inter.x);\n"
         "   vec4 col2 = colorize(inter.y);\n"

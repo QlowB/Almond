@@ -39,6 +39,8 @@ private slots:
     void on_saveBtn_clicked();
     void on_loadBtn_clicked();
     void on_maxValSpb_valueChanged(double maxVal);
+    void on_zoomOutBtn_clicked();
+    void on_zoomInBtn_clicked();
 };
 
 #endif // GRADIENTMENU_H

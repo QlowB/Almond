@@ -22,10 +22,12 @@ public:
     Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxValue, bool repeat = false, int precalcSteps = -1);
 
     const std::vector<std::pair<RGBColor, float>>& getPoints(void) const;
+    inline bool isRepeat(void) const { return repeat; }
 
     static Gradient defaultGradient(void);
 
     static Gradient fromXml(const std::string& xml);
+    std::string toXml(void) const;
 
     ///
     /// \brief get the maximum value this gradient accepts

@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Select Gradient</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1,0">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0,1,0,0">
    <property name="leftMargin">
     <number>0</number>
    </property>
@@ -41,10 +41,62 @@
     </widget>
    </item>
    <item>
-    <widget class="QComboBox" name="presetCmb"/>
+    <layout class="QGridLayout" name="gridLayout">
+     <item row="2" column="0">
+      <widget class="QPushButton" name="loadBtn">
+       <property name="text">
+        <string>Load Gradient</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="presetCmb"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="presetLbl">
+       <property name="text">
+        <string>Load Preset:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QPushButton" name="saveBtn">
+       <property name="text">
+        <string>Save Gradient</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="GradientWidget" name="gradientWidget" native="true"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="maxValLbl">
+       <property name="text">
+        <string>Max. Value</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="maxValSpb">
+       <property name="decimals">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <double>100000.000000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>10.000000000000000</double>
+       </property>
+       <property name="stepType">
+        <enum>QAbstractSpinBox::AdaptiveDecimalStepType</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">

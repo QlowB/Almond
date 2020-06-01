@@ -1,16 +1,21 @@
 #include "GradientMenu.h"
 #include "ui_GradientMenu.h"
 
+#include "XmlException.h"
+
 #include <QFile>
+#include <QMessageBox>
+#include <QFileDialog>
 
 const QString GradientMenu::presetNames[] = {
     "blue gold",
     "clouds",
-    "default",
+    "oldschool",
     "grayscale",
     "peach",
     "rainbow"
 };
+
 
 GradientMenu::GradientMenu(QWidget *parent) :
     QWidget(parent),
@@ -29,6 +34,7 @@ GradientMenu::GradientMenu(QWidget *parent) :
         ui->presetCmb->addItem(presetName);
     }
     connect(ui->gradientWidget, &GradientWidget::gradientChanged, this, &GradientMenu::gradientChanged);
+    connect(ui->gradientWidget, &GradientWidget::gradientChanged, this, &GradientMenu::onGradientChanged);
 }
 
 
@@ -56,6 +62,28 @@ void GradientMenu::setGradient(Gradient grad)
     ui->gradientWidget->setGradient(std::move(grad));
 }
 
+
+void GradientMenu::loadGradient(QFile& file)
+{
+    if (file.isOpen() || file.open(QFile::ReadOnly)) {
+        QString xml = QString::fromUtf8(file.readAll());
+        try {
+            ui->gradientWidget->setGradient(Gradient::fromXml(xml.toStdString()));
+        } catch (alm::XmlException& xmlex) {
+            QMessageBox::critical(this, tr("Error Loading Gradient"), tr("Error loading gradient: ") + xmlex.what());
+        } catch (...) {
+            QMessageBox::critical(this, tr("Error Loading Gradient"), tr("Unknown error loading gradient."));
+        }
+    }
+}
+
+
+void GradientMenu::onGradientChanged(void)
+{
+    ui->maxValSpb->setValue(ui->gradientWidget->getGradient().getMax());
+}
+
+
 void GradientMenu::on_removeBtn_clicked()
 {
     ui->gradientWidget->removeSelectedHandle();
@@ -65,9 +93,44 @@ void GradientMenu::on_presetCmb_currentIndexChanged(int index)
 {
     QString presetName = presetNames[index];
     QFile gradXml{ ":/gradients/" + presetName };
-    if (gradXml.open(QFile::ReadOnly)) {
-        QString xml = QString::fromUtf8(gradXml.readAll());
-        ui->gradientWidget->setGradient(Gradient::fromXml(xml.toStdString()));
-        gradXml.close();
+    loadGradient(gradXml);
+}
+
+void GradientMenu::on_saveBtn_clicked()
+{
+    std::string xml = ui->gradientWidget->getGradient().toXml();
+    QString filename =
+            QFileDialog::getSaveFileName(this, tr("Save Gradient"), "", "Gradient XML Files (*.xml)");
+    if (!filename.isNull()) {
+        QFile saveFile{ filename };
+        bool opened = saveFile.open(QFile::WriteOnly);
+        if (!opened) {
+            QMessageBox::critical(this, tr("Error saving file"), tr("Error saving gradient: Could not open file."));
+        }
+        saveFile.write(QString::fromStdString(xml).toUtf8());
+        saveFile.close();
     }
+}
+
+void GradientMenu::on_loadBtn_clicked()
+{
+    QFileDialog openDialog{ this, tr("Load Gradient"), "", "" };
+    connect(&openDialog, &QFileDialog::fileSelected, [this] (const QString& name) {
+        QFile file{ name };
+        loadGradient(file);
+    });
+    openDialog.exec();
+}
+
+
+void GradientMenu::on_maxValSpb_valueChanged(double maxVal)
+{
+    const Gradient& old = ui->gradientWidget->getGradient();
+    float minVal = old.getPoints().at(old.getPoints().size() - 1).second;
+    if (maxVal < minVal) {
+        ui->maxValSpb->setValue(minVal);
+        maxVal = minVal;
+    }
+    Gradient g = Gradient{ old.getPoints(), float(maxVal), old.isRepeat() };
+    ui->gradientWidget->setGradient(std::move(g));
 }

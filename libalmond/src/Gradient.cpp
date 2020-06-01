@@ -6,6 +6,7 @@
 #include "XmlException.h"
 
 #include <cmath>
+#include <sstream>
 #include <algorithm>
 #include <functional>
 
@@ -49,7 +50,10 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, 
     CubicSpline bsp(bs, false, true);
 
     if(precalcSteps <= 0) {
-        precalcSteps = int(max * 15) + 10;
+        precalcSteps = int(max * 7) + 10;
+    }
+    if (precalcSteps > 12000) {
+        precalcSteps = 12000;
     }
 
     for (int i = 0; i < precalcSteps; i++) {
@@ -98,6 +102,9 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxVal,
 
     if(precalcSteps <= 0) {
         precalcSteps = int(max * 7) + 10;
+    }
+    if (precalcSteps > 12000) {
+        precalcSteps = 12000;
     }
 
     for (int i = 0; i < precalcSteps; i++) {
@@ -153,8 +160,14 @@ Gradient Gradient::fromXml(const std::string& xml)
         throw alm::XmlException{ "invalid root node" };
 
     bool repeat = false;
-    if (auto* re = dynamic_cast<XMLElement*>(rootNode))
-        repeat = re->BoolAttribute("repeat");
+    bool hasMax = false;
+    float maxVal = 0.0f;
+    if (auto* re = dynamic_cast<XMLElement*>(rootNode)) {
+        repeat = re->BoolAttribute("repeat", false);
+        XMLError e = re->QueryFloatAttribute("max", &maxVal);
+        if (e == XML_SUCCESS)
+            hasMax = true;
+    }
 
     std::vector<std::pair<RGBColor, float>> points;
 
@@ -172,8 +185,27 @@ Gradient Gradient::fromXml(const std::string& xml)
 
         colorNode = colorNode->NextSiblingElement("color");
     }
+    if (hasMax)
+        return Gradient{ std::move(points), maxVal, repeat };
+    else
+        return Gradient{ std::move(points), repeat };
+}
 
-    return Gradient{ std::move(points), repeat };
+
+std::string Gradient::toXml(void) const
+{
+    std::stringstream buf;
+
+    buf << "<gradient max=\"" << max << "\" repeat=\"" << (repeat ? "true" : "false") << "\">" << std::endl;
+    for (const auto&[color, val] : points) {
+        buf << "    <color " <<
+               "r=\"" << int(color.r) <<
+               "\" g=\"" << int(color.g) <<
+               "\" b=\"" << int(color.b) <<
+               "\" p=\"" << val << "\" />" << std::endl;
+    }
+    buf << "</gradient>" << std::endl;
+    return buf.str();
 }
 
 

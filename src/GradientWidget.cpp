@@ -45,6 +45,7 @@ void GradientWidget::updateGradient(void)
 {
     gradient = Gradient{ points, maxValue };
     update();
+    emit gradientChanged();
 }
 
 
@@ -97,13 +98,6 @@ void GradientWidget::paintEvent(QPaintEvent* e)
     QLinearGradient linGrad;
     linGrad.setStart(0, gradientRect.top());
     linGrad.setFinalStop(0, gradientRect.bottom());
-
-    const int stops = this->height() / 5;
-    /*for (int i = 0; i < stops; i++) {
-        auto col = gradient.get(float(i) / stops * gradient.getMax());
-        linGrad.setColorAt(float(i) / stops, QColor{ col.r, col.g, col.b });
-    }*/
-
     for (const auto& [col, at] : points) {
         linGrad.setColorAt(at / maxValue, QColor{ col.r, col.g, col.b });
     }
@@ -111,60 +105,12 @@ void GradientWidget::paintEvent(QPaintEvent* e)
     // adjust rect to have small margins, so the frame
     // around the gradient is visible
     gradientRect.adjust(fhmargins, fvmargins, -fhmargins, -fvmargins);
-    float lastPoint = 0;
-    QColor lastColor = QColor{ 0, 0, 0 };
-
-
-
-    /*std::vector<int> orderedIndices(points.size());
-    for (int i = 0; i < points.size(); i++)
-        orderedIndices.push_back(i);
-
-    std::sort(orderedIndices.begin(), orderedIndices.end(),
-        [this] (int l, int r) {
-        return points[l].first < points[r].first;
-    });
-
-    // traverse gradient in order and interpolate in linear
-    // RGB space to avoid interpolating in sRGB
-    for (int i = 0; i < orderedIndices.size(); i++) {
-        int index = orderedIndices[i];
-        auto& [point, color] = points[index];
-        int m = 17;
-        if (i > 0) {
-            for (int i = 0; i < m; i++) {
-                float v = float(i) / m;
-                gradient.setColorAt(lastPoint + (point - lastPoint) / m * i,
-                                    lerp(lastColor, color, v));
-            }
-        }
-        gradient.setColorAt(point, color);
-        lastPoint = point;
-        lastColor = color;
-    }*/
-
     QBrush brush{ linGrad };
     painter.fillRect(gradientRect, brush);
 
     int index = 0;
     for (auto& [color, point] : points) {
         QRect r = getHandleRect(index);
-        /*QStyleOptionButton so;
-        so.init(this);
-        so.rect = r;
-        if (dragging && selectedHandle == index)
-            so.state |= QStyle::State_Sunken;
-        else if (selectedHandle == index)
-            so.state |= QStyle::State_HasFocus;
-        else
-            so.state &= ~QStyle::State_Sunken & ~QStyle::State_HasFocus;
-        if (mouseOver == index)
-            so.state |= QStyle::State_MouseOver;
-        else
-            so.state &= ~QStyle::State_MouseOver;
-        
-        so.palette.setColor(QPalette::ColorRole::Button, color);
-        style()->drawControl(QStyle::ControlElement::CE_PushButton, &so, &painter, this);*/
         int hs = HandleState::HANDLE_NORMAL;
         if (dragging && selectedHandle == index)
             hs |= HANDLE_DOWN;
@@ -175,30 +121,6 @@ void GradientWidget::paintEvent(QPaintEvent* e)
         paintHandle(painter, r, fromRGB(color), hs);
         index++;
     }
-    /*for (auto&[point, color] : points) {
-        QStyleOptionSlider qsos;
-        qsos.rect = QRect{ 100, static_cast<int>(point * height() - 10), 20, 20 };
-        qsos.orientation = Qt::Vertical;
-        qsos.subControls = QStyle::SC_SliderHandle;
-        if (selectedHandle == index) {
-            qsos.state |= QStyle::State_Sunken;
-        }
-        else {
-            qsos.state &= ~QStyle::State_Sunken;
-        }
-        style()->drawComplexControl(QStyle::CC_Slider, &qsos, &painter, this);
-        index++;
-    }*/
-    /*
-
-    QPen pen(Qt::red);
-    pen.setWidth(10);
-    painter.setPen(pen);
-    painter.drawRect(30, 30, 50, 50);
-
-    painter.fillRect(QRect(0, 0, width(), height()), QColor{ 100, 20, 20 });
-    qDebug(std::to_string(width()).c_str());
-    */
 }
 
 

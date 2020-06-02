@@ -27,9 +27,14 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, 
             return a.second < b.second;
         });
 
+    for (auto& [col, at] : colors) {
+        pointMap[at] = col;
+    }
+
     points = colors;
     max = colors.at(colors.size() - 1).second;
 
+    return;
     std::vector<std::pair<RGBColorf, float>> linearColors;
     std::transform(colors.begin(), colors.end(), std::back_inserter(linearColors),
                    [] (auto c) { return c; });
@@ -78,9 +83,13 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxVal,
             return a.second < b.second;
         });
 
+    for (auto& [col, at] : colors) {
+        pointMap[at] = col;
+    }
+
     points = colors;
     max = maxVal;
-
+    return;
     std::vector<std::pair<RGBColorf, float>> linearColors;
     std::transform(colors.begin(), colors.end(), std::back_inserter(linearColors),
                    [] (auto c) { return c; });
@@ -217,6 +226,7 @@ float Gradient::getMax(void) const
 
 RGBColor Gradient::get(float x) const
 {
+    return interpolate(x);
     if (colors.empty() || std::isnan(x) || std::isinf(x))
         return RGBColor();
     /*const auto [left, right, lerp] = getNeighbors(x);
@@ -249,6 +259,38 @@ RGBColor Gradient::get(float x) const
     else {
         return lerpColors(colors[left], colors[right], lerp);
     }
+}
+
+
+RGBColor Gradient::interpolate(float x) const
+{
+    if (pointMap.empty()) {
+        return RGBColor{ 0, 0, 0 };
+    }
+
+    if (x < 0)
+        return pointMap.begin()->second;
+    if (x > this->max) {
+        if (repeat)
+            x = ::fmodf(x, this->max);
+        else
+            return (pointMap.rbegin())->second;
+    }
+
+    auto firstLess = pointMap.lower_bound(x);
+
+    if (firstLess == pointMap.begin())
+        return firstLess->second;
+    if (firstLess == pointMap.end())
+        return (pointMap.rbegin())->second;
+
+    auto oneBefore = firstLess; oneBefore--;
+    float lo = oneBefore->first;
+    float hi = firstLess->first;
+    RGBColor loCol = oneBefore->second;
+    RGBColor hiCol = firstLess->second;
+
+    return lerpColors(loCol, hiCol, (x - lo) / (hi - lo));
 }
 
 

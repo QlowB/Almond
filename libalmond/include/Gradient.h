@@ -2,6 +2,7 @@
 #define GRADIENT_H
 
 #include <vector>
+#include <map>
 #include <string>
 #include "Color.h"
 #include <tuple>
@@ -11,6 +12,8 @@
 class Gradient
 {
     std::vector<std::pair<RGBColor, float>> points;
+    std::map<float, RGBColor, std::greater<float>> pointMap;
+
     /// the colors of this gradient stored in linear RGB format
     /// so they can be easily interpolated
     std::vector<RGBColorf> colors;
@@ -44,6 +47,8 @@ public:
     /// \return the color in sRGB format
     ///
     RGBColor get(float x) const;
+
+    RGBColor interpolate(float x) const;
 private:
     static RGBColorf lerpColors(RGBColorf a, RGBColorf b, float val);
     static RGBColor lerpColors(RGBColor a, RGBColor b, float val);

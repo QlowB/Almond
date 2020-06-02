@@ -383,7 +383,7 @@
                 </property>
                 <property name="icon">
                  <iconset resource="../resources/Almond.qrc">
-                  <normaloff>:/icons/icons/cancel.svg</normaloff>:/icons/icons/cancel.svg</iconset>
+                  <normaloff>:/icons/cancel</normaloff>:/icons/cancel</iconset>
                 </property>
                </widget>
               </item>

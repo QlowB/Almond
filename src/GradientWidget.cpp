@@ -271,7 +271,10 @@ QSize GradientWidget::sizeHint(void) const
                     QSizePolicy::PushButton,
                     Qt::Horizontal);
     }
-    return QSize{ int(handleWidth * 1.1 + spacing), handleHeight };
+    int spacingV = this->style()->pixelMetric(
+                QStyle::PM_LayoutVerticalSpacing);
+    return QSize{ int(handleWidth * 1.1 + spacing),
+        2 * spacingV + 3 * handleHeight };
 }
 
 

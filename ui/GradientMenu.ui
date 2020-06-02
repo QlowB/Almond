@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>302</width>
+    <width>427</width>
     <height>508</height>
    </rect>
   </property>
@@ -73,12 +73,17 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QPushButton" name="zoomOutBtn">
-         <property name="icon">
-          <iconset resource="../resources/Almond.qrc">
-           <normaloff>:/icons/zoom_out</normaloff>:/icons/zoom_out</iconset>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-        </widget>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
        <item>
         <widget class="QPushButton" name="zoomInBtn">
@@ -86,17 +91,64 @@
           <iconset resource="../resources/Almond.qrc">
            <normaloff>:/icons/zoom_in</normaloff>:/icons/zoom_in</iconset>
          </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
         </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="zoomResetBtn">
+         <property name="icon">
+          <iconset resource="../resources/Almond.qrc">
+           <normaloff>:/icons/zoom_zero</normaloff>:/icons/zoom_zero</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="zoomOutBtn">
+         <property name="icon">
+          <iconset resource="../resources/Almond.qrc">
+           <normaloff>:/icons/zoom_out</normaloff>:/icons/zoom_out</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </item>
      <item>
       <widget class="QScrollArea" name="scrollArea">
-       <property name="verticalScrollBarPolicy">
-        <enum>Qt::ScrollBarAlwaysOn</enum>
+       <property name="frameShape">
+        <enum>QFrame::NoFrame</enum>
        </property>
-       <property name="sizeAdjustPolicy">
-        <enum>QAbstractScrollArea::AdjustToContents</enum>
+       <property name="lineWidth">
+        <number>0</number>
        </property>
        <property name="widgetResizable">
         <bool>true</bool>
@@ -106,26 +158,13 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>245</width>
-          <height>359</height>
+          <width>361</width>
+          <height>213</height>
          </rect>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <item>
-          <widget class="GradientWidget" name="gradientWidget" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>300</height>
-            </size>
-           </property>
-          </widget>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="GradientWidget" name="gradientWidget" native="true"/>
          </item>
         </layout>
        </widget>

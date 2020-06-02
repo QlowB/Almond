@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QTextEdit>
 
 const QString GradientMenu::presetNames[] = {
     "blue gold",
@@ -15,6 +16,38 @@ const QString GradientMenu::presetNames[] = {
     "peach",
     "rainbow"
 };
+
+
+MinHeightWrapperWidget::MinHeightWrapperWidget(QWidget* contains, QWidget* parent) :
+    QWidget{ parent },
+    widget{ contains }
+{
+    this->setContentsMargins(0, 0, 0, 0);
+    resize(300, 1200);
+    QVBoxLayout* l = new QVBoxLayout(this);
+    l->setStretch(0, 1);
+    this->setLayout(l);
+    widget->setParent(this);
+    widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
+    //this->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    this->layout()->update();
+}
+
+
+QSize MinHeightWrapperWidget::minimumSizeHint(void) const
+{
+    return QSize(300, 1200);
+    QSize minH = widget->minimumSizeHint();
+    return QSize(minH.width(), qMax(minH.height(), minHeight));
+}
+
+
+QSize MinHeightWrapperWidget::sizeHint(void) const
+{
+    return QSize(300, 1200);
+    QSize minH = widget->sizeHint();
+    return QSize(minH.width(), qMax(minH.height(), minHeight));
+}
 
 
 GradientMenu::GradientMenu(QWidget *parent) :
@@ -135,22 +168,33 @@ void GradientMenu::on_maxValSpb_valueChanged(double maxVal)
     ui->gradientWidget->setGradient(std::move(g));
 }
 
+
 void GradientMenu::on_zoomOutBtn_clicked()
 {
-    QSize size = ui->scrollArea->size();
-    if (size.height() * 0.9 >= ui->gradientWidget->sizeHint().height()) {
-        ui->gradientWidget->resize(size.width(), int(size.height() * 0.9));
+    int currentHeight = ui->gradientWidget->height();
+    int minHeight = ui->gradientWidget->sizeHint().height();
+    if (currentHeight * 0.9 >= minHeight) {
+        ui->gradientWidget->setFixedHeight(int(currentHeight * 0.9));
     }
     else {
-        ui->gradientWidget->resize(size.width(), ui->gradientWidget->sizeHint().height());
+        ui->gradientWidget->setFixedHeight(minHeight);
     }
-    ui->scrollArea->updateGeometry();
 }
+
 
 void GradientMenu::on_zoomInBtn_clicked()
 {
-    QSize size = ui->gradientWidget->size();
-    if (size.height() < 16000)
-        ui->gradientWidget->resize(size.width(), int(size.height() * 1.1));
-    ui->scrollArea->updateGeometry();
+    int currentHeight = ui->gradientWidget->height();
+    int maxHeight = 16000;
+    if (currentHeight * 1.1 <= maxHeight)
+        ui->gradientWidget->setFixedHeight(currentHeight * 1.1);
+    else
+        ui->gradientWidget->setFixedHeight(maxHeight);
+}
+
+
+void GradientMenu::on_zoomResetBtn_clicked()
+{
+    ui->gradientWidget->setMinimumHeight(ui->gradientWidget->minimumSizeHint().height());
+    ui->gradientWidget->setMaximumHeight(16000);
 }

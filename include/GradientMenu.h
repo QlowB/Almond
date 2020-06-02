@@ -12,6 +12,20 @@ namespace Ui {
 class GradientMenu;
 }
 
+
+class MinHeightWrapperWidget :
+    public QWidget
+{
+    Q_OBJECT
+    int minHeight;
+    QWidget* widget;
+public:
+    MinHeightWrapperWidget(QWidget* contains, QWidget* parent);
+    QSize minimumSizeHint(void) const override;
+    QSize sizeHint(void) const override;
+};
+
+
 class GradientMenu : public QWidget
 {
     Q_OBJECT
@@ -41,6 +55,7 @@ private slots:
     void on_maxValSpb_valueChanged(double maxVal);
     void on_zoomOutBtn_clicked();
     void on_zoomInBtn_clicked();
+    void on_zoomResetBtn_clicked();
 };
 
 #endif // GRADIENTMENU_H

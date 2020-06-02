@@ -75,11 +75,11 @@ public:
     ~Almond(void);
 
     void submitBackgroundTask(BackgroundTask* task);
-    void stopBackgroundTask();
+    void stopBackgroundTask(void);
 
     void closeEvent(QCloseEvent* ce) override;
 
-    bool eventFilter(QObject *target, QEvent *event);
+    bool eventFilter(QObject *target, QEvent *event) override;
 
     void submenuOK(int smIndex);
     void imageExportOk(void);

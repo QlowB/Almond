@@ -100,6 +100,10 @@ QSize AlmondMenuWidget::sizeHint(void) const
         if (hint.height() < widgetHint.height())
             hint.setHeight(widgetHint.height());
     }
+    QMargins m = contentsMargins();
+    m += subMenuContainer->contentsMargins();
+    hint.setWidth(hint.width() + m.left() + m.right());
+    hint.setHeight(hint.height() + m.top() + m.bottom());
     return hint;
 }
 
@@ -116,6 +120,10 @@ QSize AlmondMenuWidget::minimumSizeHint(void) const
         if (hint.height() < widgetHint.height())
             hint.setHeight(widgetHint.height());
     }
+    QMargins m = contentsMargins();
+    m += subMenuContainer->contentsMargins();
+    hint.setWidth(hint.width() + m.left() + m.right());
+    hint.setHeight(hint.height() + m.top() + m.bottom());
     return hint;
 }
 

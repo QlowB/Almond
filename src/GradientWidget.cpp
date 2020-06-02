@@ -53,27 +53,6 @@ QColor GradientWidget::colorAtY(float y)
 {
     float v = handleYToGradVal(y);
     return fromRGB(gradient.get(v));
-    /*float v = handleYToGradVal(y);
-    QColor up = QColor(QColor::Invalid);
-    QColor down = QColor(QColor::Invalid);
-    float upv = 0;
-    float downv = 1;
-    for (const auto& [color, val] : points) {
-        if (val >= upv && val < v) {
-            upv = val;
-            up = QColor(color.r, color.g, color.b);
-        }
-        if (val <= downv && val > v) {
-            downv = val;
-            down = QColor(color.r, color.g, color.b);
-        }
-    }
-
-    if (!up.isValid())
-        return down;
-    if (!down.isValid())
-        return up;
-    return lerp(up, down, (v - upv) / (downv - upv));*/
 }
 
 

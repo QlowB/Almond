@@ -10,17 +10,13 @@ Files: libmandel/asmjit/*
 Copyright: 2008-2020 The AsmJit Authors
 License: Zlib
 
+Files: libalmond/tinyxml2/*
+Copyright:
+License: Zlib
+
 Files: libmandel/qd-2.3.22/*
 Copyright: 
 License: BSD-3-Clause-LBNL
-
-Files: libalmond/lpng1637/*
-Copyright: 
-License: Libpng
-
-Files: libalmond/zlib-1.2.11/
-Copyright: 1995-2017 Jean-loup Gailly and Mark Adler
-License: Zlib
 
 License: Zlib
 This software is provided 'as-is', without any express or implied warranty. In

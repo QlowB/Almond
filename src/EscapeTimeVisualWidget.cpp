@@ -192,9 +192,6 @@ void EscapeTimeVisualWidget::initializeGL(void)
     fprintf(stdout, "version: %s\n", gl.glGetString(GL_VERSION));
     fflush(stdout);
 
-    // looks not even better
-    //gl.glEnable(GL_FRAMEBUFFER_SRGB);
-
     //glShadeModel(GL_SMOOTH);
 
     renderTextures = new QOpenGLShaderProgram{ this->context() };

@@ -34,6 +34,12 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, 
     points = colors;
     max = colors.at(colors.size() - 1).second;
 
+    std::vector<std::pair<float, RGBColorf>> fs;
+    for (const auto& [col, pos] : points) {
+        fs.push_back(std::make_pair(pos, col));
+    }
+    colorSpline = ColorSpline{ fs, false, false };
+    
     return;
     std::vector<std::pair<RGBColorf, float>> linearColors;
     std::transform(colors.begin(), colors.end(), std::back_inserter(linearColors),
@@ -89,6 +95,13 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxVal,
 
     points = colors;
     max = maxVal;
+    
+
+    std::vector<std::pair<float, RGBColorf>> fs;
+    for (const auto& [col, pos] : points) {
+        fs.push_back(std::make_pair(pos, col));
+    }
+    colorSpline = ColorSpline{ fs, false, false };
     return;
     std::vector<std::pair<RGBColorf, float>> linearColors;
     std::transform(colors.begin(), colors.end(), std::back_inserter(linearColors),
@@ -205,7 +218,9 @@ std::string Gradient::toXml(void) const
 {
     std::stringstream buf;
 
-    buf << "<gradient max=\"" << max << "\" repeat=\"" << (repeat ? "true" : "false") << "\">" << std::endl;
+    std::string version = "1.0.0";
+    buf << "<gradient max=\"" << max << "\" repeat=\"" << (repeat ? "true" : "false") 
+        << "\" version=\"" << version << "\" >" << std::endl;
     for (const auto&[color, val] : points) {
         buf << "    <color " <<
                "r=\"" << int(color.r) <<
@@ -264,6 +279,8 @@ RGBColor Gradient::get(float x) const
 
 RGBColor Gradient::interpolate(float x) const
 {
+    return colorSpline.interpolateAt(x);
+    
     if (pointMap.empty()) {
         return RGBColor{ 0, 0, 0 };
     }

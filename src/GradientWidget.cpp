@@ -77,8 +77,17 @@ void GradientWidget::paintEvent(QPaintEvent* e)
     QLinearGradient linGrad;
     linGrad.setStart(0, gradientRect.top());
     linGrad.setFinalStop(0, gradientRect.bottom());
-    for (const auto& [col, at] : points) {
+    for (auto it = points.cbegin(); it != points.cend(); it++) {
+        float at = it->second;
+        RGBColor col = it->first;
         linGrad.setColorAt(at / maxValue, QColor{ col.r, col.g, col.b });
+        /*if (it + 1 != points.cend()) {
+            float nat = (it + 1)->second;
+            for (int i = 0; i < 5; i++) {
+                float iat = at + i * (nat - at) / 5.0;
+                linGrad.setColorAt(iat / maxValue, fromRGB(gradient.get(iat)));
+            }
+        }*/
     }
 
     // adjust rect to have small margins, so the frame

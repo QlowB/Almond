@@ -9,19 +9,20 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
    sodipodi:docname="zoom_zero.svg"
-   width="210mm"
-   height="297mm"
-   viewBox="0 0 210 297"
+   width="64"
+   height="64"
+   viewBox="0 0 16.933333 16.933333"
    version="1.1"
    id="svg8">
   <sodipodi:namedview
+     units="px"
      inkscape:current-layer="layer1"
      inkscape:window-maximized="0"
      inkscape:window-y="34"
      inkscape:window-x="0"
-     inkscape:cy="561.25984"
-     inkscape:cx="36.27941"
-     inkscape:zoom="0.74742565"
+     inkscape:cy="8.3242034"
+     inkscape:cx="41.722802"
+     inkscape:zoom="5.5928823"
      showgrid="false"
      id="namedview10"
      inkscape:window-height="1360"
@@ -33,7 +34,12 @@
      objecttolerance="10"
      borderopacity="1"
      bordercolor="#666666"
-     pagecolor="#ffffff" />
+     pagecolor="#ffffff"
+     inkscape:document-rotation="0"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
   <defs
      id="defs2" />
   <metadata
@@ -49,28 +55,29 @@
     </rdf:RDF>
   </metadata>
   <g
-     id="layer1">
+     id="layer1"
+     transform="translate(-2.1009127,-45.367542)">
     <ellipse
-       style="fill:none;stroke:#000000;stroke-width:16;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
-       id="path4526"
-       cx="69.093491"
-       cy="112.36012"
-       rx="58.992577"
-       ry="58.99258" />
+       cx="8.6986227"
+       cy="51.862511"
+       rx="3.9521058"
+       ry="3.8493688"
+       style="fill:none;stroke:#000000;stroke-width:1.05787;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+       id="path4526" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:16.00000045;stroke-linecap:round;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none;paint-order:stroke fill markers"
-       d="m 111.18412,154.81261 72.69731,76.97362"
+       style="fill:none;stroke:#000000;stroke-width:1.05787;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+       d="m 11.518412,54.63261 4.87023,5.022664"
        id="path4584" />
     <ellipse
-       ry="33.163971"
-       rx="21.126312"
-       cy="112.36012"
-       cx="69.093491"
+       ry="2.1640072"
+       rx="1.4153208"
+       cy="51.862511"
+       cx="8.6986227"
        id="path12"
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:13.8082;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.912953;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
     <path
        id="path863"
-       d="M 57.790024,90.093966 81.672225,136.93685"
-       style="fill:none;stroke:#000000;stroke-width:7.93750002;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none" />
+       d="m 7.9413666,50.409606 1.5999468,3.05658"
+       style="fill:none;stroke:#000000;stroke-width:0.524802;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
   </g>
 </svg>

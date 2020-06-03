@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include "Color.h"
+#include "CubicSpline.h"
 #include <tuple>
 #include <cinttypes>
 
@@ -13,6 +14,7 @@ class Gradient
 {
     std::vector<std::pair<RGBColor, float>> points;
     std::map<float, RGBColor, std::greater<float>> pointMap;
+    ColorSpline colorSpline;
 
     /// the colors of this gradient stored in linear RGB format
     /// so they can be easily interpolated

@@ -11,6 +11,7 @@
 
 #include <vector>
 
+using alm::Gradient;
 
 ETVImage::ETVImage(EscapeTimeVisualWidget& owner,
                    const Bitmap<float>& img) :

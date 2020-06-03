@@ -1,5 +1,5 @@
-#ifndef GRADIENT_H
-#define GRADIENT_H
+#ifndef LIBALMOND_GRADIENT_H
+#define LIBALMOND_GRADIENT_H
 
 #include <vector>
 #include <map>
@@ -8,9 +8,16 @@
 #include "CubicSpline.h"
 #include <tuple>
 #include <cinttypes>
+#include <memory>
 
 
-class Gradient
+namespace alm
+{
+    class Gradient;
+}
+
+
+class alm::Gradient
 {
     std::vector<std::pair<RGBColor, float>> points;
     std::map<float, RGBColor, std::greater<float>> pointMap;
@@ -27,12 +34,9 @@ public:
     Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxValue, bool repeat = false, int precalcSteps = -1);
 
     const std::vector<std::pair<RGBColor, float>>& getPoints(void) const;
-    inline bool isRepeat(void) const { return repeat; }
-
     static Gradient defaultGradient(void);
+    bool isRepeat(void) const;
 
-    static Gradient fromXml(const std::string& xml);
-    std::string toXml(void) const;
 
     ///
     /// \brief get the maximum value this gradient accepts
@@ -57,4 +61,4 @@ private:
     std::tuple<RGBColor, RGBColor, float> getNeighbors(float x) const;
 };
 
-#endif // GRADIENT_H
+#endif // LIBALMOND_GRADIENT_H

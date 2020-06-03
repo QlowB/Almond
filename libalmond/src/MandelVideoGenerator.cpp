@@ -5,6 +5,8 @@
 #include <cmath>
 #include <omp.h>
 
+using alm::Gradient;
+
 MandelVideoGenerator::MandelVideoGenerator(const ExportVideoInfo& evi) :
     evi{ evi }
 {

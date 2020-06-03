@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <cmath>
 
+using alm::Gradient;
+
 GradientWidget::GradientWidget(QWidget* parent) :
     QWidget{ parent }
 {

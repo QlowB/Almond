@@ -1,12 +1,15 @@
 #include "GradientMenu.h"
 #include "ui_GradientMenu.h"
 
+#include "Serialize.h"
 #include "XmlException.h"
 
 #include <QFile>
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QTextEdit>
+
+using alm::Gradient;
 
 const QString GradientMenu::presetNames[] = {
     "blue gold",
@@ -16,38 +19,6 @@ const QString GradientMenu::presetNames[] = {
     "peach",
     "rainbow"
 };
-
-
-MinHeightWrapperWidget::MinHeightWrapperWidget(QWidget* contains, QWidget* parent) :
-    QWidget{ parent },
-    widget{ contains }
-{
-    this->setContentsMargins(0, 0, 0, 0);
-    resize(300, 1200);
-    QVBoxLayout* l = new QVBoxLayout(this);
-    l->setStretch(0, 1);
-    this->setLayout(l);
-    widget->setParent(this);
-    widget->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
-    //this->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    this->layout()->update();
-}
-
-
-QSize MinHeightWrapperWidget::minimumSizeHint(void) const
-{
-    return QSize(300, 1200);
-    QSize minH = widget->minimumSizeHint();
-    return QSize(minH.width(), qMax(minH.height(), minHeight));
-}
-
-
-QSize MinHeightWrapperWidget::sizeHint(void) const
-{
-    return QSize(300, 1200);
-    QSize minH = widget->sizeHint();
-    return QSize(minH.width(), qMax(minH.height(), minHeight));
-}
 
 
 GradientMenu::GradientMenu(QWidget *parent) :
@@ -101,7 +72,7 @@ void GradientMenu::loadGradient(QFile& file)
     if (file.isOpen() || file.open(QFile::ReadOnly)) {
         QString xml = QString::fromUtf8(file.readAll());
         try {
-            ui->gradientWidget->setGradient(Gradient::fromXml(xml.toStdString()));
+            ui->gradientWidget->setGradient(alm::loadGradient(xml.toStdString()));
         } catch (alm::XmlException& xmlex) {
             QMessageBox::critical(this, tr("Error Loading Gradient"), tr("Error loading gradient: ") + xmlex.what());
         } catch (...) {
@@ -131,7 +102,7 @@ void GradientMenu::on_presetCmb_currentIndexChanged(int index)
 
 void GradientMenu::on_saveBtn_clicked()
 {
-    std::string xml = ui->gradientWidget->getGradient().toXml();
+    std::string xml = alm::saveGradient(ui->gradientWidget->getGradient());
     QString filename =
             QFileDialog::getSaveFileName(this, tr("Save Gradient"), "", "Gradient XML Files (*.xml)");
     if (!filename.isNull()) {

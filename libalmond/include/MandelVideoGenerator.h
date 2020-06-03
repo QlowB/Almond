@@ -19,7 +19,7 @@ struct ExportVideoInfo
     mnd::MandelInfo mi;
 
     /// the gradient to use
-    Gradient gradient;
+    alm::Gradient gradient;
 
     int fps;
     double zoomSpeed;

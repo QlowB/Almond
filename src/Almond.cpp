@@ -19,7 +19,7 @@ Almond::Almond(QWidget* parent) :
     ui.setupUi(this);
     fractalWidget = new FractalWidget(this);
     fractalWidget->setGenerator(&mandelContext.getDefaultGenerator());
-    fractalWidget->setGradient(Gradient::defaultGradient());
+    fractalWidget->setGradient(alm::Gradient::defaultGradient());
     fractalWidget->setSmoothColoring(ui.smooth->isChecked());
     QSizePolicy fsp{ QSizePolicy::Expanding, QSizePolicy::Expanding };
     fsp.setHorizontalStretch(2);

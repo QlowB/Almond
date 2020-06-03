@@ -41,7 +41,7 @@ protected:
     GLuint gradientTextureId;
     float gradientTextureMax;
     float maxIterations;
-    Gradient gradient;
+    alm::Gradient gradient;
     bool gradientNeedsUpdate;
 
     float resolutionX;
@@ -53,8 +53,8 @@ protected:
 public:
     EscapeTimeVisualWidget(QWidget* parent = nullptr);
 
-    void setGradient(Gradient newGradient);
-    const Gradient& getGradient(void);
+    void setGradient(alm::Gradient newGradient);
+    const alm::Gradient& getGradient(void);
 
     virtual void initializeGL(void) override;
     virtual void resizeGL(int w, int h) override;

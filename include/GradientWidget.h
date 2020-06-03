@@ -15,7 +15,7 @@ class GradientWidget :
     Q_OBJECT
 
     std::vector<std::pair<RGBColor, float>> points;
-    Gradient gradient;
+    alm::Gradient gradient;
     float maxValue;
 
     QColorDialog* colorPicker;
@@ -41,8 +41,8 @@ public:
 
     explicit GradientWidget(QWidget *parent = nullptr);
 
-    const Gradient& getGradient(void) const;
-    void setGradient(Gradient gradient);
+    const alm::Gradient& getGradient(void) const;
+    void setGradient(alm::Gradient gradient);
 
 private:
     void updateGradient(void);

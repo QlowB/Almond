@@ -108,8 +108,8 @@ void FractalWidget::mouseReleaseEvent(QMouseEvent* me)
 void FractalWidget::wheelEvent(QWheelEvent* we)
 {
     QOpenGLWidget::wheelEvent(we);
-    float x = float(we->x()) / this->width();
-    float y = float(we->y()) / this->height();
+    float x = float(we->position().x()) / this->width();
+    float y = float(we->position().y()) / this->height();
     float scale = ::powf(0.9975f, we->angleDelta().y());
     //mandelInfo.view.zoom(scale, x, y);
     zoom(scale, x, y);

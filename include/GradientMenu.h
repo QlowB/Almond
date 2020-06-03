@@ -13,34 +13,21 @@ class GradientMenu;
 }
 
 
-class MinHeightWrapperWidget :
-    public QWidget
-{
-    Q_OBJECT
-    int minHeight;
-    QWidget* widget;
-public:
-    MinHeightWrapperWidget(QWidget* contains, QWidget* parent);
-    QSize minimumSizeHint(void) const override;
-    QSize sizeHint(void) const override;
-};
-
-
 class GradientMenu : public QWidget
 {
     Q_OBJECT
 
     Ui::GradientMenu *ui;
-    Gradient before;
+    alm::Gradient before;
 
     static const QString presetNames[];
 public:
     explicit GradientMenu(QWidget *parent = nullptr);
     ~GradientMenu(void);
 
-    const Gradient& getGradient(void);
-    const Gradient& getGradientBefore(void) const;
-    void setGradient(Gradient grad);
+    const alm::Gradient& getGradient(void);
+    const alm::Gradient& getGradientBefore(void) const;
+    void setGradient(alm::Gradient grad);
 
     void loadGradient(QFile& file);
 

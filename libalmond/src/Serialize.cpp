@@ -15,7 +15,8 @@ using tinyxml2::XMLNode;
 using tinyxml2::XML_SUCCESS;
 
 
-alm::Gradient alm::deserializeGradient(XMLElement* elem)
+template<>
+alm::Gradient alm::deserialize<alm::Gradient>(XMLElement* elem)
 {
     if (elem == nullptr)
         throw alm::XmlException{ "invalid root node" };
@@ -51,17 +52,27 @@ alm::Gradient alm::deserializeGradient(XMLElement* elem)
 }
 
 
-alm::Gradient alm::loadGradient(const std::string& xml)
+
+template<>
+tinyxml2::XMLElement* alm::serialize<alm::Gradient>(tinyxml2::XMLDocument& doc, const alm::Gradient&)
+{
+    return nullptr;
+}
+
+
+template<>
+alm::Gradient alm::fromXml<alm::Gradient>(const std::string& xml)
 {
     XMLDocument xmlDoc;
     XMLError err = xmlDoc.Parse(xml.c_str());
     if (err != XML_SUCCESS)
         throw alm::XmlException{ "error parsing gradient xml" };
-    return deserializeGradient(xmlDoc.RootElement());
+    return deserialize<Gradient>(xmlDoc.RootElement());
 }
 
 
-std::string alm::saveGradient(const Gradient& g)
+template<>
+std::string alm::toXml<alm::Gradient>(const alm::Gradient& g)
 {
     std::stringstream buf;
 
@@ -79,6 +90,3 @@ std::string alm::saveGradient(const Gradient& g)
     return buf.str();
 }
 
-
-ImageView deserializeImageView(tinyxml2::XMLElement* xml);
-std::unique_ptr<tinyxml2::XMLElement> serializeImageView(const ImageView& iv);

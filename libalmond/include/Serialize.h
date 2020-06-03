@@ -9,24 +9,38 @@
 
 namespace tinyxml2
 {
-    struct XMLElement;
+    class XMLElement;
+    class XMLDocument;
 }
+
 
 namespace alm
 {
     struct ImageView;
 
-    Gradient deserializeGradient(tinyxml2::XMLElement* xml);
-    std::unique_ptr<tinyxml2::XMLElement> serializeGradient(const Gradient& g);
 
-    Gradient loadGradient(const std::string& xml);
-    std::string saveGradient(const Gradient& g);
+    template<typename T>
+    tinyxml2::XMLElement* serialize(tinyxml2::XMLDocument& doc, const T&);
 
-    ImageView deserializeImageView(tinyxml2::XMLElement* xml);
-    std::unique_ptr<tinyxml2::XMLElement> serializeImageView(const ImageView& iv);
+    template<typename T>
+    std::string toXml(const T&);
 
-    ImageView loadImageView(const std::string& xml);
-    std::string saveImageView(const ImageView& iv);
+    template<typename T>
+    T deserialize(tinyxml2::XMLElement* xml);
+
+    template<typename T>
+    T fromXml(const std::string& xml);
+
+
+    // specializations
+    template<>
+    tinyxml2::XMLElement* serialize<Gradient>(tinyxml2::XMLDocument& doc, const Gradient&);
+    template<>
+    std::string toXml<Gradient>(const Gradient&);
+    template<>
+    Gradient deserialize<Gradient>(tinyxml2::XMLElement* xml);
+    template<>
+    Gradient fromXml<Gradient>(const std::string& xml);
 }
 
 

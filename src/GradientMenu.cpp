@@ -15,6 +15,7 @@ const QString GradientMenu::presetNames[] = {
     "blue gold",
     "clouds",
     "oldschool",
+    "element",
     "grayscale",
     "peach",
     "rainbow"
@@ -72,7 +73,7 @@ void GradientMenu::loadGradient(QFile& file)
     if (file.isOpen() || file.open(QFile::ReadOnly)) {
         QString xml = QString::fromUtf8(file.readAll());
         try {
-            ui->gradientWidget->setGradient(alm::loadGradient(xml.toStdString()));
+            ui->gradientWidget->setGradient(alm::fromXml<alm::Gradient>(xml.toStdString()));
         } catch (alm::XmlException& xmlex) {
             QMessageBox::critical(this, tr("Error Loading Gradient"), tr("Error loading gradient: ") + xmlex.what());
         } catch (...) {
@@ -102,7 +103,7 @@ void GradientMenu::on_presetCmb_currentIndexChanged(int index)
 
 void GradientMenu::on_saveBtn_clicked()
 {
-    std::string xml = alm::saveGradient(ui->gradientWidget->getGradient());
+    std::string xml = alm::toXml(ui->gradientWidget->getGradient());
     QString filename =
             QFileDialog::getSaveFileName(this, tr("Save Gradient"), "", "Gradient XML Files (*.xml)");
     if (!filename.isNull()) {

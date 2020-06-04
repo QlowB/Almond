@@ -30,8 +30,8 @@ class alm::Gradient
     bool repeat;
 public:
     Gradient(void);
-    Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat = false, int precalcSteps = -1);
-    Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxValue, bool repeat = false, int precalcSteps = -1);
+    Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat = true);
+    Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxValue, bool repeat = true);
 
     const std::vector<std::pair<RGBColor, float>>& getPoints(void) const;
     static Gradient defaultGradient(void);

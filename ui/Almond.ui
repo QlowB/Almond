@@ -65,7 +65,7 @@
           <x>0</x>
           <y>0</y>
           <width>593</width>
-          <height>1063</height>
+          <height>1124</height>
          </rect>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -98,20 +98,6 @@
               <string>Zoom</string>
              </property>
              <layout class="QGridLayout" name="gridLayout_2">
-              <item row="1" column="3">
-               <widget class="QPushButton" name="zoom_out">
-                <property name="icon">
-                 <iconset resource="../resources/Almond.qrc">
-                  <normaloff>:/icons/zoom_out</normaloff>:/icons/zoom_out</iconset>
-                </property>
-                <property name="iconSize">
-                 <size>
-                  <width>32</width>
-                  <height>32</height>
-                 </size>
-                </property>
-               </widget>
-              </item>
               <item row="1" column="1">
                <widget class="QPushButton" name="resetZoom">
                 <property name="sizePolicy">
@@ -145,6 +131,38 @@
                  </size>
                 </property>
                </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QPushButton" name="zoom_out">
+                <property name="icon">
+                 <iconset resource="../resources/Almond.qrc">
+                  <normaloff>:/icons/zoom_out</normaloff>:/icons/zoom_out</iconset>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>32</width>
+                  <height>32</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0" colspan="3">
+               <layout class="QHBoxLayout" name="horizontalLayout_6">
+                <item>
+                 <widget class="QPushButton" name="loadBtn">
+                  <property name="text">
+                   <string>Load View</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="saveBtn">
+                  <property name="text">
+                   <string>Save View</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
               </item>
              </layout>
             </widget>

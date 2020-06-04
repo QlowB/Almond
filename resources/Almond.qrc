@@ -15,6 +15,7 @@
         <file alias="peach">gradients/peach.xml</file>
         <file alias="blue gold">gradients/blue_gold.xml</file>
         <file alias="element">gradients/element.xml</file>
+        <file alias="ikea">gradients/ikea.xml</file>
     </qresource>
     <qresource prefix="/about">
         <file alias="about_en">about_en.html</file>

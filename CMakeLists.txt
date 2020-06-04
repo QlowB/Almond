@@ -21,6 +21,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 FILE(GLOB AlmondSources src/*.cpp)
 FILE(GLOB AlmondHeaders include/*.h)
+FILE(GLOB AlmondUIs ui/*.ui)
 
 
 IF (WIN32)
@@ -28,11 +29,13 @@ IF (WIN32)
                    resources/Almond.qrc
                    resources/splash.qrc
                    resources/icon.rc
+                   ${AlmondUIs}
                    ${AlmondHeaders})
 ELSE()
     add_executable(Almond ${AlmondSources}
                    resources/Almond.qrc
                    resources/splash.qrc
+                   ${AlmondUIs}
                    ${AlmondHeaders})
     set_target_properties(Almond PROPERTIES OUTPUT_NAME "almond")
 ENDIF()

@@ -16,6 +16,7 @@ const QString GradientMenu::presetNames[] = {
     "clouds",
     "oldschool",
     "element",
+    "ikea",
     "grayscale",
     "peach",
     "rainbow"

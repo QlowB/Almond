@@ -119,6 +119,10 @@ private slots:
 
     void on_aboutBtn_clicked();
 
+    void on_loadBtn_clicked();
+
+    void on_saveBtn_clicked();
+
 private:
     Ui::AlmondClass ui;
 };

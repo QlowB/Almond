@@ -242,8 +242,8 @@ void FractalWidget::drawDisplayInfo(void)
     QPainter infoPainter{ this };
 
     const float DIST_FROM_BORDER = 15;
-    float maxWidth = this->width() - 2 * DIST_FROM_BORDER;
-    mnd::Real distPerPixel = getViewport().width / this->width();
+    float maxWidth = getResolutionX() - 2 * DIST_FROM_BORDER;
+    mnd::Real distPerPixel = getViewport().width / getResolutionX();
     float log10 = (mnd::convert<float>(mnd::log(distPerPixel)) + ::logf(maxWidth)) / ::logf(10);
     mnd::Real displayDist = mnd::pow(mnd::Real(10), ::floor(log10));
     float pixels = mnd::convert<float>(displayDist / distPerPixel);
@@ -270,7 +270,7 @@ void FractalWidget::drawDisplayInfo(void)
     }
 
     float lineY = this->height() - DIST_FROM_BORDER;
-    float lineXEnd = DIST_FROM_BORDER + pixels;
+    float lineXEnd = DIST_FROM_BORDER + pixels / devicePixelRatioF();
 
     infoPainter.setPen(Qt::white);
     infoPainter.setFont(QFont("Arial", 12));

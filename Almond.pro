@@ -31,7 +31,6 @@ SOURCES += \
         src/Almond.cpp \
         src/AlmondMenuWidget.cpp \
         src/BackgroundTask.cpp \
-        src/Color.cpp \
         src/EscapeTimeVisualWidget.cpp \
         src/ExportImageMenu.cpp \
         src/ExportVideoMenu.cpp \
@@ -50,7 +49,6 @@ HEADERS += \
         include/Almond.h \
         include/AlmondMenuWidget.h \
         include/BackgroundTask.h \
-        include/Color.h \
         include/EscapeTimeVisualWidget.h \
         include/ExportImageMenu.h \
         include/ExportVideoMenu.h \

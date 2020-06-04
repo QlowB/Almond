@@ -20,7 +20,7 @@ namespace alm
 
 
     template<typename T>
-    tinyxml2::XMLElement* serialize(tinyxml2::XMLDocument& doc, const T&);
+    void serialize(tinyxml2::XMLElement* elem, const T&);
 
     template<typename T>
     std::string toXml(const T&);
@@ -34,13 +34,33 @@ namespace alm
 
     // specializations
     template<>
-    tinyxml2::XMLElement* serialize<Gradient>(tinyxml2::XMLDocument& doc, const Gradient&);
-    template<>
-    std::string toXml<Gradient>(const Gradient&);
+    void serialize<Gradient>(tinyxml2::XMLElement* elem, const Gradient&);
     template<>
     Gradient deserialize<Gradient>(tinyxml2::XMLElement* xml);
     template<>
+    std::string toXml<Gradient>(const Gradient&);
+    template<>
     Gradient fromXml<Gradient>(const std::string& xml);
+
+
+    template<>
+    void serialize<mnd::MandelViewport>(tinyxml2::XMLElement* elem, const mnd::MandelViewport&);
+    template<>
+    mnd::MandelViewport deserialize<mnd::MandelViewport>(tinyxml2::XMLElement* xml);
+
+    template<>
+    void serialize<mnd::MandelInfo>(tinyxml2::XMLElement* elem, const mnd::MandelInfo&);
+    template<>
+    mnd::MandelInfo deserialize<mnd::MandelInfo>(tinyxml2::XMLElement* xml);
+
+    template<>
+    void serialize<ImageView>(tinyxml2::XMLElement* elem, const ImageView&);
+    template<>
+    ImageView deserialize<ImageView>(tinyxml2::XMLElement* xml);
+    template<>
+    std::string toXml<ImageView>(const ImageView&);
+    template<>
+    ImageView fromXml<ImageView>(const std::string& xml);
 }
 
 
@@ -48,9 +68,6 @@ struct alm::ImageView
 {
     mnd::MandelInfo view;
     Gradient gradient;
-
-    std::string toXml(void) const;
-    static ImageView fromXml(const std::string& xml);
 };
 
 #endif // LIBALMOND_SERIALIZE_H

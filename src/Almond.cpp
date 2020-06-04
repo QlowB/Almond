@@ -8,7 +8,7 @@
 #include <QWindow>
 #include <QKeyEvent>
 
-#include "GridFlowLayout.h"
+#include "Serialize.h"
 
 #include <cmath>
 
@@ -525,4 +525,37 @@ void Almond::on_cancelProgress_clicked()
 void Almond::on_aboutBtn_clicked()
 {
     amw->showSubMenu(3);
+}
+
+
+void Almond::on_loadBtn_clicked()
+{
+    QString filename =
+        QFileDialog::getOpenFileName(this, tr("Load View"), "", "Almond XML Files (*.xml)");
+    QFile file{ filename };
+    if (file.open(QFile::ReadOnly)) {
+        alm::ImageView iv = alm::fromXml<alm::ImageView>(file.readAll().toStdString());
+        this->ui.smooth->setCheckState(iv.view.smooth ? Qt::Checked : Qt::Unchecked);
+        this->ui.maxIterations->setText(QString::number(iv.view.maxIter));
+        this->fractalWidget->setMaxIterations(iv.view.maxIter);
+        this->fractalWidget->setSmoothColoring(iv.view.smooth);
+        this->fractalWidget->setGradient(iv.gradient);
+        this->fractalWidget->setViewport(iv.view.view);
+    }
+}
+
+void Almond::on_saveBtn_clicked()
+{
+    QString filename =
+        QFileDialog::getSaveFileName(this, tr("Save View"), "", "Almond XML Files (*.xml)");
+    QFile file{ filename };
+    if (file.open(QFile::WriteOnly)) {
+        alm::ImageView iv;
+        iv.view = fractalWidget->getMandelInfo();
+        iv.view.bWidth = fractalWidget->getResolutionX();
+        iv.view.bHeight = fractalWidget->getResolutionY();
+        iv.gradient = fractalWidget->getGradient();
+        const std::string& xml = alm::toXml(iv);
+        file.write(xml.c_str());
+    }
 }

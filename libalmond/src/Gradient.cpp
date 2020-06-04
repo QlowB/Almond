@@ -17,7 +17,7 @@ Gradient::Gradient(void) :
 }
 
 
-Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, int precalcSteps) :
+Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat) :
     repeat{ repeat }
 {
     if(colors.empty() || colors.size() < 2)
@@ -41,45 +41,10 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, bool repeat, 
     colorSpline = ColorSpline{ fs, false, false };
     
     return;
-    std::vector<std::pair<RGBColorf, float>> linearColors;
-    std::transform(colors.begin(), colors.end(), std::back_inserter(linearColors),
-                   [] (auto c) { return c; });
-
-    std::vector<std::pair<float, float>> rs;
-    std::vector<std::pair<float, float>> gs;
-    std::vector<std::pair<float, float>> bs;
-
-    std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(rs),
-                   [] (auto p) { return std::pair{ p.second, p.first.r }; });
-    std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(gs),
-                   [] (auto p) { return std::pair{ p.second, p.first.g }; });
-    std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(bs),
-                   [] (auto p) { return std::pair{ p.second, p.first.b }; });
-
-    CubicSpline rsp(rs, false, true);
-    CubicSpline gsp(gs, false, true);
-    CubicSpline bsp(bs, false, true);
-
-    if(precalcSteps <= 0) {
-        precalcSteps = int(max * 7) + 10;
-    }
-    if (precalcSteps > 12000) {
-        precalcSteps = 12000;
-    }
-
-    for (int i = 0; i < precalcSteps; i++) {
-        float position = i * max / precalcSteps;
-        RGBColorf at = {
-            rsp.interpolateAt(position),
-            gsp.interpolateAt(position),
-            bsp.interpolateAt(position)
-        };
-        this->colors.push_back(at);
-    }
 }
 
 
-Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxVal, bool repeat, int precalcSteps) :
+Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxVal, bool repeat) :
     repeat{ repeat }
 {
     if(colors.empty() || colors.size() < 2)
@@ -103,41 +68,6 @@ Gradient::Gradient(std::vector<std::pair<RGBColor, float>> colors, float maxVal,
     }
     colorSpline = ColorSpline{ fs, false, false };
     return;
-    std::vector<std::pair<RGBColorf, float>> linearColors;
-    std::transform(colors.begin(), colors.end(), std::back_inserter(linearColors),
-                   [] (auto c) { return c; });
-
-    std::vector<std::pair<float, float>> rs;
-    std::vector<std::pair<float, float>> gs;
-    std::vector<std::pair<float, float>> bs;
-
-    std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(rs),
-                   [] (auto p) { return std::pair{ p.second, p.first.r }; });
-    std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(gs),
-                   [] (auto p) { return std::pair{ p.second, p.first.g }; });
-    std::transform(linearColors.begin(), linearColors.end(), std::back_inserter(bs),
-                   [] (auto p) { return std::pair{ p.second, p.first.b }; });
-
-    CubicSpline rsp(rs, false, true);
-    CubicSpline gsp(gs, false, true);
-    CubicSpline bsp(bs, false, true);
-
-    if(precalcSteps <= 0) {
-        precalcSteps = int(max * 7) + 10;
-    }
-    if (precalcSteps > 12000) {
-        precalcSteps = 12000;
-    }
-
-    for (int i = 0; i < precalcSteps; i++) {
-        float position = i * max / precalcSteps;
-        RGBColorf at = {
-            rsp.interpolateAt(position),
-            gsp.interpolateAt(position),
-            bsp.interpolateAt(position)
-        };
-        this->colors.push_back(at);
-    }
 }
 
 
@@ -217,7 +147,6 @@ RGBColor Gradient::get(float x) const
 
 RGBColor Gradient::interpolate(float x) const
 {
-    return colorSpline.interpolateAt(x);
     
     if (pointMap.empty()) {
         return RGBColor{ 0, 0, 0 };
@@ -231,6 +160,7 @@ RGBColor Gradient::interpolate(float x) const
         else
             return (pointMap.rbegin())->second;
     }
+    return colorSpline.interpolateAt(x);
 
     auto firstLess = pointMap.lower_bound(x);
 

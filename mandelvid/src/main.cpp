@@ -2,19 +2,25 @@
 #include <iostream>
 
 #include <boost/program_options.hpp>
+#include <boost/optional.hpp>
 
 namespace progOpts = boost::program_options;
 
 int main(int argc, char** argv)
 {
     progOpts::options_description desc("Available options");
+    progOpts::positional_options_description p;
+
+    boost::optional<std::string> inPath;
+    boost::optional<std::string> outPath;
     desc.add_options()
         ("help", "display this help message")
         ("render-image,i", "render a mandelbrot view")
-        ("file,f", progOpts::value<std::string>(), "specifies a file to load")
-        ("output,o", progOpts::value<std::string>(), "file to output")
+        ("file,f", progOpts::value(&inPath), "specifies a file to load")
+        ("output,o", progOpts::value(&outPath), "file to output")
     ;
-    progOpts::positional_options_description p;
+
+
     p.add("file", 1);
     progOpts::variables_map vm;
     progOpts::store(progOpts::command_line_parser(argc, argv)
@@ -26,12 +32,16 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    std::string out = vm["output"].as<std::string>();
-
     if (vm.count("render-image")) {
-        std::string inPath = vm["file"].as<std::string>();
-        std::cout << "rendering image " << inPath << std::endl;
-        renderImage(inPath, out);
+        if (!inPath) {
+            std::cout << "Please specify a path" << std::endl;
+            return 1;
+        }
+        if (!outPath) {
+            std::cout << "Please specify an output file" << std::endl;
+            return 1;
+        }
+        renderImage(*inPath, *outPath);
     } else {
         std::cout << "No files specified" << std::endl;
     }

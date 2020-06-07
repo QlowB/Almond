@@ -1,4 +1,6 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#pragma OPENCL FP_CONTRACT OFF
+
 
 inline double2 twoSum(double a, double b) {
     double s = a + b;

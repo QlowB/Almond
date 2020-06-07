@@ -5,6 +5,7 @@
 #include "opencl/doublefloat.h"
 #include "opencl/doubledouble.h"
 #include "opencl/tripledouble.h"
+#include "opencl/triplefloat.h"
 #include "opencl/quaddouble.h"
 #include "opencl/hexdouble.h"
 
@@ -32,6 +33,10 @@ namespace mnd
 
     std::string getTripleDouble_cl() {
         return std::string{ (char*) tripledouble_cl, tripledouble_cl_len };
+    }
+
+    std::string getTripleFloat_cl() {
+        return std::string{ (char*) triplefloat_cl, triplefloat_cl_len };
     }
 
     std::string getQuadDouble_cl() {

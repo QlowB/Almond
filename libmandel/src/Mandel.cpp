@@ -248,6 +248,12 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
             catch (const std::string& err) {
                 printf("err: %s", err.c_str());
             }
+            try {
+                md.mandelGenerators.insert({ Precision::TRIPLE_FLOAT, std::make_unique<ClGeneratorTripleFloat>(md) });
+            }
+            catch (const std::string& err) {
+                printf("err: %s", err.c_str());
+            }
 
             if (supportsDouble) {
                 try {

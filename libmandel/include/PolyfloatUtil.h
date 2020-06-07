@@ -123,6 +123,15 @@ namespace mnd
             return { ahi, alo };
         }
 
+        inline Pair<float> split(float a)
+        {
+            static const float splitter = float((1ULL << 12) + 1);
+            float t = splitter * a;
+            float ahi = t - (t - a);
+            float alo = a - ahi;
+            return { ahi, alo };
+        }
+
         template<typename T>
         inline Pair<T> twoProd(T a, T b)
         {

@@ -17,6 +17,7 @@ using namespace cl;
 using mnd::ClGenerator;
 using mnd::ClGeneratorFloat;
 using mnd::ClGeneratorDoubleFloat;
+using mnd::ClGeneratorTripleFloat;
 using mnd::ClGeneratorDouble;
 using mnd::ClGeneratorDoubleDouble;
 using mnd::ClGeneratorTripleDouble;
@@ -196,57 +197,6 @@ ClGeneratorDoubleFloat::ClGeneratorDoubleFloat(mnd::MandelDevice& device) :
 }
 
 
-std::pair<float, float> twoSum(float a, float b) {
-    float s = a + b;
-    float v = s - a;
-    float r = (a - (s - v)) + (b - v);
-    return { s, r };
-}
-
-std::pair<float, float> split(float a) {
-    float c = (4096 + 1) * a;
-    float abig = c - a;
-    float ahi = c - abig;
-    float alo = a - ahi;
-    return { ahi, alo };
-}
-
-std::pair<float, float> twoProd(float a, float b) {
-    float x = a * b;
-    auto aex = split(a);
-    auto bex = split(b);
-    float errx = x - (aex.first * bex.first);
-    float erry = errx - (aex.second * bex.first);
-    float errz = erry - (aex.first * bex.second);
-    float y = (aex.second * bex.second) - errz;
-    return { x, y };
-}
-
-std::pair<float, float> add(std::pair<float, float> a, std::pair<float, float> b) {
-    float r = a.first + b.first;
-    float s;
-    if (fabs(a.first) >= fabs(b.first)) {
-        s = (((a.first - r) + b.first) + b.second) + a.second;
-    }
-    else {
-        s = (((b.first - r) + a.first) + a.second) + b.second;
-    }
-    return twoSum(r, s);
-}
-
-std::pair<float, float> mul(std::pair<float, float> a, std::pair<float, float> b) {
-    auto t = twoProd(a.first, b.first);
-    t.second += ((a.first * b.second) + (a.second * b.first));
-    return twoSum(t.first, t.second);
-}
-
-std::pair<float, float> mulFloat(std::pair<float, float> a, float b) {
-    std::pair<float, float> t = twoProd(a.first, b);
-    float t3 = (a.second * b) + t.second;
-    return twoSum(t.first, t.second);
-}
-
-
 void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
 {
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
@@ -286,6 +236,61 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
 std::string ClGeneratorDoubleFloat::getKernelCode(bool smooth) const
 {
     return getDoubleFloat_cl();
+}
+
+
+ClGeneratorTripleFloat::ClGeneratorTripleFloat(mnd::MandelDevice& device) :
+    ClGenerator{ device, this->getKernelCode(false), mnd::Precision::TRIPLE_FLOAT  }
+{
+    kernel = Kernel(program, "iterate");
+}
+
+
+void ClGeneratorTripleFloat::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+    mnd::TripleFloat pixelScX = mnd::convert<mnd::TripleFloat>(info.view.width / info.bWidth);
+    mnd::TripleFloat pixelScY = mnd::convert<mnd::TripleFloat>(info.view.height / info.bHeight);
+
+    mnd::TripleFloat x = mnd::convert<mnd::TripleFloat>(info.view.x);
+    mnd::TripleFloat y = mnd::convert<mnd::TripleFloat>(info.view.y);
+    mnd::TripleFloat jx = mnd::convert<mnd::TripleFloat>(info.juliaX);
+    mnd::TripleFloat jy = mnd::convert<mnd::TripleFloat>(info.juliaY);
+
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, x[0]);
+    kernel.setArg(3, x[1]);
+    kernel.setArg(4, x[2]);
+    kernel.setArg(5, y[0]);
+    kernel.setArg(6, y[1]);
+    kernel.setArg(7, y[2]);
+    kernel.setArg(8, pixelScX[0]);
+    kernel.setArg(9, pixelScX[1]);
+    kernel.setArg(10, pixelScX[2]);
+    kernel.setArg(11, pixelScY[0]);
+    kernel.setArg(12, pixelScY[1]);
+    kernel.setArg(13, pixelScY[2]);
+    kernel.setArg(14, int(info.maxIter));
+    kernel.setArg(15, int(info.smooth ? 1 : 0));
+    kernel.setArg(16, int(info.julia ? 1 : 0));
+    kernel.setArg(17, jx[0]);
+    kernel.setArg(18, jx[1]);
+    kernel.setArg(19, jx[2]);
+    kernel.setArg(20, jy[0]);
+    kernel.setArg(21, jy[1]);
+    kernel.setArg(22, jy[2]);
+
+    cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+
+std::string ClGeneratorTripleFloat::getKernelCode(bool smooth) const
+{
+    return getTripleFloat_cl();
 }
 
 

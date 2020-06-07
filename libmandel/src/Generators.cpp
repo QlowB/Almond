@@ -126,6 +126,8 @@ namespace mnd
             return "float";
         case Precision::DOUBLE_FLOAT:
             return "double-float";
+        case Precision::TRIPLE_FLOAT:
+            return "triple-float";
         case Precision::DOUBLE:
             return "double";
         case Precision::DOUBLE_DOUBLE:
@@ -180,6 +182,7 @@ namespace mnd
         static const std::map<Precision, Real> precs {
             { Precision::FLOAT, getPrecision<float>() },
             { Precision::DOUBLE_FLOAT, Real("4.0e-15") },
+            { Precision::TRIPLE_FLOAT, Real("1.0e-21") },
             { Precision::DOUBLE, getPrecision<double>() },
             { Precision::DOUBLE_DOUBLE, Real("1.0e-29") },
             { Precision::TRIPLE_DOUBLE, Real("1.0e-47") },

@@ -24,6 +24,7 @@
 
 #include "LightDoubleDouble.h"
 #include "TripleDouble.h"
+#include "TripleFloat.h"
 #include "HexDouble.h"
 
 namespace mnd
@@ -162,6 +163,23 @@ namespace mnd
     }
 
 #if defined(WITH_BOOST)
+
+    template<>
+    inline TripleFloat convert<TripleFloat, Real>(const Real& x)
+    {
+        float s = static_cast<float>(x);
+        Real t = x - s;
+        float e1 = static_cast<float>(t);
+        float e2 = static_cast<float>(t - e1);
+        return TripleFloat{ s, e1, e2 };
+    }
+
+    template<>
+    inline Real convert<Real, TripleFloat>(const TripleFloat& x)
+    {
+        return Real{ x[0] } + x[1] + x[2];
+    }
+    
     template<>
     inline DoubleDouble convert<DoubleDouble, Real>(const Real& x)
     {

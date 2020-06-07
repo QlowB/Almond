@@ -20,6 +20,7 @@ namespace mnd
     {
         FLOAT,
         DOUBLE_FLOAT,
+        TRIPLE_FLOAT,
         DOUBLE,
         DOUBLE_DOUBLE,
         TRIPLE_DOUBLE,

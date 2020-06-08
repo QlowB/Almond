@@ -417,6 +417,21 @@ static inline VecTriple sixThreeSum(__m256d a, __m256d b, __m256d c,
     return { r0, r1, r2 };
 }
 
+static inline VecPair sixTwoSum(__m256d a, __m256d b, __m256d c,
+                                    __m256d d, __m256d e, __m256d f)
+{
+    auto[x0, x1, x2] = threeSum(a, b, c);
+    auto[y0, y1, y2] = threeSum(d, e, f);
+
+    auto[r0, t0] = twoSum(x0, y0);
+    auto[t1, t2] = twoSum(x1, y1);
+    auto[r1, t3] = twoSum(t0, t1);
+    r1 = _mm256_add_pd(r1, _mm256_add_pd(x2, y2));
+    r1 = _mm256_add_pd(r1, t3);
+
+    return { r0, r1 };
+}
+
 static inline VecPair addDD(const VecPair& a, const VecPair& b)
 {
     auto[s, e] = twoSum(a.a, b.a);
@@ -470,6 +485,34 @@ static inline VecQuadruple renormalize(__m256d x0, __m256d x1, __m256d x2, __m25
     return { b[0], b[1], b[2], b[3] };
 }
 
+
+static inline VecQuadruple renorm1(__m256d x0, __m256d x1, __m256d x2, __m256d x3, __m256d x4)
+{
+    auto [r0, t0] = quickTwoSum(x0, x1);
+    auto [r1, t1] = quickTwoSum(t0, x2);
+    auto [r2, t2] = quickTwoSum(t1, x3);
+    auto r3 = _mm256_add_pd(t2, x4);
+
+    return { r0, r1, r2, r3 };
+}
+
+
+static inline VecQuadruple renorm2(__m256d x0, __m256d x1, __m256d x2, __m256d x3, __m256d x4)
+{
+    auto [st1, t4] = quickTwoSum(x3, x4);
+    auto [st2, t3] = quickTwoSum(x2, st1);
+    auto [st3, t2] = quickTwoSum(x1, st2);
+    auto [t0, t1] = quickTwoSum(x0, st3);
+
+    __m256d e = t0;
+
+    auto [r0, e1] = quickTwoSum(e, t1);
+    auto [r1, e2] = quickTwoSum(e1, t2);
+    auto [r2, e3] = quickTwoSum(e2, t3);
+    auto r3 = _mm256_add_pd(e3, t4);
+    return { r0, r1, r2, r3 };
+}
+
 static inline VecPair twoProd(__m256d a, __m256d b)
 {
     __m256d p = _mm256_mul_pd(a, b);
@@ -514,6 +557,21 @@ struct AvxDoubleDouble
             _mm256_add_pd(_mm256_mul_pd(sm.x[1], x[0]), _mm256_mul_pd(sm.x[0], x[1])) );
         auto[r1, r2] = quickTwoSum(p1, p2);
         return AvxDoubleDouble{ r1, r2 };
+    }
+
+    inline AvxDoubleDouble sq(void) const
+    {
+        auto[p1, p2] = twoProd(x[0], x[0]);
+        __m256d x01 = _mm256_mul_pd(x[1], x[0]);
+        p2 = _mm256_add_pd(p2, _mm256_add_pd(x01, x01));
+        auto[r1, r2] = quickTwoSum(p1, p2);
+        return AvxDoubleDouble{ r1, r2 };
+    }
+
+    inline AvxDoubleDouble mul_pow2(double v) const
+    {
+        __m256d vv = _mm256_set1_pd(v);
+        return { _mm256_mul_pd(vv, x[0]), _mm256_mul_pd(vv, x[1]) };
     }
 };
 
@@ -580,9 +638,9 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
 
             __m256d cmp = _mm256_cmp_pd(threshold, threshold, _CMP_LE_OQ);
             for (int k = 0; k < info.maxIter; k++) {
-                AvxDoubleDouble aa = a * a;
-                AvxDoubleDouble bb = b * b;
-                AvxDoubleDouble abab = a * b; abab = abab + abab;
+                AvxDoubleDouble aa = a.sq();
+                AvxDoubleDouble bb = b.sq();
+                AvxDoubleDouble abab = a * b.mul_pow2(2.0);
                 a = aa - bb + cx;
                 b = abab + cy;
                 if (info.smooth) {
@@ -592,7 +650,7 @@ void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const
                 cmp = _mm256_cmp_pd(_mm256_add_pd(aa.x[0], bb.x[0]), threshold, _CMP_LE_OQ);
                 adder = _mm256_and_pd(adder, cmp);
                 counter = _mm256_add_pd(counter, adder);
-                if (_mm256_testz_si256(_mm256_castpd_si256(cmp), _mm256_castpd_si256(cmp)) != 0) {
+                if ((k & 0x7) && _mm256_testz_si256(_mm256_castpd_si256(cmp), _mm256_castpd_si256(cmp)) != 0) {
                     break;
                 }
             }
@@ -648,7 +706,7 @@ struct AvxQuadDouble
         auto [r3, t3, _t4] = threeSum(s3, e2, t1);
         auto [r4, _t5, _t6] = threeSum(e3, t3, t2);
 
-        auto [re0, re1, re2, re3] = renormalize(r0, r1, r2, r3, r4);
+        auto [re0, re1, re2, re3] = renorm1(r0, r1, r2, r3, r4);
         return { re0, re1, re2, re3 };
     }
 
@@ -665,7 +723,7 @@ struct AvxQuadDouble
         auto [r3, t3, _t4] = threeSum(s3, e2, t1);
         auto [r4, _t5, _t6] = threeSum(e3, t3, t2);
 
-        auto [re0, re1, re2, re3] = renormalize(r0, r1, r2, r3, r4);
+        auto [re0, re1, re2, re3] = renorm1(r0, r1, r2, r3, r4);
         return { re0, re1, re2, re3 };
     }
 
@@ -688,7 +746,38 @@ struct AvxQuadDouble
         auto[r3, e1] = nineTwoSum(d0, d1, d2, d3, d4, d5, d6, d7, d8);
         auto r4 = _mm256_add_pd(e0, e1);
 
-        auto [n0, n1, n2, n3] = renormalize(r0, r1, r2, r3, r4);
+        auto [n0, n1, n2, n3] = renorm2(r0, r1, r2, r3, r4);
+
+        return { n0, n1, n2, n3 };
+    }
+
+    inline AvxQuadDouble mul_pow2(double v) const
+    {
+        __m256d vv = _mm256_set1_pd(v);
+        return { _mm256_mul_pd(vv, x[0]), _mm256_mul_pd(vv, x[1]),
+                 _mm256_mul_pd(vv, x[2]), _mm256_mul_pd(vv, x[3]) };
+    }
+
+    inline AvxQuadDouble sq(void) const
+    {
+        auto[a0, b0] = twoProd(x[0], x[0]);
+        auto[b1, c0] = twoProd(x[0], x[1]);
+        //auto[b2, c1] = twoProd(x[0], x[1]); //
+        auto[c2, d0] = twoProd(x[0], x[2]);
+        auto[c3, d1] = twoProd(x[1], x[1]);
+        //auto[c4, d2] = twoProd(x[0], x[2]); //
+        auto d5 = _mm256_mul_pd(x[3], x[0]);
+        auto d6 = _mm256_mul_pd(x[2], x[1]);
+        //auto d7 = _mm256_mul_pd(x[1], x[2]); //
+        //auto d8 = _mm256_mul_pd(x[0], x[3]); //
+
+        auto r0 = a0;
+        auto[r1, c5] = twoSum(b0, _mm256_add_pd(b1, b1)); // d3
+        auto[r2, d4, e0] = sixThreeSum(_mm256_add_pd(c0, c0), /*c0*/ _mm256_set1_pd(0.0), c2, c3, c2, c5);
+        auto[r3, e1] = sixTwoSum(d0, d1, d0, d4, _mm256_add_pd(d5, d5), _mm256_add_pd(d6, d6));
+        auto r4 = _mm256_add_pd(e0, e1);
+
+        auto [n0, n1, n2, n3] = renorm2(r0, r1, r2, r3, r4);
 
         return { n0, n1, n2, n3 };
     }
@@ -779,9 +868,9 @@ void CpuGenerator<mnd::QuadDouble, mnd::X86_AVX_FMA, parallel>::generate(const m
 
             __m256d cmp = _mm256_cmp_pd(threshold, threshold, _CMP_LE_OQ);
             for (int k = 0; k < info.maxIter; k++) {
-                AvxQuadDouble aa = a * a;
-                AvxQuadDouble bb = b * b;
-                AvxQuadDouble abab = a * b; abab = abab + abab;
+                AvxQuadDouble aa = a.sq();
+                AvxQuadDouble bb = b.sq();
+                AvxQuadDouble abab = a * b.mul_pow2(2.0);
                 a = aa - bb + cx;
                 b = abab + cy;
                 if (info.smooth) {

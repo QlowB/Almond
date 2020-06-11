@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QTextEdit>
+#include <QDirIterator>
 
 using alm::Gradient;
 
@@ -36,6 +37,7 @@ GradientMenu::GradientMenu(QWidget *parent) :
         1.0f
     });
 
+    //QDirIterator it(":/gradients", QDirIterator::Subdirectories);
     for (const auto& presetName : presetNames) {
         ui->presetCmb->addItem(presetName);
     }

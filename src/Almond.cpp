@@ -72,6 +72,7 @@ Almond::Almond(QWidget* parent) :
     connect(aboutSm, &AlmondSubMenu::accepted, [] () {});
     connect(aboutSm, &AlmondSubMenu::cancelled, [] () {});
 
+    fractalWidget->setGradient(gradientMenu->getGradient());
 
     /*QStatusBar* bar = new QStatusBar(this);
     bar->addWidget(new QLabel("ayay"));

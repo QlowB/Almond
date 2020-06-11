@@ -21,6 +21,10 @@
 
 #include <memory>
 
+///
+/// \brief contains a viewport that can be restored when switching
+///        between mandelbrot set and julia set
+///
 struct ViewState
 {
     mnd::MandelViewport viewport;
@@ -36,6 +40,9 @@ enum ViewType
 };
 
 
+///
+/// \brief The main window of the Almond application
+///
 class Almond : public QMainWindow
 {
     Q_OBJECT

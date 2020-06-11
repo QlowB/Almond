@@ -363,6 +363,24 @@ static inline VecPair twoProd(__m256d a, __m256d b)
     return { p, err };
 }
 
+static inline VecPair twoSq(__m256d a)
+{
+    __m256d p = _mm256_mul_pd(a, a);
+    auto[a_hi, a_lo] = split(a);
+    __m256d err =
+        _mm256_add_pd(
+            _mm256_add_pd(
+                _mm256_sub_pd(_mm256_mul_pd(a_hi, a_hi), p),
+                _mm256_add_pd(
+                    _mm256_mul_pd(a_hi, a_lo),
+                    _mm256_mul_pd(a_hi, a_lo)
+                )
+            ),
+        _mm256_mul_pd(a_lo, a_lo)
+        );
+    return { p, err };
+}
+
 
 struct AvxDoubleDouble
 {
@@ -401,6 +419,20 @@ struct AvxDoubleDouble
             _mm256_add_pd(_mm256_mul_pd(sm.x[1], x[0]), _mm256_mul_pd(sm.x[0], x[1])) );
         auto[r1, r2] = quickTwoSum(p1, p2);
         return AvxDoubleDouble{ r1, r2 };
+    }
+
+    inline AvxDoubleDouble sq(void) const
+    {
+        auto[p1, p2] = twoSq(x[0]);
+        __m256d x01_2 = _mm256_mul_pd(_mm256_add_pd(x[0], x[0]), x[1]);
+        p2 = _mm256_add_pd(p2, x01_2);
+        auto[r1, r2] = quickTwoSum(p1, p2);
+        return AvxDoubleDouble{ r1, r2 };
+    }
+
+    inline AvxDoubleDouble twice(void) const
+    {
+        return AvxDoubleDouble{ _mm256_add_pd(x[0], x[0]), _mm256_add_pd(x[1], x[1]) };
     }
 };
 
@@ -467,6 +499,34 @@ struct AvxTripleDouble
         auto[re1, re2] = quickTwoSum(q2, t3);
         return { re0, re1, re2 };
     }
+
+    inline AvxTripleDouble sq(void) const
+    {
+        auto twox0 = _mm256_add_pd(x[0], x[0]);
+        auto[p1_0, p2_0] = twoProd(x[0], x[0]);
+        auto[p2_1, p3_0] = twoProd(twox0, x[1]);
+
+        auto[t2, tl3] = twoSum(p2_0, p2_1);
+        auto t3 =
+            _mm256_add_pd(
+                tl3,
+                _mm256_add_pd(
+                    p3_0,
+                    _mm256_add_pd(
+                        _mm256_mul_pd(x[1], x[1]),
+                        _mm256_mul_pd(x[2], twox0)
+                    )
+                )
+            );
+        auto[re0, q2] = quickTwoSum(p1_0, t2);
+        auto[re1, re2] = quickTwoSum(q2, t3);
+        return { re0, re1, re2 };
+    }
+
+    inline AvxTripleDouble twice(void) const
+    {
+        return AvxTripleDouble{ _mm256_add_pd(x[0], x[0]), _mm256_add_pd(x[1], x[1]), _mm256_add_pd(x[2], x[2]) };
+    }
 };
 
 } // namespace avx_private
@@ -530,9 +590,9 @@ void generateDoubleDoubleAvx(long width, long height, float* data, bool parallel
 
             __m256d cmp = _mm256_cmp_pd(threshold, threshold, _CMP_LE_OQ);
             for (int k = 0; k < maxIter; k++) {
-                AvxDoubleDouble aa = a * a;
-                AvxDoubleDouble bb = b * b;
-                AvxDoubleDouble abab = a * b; abab = abab + abab;
+                AvxDoubleDouble aa = a.sq();
+                AvxDoubleDouble bb = b.sq();
+                AvxDoubleDouble abab = a * b.twice();
                 a = aa - bb + cx;
                 b = abab + cy;
                 if (smooth) {
@@ -627,9 +687,9 @@ void generateTripleDoubleAvx(long width, long height, float* data, bool parallel
 
             __m256d cmp = _mm256_cmp_pd(threshold, threshold, _CMP_LE_OQ);
             for (int k = 0; k < maxIter; k++) {
-                AvxTripleDouble aa = a * a;
-                AvxTripleDouble bb = b * b;
-                AvxTripleDouble abab = a * b; abab = abab + abab;
+                AvxTripleDouble aa = a.sq();
+                AvxTripleDouble bb = b.sq();
+                AvxTripleDouble abab = a * b.twice();
                 a = aa - bb + cx;
                 b = abab + cy;
                 if (smooth) {
@@ -654,7 +714,7 @@ void generateTripleDoubleAvx(long width, long height, float* data, bool parallel
                 if (smooth)
                     data[i + k + j * width] = float(ftRes[k] < 0 ? maxIter :
                         ftRes[k] >= maxIter ? maxIter :
-                        ((float)ftRes[k]) + 1 - floatLog2(::floatLog(float(resa[k] * resa[k] + resb[k] * resb[k])) / 2));
+                        ((float)ftRes[k]) + 1 - floatLog2(::floatLog(float(resa[k] * resa[k] + resb[k] * resb[k])) * 0.5f));
                 else
                     data[i + k + j * width] = ftRes[k] >= 0 ? float(ftRes[k]) : maxIter;
             }

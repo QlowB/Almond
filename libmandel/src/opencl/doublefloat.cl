@@ -2,6 +2,7 @@
 // Real Numbers and Computers 7, Jul 2006, Nancy, France. pp.23-32. ffhal-00021443
 // https://hal.archives-ouvertes.fr/hal-00021443/document
 // added some optimizations using fma
+#pragma OPENCL FP_CONTRACT OFF
 
 float2 twoSum(float a, float b) {
     float s = a + b;
@@ -25,7 +26,11 @@ float2 split(float a) {
 }
 
 float2 twoProd(float a, float b) {
-    /*
+#ifdef FP_FAST_FMA
+    float p = a * b;
+    float e = fma(a, b, -p);
+    return (float2)(p, e);
+#else
     float x = a * b;
     float2 aex = split(a);
     float2 bex = split(b);
@@ -34,29 +39,8 @@ float2 twoProd(float a, float b) {
     float errz = erry - (aex.s0 * bex.s1);
     float y = (aex.s1 * bex.s1) - errz;
     return (float2)(x, y);
-    */
-    float p = a * b;
-    float e = fma(a, b, -p);
-    return (float2)(p, e);
+#endif
 }
-
-float2 twoProdSq(float a) {
-    float p = a * a;
-    float e = fma(a, a, -p);
-    return (float2)(p, e);
-}
-
-/*float2 add(float2 a, float2 b) {
-    float r = a.s0 + b.s0;
-    float s;
-    if (fabs(a.s0) >= fabs(b.s0)) {
-        s = (((a.s0 - r) + b.s0) + b.s1) + a.s1;
-    }
-    else {
-        s = (((b.s0 - r) + a.s0) + a.s1) + b.s1;
-    }
-    return twoSum(r, s);
-}*/
 
 float2 add(float2 a, float2 b) {
     float2 se = twoSum(a.s0, b.s0);
@@ -71,9 +55,9 @@ float2 mul(float2 a, float2 b) {
 }
 
 float2 sq(float2 a) {
-    float2 t = twoProdSq(a.s0);
-    float e = a.s0 * a.s1;
-    t.s1 += e + e;
+    float2 t = twoProd(a.s0, a.s0);
+    float e = 2 * a.s0 * a.s1;
+    t.s1 += e;
     return quickTwoSum(t.s0, t.s1);
 }
 

@@ -1,6 +1,8 @@
 #ifndef MANDEL_TYPES_H
 #define MANDEL_TYPES_H
 
+#include "Real.h"
+
 #include <cinttypes>
 #include <cmath>
 #include <string>
@@ -24,7 +26,9 @@
 
 #include "LightDoubleDouble.h"
 #include "TripleDouble.h"
+#include "TripleFloat.h"
 #include "HexDouble.h"
+#include "OctaDouble.h"
 
 namespace mnd
 {
@@ -67,45 +71,7 @@ namespace mnd
     inline Float256 sin(const Float256& x) { return boost::multiprecision::sin(x); }
     inline Float256 exp(const Float256& x) { return boost::multiprecision::exp(x); }
 
-    using Float512 = boost::multiprecision::number<
-        boost::multiprecision::backends::cpp_bin_float<
-            496, boost::multiprecision::backends::digit_base_2, void, boost::int16_t, -16382, 16383>,
-            boost::multiprecision::et_off>;
-
-    inline Float512 abs(const Float512& x) { return boost::multiprecision::abs(x); }
-    inline Float512 sqrt(const Float512& x) { return boost::multiprecision::sqrt(x); }
-    inline Float512 floor(const Float512& x) { return boost::multiprecision::floor(x); }
-    inline Float512 log(const Float512& x) { return boost::multiprecision::log(x); }
-    inline Float512 log2(const Float512& x) { return boost::multiprecision::log2(x); }
-    inline Float512 pow(const Float512& x, const Float512& y) { return boost::multiprecision::pow(x, y); }
-    inline Float512 atan2(const Float512& y, const Float512& x) { return boost::multiprecision::atan2(y, x); }
-    inline Float512 cos(const Float512& x) { return boost::multiprecision::cos(x); }
-    inline Float512 sin(const Float512& x) { return boost::multiprecision::sin(x); }
-    inline Float512 exp(const Float512& x) { return boost::multiprecision::exp(x); }
-
-    using Real = Float512;
-    using Integer = boost::multiprecision::int512_t;
-    /*boost::multiprecision::number<
-        boost::multiprecision::backends::cpp_bin_float<
-            1500, boost::multiprecision::backends::digit_base_2, void, boost::int16_t, -16382, 16383>,
-            boost::multiprecision::et_off>;
-
-    inline Real abs(const Real& x) { return boost::multiprecision::abs(x); }
-    inline Real sqrt(const Real& x) { return boost::multiprecision::sqrt(x); }
-    inline Real floor(const Real& x) { return boost::multiprecision::floor(x); }
-    inline Real log(const Real& x) { return boost::multiprecision::log(x); }
-    inline Real log2(const Real& x) { return boost::multiprecision::log2(x); }
-    inline Real pow(const Real& x, const Real& y) { return boost::multiprecision::pow(x, y); }
-    inline Real atan2(const Real& y, const Real& x) { return boost::multiprecision::atan2(y, x); }
-    inline Real cos(const Real& x) { return boost::multiprecision::cos(x); }
-    inline Real sin(const Real& x) { return boost::multiprecision::sin(x); }
-    inline Real exp(const Real& x) { return boost::multiprecision::exp(x); }
-*/
-#else
-    using Real = double;
-    using Integer = int64_t;
 #endif
-
 
     using DoubleDouble = dd_real;
     using QuadDouble = qd_real;
@@ -162,6 +128,23 @@ namespace mnd
     }
 
 #if defined(WITH_BOOST)
+
+    template<>
+    inline TripleFloat convert<TripleFloat, Real>(const Real& x)
+    {
+        float s = static_cast<float>(x);
+        Real t = x - s;
+        float e1 = static_cast<float>(t);
+        float e2 = static_cast<float>(t - e1);
+        return TripleFloat{ s, e1, e2 };
+    }
+
+    template<>
+    inline Real convert<Real, TripleFloat>(const TripleFloat& x)
+    {
+        return Real{ x[0] } + x[1] + x[2];
+    }
+    
     template<>
     inline DoubleDouble convert<DoubleDouble, Real>(const Real& x)
     {
@@ -268,6 +251,39 @@ namespace mnd
     }
 
     template<>
+    inline Real convert<Real, OctaDouble>(const OctaDouble& x)
+    {
+        return Real{ x[0] } + x[1] + x[2] + x[3] + x[4] + x[5] + x[6] + x[7];
+    }
+
+    template<>
+    inline OctaDouble convert<OctaDouble, Real>(const Real& x)
+    {
+        double s = static_cast<double>(x);
+        Real tmp = x - s;
+        double e1 = static_cast<double>(tmp);
+        tmp = tmp - e1;
+        double e2 = static_cast<double>(tmp);
+        tmp = tmp - e2;
+        double e3 = static_cast<double>(tmp);
+        tmp = tmp - e3;
+        double e4 = static_cast<double>(tmp);
+        tmp = tmp - e4;
+        double e5 = static_cast<double>(tmp);
+        tmp = tmp - e5;
+        double e6 = static_cast<double>(tmp);
+        tmp = tmp - e6;
+        double e7 = static_cast<double>(tmp);
+        return OctaDouble{ s, e1, e2, e3, e4, e5, e6, e7 };
+    }
+
+    template<>
+    inline float convert<float, OctaDouble>(const OctaDouble& x)
+    {
+        return float(x.x[0] + x.x[1]);
+    }
+
+    template<>
     inline float convert<float, Fixed512>(const Fixed512& x)
     {
         return float(Real(x));
@@ -301,3 +317,4 @@ namespace mnd
 
 
 #endif // MANDEL_TYPES_H
+

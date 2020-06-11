@@ -1,4 +1,5 @@
 #include "ClGenerators.h"
+#include "Types.h"
 #include "Mandel.h"
 #include "OpenClInternal.h"
 #include "OpenClCode.h"
@@ -17,11 +18,13 @@ using namespace cl;
 using mnd::ClGenerator;
 using mnd::ClGeneratorFloat;
 using mnd::ClGeneratorDoubleFloat;
+using mnd::ClGeneratorTripleFloat;
 using mnd::ClGeneratorDouble;
 using mnd::ClGeneratorDoubleDouble;
 using mnd::ClGeneratorTripleDouble;
 using mnd::ClGeneratorQuadDouble;
 using mnd::ClGeneratorHexDouble;
+using mnd::ClGeneratorOctaDouble;
 using mnd::ClGenerator128;
 using mnd::ClGenerator64;
 
@@ -196,57 +199,6 @@ ClGeneratorDoubleFloat::ClGeneratorDoubleFloat(mnd::MandelDevice& device) :
 }
 
 
-std::pair<float, float> twoSum(float a, float b) {
-    float s = a + b;
-    float v = s - a;
-    float r = (a - (s - v)) + (b - v);
-    return { s, r };
-}
-
-std::pair<float, float> split(float a) {
-    float c = (4096 + 1) * a;
-    float abig = c - a;
-    float ahi = c - abig;
-    float alo = a - ahi;
-    return { ahi, alo };
-}
-
-std::pair<float, float> twoProd(float a, float b) {
-    float x = a * b;
-    auto aex = split(a);
-    auto bex = split(b);
-    float errx = x - (aex.first * bex.first);
-    float erry = errx - (aex.second * bex.first);
-    float errz = erry - (aex.first * bex.second);
-    float y = (aex.second * bex.second) - errz;
-    return { x, y };
-}
-
-std::pair<float, float> add(std::pair<float, float> a, std::pair<float, float> b) {
-    float r = a.first + b.first;
-    float s;
-    if (fabs(a.first) >= fabs(b.first)) {
-        s = (((a.first - r) + b.first) + b.second) + a.second;
-    }
-    else {
-        s = (((b.first - r) + a.first) + a.second) + b.second;
-    }
-    return twoSum(r, s);
-}
-
-std::pair<float, float> mul(std::pair<float, float> a, std::pair<float, float> b) {
-    auto t = twoProd(a.first, b.first);
-    t.second += ((a.first * b.second) + (a.second * b.first));
-    return twoSum(t.first, t.second);
-}
-
-std::pair<float, float> mulFloat(std::pair<float, float> a, float b) {
-    std::pair<float, float> t = twoProd(a.first, b);
-    float t3 = (a.second * b) + t.second;
-    return twoSum(t.first, t.second);
-}
-
-
 void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
 {
     ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
@@ -286,6 +238,61 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
 std::string ClGeneratorDoubleFloat::getKernelCode(bool smooth) const
 {
     return getDoubleFloat_cl();
+}
+
+
+ClGeneratorTripleFloat::ClGeneratorTripleFloat(mnd::MandelDevice& device) :
+    ClGenerator{ device, this->getKernelCode(false), mnd::Precision::TRIPLE_FLOAT  }
+{
+    kernel = Kernel(program, "iterate");
+}
+
+
+void ClGeneratorTripleFloat::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+    mnd::TripleFloat pixelScX = mnd::convert<mnd::TripleFloat>(info.view.width / info.bWidth);
+    mnd::TripleFloat pixelScY = mnd::convert<mnd::TripleFloat>(info.view.height / info.bHeight);
+
+    mnd::TripleFloat x = mnd::convert<mnd::TripleFloat>(info.view.x);
+    mnd::TripleFloat y = mnd::convert<mnd::TripleFloat>(info.view.y);
+    mnd::TripleFloat jx = mnd::convert<mnd::TripleFloat>(info.juliaX);
+    mnd::TripleFloat jy = mnd::convert<mnd::TripleFloat>(info.juliaY);
+
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, x[0]);
+    kernel.setArg(3, x[1]);
+    kernel.setArg(4, x[2]);
+    kernel.setArg(5, y[0]);
+    kernel.setArg(6, y[1]);
+    kernel.setArg(7, y[2]);
+    kernel.setArg(8, pixelScX[0]);
+    kernel.setArg(9, pixelScX[1]);
+    kernel.setArg(10, pixelScX[2]);
+    kernel.setArg(11, pixelScY[0]);
+    kernel.setArg(12, pixelScY[1]);
+    kernel.setArg(13, pixelScY[2]);
+    kernel.setArg(14, int(info.maxIter));
+    kernel.setArg(15, int(info.smooth ? 1 : 0));
+    kernel.setArg(16, int(info.julia ? 1 : 0));
+    kernel.setArg(17, jx[0]);
+    kernel.setArg(18, jx[1]);
+    kernel.setArg(19, jx[2]);
+    kernel.setArg(20, jy[0]);
+    kernel.setArg(21, jy[1]);
+    kernel.setArg(22, jy[2]);
+
+    cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+}
+
+
+std::string ClGeneratorTripleFloat::getKernelCode(bool smooth) const
+{
+    return getTripleFloat_cl();
 }
 
 
@@ -554,7 +561,6 @@ void ClGeneratorHexDouble::generate(const mnd::MandelInfo& info, float* data)
     mnd::HexDouble jx = mnd::convert<mnd::HexDouble>(info.juliaX);
     mnd::HexDouble jy = mnd::convert<mnd::HexDouble>(info.juliaY);
 
-    double vals[] = {250, 250, 250, 250, 250, 250 };
     const size_t argBufSize = 6 * sizeof(double);
     Buffer xbuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, x.x);
     Buffer ybuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, y.x);
@@ -586,6 +592,59 @@ std::string ClGeneratorHexDouble::getKernelCode(bool smooth) const
     return getHexDouble_cl();
 }
 
+
+ClGeneratorOctaDouble::ClGeneratorOctaDouble(mnd::MandelDevice& device) :
+    ClGenerator{ device, getOctaDouble_cl(), mnd::Precision::OCTA_DOUBLE }
+{
+    kernel = Kernel(program, "iterate");
+}
+
+
+void ClGeneratorOctaDouble::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+
+    mnd::OctaDouble x = mnd::convert<mnd::OctaDouble>(info.view.x);
+    mnd::OctaDouble y = mnd::convert<mnd::OctaDouble>(info.view.y);
+
+    mnd::OctaDouble psx = mnd::convert<mnd::OctaDouble>(info.view.width / info.bWidth);
+    mnd::OctaDouble psy = mnd::convert<mnd::OctaDouble>(info.view.height / info.bHeight);
+
+    mnd::OctaDouble jx = mnd::convert<mnd::OctaDouble>(info.juliaX);
+    mnd::OctaDouble jy = mnd::convert<mnd::OctaDouble>(info.juliaY);
+
+    const size_t argBufSize = 8 * sizeof(double);
+    Buffer xbuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, x.x);
+    Buffer ybuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, y.x);
+    Buffer psxbuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, psx.x);
+    Buffer psybuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, psy.x);
+    Buffer jxbuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, jx.x);
+    Buffer jybuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize);
+
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, xbuf);
+    kernel.setArg(3, ybuf);
+    kernel.setArg(4, psxbuf);
+    kernel.setArg(5, psybuf);
+    kernel.setArg(6, int(info.maxIter));
+    kernel.setArg(7, int(info.smooth ? 1 : 0));
+    kernel.setArg(8, int(info.julia ? 1 : 0));
+    kernel.setArg(9, jxbuf);
+    kernel.setArg(10, jybuf);
+
+    cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+
+}
+
+
+std::string ClGeneratorOctaDouble::getKernelCode(bool smooth) const
+{
+    return getOctaDouble_cl();
+}
 
 ClGenerator128::ClGenerator128(mnd::MandelDevice& device) :
     ClGenerator{ device, getFixed512_cl(), mnd::Precision::FIXED128 }

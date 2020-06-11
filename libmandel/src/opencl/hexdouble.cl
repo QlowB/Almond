@@ -1,4 +1,5 @@
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#pragma OPENCL FP_CONTRACT OFF
 
 
 typedef struct hex_double {
@@ -157,6 +158,19 @@ inline HexDouble mul(const __private HexDouble* a, const __private HexDouble* b)
 }
 
 
+inline HexDouble twice(const __private HexDouble* a)
+{
+    return (HexDouble) {
+        a->x[0] * 2,
+        a->x[1] * 2,
+        a->x[2] * 2,
+        a->x[3] * 2,
+        a->x[4] * 2,
+        a->x[5] * 2,
+    };
+}
+
+
 HexDouble loadHd(const __constant double* v) {
     return (HexDouble) {
         v[0],
@@ -171,7 +185,7 @@ HexDouble loadHd(const __constant double* v) {
 
 __kernel void iterate(__global float* A, const int width,
                       __constant double* x, __constant double* y,
-                      __constant double* pw, __constant double* ph, int max, int smooth, int julia,
+                      __constant double* pw, __constant double* ph, int maxIter, int smooth, int julia,
                       __constant double* jx, __constant double* jy) {
     int index = get_global_id(0);
     int px = index % width;
@@ -197,13 +211,13 @@ __kernel void iterate(__global float* A, const int width,
     }
 
     int n = 0;
-    while (n < max - 1) {
+    while (n < maxIter - 1) {
         HexDouble aa = mul(&a, &a); /* TODO add squaring function */
         HexDouble bb = mul(&b, &b);
         HexDouble ab = mul(&a, &b);
         HexDouble minusbb = { -bb.x[0], -bb.x[1], -bb.x[2], -bb.x[3], -bb.x[4], -bb.x[5] };
         HexDouble aambb = add(&aa, &minusbb);
-        HexDouble abab = add(&ab, &ab);
+        HexDouble abab = twice(&ab);
         a = add(&aambb, &ca);
         b = add(&abab, &cb);
         if (aa.x[0] + bb.x[0] > 16) break;
@@ -211,8 +225,8 @@ __kernel void iterate(__global float* A, const int width,
     }
 
     // N + 1 - log (log  |Z(N)|) / log 2
-    if (n >= max - 1)
-        A[index] = max;
+    if (n >= maxIter - 1)
+        A[index] = maxIter;
     else {
         if (smooth != 0)
             A[index] = ((float) n) + 1 - log2(log(a.x[0] * a.x[0] + b.x[0] * b.x[0]) * 0.5);

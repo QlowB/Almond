@@ -38,6 +38,7 @@ SET(MandelSources
     src/Hardware.cpp
     src/MandelUtil.cpp
     src/Types.cpp
+    src/Real.cpp
     src/OpenClCode.cpp
     src/IterationGenerator.cpp
     src/IterationFormula.cpp

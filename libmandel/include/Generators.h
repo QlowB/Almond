@@ -7,24 +7,23 @@
 #include <map>
 #include <utility>
 
-
-
 namespace mnd
 {
     class MandelGenerator;
 
     class AdaptiveGenerator;
 
-    enum class GeneratorType : int;
     enum class Precision : int
     {
         FLOAT,
         DOUBLE_FLOAT,
+        TRIPLE_FLOAT,
         DOUBLE,
         DOUBLE_DOUBLE,
         TRIPLE_DOUBLE,
         QUAD_DOUBLE,
         HEX_DOUBLE,
+        OCTA_DOUBLE,
         FLOAT128,
         FLOAT256,
         FLOAT512,
@@ -49,73 +48,15 @@ namespace mnd
     std::string toString(CpuExtension);
 
     Real getPrecision(Precision p);
-    
+
     template<typename T>
     Real getPrecision(void);
 
-    template<> Real getPrecision<float>();
-    template<> Real getPrecision<double>();
-    template<> Real getPrecision<DoubleDouble>();
-    template<> Real getPrecision<TripleDouble>();
-    template<> Real getPrecision<QuadDouble>();
-    template<> Real getPrecision<HexDouble>();
-    template<> Real getPrecision<Fixed64>();
-    template<> Real getPrecision<Fixed128>();
-    template<> Real getPrecision<Fixed512>();
-    template<> Real getPrecision<Float128>();
-    template<> Real getPrecision<Float256>();
-    template<> Real getPrecision<Float512>();
-
     template<typename T>
     Precision getType(void);
-    template<> inline Precision getType<float>() { return Precision::FLOAT; }
-    template<> inline Precision getType<double>() { return Precision::DOUBLE; }
-    template<> inline Precision getType<DoubleDouble>() { return Precision::DOUBLE_DOUBLE; }
-    template<> inline Precision getType<TripleDouble>() { return Precision::TRIPLE_DOUBLE; }
-    template<> inline Precision getType<QuadDouble>() { return Precision::QUAD_DOUBLE; }
-    template<> inline Precision getType<HexDouble>() { return Precision::HEX_DOUBLE; }
-    template<> inline Precision getType<Fixed64>() { return Precision::FIXED64; }
-    template<> inline Precision getType<Fixed128>() { return Precision::FIXED128; }
-    template<> inline Precision getType<Fixed512>() { return Precision::FIXED512; }
-    template<> inline Precision getType<Float128>() { return Precision::FLOAT128; }
-    template<> inline Precision getType<Float256>() { return Precision::FLOAT256; }
-    template<> inline Precision getType<Float512>() { return Precision::FLOAT512; }
 
     class MandelDevice;
 }
-
-/*
-enum class mnd::GeneratorType : int
-{
-    UNSPECIFIED,
-    FLOAT,
-    FLOAT_SSE2,
-    FLOAT_AVX,
-    FLOAT_AVX_FMA,
-    FLOAT_AVX512,
-    FLOAT_NEON,
-    DOUBLE_FLOAT,
-    DOUBLE,
-    DOUBLE_SSE2,
-    DOUBLE_AVX,
-    DOUBLE_AVX_FMA,
-    DOUBLE_AVX512,
-    DOUBLE_NEON,
-    DOUBLE_DOUBLE,
-    DOUBLE_DOUBLE_AVX,
-    DOUBLE_DOUBLE_AVX_FMA,
-    DOUBLE_DOUBLE_NEON,
-    TRIPLE_DOUBLE,
-    TRIPLE_DOUBLE_AVX,
-    QUAD_DOUBLE,
-    QUAD_DOUBLE_AVX_FMA,
-    FLOAT128,
-    FLOAT256,
-    FIXED64,
-    FIXED128,
-    FIXED512
-};
-*/
 
 
 class mnd::MandelGenerator

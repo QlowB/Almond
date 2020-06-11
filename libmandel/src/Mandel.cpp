@@ -127,18 +127,22 @@ MandelContext::MandelContext(void)
 #ifdef WITH_BOOST
     auto quad = std::make_unique<CpuGenerator<Float128, mnd::NONE, true>>();
     auto oct = std::make_unique<CpuGenerator<Float256, mnd::NONE, true>>();
+    auto f512 = std::make_unique<CpuGenerator<Float512, mnd::NONE, true>>();
     cpuGenerators.insert({ std::pair{ Precision::FLOAT128, CpuExtension::NONE }, std::move(quad) });
     cpuGenerators.insert({ std::pair{ Precision::FLOAT256, CpuExtension::NONE }, std::move(oct) });
+    cpuGenerators.insert({ std::pair{ Precision::FLOAT512, CpuExtension::NONE }, std::move(f512) });
 #endif // WITH_BOOST
 
     auto dd = std::make_unique<CpuGenerator<DoubleDouble, mnd::NONE, true>>();
     auto td = std::make_unique<CpuGenerator<TripleDouble, mnd::NONE, true>>();
     auto qd = std::make_unique<CpuGenerator<QuadDouble, mnd::NONE, true>>();
     auto hd = std::make_unique<CpuGenerator<HexDouble, mnd::NONE, true>>();
+    auto od = std::make_unique<CpuGenerator<OctaDouble, mnd::NONE, true>>();
     cpuGenerators.insert({ std::pair{ Precision::DOUBLE_DOUBLE, CpuExtension::NONE }, std::move(dd) });
     cpuGenerators.insert({ std::pair{ Precision::TRIPLE_DOUBLE, CpuExtension::NONE }, std::move(td) });
     cpuGenerators.insert({ std::pair{ Precision::QUAD_DOUBLE, CpuExtension::NONE }, std::move(qd) });
     cpuGenerators.insert({ std::pair{ Precision::HEX_DOUBLE, CpuExtension::NONE }, std::move(hd) });
+    cpuGenerators.insert({ std::pair{ Precision::OCTA_DOUBLE, CpuExtension::NONE }, std::move(od) });
 
 
     auto fix512 = std::make_unique<CpuGenerator<Fixed512, mnd::NONE, true>>();
@@ -161,7 +165,8 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
         Precision::TRIPLE_DOUBLE,
         Precision::QUAD_DOUBLE,
         Precision::HEX_DOUBLE,
-        Precision::FIXED512
+        Precision::OCTA_DOUBLE,
+        Precision::FLOAT512
     };
 
     auto ag = std::make_unique<AdaptiveGenerator>();
@@ -236,7 +241,7 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
             //printf("    using opencl device: %s\n", md.name.c_str());
             try {
                 md.mandelGenerators.insert({ Precision::FLOAT, std::make_unique<ClGeneratorFloat>(md) });
-                md.mandelGenerators.insert({ Precision::FIXED64, std::make_unique<ClGenerator64>(md) });
+                //md.mandelGenerators.insert({ Precision::FIXED64, std::make_unique<ClGenerator64>(md) });
                 //md.mandelGenerators.insert({ GeneratorType::FIXED128, std::make_unique<ClGenerator128>(md) });
             }
             catch (const std::string& err) {
@@ -244,6 +249,12 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
             }
             try {
                 md.mandelGenerators.insert({ Precision::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(md) });
+            }
+            catch (const std::string& err) {
+                printf("err: %s", err.c_str());
+            }
+            try {
+                md.mandelGenerators.insert({ Precision::TRIPLE_FLOAT, std::make_unique<ClGeneratorTripleFloat>(md) });
             }
             catch (const std::string& err) {
                 printf("err: %s", err.c_str());
@@ -256,6 +267,7 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
                     md.mandelGenerators.insert({ Precision::TRIPLE_DOUBLE, std::make_unique<ClGeneratorTripleDouble>(md) });
                     md.mandelGenerators.insert({ Precision::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(md) });
                     md.mandelGenerators.insert({ Precision::HEX_DOUBLE, std::make_unique<ClGeneratorHexDouble>(md) });
+                    md.mandelGenerators.insert({ Precision::OCTA_DOUBLE, std::make_unique<ClGeneratorOctaDouble>(md) });
                 }
                 catch (const std::string& err) {
                     printf("err: %s", err.c_str());

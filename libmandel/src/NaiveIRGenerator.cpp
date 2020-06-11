@@ -1,6 +1,7 @@
 #include "NaiveIRGenerator.h"
 #include <omp.h>
 
+#include "Types.h"
 
 using mnd::NaiveIRGenerator;
 

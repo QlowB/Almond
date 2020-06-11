@@ -1,15 +1,51 @@
 #include "Generators.h"
 
+#include "Types.h"
+
 #include <cstdio>
 
 using mnd::MandelGenerator;
 using mnd::AdaptiveGenerator;
 
 
+namespace mnd
+{
+    template<> Real getPrecision<float>();
+    template<> Real getPrecision<double>();
+    template<> Real getPrecision<DoubleDouble>();
+    template<> Real getPrecision<TripleDouble>();
+    template<> Real getPrecision<QuadDouble>();
+    template<> Real getPrecision<HexDouble>();
+    template<> Real getPrecision<OctaDouble>();
+    template<> Real getPrecision<Fixed64>();
+    template<> Real getPrecision<Fixed128>();
+    template<> Real getPrecision<Fixed512>();
+    template<> Real getPrecision<Float128>();
+    template<> Real getPrecision<Float256>();
+    template<> Real getPrecision<Float512>();
+
+    template<typename T>
+    Precision getType(void);
+    template<> Precision getType<float>() { return Precision::FLOAT; }
+    template<> Precision getType<double>() { return Precision::DOUBLE; }
+    template<> Precision getType<DoubleDouble>() { return Precision::DOUBLE_DOUBLE; }
+    template<> Precision getType<TripleDouble>() { return Precision::TRIPLE_DOUBLE; }
+    template<> Precision getType<QuadDouble>() { return Precision::QUAD_DOUBLE; }
+    template<> Precision getType<HexDouble>() { return Precision::HEX_DOUBLE; }
+    template<> Precision getType<OctaDouble>() { return Precision::OCTA_DOUBLE; }
+    template<> Precision getType<Fixed64>() { return Precision::FIXED64; }
+    template<> Precision getType<Fixed128>() { return Precision::FIXED128; }
+    template<> Precision getType<Fixed512>() { return Precision::FIXED512; }
+    template<> Precision getType<Float128>() { return Precision::FLOAT128; }
+    template<> Precision getType<Float256>() { return Precision::FLOAT256; }
+    template<> Precision getType<Float512>() { return Precision::FLOAT512; }
+}
+
+
+
 MandelGenerator::~MandelGenerator(void)
 {
 }
-
 
 
 mnd::MandelDevice* MandelGenerator::getDevice(void)
@@ -126,6 +162,8 @@ namespace mnd
             return "float";
         case Precision::DOUBLE_FLOAT:
             return "double-float";
+        case Precision::TRIPLE_FLOAT:
+            return "triple-float";
         case Precision::DOUBLE:
             return "double";
         case Precision::DOUBLE_DOUBLE:
@@ -136,10 +174,12 @@ namespace mnd
             return "quad-double";
         case Precision::HEX_DOUBLE:
             return "hex-double";
+        case Precision::OCTA_DOUBLE:
+            return "octa-double";
         case Precision::FLOAT128:
-            return "IEEE 754 128-bit float";
+            return "float128";
         case Precision::FLOAT256:
-            return "IEEE 754 256-bit float";
+            return "float256";
         case Precision::FLOAT512:
             return "float512";
         case Precision::FIXED64:
@@ -180,11 +220,13 @@ namespace mnd
         static const std::map<Precision, Real> precs {
             { Precision::FLOAT, getPrecision<float>() },
             { Precision::DOUBLE_FLOAT, Real("4.0e-15") },
+            { Precision::TRIPLE_FLOAT, Real("1.0e-21") },
             { Precision::DOUBLE, getPrecision<double>() },
             { Precision::DOUBLE_DOUBLE, Real("1.0e-29") },
             { Precision::TRIPLE_DOUBLE, Real("1.0e-47") },
             { Precision::QUAD_DOUBLE, Real("1.0e-56") },
             { Precision::HEX_DOUBLE, Real("1.0e-94") },
+            { Precision::OCTA_DOUBLE, Real("1.0e-126") },
             { Precision::FIXED64, Real("3.5e-15") },
             { Precision::FIXED128, Real("1.317e-29") },
             { Precision::FIXED512, Real("1.5e-130") },
@@ -220,6 +262,10 @@ namespace mnd
     template<>
     Real getPrecision<HexDouble>() {
         return Real("3.0e-94");
+    }
+    template<>
+    Real getPrecision<OctaDouble>() {
+        return Real("1.0e-126");
     }
     template<>
     Real getPrecision<Fixed64>() {

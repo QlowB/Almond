@@ -8,6 +8,7 @@
 #include "opencl/triplefloat.h"
 #include "opencl/quaddouble.h"
 #include "opencl/hexdouble.h"
+#include "opencl/octadouble.h"
 
 #include "opencl/fixed64.h"
 #include "opencl/fixed128.h"
@@ -45,6 +46,10 @@ namespace mnd
 
     std::string getHexDouble_cl() {
         return std::string{ (char*) hexdouble_cl, hexdouble_cl_len };
+    }
+
+    std::string getOctaDouble_cl() {
+        return std::string{ (char*) octadouble_cl, octadouble_cl_len };
     }
 
     std::string getFixed64_cl() {

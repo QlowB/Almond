@@ -1,4 +1,5 @@
 #include "ClGenerators.h"
+#include "Types.h"
 #include "Mandel.h"
 #include "OpenClInternal.h"
 #include "OpenClCode.h"
@@ -23,6 +24,7 @@ using mnd::ClGeneratorDoubleDouble;
 using mnd::ClGeneratorTripleDouble;
 using mnd::ClGeneratorQuadDouble;
 using mnd::ClGeneratorHexDouble;
+using mnd::ClGeneratorOctaDouble;
 using mnd::ClGenerator128;
 using mnd::ClGenerator64;
 
@@ -559,7 +561,6 @@ void ClGeneratorHexDouble::generate(const mnd::MandelInfo& info, float* data)
     mnd::HexDouble jx = mnd::convert<mnd::HexDouble>(info.juliaX);
     mnd::HexDouble jy = mnd::convert<mnd::HexDouble>(info.juliaY);
 
-    double vals[] = {250, 250, 250, 250, 250, 250 };
     const size_t argBufSize = 6 * sizeof(double);
     Buffer xbuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, x.x);
     Buffer ybuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, y.x);
@@ -591,6 +592,59 @@ std::string ClGeneratorHexDouble::getKernelCode(bool smooth) const
     return getHexDouble_cl();
 }
 
+
+ClGeneratorOctaDouble::ClGeneratorOctaDouble(mnd::MandelDevice& device) :
+    ClGenerator{ device, getOctaDouble_cl(), mnd::Precision::OCTA_DOUBLE }
+{
+    kernel = Kernel(program, "iterate");
+}
+
+
+void ClGeneratorOctaDouble::generate(const mnd::MandelInfo& info, float* data)
+{
+    ::size_t bufferSize = info.bWidth * info.bHeight * sizeof(float);
+
+    Buffer buffer_A(context, CL_MEM_WRITE_ONLY, bufferSize);
+
+    mnd::OctaDouble x = mnd::convert<mnd::OctaDouble>(info.view.x);
+    mnd::OctaDouble y = mnd::convert<mnd::OctaDouble>(info.view.y);
+
+    mnd::OctaDouble psx = mnd::convert<mnd::OctaDouble>(info.view.width / info.bWidth);
+    mnd::OctaDouble psy = mnd::convert<mnd::OctaDouble>(info.view.height / info.bHeight);
+
+    mnd::OctaDouble jx = mnd::convert<mnd::OctaDouble>(info.juliaX);
+    mnd::OctaDouble jy = mnd::convert<mnd::OctaDouble>(info.juliaY);
+
+    const size_t argBufSize = 8 * sizeof(double);
+    Buffer xbuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, x.x);
+    Buffer ybuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, y.x);
+    Buffer psxbuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, psx.x);
+    Buffer psybuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, psy.x);
+    Buffer jxbuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize, jx.x);
+    Buffer jybuf(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, argBufSize);
+
+    kernel.setArg(0, buffer_A);
+    kernel.setArg(1, int(info.bWidth));
+    kernel.setArg(2, xbuf);
+    kernel.setArg(3, ybuf);
+    kernel.setArg(4, psxbuf);
+    kernel.setArg(5, psybuf);
+    kernel.setArg(6, int(info.maxIter));
+    kernel.setArg(7, int(info.smooth ? 1 : 0));
+    kernel.setArg(8, int(info.julia ? 1 : 0));
+    kernel.setArg(9, jxbuf);
+    kernel.setArg(10, jybuf);
+
+    cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
+    queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
+
+}
+
+
+std::string ClGeneratorOctaDouble::getKernelCode(bool smooth) const
+{
+    return getOctaDouble_cl();
+}
 
 ClGenerator128::ClGenerator128(mnd::MandelDevice& device) :
     ClGenerator{ device, getFixed512_cl(), mnd::Precision::FIXED128 }

@@ -1,7 +1,7 @@
 #ifndef MANDEL_MANDELUTIL_H
 #define MANDEL_MANDELUTIL_H
 
-#include "Types.h"
+#include "Real.h"
 
 namespace mnd 
 {

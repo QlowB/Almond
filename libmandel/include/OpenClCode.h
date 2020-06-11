@@ -13,6 +13,7 @@ namespace mnd
     std::string getTripleFloat_cl();
     std::string getQuadDouble_cl();
     std::string getHexDouble_cl();
+    std::string getOctaDouble_cl();
     std::string getFixed64_cl();
     std::string getFixed128_cl();
     std::string getFixed512_cl();

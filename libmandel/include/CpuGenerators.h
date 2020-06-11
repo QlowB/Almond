@@ -2,6 +2,7 @@
 #define MANDEL_CPUGENERATORS_H
 
 #include "Generators.h"
+#include "Types.h"
 
 namespace mnd
 {

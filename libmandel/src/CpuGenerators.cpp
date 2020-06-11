@@ -40,6 +40,9 @@ namespace mnd
     template class CpuGenerator<mnd::Float256, mnd::NONE, false>;
     template class CpuGenerator<mnd::Float256, mnd::NONE, true>;
 
+    template class CpuGenerator<mnd::Float512, mnd::NONE, false>;
+    template class CpuGenerator<mnd::Float512, mnd::NONE, true>;
+
     template class CpuGenerator<Fixed512, mnd::NONE, false>;
     template class CpuGenerator<Fixed512, mnd::NONE, true>;
 #endif
@@ -56,6 +59,9 @@ namespace mnd
 
     template class CpuGenerator<mnd::HexDouble, mnd::NONE, false>;
     template class CpuGenerator<mnd::HexDouble, mnd::NONE, true>;
+
+    template class CpuGenerator<mnd::OctaDouble, mnd::NONE, false>;
+    template class CpuGenerator<mnd::OctaDouble, mnd::NONE, true>;
 #endif
 }
 

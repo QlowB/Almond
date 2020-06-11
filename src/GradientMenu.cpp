@@ -12,6 +12,7 @@
 using alm::Gradient;
 
 const QString GradientMenu::presetNames[] = {
+    "almond",
     "blue gold",
     "clouds",
     "oldschool",

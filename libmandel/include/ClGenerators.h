@@ -39,6 +39,7 @@ namespace mnd
     class ClGeneratorTripleDouble;
     class ClGeneratorQuadDouble;
     class ClGeneratorHexDouble;
+    class ClGeneratorOctaDouble;
     class ClGenerator128;
     class ClGenerator64;
 }
@@ -151,10 +152,21 @@ protected:
 
 class mnd::ClGeneratorHexDouble : public ClGenerator
 {
-    bool smooth;
 public:
     ClGeneratorHexDouble(mnd::MandelDevice& device);
     virtual ~ClGeneratorHexDouble(void) = default;
+
+    virtual void generate(const MandelInfo& info, float* data) override;
+protected:
+    virtual std::string getKernelCode(bool smooth) const;
+};
+
+
+class mnd::ClGeneratorOctaDouble : public ClGenerator
+{
+public:
+    ClGeneratorOctaDouble(mnd::MandelDevice& device);
+    virtual ~ClGeneratorOctaDouble(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data) override;
 protected:

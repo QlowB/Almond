@@ -124,7 +124,7 @@ public:
 
 extern template class mnd::NaiveIRGenerator<float>;
 extern template class mnd::NaiveIRGenerator<double>;
-extern template class mnd::NaiveIRGenerator<mnd::DoubleDouble>;
-extern template class mnd::NaiveIRGenerator<mnd::QuadDouble>;
+//extern template class mnd::NaiveIRGenerator<mnd::DoubleDouble>;
+//extern template class mnd::NaiveIRGenerator<mnd::QuadDouble>;
 
 #endif // MANDEL_NAIVEIRGENERATOR_H

@@ -74,14 +74,14 @@ const std::vector<mnd::MandelInfo> Benchmarker::benches = {
     mnd::MandelInfo{ benchViewport(), 512, 512, 2048000, false },
     mnd::MandelInfo{ benchViewport(), 512, 512, 4096000, false },
     mnd::MandelInfo{ benchViewport(), 512, 512, 8192000, false },
-    mnd::MandelInfo{ benchViewport(), 512, 512, 16384000, false },
+/*    mnd::MandelInfo{ benchViewport(), 512, 512, 16384000, false },
     mnd::MandelInfo{ benchViewport(), 512, 512, 32768000, false },
     mnd::MandelInfo{ benchViewport(), 512, 512, 65536000, false },
     mnd::MandelInfo{ benchViewport(), 512, 512, 131072000, false },
     mnd::MandelInfo{ benchViewport(), 512, 512, 262144000, false },
     mnd::MandelInfo{ benchViewport(), 512, 512, 524288000, false },
     mnd::MandelInfo{ benchViewport(), 512, 512, 1048576000, false },
-    mnd::MandelInfo{ benchViewport(), 512, 512, 2097152000, false },
+    mnd::MandelInfo{ benchViewport(), 512, 512, 2097152000, false },*/
 };
 
 

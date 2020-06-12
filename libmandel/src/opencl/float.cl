@@ -99,6 +99,18 @@ __kernel void iterate2(__global float* A, const int width, float xl, float yt, f
 }
 
 
+float ith(float4 v, int index) {
+    switch(index) {
+        case 0:
+        return v.s0;
+        case 1:
+        return v.s1;
+        case 2:
+        return v.s2;
+        case 3:
+        return v.s3;
+    }
+}
 
 __kernel void iterate_vec4(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int maxIter, int smooth, int julia, float juliaX, float juliaY) {
    int index = get_global_id(0) * 4;
@@ -141,20 +153,13 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
        }
     }
 
-    float4 res;
-    if (smooth != 0) {
-        if (count.s0 >= 0)
-            res = ((float4) count) + ((float4)(1.0f, 1.0f, 1.0f, 1.0f)) - log2(log(fma(resa, resa, resb * resb)) / 2);
-    }
-
-
     for (int i = 0; i < 4 && i + x < width; i++) {
     if (smooth != 0) {
-        if (count[i] >= 0)
-            A[index + i] = ((float) count[i]) + 1 - log(log(fma(resa[i], resa[i], resb[i] * resb[i])) / 2) / log(2.0f);
+        if (ith(count, i) >= 0)
+            A[index + i] = ith(count, i) + 1 - log(log(fma(ith(resa, i), ith(resa, i), ith(resb, i) * ith(resb, i))) / 2) / log(2.0f);
     }
     else
-        A[index + i] = ((float) count[i]);
+        A[index + i] = ith(count, i);
    }
 }
 

@@ -149,8 +149,8 @@ ClGeneratorFloat::ClGeneratorFloat(mnd::MandelDevice& device, const std::string&
     const cl::Device& dev = device.getClDevice().device;
     useVec = dev.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>() >= 4;
     // often still slower than non-vec variation
-    useVec = false;
-    kernel = Kernel(program, useVec ? "iterate_vec4" : "iterate");
+    //useVec = false;
+    kernel = Kernel(program, useVec ? "iterate_vec4" : "iterate2");
 }
 
 
@@ -177,7 +177,7 @@ void ClGeneratorFloat::generate(const mnd::MandelInfo& info, float* data)
     if (useVec) {
         queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight / 4));
     } else {
-        queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
+        queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight / 2));
     }
     cl::Event event;
     queue.enqueueReadBuffer(buffer_A, CL_FALSE, 0, bufferSize, data, nullptr, &event);

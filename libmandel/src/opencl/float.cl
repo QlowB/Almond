@@ -1,5 +1,5 @@
 
-__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth, int julia, float juliaX, float juliaY) {
+__kernel void iterate(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int maxIter, int smooth, int julia, float juliaX, float juliaY) {
    int index = get_global_id(0);
    int x = index % width;
    int y = index / width;
@@ -9,7 +9,7 @@ __kernel void iterate(__global float* A, const int width, float xl, float yt, fl
    float cb = julia != 0 ? juliaY : b;
 
    int n = 0;
-   while (n < max - 1) {
+   while (n < maxIter - 1) {
        float aa = a * a;
        float bb = b * b;
        float ab = a * b;
@@ -18,8 +18,8 @@ __kernel void iterate(__global float* A, const int width, float xl, float yt, fl
        if (aa + bb > 16) break;
        n++;
    }
-   if (n >= max - 1) {
-       A[index] = max;
+   if (n >= maxIter - 1) {
+       A[index] = maxIter;
    }
    else {
        if (smooth != 0)
@@ -30,8 +30,77 @@ __kernel void iterate(__global float* A, const int width, float xl, float yt, fl
 }
 
 
-/*
-__kernel void iterate_vec4(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int max, int smooth, int julia, float juliaX, float juliaY) {
+__kernel void iterate2(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int maxIter, int smooth, int julia, float juliaX, float juliaY) {
+   int index = get_global_id(0);
+   int index1 = index * 2;
+   int index2 = index * 2 + 1;
+   int x1 = index1 % width;
+   int y1 = index1 / width;
+   int x2 = index2 % width;
+   int y2 = index2 / width;
+
+   float a1 = x1 * pixelScaleX + xl;
+   float b1 = y1 * pixelScaleY + yt;
+   float ca1 = julia != 0 ? juliaX : a1;
+   float cb1 = julia != 0 ? juliaY : b1;
+
+   float a2 = x2 * pixelScaleX + xl;
+   float b2 = y2 * pixelScaleY + yt;
+   float ca2 = julia != 0 ? juliaX : a2;
+   float cb2 = julia != 0 ? juliaY : b2;
+
+   int n = 0;
+   int n1 = 0;
+   int n2 = 0;
+   while (n < maxIter - 1) {
+       float aa1 = a1 * a1;
+       float aa2 = a2 * a2;
+       float bb1 = b1 * b1;
+       float bb2 = b2 * b2;
+       float ab1 = a1 * b1;
+       float ab2 = a2 * b2;
+
+       if (aa1 + bb1 <= 16) {
+           a1 = aa1 - bb1 + ca1;
+           b1 = ab1 + ab1 + cb1;
+           n1++;
+       }
+       if (aa2 + bb2 <= 16) {
+           a2 = aa2 - bb2 + ca2;
+           b2 = ab2 + ab2 + cb2;
+           n2++;
+       }
+       if (aa1 + bb1 > 16 && aa2 + bb2 > 16) {
+           break;
+       }
+       n++;
+   }
+   if (n1 >= maxIter - 1) {
+       A[index1] = maxIter;
+   }
+   else {
+       if (smooth != 0) {
+           A[index1] = ((float)n1) + 1 - log2(log(a1 * a1 + b1 * b1) / 2);
+       } else {
+           A[index1] = ((float)n1);
+       }
+   }
+
+   if (n2 >= maxIter - 1) {
+       A[index2] = maxIter;
+   }
+   else {
+       if (smooth != 0) {
+           A[index2] = ((float)n2) + 1 - log2(log(a2 * a2 + b2 * b2) / 2);
+       } else {
+           A[index2] = ((float)n2);
+       }
+   }
+}
+
+
+
+__kernel void iterate_vec4(__global float* A, const int width, float xl, float yt, float pixelScaleX, float pixelScaleY, int maxIter, int smooth, int julia, float juliaX, float juliaY) {
    int index = get_global_id(0) * 4;
    int x = index % width;
    int y = index / width;
@@ -46,7 +115,7 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
    int n = 0;
    if (smooth) {
        int4 cmp = isless((float4)(16.0f), (float4)(16.0f));
-       while (n < max) {
+       while (n < maxIter) {
            float4 ab = a * b;
            float4 cmpVal = fma(a, a, b * b);
            a = fma(a, a, -fma(b, b, -ca));
@@ -60,7 +129,7 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
        }
    }
     else {
-       while (n < max) {
+       while (n < maxIter) {
            float4 ab = a * b;
            float4 cmpVal = fma(a, a, b * b);
            a = fma(a, a, -fma(b, b, -ca));
@@ -75,7 +144,7 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
     float4 res;
     if (smooth != 0) {
         if (count.s0 >= 0)
-            res = ((float4) count) + ((float4)(1.0f, 1.0f, 1.0f, 1.0f)) - log2(log(fma(resa, resa, resb * resb)) * 0.5);
+            res = ((float4) count) + ((float4)(1.0f, 1.0f, 1.0f, 1.0f)) - log2(log(fma(resa, resa, resb * resb)) / 2);
     }
 
 
@@ -88,4 +157,4 @@ __kernel void iterate_vec4(__global float* A, const int width, float xl, float y
         A[index + i] = ((float) count[i]);
    }
 }
-*/
+

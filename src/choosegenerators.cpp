@@ -1,6 +1,9 @@
 #include "choosegenerators.h"
 #include "ui_choosegenerators.h"
 
+
+#include "Benchmark.h"
+
 #include "Almond.h"
 
 #include <Hardware.h>
@@ -108,7 +111,8 @@ std::pair<long long, std::chrono::nanoseconds> Benchmarker::measureMips(
 
 double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
 {
-    size_t testIndex = 0;
+    return mnd::benchmark(mg) * 1000;
+    /*size_t testIndex = 0;
 
     for (size_t i = 0; i < benches.size(); i++) {
         const mnd::MandelInfo& mi = benches[i];
@@ -151,7 +155,7 @@ double Benchmarker::benchmarkResult(mnd::MandelGenerator& mg) const
     catch(...) {
         printf("error benchmarking\n");
     }
-    return 0;
+    return 0;*/
 }
 
 

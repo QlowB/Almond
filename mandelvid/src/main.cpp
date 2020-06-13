@@ -15,6 +15,8 @@ int main(int argc, char** argv)
     boost::optional<std::string> outPath;
     desc.add_options()
         ("help", "display this help message")
+        ("list-generators", "list all available generators on this machine")
+        ("benchmark-generators", "benchmark all available generators on this machine")
         ("render-image,i", "render a mandelbrot view")
         ("file,f", progOpts::value(&inPath), "specifies a file to load")
         ("output,o", progOpts::value(&outPath), "file to output")
@@ -32,7 +34,16 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    if (vm.count("render-image")) {
+
+    if (vm.count("list-generators")) {
+        mnd::MandelContext mndCtxt = mnd::initializeContext();
+        listGenerators(mndCtxt);
+    }
+    else if (vm.count("benchmark-generators")) {
+        mnd::MandelContext mndCtxt = mnd::initializeContext();
+        benchGenerators(mndCtxt);
+    }
+    else if (vm.count("render-image")) {
         if (!inPath) {
             std::cout << "Please specify a path" << std::endl;
             return 1;

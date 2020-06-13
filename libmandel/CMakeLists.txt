@@ -47,6 +47,7 @@ SET(MandelSources
     src/IterationIR.cpp
     src/NaiveIRGenerator.cpp
     src/FloatLog.cpp
+    src/Benchmark.cpp
 )
 FILE(GLOB MandelHeaders include/*.h)
 

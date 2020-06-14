@@ -47,7 +47,6 @@ namespace mnd
     template class CpuGenerator<Fixed512, mnd::NONE, true>;
 #endif
 
-#ifdef WITH_QD
     template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, false>;
     template class CpuGenerator<mnd::DoubleDouble, mnd::NONE, true>;
 
@@ -62,7 +61,6 @@ namespace mnd
 
     template class CpuGenerator<mnd::OctaDouble, mnd::NONE, false>;
     template class CpuGenerator<mnd::OctaDouble, mnd::NONE, true>;
-#endif
 }
 
 

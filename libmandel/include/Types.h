@@ -8,10 +8,6 @@
 #include <string>
 #include "Fixed.h"
 
-#ifndef WITH_QD
-#define WITH_QD
-#endif
-
 #ifdef WITH_BOOST
 #   include <boost/multiprecision/cpp_bin_float.hpp>
 #   if (defined(__GNUC__) || defined(__INTEL_COMPILER)) && defined(WITH_QUADMATH)

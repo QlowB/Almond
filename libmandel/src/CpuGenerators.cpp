@@ -119,6 +119,7 @@ void CpuGenerator<T, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info,
     }
 }
 
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
 namespace mnd
 {
     template class CpuGenerator<float, mnd::X86_AVX, false>;
@@ -264,4 +265,4 @@ void CpuGenerator<float, mnd::X86_AVX_512, parallel>::generate(const mnd::Mandel
 }
 
 #endif // WITH_AVX512
-
+#endif // defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)

@@ -816,6 +816,8 @@ namespace mnd
         printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
         irf.optimize();
         printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
+
+#ifdef WITH_OPENCL
         auto fl = compileCl(irf, dev);
         vec.push_back(std::move(fl));
         if (dev.supportsDouble()) {
@@ -823,6 +825,7 @@ namespace mnd
             auto fld = compileClDouble(irf, dev);
             vec.push_back(std::move(fld));
         }
+#endif // WITH_OPENCL
 
         return vec;// { { mnd::GeneratorType::FLOAT, std::move(fl) } };
     }

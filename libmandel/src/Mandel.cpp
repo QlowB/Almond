@@ -29,9 +29,11 @@ MandelDevice::MandelDevice(mnd::ClDeviceWrapper device, const std::string& platf
     clDevice{ std::make_unique<ClDeviceWrapper>(std::move(device)) },
     platformName{ platformName }
 {
+#ifdef WITH_OPENCL
     extensions = clDevice->device.getInfo<CL_DEVICE_EXTENSIONS>();
     name = clDevice->device.getInfo<CL_DEVICE_NAME>();
     vendor = clDevice->device.getInfo<CL_DEVICE_VENDOR>();
+#endif // WITH_OPENCL
 }
 
 

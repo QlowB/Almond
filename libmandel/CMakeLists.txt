@@ -11,6 +11,7 @@ else()
 endif()
 option(MANDEL_AVX512 "generate code that can make use of avx-512-instructions" ON)
 option(MANDEL_ASMJIT "use just-in-time-compilation library asmjit" ON)
+option(MANDEL_OPENCL "use opencl to offload calculations on GPU devices" ON)
 option(MANDEL_BUILD_NATIVE
 	"use the -march=native flags if supported WARNING: when compiling with this flag, the binary might not run on machines other than the one it was compiled on"
 	OFF)
@@ -92,14 +93,14 @@ if(MANDEL_ASMJIT)
 endif(MANDEL_ASMJIT)
 
 
-if(OPENCL_FOUND)
+if(OPENCL_FOUND AND MANDEL_OPENCL)
     target_compile_definitions(mandel PUBLIC WITH_OPENCL)
     target_include_directories(mandel SYSTEM PUBLIC ${OpenCL_INCLUDE_DIRS})
     target_include_directories(mandel SYSTEM PUBLIC "include_cl")
     link_directories(${OpenCL_LIBRARY})
     target_link_libraries(mandel PUBLIC OpenCL::OpenCL)
-else(OPENCL_FOUND)
-endif(OPENCL_FOUND)
+else()
+endif()
 
 if (APPLE AND OpenCL_FOUND)
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -framework OpenCL")

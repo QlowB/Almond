@@ -4,9 +4,9 @@
 #include "OpenClInternal.h"
 #include "OpenClCode.h"
 
-#include <CL/cl2.hpp>
 
 #if WITH_OPENCL
+#include <CL/cl2.hpp>
 
 #include <iostream>
 #include <iterator>

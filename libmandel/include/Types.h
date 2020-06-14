@@ -21,10 +21,11 @@
 #   include <boost/functional/hash.hpp>
 #endif
 
-#include <qd/dd_real.h>
-#include <qd/qd_real.h>
+//#include <qd/dd_real.h>
+//#include <qd/qd_real.h>
 
 #include "LightDoubleDouble.h"
+#include "QuadDouble.h"
 #include "TripleDouble.h"
 #include "TripleFloat.h"
 #include "HexDouble.h"
@@ -74,7 +75,7 @@ namespace mnd
 #endif
 
     using DoubleDouble = mnd::LightDoubleDouble;
-    using QuadDouble = qd_real;
+    //using QuadDouble = qd_real;
 
     /*inline DoubleDouble abs(const DoubleDouble& x) { return ::abs(x); }
     inline DoubleDouble sqrt(const DoubleDouble& x) { return ::sqrt(x); }
@@ -88,7 +89,7 @@ namespace mnd
     inline DoubleDouble exp(const DoubleDouble& x) { return ::exp(x); }*/
 
 
-    inline QuadDouble abs(const QuadDouble& x) { return ::abs(x); }
+    /*inline QuadDouble abs(const QuadDouble& x) { return ::abs(x); }
     inline QuadDouble sqrt(const QuadDouble& x) { return ::sqrt(x); }
     inline QuadDouble floor(const QuadDouble& x) { return ::floor(x); }
     inline QuadDouble log(const QuadDouble& x) { return ::log(x); }
@@ -97,7 +98,7 @@ namespace mnd
     inline QuadDouble atan2(const QuadDouble& y, const QuadDouble& x) { return ::atan2(y, x); }
     inline QuadDouble cos(const QuadDouble& x) { return ::cos(x); }
     inline QuadDouble sin(const QuadDouble& x) { return ::sin(x); }
-    inline QuadDouble exp(const QuadDouble& x) { return ::exp(x); }
+    inline QuadDouble exp(const QuadDouble& x) { return ::exp(x); }*/
 
     inline double abs(double x) { return ::abs(x); }
     inline float abs(float x) { return ::abs(x); }

@@ -15,23 +15,33 @@
 
 void listGenerators(mnd::MandelContext& context)
 {
-    Table table;
+    Table cputable;
+    cputable.push_back({ "Data Type", "Extension", "Precision" });
     for (const auto& [type, extension] : context.getSupportedTypes()) {
-        table.push_back({ context.getCpuInfo().getBrand(), mnd::toString(type), mnd::toString(extension), mnd::toLegibleString(mnd::getPrecision(type)) });
+        cputable.push_back({ mnd::toString(type), mnd::toString(extension), mnd::toLegibleString(mnd::getPrecision(type)) });
     }
+
+    std::cout << "CPU: " << context.getCpuInfo().getBrand() << std::endl;
+    printTable(cputable);
 
     for (auto& device : context.getDevices()) {
+        Table devtable;
+        devtable.push_back({ "Data Type", "Extension", "Precision" });
         for (const auto& type : device->getSupportedTypes()) {
-            table.push_back({ device->getName(), mnd::toString(type), "", mnd::toLegibleString(mnd::getPrecision(type)) });
+            devtable.push_back({ mnd::toString(type), "", mnd::toLegibleString(mnd::getPrecision(type)) });
         }
+        std::cout << std::endl;
+        std::cout << "Device: [" << device->getVendor() << "] " << device->getName() << std::endl;
+        printTable(devtable);
     }
 
-    printTable(table);
 }
+
 
 void benchGenerators(mnd::MandelContext& context)
 {
     Table table;
+    table.push_back({ "Device", "Data Type", "Extension", "Precision", "Performance [MI/s]" });
     std::map<size_t, mnd::MandelGenerator*> generators;
     for (const auto& [type, extension] : context.getSupportedTypes()) {
         generators[table.size()] = context.getCpuGenerator(type, extension);
@@ -53,15 +63,17 @@ void benchGenerators(mnd::MandelContext& context)
                 maxLenghts[i] = arr[i].size();
         }
     }
-
+    std::cout << "\033[1m";
     for (int i = 0; i < table.size(); i++) {
         const auto& arr = table[i];
         for (int i = 0; i < arr.size(); i++) {
             std::cout << std::setw(maxLenghts[i] + 3) << std::left << arr[i];
         }
-        double iterPerNanos = mnd::benchmark(*generators[i]);
-        std::cout << std::fixed << std::setprecision(2) << (iterPerNanos * 1000);
-        std::cout << std::endl;
+        if (i > 0) {
+            double iterPerNanos = mnd::benchmark(*generators[i]);
+            std::cout << std::fixed << std::setprecision(2) << (iterPerNanos * 1000);
+        }
+        std::cout << "\033[m" << std::endl;
     }
 }
 

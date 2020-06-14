@@ -233,7 +233,7 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
 
             auto supportsDouble = md.supportsDouble();
 
-#pragma omp parallel
+//#pragma omp parallel
 #pragma omp sections
             {
 #pragma omp section

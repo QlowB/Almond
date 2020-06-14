@@ -16,10 +16,16 @@ void printTable(const Table& t)
         }
     }
 
+    bool header = true;
     for (const auto& arr : t) {
+        if (header) {
+            std::cout << "\033[1m";
+            header = false;
+        }
+
         for (int i = 0; i < arr.size(); i++) {
             std::cout << std::setw(maxLenghts[i] + 3) << std::left << arr[i];
         }
-        std::cout << std::endl;
+        std::cout << "\033[m" << std::endl;
     }
 }

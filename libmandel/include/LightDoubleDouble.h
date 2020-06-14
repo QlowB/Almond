@@ -68,6 +68,8 @@ struct mnd::LightDoubleDouble
 {
     double x[2];
 
+    LightDoubleDouble(void) = default;
+
     inline LightDoubleDouble(double val) :
         x{ val, 0 }
     {}
@@ -112,6 +114,11 @@ inline mnd::LightDoubleDouble operator*(const mnd::LightDoubleDouble& a,
     return mnd::ldd::quickTwoSum(p1, p2);
 }
 
+inline bool operator>(const mnd::LightDoubleDouble& a,
+    const mnd::LightDoubleDouble& b)
+{
+    return a[0] > b[0] || (a[0] == b[0] && a[1] > b[1]);
+}
 
 struct mnd::LightDoubleFloat
 {

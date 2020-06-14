@@ -73,10 +73,10 @@ namespace mnd
 
 #endif
 
-    using DoubleDouble = dd_real;
+    using DoubleDouble = mnd::LightDoubleDouble;
     using QuadDouble = qd_real;
 
-    inline DoubleDouble abs(const DoubleDouble& x) { return ::abs(x); }
+    /*inline DoubleDouble abs(const DoubleDouble& x) { return ::abs(x); }
     inline DoubleDouble sqrt(const DoubleDouble& x) { return ::sqrt(x); }
     inline DoubleDouble floor(const DoubleDouble& x) { return ::floor(x); }
     inline DoubleDouble log(const DoubleDouble& x) { return ::log(x); }
@@ -85,7 +85,7 @@ namespace mnd
     inline DoubleDouble atan2(const DoubleDouble& y, const DoubleDouble& x) { return ::atan2(y, x); }
     inline DoubleDouble cos(const DoubleDouble& x) { return ::cos(x); }
     inline DoubleDouble sin(const DoubleDouble& x) { return ::sin(x); }
-    inline DoubleDouble exp(const DoubleDouble& x) { return ::exp(x); }
+    inline DoubleDouble exp(const DoubleDouble& x) { return ::exp(x); }*/
 
 
     inline QuadDouble abs(const QuadDouble& x) { return ::abs(x); }
@@ -145,13 +145,13 @@ namespace mnd
         return Real{ x[0] } + x[1] + x[2];
     }
     
-    template<>
+    /*template<>
     inline DoubleDouble convert<DoubleDouble, Real>(const Real& x)
     {
         double s = static_cast<double>(x);
         double e = static_cast<double>(x - s);
         return DoubleDouble{ s, e };
-    }
+    }*/
 
     template<>
     inline LightDoubleDouble convert<LightDoubleDouble, Real>(const Real& x)
@@ -161,11 +161,11 @@ namespace mnd
         return LightDoubleDouble{ s, e };
     }
 
-    template<>
+    /*template<>
     inline float convert<float, DoubleDouble>(const DoubleDouble& x)
     {
         return float(x.x[0] + x.x[1]);
-    }
+    }*/
 
     template<>
     inline float convert<float, LightDoubleDouble>(const LightDoubleDouble& x)

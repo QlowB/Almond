@@ -7,8 +7,8 @@ using mnd::NaiveIRGenerator;
 
 template class mnd::NaiveIRGenerator<float>;
 template class mnd::NaiveIRGenerator<double>;
-template class mnd::NaiveIRGenerator<mnd::DoubleDouble>;
-template class mnd::NaiveIRGenerator<mnd::QuadDouble>;
+//template class mnd::NaiveIRGenerator<mnd::DoubleDouble>;
+//template class mnd::NaiveIRGenerator<mnd::QuadDouble>;
 
 namespace mnd::eval
 {
@@ -239,7 +239,7 @@ void NaiveIRGenerator<T>::generate(const mnd::MandelInfo& info, float* data)
                 T newB = visitor.visit(*newz_im);
                 a = newA;
                 b = newB;
-                if (a * a + b * b >= 16.0)
+                if (a * a + b * b > 16.0)
                     break;
             }
             data[i + j * info.bWidth] = float(k);

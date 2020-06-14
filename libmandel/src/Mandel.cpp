@@ -109,9 +109,9 @@ MandelContext::MandelContext(void)
         auto fl = std::make_unique<CpuGenerator<float, mnd::ARM_NEON, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::ARM_NEON, true>>();
         auto ddb = std::make_unique<CpuGenerator<mnd::DoubleDouble, mnd::ARM_NEON, true>>();
-        cpuGenerators.insert({ { Precision::FLOAT, CpuExtension::ARM_NEON }, std::move(fl) });
-        cpuGenerators.insert({ { Precision::DOUBLE, CpuExtension::ARM_NEON }, std::move(db) });
-        cpuGenerators.insert({ { Precision::DOUBLE_DOUBLE, CpuExtension::ARM_NEON }, std::move(ddb) });
+        cpuGenerators.insert({ std::pair{ Precision::FLOAT, CpuExtension::ARM_NEON }, std::move(fl) });
+        cpuGenerators.insert({ std::pair{ Precision::DOUBLE, CpuExtension::ARM_NEON }, std::move(db) });
+        cpuGenerators.insert({ std::pair{ Precision::DOUBLE_DOUBLE, CpuExtension::ARM_NEON }, std::move(ddb) });
     }
 #endif
     {

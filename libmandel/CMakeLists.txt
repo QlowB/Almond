@@ -18,7 +18,7 @@ option(MANDEL_BUILD_NATIVE
 #message(CMAKE_SYSTEM_PROCESSOR)
 
 
-find_package(OpenCL REQUIRED)
+find_package(OpenCL)
 find_package(OpenMP)
 #set(Boost_DEBUG 1)
 set(Boost_USE_STATIC_LIBS ON)

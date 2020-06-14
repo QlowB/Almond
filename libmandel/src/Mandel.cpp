@@ -225,61 +225,96 @@ std::vector<std::unique_ptr<MandelDevice>> MandelContext::createDevices(void)
         
         cl::Context context{ devices, nullptr, onError };
         for (auto& device : devices) {
-            //printf("Device: %s\n", device.getInfo<CL_DEVICE_NAME>().c_str());
-            //printf("preferred float width: %d\n", device.getInfo<CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT>());
-            //printf("vendor: %s\n", device.getInfo<CL_DEVICE_VENDOR>().c_str());
-
-
-            //printf("Device extensions: %s\n", ext.c_str());
             auto mandelDevice = std::make_unique<mnd::MandelDevice>(
                 ClDeviceWrapper{ device, context }, platformName);
             MandelDevice& md = *mandelDevice;
 
             auto supportsDouble = md.supportsDouble();
-            //printf("clock: %d", device.getInfo<CL_DEVICE_MAX_CLOCK_FREQUENCY>());
 
-            //printf("    using opencl device: %s\n", md.name.c_str());
-            try {
-                md.mandelGenerators.insert({ Precision::FLOAT, std::make_unique<ClGeneratorFloat>(md) });
-                //md.mandelGenerators.insert({ Precision::FIXED64, std::make_unique<ClGenerator64>(md) });
-                //md.mandelGenerators.insert({ GeneratorType::FIXED128, std::make_unique<ClGenerator128>(md) });
-            }
-            catch (const std::string& err) {
-                printf("err: %s", err.c_str());
-            }
-            try {
-                md.mandelGenerators.insert({ Precision::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(md) });
-            }
-            catch (const std::string& err) {
-                printf("err: %s", err.c_str());
-            }
-            try {
-                md.mandelGenerators.insert({ Precision::TRIPLE_FLOAT, std::make_unique<ClGeneratorTripleFloat>(md) });
-            }
-            catch (const std::string& err) {
-                printf("err: %s", err.c_str());
-            }
-
-            if (supportsDouble) {
+#pragma omp parallel
+#pragma omp sections
+            {
+#pragma omp section
                 try {
-                    md.mandelGenerators.insert({ Precision::DOUBLE, std::make_unique<ClGeneratorDouble>(md) });
-                    md.mandelGenerators.insert({ Precision::DOUBLE_DOUBLE, std::make_unique<ClGeneratorDoubleDouble>(md) });
-                    md.mandelGenerators.insert({ Precision::TRIPLE_DOUBLE, std::make_unique<ClGeneratorTripleDouble>(md) });
-                    md.mandelGenerators.insert({ Precision::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(md) });
-                    md.mandelGenerators.insert({ Precision::HEX_DOUBLE, std::make_unique<ClGeneratorHexDouble>(md) });
-                    md.mandelGenerators.insert({ Precision::OCTA_DOUBLE, std::make_unique<ClGeneratorOctaDouble>(md) });
+                    md.mandelGenerators.insert({ Precision::FLOAT, std::make_unique<ClGeneratorFloat>(md) });
+                    //md.mandelGenerators.insert({ Precision::FIXED64, std::make_unique<ClGenerator64>(md) });
+                    //md.mandelGenerators.insert({ GeneratorType::FIXED128, std::make_unique<ClGenerator128>(md) });
                 }
                 catch (const std::string& err) {
                     printf("err: %s", err.c_str());
-                    fflush(stdout);
                 }
-            }
 
-            try {
-                //md.generator128 = std::make_unique<ClGenerator128>(device);
-            }
-            catch (const std::string& /*err*/) {
-                //fprintf(stderr, "error creating 128bit cl generator: %s\n", err.c_str());
+#pragma omp section
+                try {
+                    md.mandelGenerators.insert({ Precision::DOUBLE_FLOAT, std::make_unique<ClGeneratorDoubleFloat>(md) });
+                }
+                catch (const std::string& err) {
+                    printf("err: %s", err.c_str());
+                }
+
+#pragma omp section
+                try {
+                    md.mandelGenerators.insert({ Precision::TRIPLE_FLOAT, std::make_unique<ClGeneratorTripleFloat>(md) });
+                }
+                catch (const std::string& err) {
+                    printf("err: %s", err.c_str());
+                }
+
+#pragma omp section
+                if (supportsDouble) {
+                    try {
+                        md.mandelGenerators.insert({ Precision::DOUBLE, std::make_unique<ClGeneratorDouble>(md) });
+                        md.mandelGenerators.insert({ Precision::DOUBLE_DOUBLE, std::make_unique<ClGeneratorDoubleDouble>(md) });
+                    }
+                    catch (const std::string& err) {
+                        printf("err: %s", err.c_str());
+                        fflush(stdout);
+                    }
+                }
+
+#pragma omp section
+                if (supportsDouble) {
+                    try {
+                        md.mandelGenerators.insert({ Precision::TRIPLE_DOUBLE, std::make_unique<ClGeneratorTripleDouble>(md) });
+                    }
+                    catch (const std::string& err) {
+                        printf("err: %s", err.c_str());
+                        fflush(stdout);
+                    }
+                }
+
+#pragma omp section
+                if (supportsDouble) {
+                    try {
+                        md.mandelGenerators.insert({ Precision::QUAD_DOUBLE, std::make_unique<ClGeneratorQuadDouble>(md) });
+                    }
+                    catch (const std::string& err) {
+                        printf("err: %s", err.c_str());
+                        fflush(stdout);
+                    }
+                }
+
+#pragma omp section
+                if (supportsDouble) {
+                    try {
+                        md.mandelGenerators.insert({ Precision::HEX_DOUBLE, std::make_unique<ClGeneratorHexDouble>(md) });
+                    }
+                    catch (const std::string& err) {
+                        printf("err: %s", err.c_str());
+                        fflush(stdout);
+                    }
+                }
+
+#pragma omp section
+                if (supportsDouble) {
+                    try {
+                        md.mandelGenerators.insert({ Precision::OCTA_DOUBLE, std::make_unique<ClGeneratorOctaDouble>(md) });
+                    }
+                    catch (const std::string& err) {
+                        printf("err: %s", err.c_str());
+                        fflush(stdout);
+                    }
+                }
             }
 
             mandelDevices.push_back(std::move(mandelDevice));

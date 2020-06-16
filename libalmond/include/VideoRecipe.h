@@ -38,10 +38,14 @@ struct alm::VideoPoint
 };
 
 
-class alm::VideoRecipe
+struct alm::VideoRecipe
 {
     int width;
     int height;
+
+    float fps;
+
+    std::vector<VideoPoint> nodes;
 };
 
 #endif // ALMOND_VIDEORECIPE_H

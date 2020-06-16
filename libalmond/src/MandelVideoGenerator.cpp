@@ -211,3 +211,13 @@ Bitmap<RGBColor> MandelVideoGenerator::overlay(const Bitmap<RGBColor>& outer,
 
     return ret;
 }
+
+
+
+namespace alm
+{
+void exportVideo(const alm::VideoRecipe& vr, const std::string& path)
+{
+
+}
+}

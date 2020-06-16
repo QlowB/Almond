@@ -5,6 +5,7 @@
 #include "VideoStream.h"
 #include "Gradient.h"
 #include "Bitmap.h"
+#include "VideoRecipe.h"
 #include <functional>
 
 struct ExportVideoInfo
@@ -60,5 +61,12 @@ private:
                              long bw, long bh,
                              double scale, double oversizeFactor);
 };
+
+
+namespace alm
+{
+    void exportVideo(const VideoRecipe& vr, const std::string& path);
+}
+
 
 #endif // MANDELVIDEOGENERATOR_H

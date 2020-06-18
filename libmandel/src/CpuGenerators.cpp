@@ -120,6 +120,11 @@ void CpuGenerator<T, mnd::NONE, parallel>::generate(const mnd::MandelInfo& info,
 }
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__i386) || defined(_M_IX86)
+
+// ===========================================
+// =================== AVX ===================
+// ===========================================
+
 namespace mnd
 {
     template class CpuGenerator<float, mnd::X86_AVX, false>;
@@ -231,6 +236,154 @@ void CpuGenerator<mnd::TripleDouble, mnd::X86_AVX, parallel>::generate(const mnd
         jX.x[0], jX.x[1], jX.x[2], jY.x[0], jY.x[1], jY.x[2]);
 }
 
+
+
+// ===========================================
+// ================= AVX-FMA =================
+// ===========================================
+
+namespace mnd
+{
+    template class CpuGenerator<float, mnd::X86_AVX_FMA, false>;
+    template class CpuGenerator<float, mnd::X86_AVX_FMA, true>;
+
+    template class CpuGenerator<double, mnd::X86_AVX_FMA, false>;
+    template class CpuGenerator<double, mnd::X86_AVX_FMA, true>;
+
+    template class CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, false>;
+    template class CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>;
+
+    template class CpuGenerator<QuadDouble, mnd::X86_AVX_FMA, false>;
+    template class CpuGenerator<QuadDouble, mnd::X86_AVX_FMA, true>;
+
+    template class CpuGenerator<HexDouble, mnd::X86_AVX_FMA, false>;
+    template class CpuGenerator<HexDouble, mnd::X86_AVX_FMA, true>;
+}
+
+
+extern void generateFloatAvxFma(long width, long height, float* data, bool parallel,
+    float vx, float vy, float vw, float vh, int maxIter, bool smooth,
+    bool julia, float jX, float jY);
+
+extern void generateDoubleAvxFma(long width, long height, float* data, bool parallel,
+    double vx, double vy, double vw, double vh, int maxIter, bool smooth,
+    bool julia, double jX, double jY);
+
+extern void generateDoubleDoubleAvxFma(long width, long height, float* data, bool parallel,
+    double vx1, double vx2, double vy1, double vy2, double vw1, double vw2, double vh1, double vh2, int maxIter, bool smooth,
+    bool julia, double jX1, double jX2, double jY1, double jY2);
+
+extern void generateQuadDoubleAvxFma(long width, long height, float* data, bool parallel,
+    const double* vx, const double* vy,
+    const double* vw, const double* vh,
+    int maxIter, bool smooth, bool julia,
+    const double* jXp, const double* jYp);
+
+extern void generateHexDoubleAvxFma(long width, long height, float* data, bool parallel,
+    const double* vx, const double* vy,
+    const double* vw, const double* vh,
+    int maxIter, bool smooth, bool julia,
+    const double* jXp, const double* jYp);
+
+
+template<bool parallel>
+void CpuGenerator<float, mnd::X86_AVX_FMA, parallel>::generate(const mnd::MandelInfo& info, float* data)
+{
+    using T = float;
+    const MandelViewport& view = info.view;
+
+    const T vx = mnd::convert<T>(view.x);
+    const T vy = mnd::convert<T>(view.y);
+    const T vw = mnd::convert<T>(view.width);
+    const T vh = mnd::convert<T>(view.height);
+
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+
+    generateFloatAvxFma(info.bWidth, info.bHeight, data, parallel, vx, vy, vw, vh, info.maxIter, info.smooth, info.julia, jX, jY);
+}
+
+
+template<bool parallel>
+void CpuGenerator<double, mnd::X86_AVX_FMA, parallel>::generate(const mnd::MandelInfo& info, float* data)
+{
+    using T = double;
+    const MandelViewport& view = info.view;
+
+    const T vx = mnd::convert<T>(view.x);
+    const T vy = mnd::convert<T>(view.y);
+    const T vw = mnd::convert<T>(view.width);
+    const T vh = mnd::convert<T>(view.height);
+
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+
+    generateDoubleAvxFma(info.bWidth, info.bHeight, data, parallel, vx, vy, vw, vh, info.maxIter, info.smooth, info.julia, jX, jY);
+}
+
+
+template<bool parallel>
+void CpuGenerator<mnd::DoubleDouble, mnd::X86_AVX_FMA, parallel>::generate(const mnd::MandelInfo& info, float* data)
+{
+    using T = mnd::DoubleDouble;
+    const MandelViewport& view = info.view;
+
+    const T vx = mnd::convert<T>(view.x);
+    const T vy = mnd::convert<T>(view.y);
+    const T vw = mnd::convert<T>(view.width);
+    const T vh = mnd::convert<T>(view.height);
+
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+
+    generateDoubleDoubleAvxFma(info.bWidth, info.bHeight, data, parallel,
+        vx.x[0], vx.x[1], vy.x[0], vy.x[1], vw.x[0], vw.x[1], vh.x[0], vh.x[1],
+        info.maxIter, info.smooth, info.julia, jX.x[0], jX.x[1], jY.x[0], jY.x[1]);
+}
+
+
+template<bool parallel>
+void CpuGenerator<mnd::QuadDouble, mnd::X86_AVX_FMA, parallel>::generate(const mnd::MandelInfo& info, float* data)
+{
+    using T = mnd::QuadDouble;
+    const MandelViewport& view = info.view;
+
+    const T vx = mnd::convert<T>(view.x);
+    const T vy = mnd::convert<T>(view.y);
+    const T vw = mnd::convert<T>(view.width);
+    const T vh = mnd::convert<T>(view.height);
+
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+
+    generateQuadDoubleAvxFma(info.bWidth, info.bHeight, data, parallel,
+        vx.x, vy.x,
+        vw.x, vh.x,
+        info.maxIter, info.smooth, info.julia,
+        jX.x, jY.x);
+}
+
+
+template<bool parallel>
+void CpuGenerator<mnd::HexDouble, mnd::X86_AVX_FMA, parallel>::generate(const mnd::MandelInfo& info, float* data)
+{
+    using T = mnd::HexDouble;
+    const MandelViewport& view = info.view;
+
+    const T vx = mnd::convert<T>(view.x);
+    const T vy = mnd::convert<T>(view.y);
+    const T vw = mnd::convert<T>(view.width);
+    const T vh = mnd::convert<T>(view.height);
+
+    T jX = mnd::convert<T>(info.juliaX);
+    T jY = mnd::convert<T>(info.juliaY);
+
+    generateHexDoubleAvxFma(info.bWidth, info.bHeight, data, parallel,
+        vx.x, vy.x,
+        vw.x, vh.x,
+        info.maxIter, info.smooth, info.julia,
+        jX.x, jY.x);
+}
 
 #ifdef WITH_AVX512
 

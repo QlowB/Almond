@@ -625,6 +625,7 @@ void generateDoubleDoubleAvx(long width, long height, float* data, bool parallel
     }
 }
 
+
 void generateTripleDoubleAvx(long width, long height, float* data, bool parallel,
     double vx1, double vx2, double vx3, double vy1, double vy2, double vy3,
     double vw1, double vw2, double vw3, double vh1, double vh2, double vh3,
@@ -714,7 +715,7 @@ void generateTripleDoubleAvx(long width, long height, float* data, bool parallel
                 if (smooth)
                     data[i + k + j * width] = float(ftRes[k] < 0 ? maxIter :
                         ftRes[k] >= maxIter ? maxIter :
-                        ((float)ftRes[k]) + 1 - floatLog2(::floatLog(float(resa[k] * resa[k] + resb[k] * resb[k])) * 0.5f));
+                        ((float)ftRes[k]) + 1 - floatLog2(floatLog(float(resa[k] * resa[k] + resb[k] * resb[k])) * 0.5f));
                 else
                     data[i + k + j * width] = ftRes[k] >= 0 ? float(ftRes[k]) : maxIter;
             }

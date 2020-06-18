@@ -93,10 +93,12 @@ MandelContext::MandelContext(void)
         auto davxfma = std::make_unique<CpuGenerator<double, mnd::X86_AVX_FMA, true>>();
         auto ddavxfma = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>>();
         auto qdavxfma = std::make_unique<CpuGenerator<QuadDouble, mnd::X86_AVX_FMA, true>>();
+        auto hdavxfma = std::make_unique<CpuGenerator<HexDouble, mnd::X86_AVX_FMA, true>>();
         cpuGenerators.insert({ std::pair{ Precision::FLOAT, CpuExtension::X86_AVX_FMA }, std::move(favxfma) });
         cpuGenerators.insert({ std::pair{ Precision::DOUBLE, CpuExtension::X86_AVX_FMA }, std::move(davxfma) });
         cpuGenerators.insert({ std::pair{ Precision::DOUBLE_DOUBLE, CpuExtension::X86_AVX_FMA }, std::move(ddavxfma) });
         cpuGenerators.insert({ std::pair{ Precision::QUAD_DOUBLE, CpuExtension::X86_AVX_FMA }, std::move(qdavxfma) });
+        cpuGenerators.insert({ std::pair{ Precision::HEX_DOUBLE, CpuExtension::X86_AVX_FMA }, std::move(hdavxfma) });
     }
     if (cpuInfo.hasSse2()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_SSE2, true>>();

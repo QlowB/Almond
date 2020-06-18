@@ -155,6 +155,18 @@ public:
 
 
 template<bool parallel>
+class mnd::CpuGenerator<mnd::HexDouble, mnd::X86_AVX_FMA, parallel> : public MandelGenerator
+{
+public:
+    inline CpuGenerator(void) :
+        MandelGenerator{ mnd::Precision::HEX_DOUBLE, mnd::X86_AVX_FMA }
+    {
+    }
+    virtual void generate(const MandelInfo& info, float* data);
+};
+
+
+template<bool parallel>
 class mnd::CpuGenerator<float, mnd::X86_AVX_512, parallel> : public MandelGenerator
 {
 public:

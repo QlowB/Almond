@@ -403,6 +403,6 @@ void MandelContext::saveCache(const std::string& path) const
 
 MandelContext MandelContext::initializeFromCache(const std::string& path)
 {
-
+    return initializeContext();
 }
 

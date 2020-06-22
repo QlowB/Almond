@@ -384,3 +384,25 @@ std::vector<MandelGenerator*> MandelContext::getCpuGenerators(mnd::Precision pre
 }
 
 
+void MandelContext::saveCache(const std::string& path) const
+{
+    MandelContextCache mcc;
+    for (const auto& device : devices) {
+        for (auto type : device->getSupportedTypes()) {
+            MandelGenerator* mg = device->getGenerator(type);
+            if (ClGenerator* clg = dynamic_cast<ClGenerator*>(mg)) {
+                auto maybeBinary = clg->getBinary();
+                if (maybeBinary.has_value()) {
+
+                }
+            }
+        }
+    }
+}
+
+
+MandelContext MandelContext::initializeFromCache(const std::string& path)
+{
+
+}
+

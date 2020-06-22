@@ -6,6 +6,9 @@
 #include "Generators.h"
 #include "OpenClCode.h"
 
+#include <optional>
+#include <vector>
+
 #ifdef __APPLE__
 #define CL_TARGET_OPENCL_VERSION 120
 #define CL_HPP_TARGET_OPENCL_VERSION 120
@@ -59,6 +62,8 @@ public:
 
     virtual void generate(const MandelInfo& info, float* data) = 0;
     virtual mnd::MandelDevice* getDevice(void);
+
+    virtual std::optional<std::vector<char>> getBinary(void);
 };
 
 

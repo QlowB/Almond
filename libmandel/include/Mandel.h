@@ -22,8 +22,6 @@ namespace asmjit { class JitRuntime{}; }
 #include "CpuGenerators.h"
 #include "Hardware.h"
 
-//#include "Fixedp.h"
-
 namespace mnd
 {
     class MandelContext;
@@ -32,6 +30,8 @@ namespace mnd
     struct ClDeviceWrapper;
 
     extern MandelContext initializeContext(void);
+
+    struct MandelContextCache;
 }
 
 
@@ -104,6 +104,14 @@ public:
     std::vector<MandelGenerator*> getCpuGenerators(mnd::Precision prec) const;
 
     const CpuInfo& getCpuInfo(void) const { return cpuInfo; }
+
+    void saveCache(const std::string& path) const;
+    static MandelContext initializeFromCache(const std::string& path);
+};
+
+
+struct mnd::MandelContextCache
+{
 };
 
 

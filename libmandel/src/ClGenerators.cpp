@@ -143,6 +143,12 @@ mnd::MandelDevice* ClGenerator::getDevice(void)
 }
 
 
+std::optional<std::vector<char>> ClGenerator::getBinary(void)
+{
+    return std::nullopt;
+}
+
+
 ClGeneratorFloat::ClGeneratorFloat(mnd::MandelDevice& device, const std::string& code) :
     ClGenerator{ device, code, mnd::Precision::FLOAT }
 {

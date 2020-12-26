@@ -19,6 +19,7 @@ extern "C" {
 #   include <libswscale/swscale.h>
 }
 
+
 namespace alm
 {
     struct VideoExportException;
@@ -44,6 +45,8 @@ class VideoStream
 
     int width;
     int height;
+
+    int fps;
 
     int64_t frameIndex = 0;
 public:

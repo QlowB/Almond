@@ -16,12 +16,8 @@ option(MANDEL_BUILD_NATIVE
 	"use the -march=native flags if supported WARNING: when compiling with this flag, the binary might not run on machines other than the one it was compiled on"
 	OFF)
 
-#message(CMAKE_SYSTEM_PROCESSOR)
-
-
 find_package(OpenCL)
 find_package(OpenMP)
-#set(Boost_DEBUG 1)
 set(Boost_USE_STATIC_LIBS ON)
 set(ASMJIT_STATIC ON)
 find_package(Boost 1.65 REQUIRED)
@@ -30,7 +26,6 @@ find_package(Boost 1.65 REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 
 
-#FILE(GLOB MandelSources src/*.cpp)
 SET(MandelSources
     src/ClGenerators.cpp
     src/CpuGenerators.cpp
@@ -108,7 +103,7 @@ endif()
 if(Boost_FOUND)
     target_compile_definitions(mandel PUBLIC WITH_BOOST)
     target_include_directories(mandel PUBLIC ${Boost_INCLUDE_DIRS})
-    target_link_libraries(mandel PRIVATE ${Boost_LIBRARIES})
+    #target_link_libraries(mandel PRIVATE ${Boost_LIBRARIES})
 endif(Boost_FOUND)
 
 if (MANDEL_TARGET_ARCHITECTURE STREQUAL "x86_64" OR MANDEL_TARGET_ARCHITECTURE STREQUAL "x86")

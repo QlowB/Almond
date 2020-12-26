@@ -4,11 +4,7 @@ project(Almond VERSION 1.1.0 DESCRIPTION "Fractal Viewer")
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules)
 
-#set(CMAKE_AUTOMOC ON)
-#set(CMAKE_AUTORCC ON)
-#set(CMAKE_AUTOUIC ON)
-
-find_package(Qt5 COMPONENTS Core Widgets OpenGL Xml Concurrent REQUIRED)
+find_package(Qt5 COMPONENTS Core Widgets OpenGL Xml Concurrent LinguistTools REQUIRED)
 find_package(OpenMP)
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost 1.65 REQUIRED)
@@ -22,19 +18,23 @@ set(CMAKE_CXX_STANDARD 17)
 FILE(GLOB AlmondSources src/*.cpp)
 FILE(GLOB AlmondHeaders include/*.h)
 FILE(GLOB AlmondUIs ui/*.ui)
+FILE(GLOB AlmondTranslations translations/almond_de-DE.ts)
 
+qt5_add_translation(AlmondQMs AlmondTranslations)
 
 IF (WIN32)
     add_executable(Almond WIN32 ${AlmondSources}
                    resources/Almond.qrc
                    resources/splash.qrc
                    resources/icon.rc
+                   ${AlmondQMs}
                    ${AlmondUIs}
                    ${AlmondHeaders})
 ELSE()
     add_executable(Almond ${AlmondSources}
                    resources/Almond.qrc
                    resources/splash.qrc
+                   ${AlmondQMs}
                    ${AlmondUIs}
                    ${AlmondHeaders})
     set_target_properties(Almond PROPERTIES OUTPUT_NAME "almond")

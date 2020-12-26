@@ -71,6 +71,7 @@ Calcer::Calcer(FractalZoomWidget& owner) :
     threadPool->setMaxThreadCount(1);
 }
 
+
 void Calcer::clearAll(void)
 {
     this->threadPool->clear();
@@ -135,6 +136,8 @@ void Calcer::redirect(int level, GridIndex i, GridIndex j, unsigned int calcStat
     jobsMutex.lock();
     jobs.erase({ level, i, j });
     jobsMutex.unlock();
+    // if calcState has been increased, the computed bitmap is no longer valid
+    // (e.g. maxIter changed)
     if (this->calcState == calcState) {
         emit done(level, i, j, bmp);
     }

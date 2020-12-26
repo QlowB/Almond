@@ -17,7 +17,7 @@ VideoExportException::VideoExportException(const std::string& err) :
 
 
 VideoStream::VideoStream(int width, int height, const std::string& filename, int bitrate, int fps, const char* preset) :
-    width{ width & (~1) }, height{ height & (~1) }
+    width{ width & (~1) }, height{ height & (~1) }, fps{ fps }
 {
     // only needed with ffmpeg version < 4
     //avcodec_register_all();
@@ -166,11 +166,7 @@ void VideoStream::encode(AVFrame* frame)
             throw VideoExportException{ "error during encoding" };
         }
 
-        //printf("encoded frame %3d\"PRId64\" (size=%5d)\n", pkt->pts, pkt->size);
-        //fwrite(pkt->data, 1, pkt->size, outfile);
-        //av_interleaved_write_frame(formatContext, pkt);
-
-        av_packet_rescale_ts(pkt, AVRational{ 1, 60 }, stream->time_base);
+        av_packet_rescale_ts(pkt, AVRational{ 1, fps }, stream->time_base);
         pkt->stream_index = stream->index;
 
         av_write_frame(formatContext, pkt);

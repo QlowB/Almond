@@ -65,7 +65,7 @@ void ExportImageMenu::on_pathBtn_clicked()
 
     QString saveAs = QFileDialog::getSaveFileName(this,
             tr("Save exported image"), "",
-            tr(formatString.c_str()));
+            formatString.c_str());
     if(!saveAs.isEmpty() && !saveAs.isNull())
         ui->pathTxt->setText(saveAs);
 }

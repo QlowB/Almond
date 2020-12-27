@@ -18,19 +18,6 @@ ExportVideoMenu::ExportVideoMenu(QWidget *parent) :
     ui->zoomSpeed->setValidator(new QDoubleValidator(0.0, 100.0, -1, this));
 
 
-    /*
-    evd.startX->setText(QString::fromStdString(evi.start.x.str()));
-    evd.startY->setText(QString::fromStdString(evi.start.y.str()));
-    evd.startW->setText(QString::fromStdString(evi.start.width.str()));
-    evd.startH->setText(QString::fromStdString(evi.start.height.str()));
-
-    evd.endX->setText(QString::fromStdString(evi.end.x.str()));
-    evd.endY->setText(QString::fromStdString(evi.end.y.str()));
-    evd.endW->setText(QString::fromStdString(evi.end.width.str()));
-    evd.endH->setText(QString::fromStdString(evi.end.height.str()));
-    */
-
-
     const auto presets = {
         "ultrafast",
         "superfast",
@@ -59,12 +46,6 @@ ExportVideoMenu::~ExportVideoMenu()
 ExportVideoInfo ExportVideoMenu::getInfo(void) const
 {
     ExportVideoInfo evi;
-    /*if (ui->pathTxt->text() == "") {
-        QMessageBox* msgBox = new QMessageBox;
-        msgBox->setText("Please specify a path.");
-        msgBox->exec();
-        emit reject();
-    }*/
 
     evi.path = ui->pathTxt->text().toStdString();
 
@@ -117,7 +98,7 @@ void ExportVideoMenu::setEndViewport(const mnd::MandelViewport& mv)
 void ExportVideoMenu::on_pathBtn_clicked()
 {
     QString saveAs = QFileDialog::getSaveFileName(this,
-            tr("Save exported image"), "",
+            tr("Save exported video"), "",
             tr("AVI video (*.avi);;MP4 video (*.mp4);;All Files (*)"));
     ui->pathTxt->setText(saveAs);
 }

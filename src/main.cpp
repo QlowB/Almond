@@ -4,7 +4,7 @@
 #include <QScreen>
 #include <QSplashScreen>
 #include <QTranslator>
-#include <cmath>
+#include <QDir>
 
 int main(int argc, char *argv[])
 {
@@ -12,13 +12,22 @@ int main(int argc, char *argv[])
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     QApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 
-    QTranslator lang;
-    bool loaded = lang.load(QLocale::system(), QStringLiteral("qtbase_"));
-    lang.load("almond_de-DE");
-    printf("loaded %d\n", loaded);
     QApplication a(argc, argv);
-    if (loaded)
-        a.installTranslator(&lang);
+
+    QString translationDir = QDir::currentPath() + "/translations";
+    QString translationDir2 = QApplication::applicationDirPath() + "/translations";
+    QTranslator lang;
+    QTranslator qtLang;
+    bool loaded = lang.load(QLocale::system(), QLatin1String("almond"), QLatin1String("."), translationDir);
+    qtLang.load(QLocale::system(), QLatin1String("qt"));
+    if (!loaded) {
+        loaded = lang.load(QLocale::system(), QLatin1String("almond"), QLatin1String("."), translationDir2);
+    }
+
+    if (loaded) {
+        bool installed = a.installTranslator(&lang);
+    }
+    a.installTranslator(&qtLang);
 
     QSize screenDim = QGuiApplication::screens()[0]->size();
     int splashW = screenDim.width() * 2 / 11;

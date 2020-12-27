@@ -166,7 +166,12 @@ namespace mnd
 
             if (p.integerExponent) {
                 if (auto* ex = std::get_if<ir::Constant>(c)) {
-                    return intPow({ a, b }, int(ex->value));
+                    if (int(ex->value) <= 20) {
+                        return intPow({ a, b }, int(ex->value));
+                    }
+                    else {
+                        return realPow({ a, b }, c);
+                    }
                 }
             }
             if (p.realExponent) {

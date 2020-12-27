@@ -104,6 +104,7 @@ class mnd::CompiledClGeneratorDoubleDouble : public mnd::ClGeneratorDoubleDouble
 public:
     CompiledClGeneratorDoubleDouble(MandelDevice& device, const std::string& code);
 };
+
 #endif // WITH_OPENCL
 
 

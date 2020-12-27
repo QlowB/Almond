@@ -33,6 +33,12 @@ namespace mnd
     GeneratorCollection compileFormula(mnd::MandelContext& mndCtxt,
         const IterationFormula& z0,
         const IterationFormula& zi);
+
+#ifdef WITH_OPENCL
+    std::unique_ptr<MandelGenerator> compileClFloat(const ir::Formula&, MandelDevice&);
+    std::unique_ptr<MandelGenerator> compileClDouble(const ir::Formula&, MandelDevice&);
+    std::unique_ptr<MandelGenerator> compileClDoubleDouble(const ir::Formula&, MandelDevice&);
+#endif // WITH_OPENCL
 }
 //void squareTest();
 

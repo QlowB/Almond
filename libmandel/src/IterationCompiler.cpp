@@ -377,7 +377,7 @@ namespace mnd
         static double myAtan2(double y, double x)
         {
             double result = ::atan2(y, x);
-            printf("atan2(%f, %f) = %f\n", y, x, result);
+            //printf("atan2(%f, %f) = %f\n", y, x, result);
             return result;
         }
 
@@ -763,10 +763,10 @@ namespace mnd
         return std::make_unique<CompiledClGenerator>(md, compileToOpenCl(formula));
     }
 
-    std::unique_ptr<MandelGenerator> compileClDouble(const ir::Formula& formula, MandelDevice& md)
+    /*std::unique_ptr<MandelGenerator> compileClDouble(const ir::Formula& formula, MandelDevice& md)
     {
         return std::make_unique<CompiledClGeneratorDouble>(md, compileToOpenClDouble(formula));
-    }
+    }*/
 #endif
 
     std::vector<std::unique_ptr<mnd::MandelGenerator>> compileCpu(mnd::MandelContext& mndCtxt,
@@ -818,12 +818,31 @@ namespace mnd
         printf("ir: %s\n", irf.toString().c_str()); fflush(stdout);
 
 #ifdef WITH_OPENCL
-        auto fl = compileCl(irf, dev);
-        vec.push_back(std::move(fl));
+        try {
+            auto fl = compileClFloat(irf, dev);
+            vec.push_back(std::move(fl));
+        }
+        catch(const std::string& err) {
+            printf("cl error: %s", err.c_str());
+        }
+
         if (dev.supportsDouble()) {
             irf.clearNodeData();
-            auto fld = compileClDouble(irf, dev);
-            vec.push_back(std::move(fld));
+            try {
+                auto fld = compileClDouble(irf, dev);
+                vec.push_back(std::move(fld));
+            }
+            catch(const std::string& err) {
+                printf("cl error: %s", err.c_str());
+            }
+            irf.clearNodeData();
+            try {
+                auto fldd = compileClDoubleDouble(irf, dev);
+                vec.push_back(std::move(fldd));
+            }
+            catch(const std::string& err) {
+                printf("cl error: %s", err.c_str());
+            }
         }
 #endif // WITH_OPENCL
 

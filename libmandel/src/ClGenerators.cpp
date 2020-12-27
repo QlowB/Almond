@@ -335,44 +335,9 @@ void ClGeneratorDouble::generate(const mnd::MandelInfo& info, float* data)
 }
 
 
-std::string ClGeneratorDouble::getKernelCode(bool smooth) const
-{
-    return
-        "#pragma OPENCL EXTENSION cl_khr_fp64 : enable\n"
-        "__kernel void iterate(__global float* A, const int width, double xl, double yt, double pixelScaleX, double pixelScaleY, int max, int smooth) {\n"
-        "   int index = get_global_id(0);\n"
-        "   int x = index % width;"
-        "   int y = index / width;"
-        "   double a = x * pixelScaleX + xl;"
-        "   double b = y * pixelScaleY + yt;"
-        "   double ca = a;"
-        "   double cb = b;"
-        ""
-        "   int n = 0;"
-        "   while (n < max - 1) {"
-        "       double aa = a * a;"
-        "       double bb = b * b;"
-        "       double ab = a * b;"
-        "       if (aa + bb > 16) break;"
-        "       a = aa - bb + ca;"
-        "       b = ab + ab + cb;"
-        "       n++;"
-        "   }\n"
-        // N + 1 - log (log  |Z(N)|) / log 2
-        "   if (n >= max - 1)\n"
-        "       A[index] = max;\n"
-        "   else {"
-        "       if (smooth != 0)\n"
-        "           A[index] = ((float)n) + 1 - log(log((float)(a * a + b * b)) / 2) / log(2.0f);\n"
-        "       else\n"
-        "           A[index] = ((float)n);\n"
-        "   }"
-        "}";
-}
-
-
-ClGeneratorDoubleDouble::ClGeneratorDoubleDouble(mnd::MandelDevice& device) :
-    ClGenerator{ device, getDoubleDouble_cl(), mnd::Precision::DOUBLE_DOUBLE }
+ClGeneratorDoubleDouble::ClGeneratorDoubleDouble(mnd::MandelDevice& device,
+                                                 const std::string& code) :
+    ClGenerator{ device, code, mnd::Precision::DOUBLE_DOUBLE }
 {
     kernel = Kernel(program, "iterate");
 }
@@ -413,12 +378,6 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
 
     cl_int result = queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
-}
-
-
-std::string ClGeneratorDoubleDouble::getKernelCode(bool smooth) const
-{
-    return getDoubleDouble_cl();
 }
 
 

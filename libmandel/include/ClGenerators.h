@@ -111,8 +111,6 @@ public:
     virtual ~ClGeneratorDouble(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data) override;
-protected:
-    virtual std::string getKernelCode(bool smooth) const;
 };
 
 
@@ -120,12 +118,10 @@ class mnd::ClGeneratorDoubleDouble : public ClGenerator
 {
     bool smooth;
 public:
-    ClGeneratorDoubleDouble(mnd::MandelDevice& device);
+    ClGeneratorDoubleDouble(mnd::MandelDevice& device, const std::string& source = getDoubleDouble_cl());
     virtual ~ClGeneratorDoubleDouble(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data) override;
-protected:
-    virtual std::string getKernelCode(bool smooth) const;
 };
 
 

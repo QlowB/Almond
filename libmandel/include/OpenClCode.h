@@ -17,6 +17,9 @@ namespace mnd
     std::string getFixed64_cl();
     std::string getFixed128_cl();
     std::string getFixed512_cl();
+
+
+    std::string getDoubleDouble_prelude();
 }
 
 #endif // MANDEL_OPENCLCODE_H

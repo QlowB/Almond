@@ -14,6 +14,8 @@
 #include "opencl/fixed128.h"
 #include "opencl/fixed512.h"
 
+#include "opencl_template/doubledouble_prelude.h"
+
 namespace mnd
 {
     std::string getFloat_cl() {
@@ -62,6 +64,10 @@ namespace mnd
 
     std::string getFixed512_cl() {
         return std::string{ (char*) fixed512_cl, fixed512_cl_len };
+    }
+
+    std::string getDoubleDouble_prelude() {
+        return std::string{ (char*) doubledouble_prelude_cl, doubledouble_prelude_cl_len };
     }
 }
 

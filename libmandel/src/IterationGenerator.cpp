@@ -261,7 +261,7 @@ CompiledClGeneratorDouble::CompiledClGeneratorDouble(mnd::MandelDevice& device, 
 
 
 CompiledClGeneratorDoubleDouble::CompiledClGeneratorDoubleDouble(mnd::MandelDevice& device, const std::string& code) :
-    ClGeneratorDoubleDouble{ device } // TODO make this const take code as arg
+    ClGeneratorDoubleDouble{ device, code }
 {
 }
 

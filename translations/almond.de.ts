@@ -189,7 +189,7 @@
     <message>
         <location filename="../ui/choosegenerators.ui" line="74"/>
         <source>Run All Benchmarks</source>
-        <translation>Alle Leistungstest starten</translation>
+        <translation type="unfinished">Alle Leistungstests starten</translation>
     </message>
     <message>
         <location filename="../ui/choosegenerators.ui" line="123"/>

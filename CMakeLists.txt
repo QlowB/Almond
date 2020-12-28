@@ -76,9 +76,9 @@ endif()
 
 if (DOXYGEN_FOUND)
     set(DOXYGEN_IN doxyfile)
-    add_custom_target(doc COMMAND ${DOXYGEN_EXECUTABLE} "${CMAKE_SOURCE_DIR}/doxyfile"
-            WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}
-            COMMENT "Building documentation")
+    add_custom_target(doc COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/doxyfile
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        COMMENT "Building documentation")
 endif()
 
 

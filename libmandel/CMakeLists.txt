@@ -71,10 +71,10 @@ endif()
 
 
 add_executable(resourcec resourcec/resourcec.cpp)
-add_custom_target(OpenClCode.cpp
+add_custom_command(
+    OUTPUT OpenClCode.cpp
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/OpenClCode.h
-    COMMAND resourcec ARGS ${MandelClSources} -n mnd::cl_src -d ${CMAKE_CURRENT_BINARY_DIR}/OpenClCode.h -o OpenClCode.cpp
-    DEPENDS resourcec
+    COMMAND resourcec ARGS -n mnd::cl_src -d ${CMAKE_CURRENT_BINARY_DIR}/OpenClCode.h -o OpenClCode.cpp
     SOURCES ${MandelClSources}
     WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
     COMMENT "Packaging Opencl Resources"

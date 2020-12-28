@@ -71,30 +71,6 @@ namespace mnd
 #endif
 
     using DoubleDouble = mnd::LightDoubleDouble;
-    //using QuadDouble = qd_real;
-
-    /*inline DoubleDouble abs(const DoubleDouble& x) { return ::abs(x); }
-    inline DoubleDouble sqrt(const DoubleDouble& x) { return ::sqrt(x); }
-    inline DoubleDouble floor(const DoubleDouble& x) { return ::floor(x); }
-    inline DoubleDouble log(const DoubleDouble& x) { return ::log(x); }
-    inline DoubleDouble log2(const DoubleDouble& x) { return ::log(x) / ::log(DoubleDouble(2.0)); }
-    inline DoubleDouble pow(const DoubleDouble& x, const DoubleDouble& y) { return ::pow(x, y); }
-    inline DoubleDouble atan2(const DoubleDouble& y, const DoubleDouble& x) { return ::atan2(y, x); }
-    inline DoubleDouble cos(const DoubleDouble& x) { return ::cos(x); }
-    inline DoubleDouble sin(const DoubleDouble& x) { return ::sin(x); }
-    inline DoubleDouble exp(const DoubleDouble& x) { return ::exp(x); }*/
-
-
-    /*inline QuadDouble abs(const QuadDouble& x) { return ::abs(x); }
-    inline QuadDouble sqrt(const QuadDouble& x) { return ::sqrt(x); }
-    inline QuadDouble floor(const QuadDouble& x) { return ::floor(x); }
-    inline QuadDouble log(const QuadDouble& x) { return ::log(x); }
-    inline QuadDouble log2(const QuadDouble& x) { return ::log(x) / ::log(QuadDouble(2.0)); }
-    inline QuadDouble pow(const QuadDouble& x, const QuadDouble& y) { return ::pow(x, y); }
-    inline QuadDouble atan2(const QuadDouble& y, const QuadDouble& x) { return ::atan2(y, x); }
-    inline QuadDouble cos(const QuadDouble& x) { return ::cos(x); }
-    inline QuadDouble sin(const QuadDouble& x) { return ::sin(x); }
-    inline QuadDouble exp(const QuadDouble& x) { return ::exp(x); }*/
 
     inline double abs(double x) { return ::abs(x); }
     inline float abs(float x) { return ::abs(x); }

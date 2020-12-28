@@ -11,6 +11,11 @@ namespace mnd
             496, boost::multiprecision::backends::digit_base_2, void, boost::int16_t, -16382, 16383>,
             boost::multiprecision::et_off>;
 
+    using Float2048 = boost::multiprecision::number<
+        boost::multiprecision::backends::cpp_bin_float<
+            2016, boost::multiprecision::backends::digit_base_2, std::allocator<void>, boost::int32_t, -16777214, 16777215>,
+            boost::multiprecision::et_off>;
+
     using Real = Float512;
     using Integer = boost::multiprecision::int512_t;
 

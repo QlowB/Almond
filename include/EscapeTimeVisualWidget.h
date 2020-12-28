@@ -2,13 +2,11 @@
 #define ESCAPETIMEVISUALWIDGET_H
 
 #include <QOpenGLWidget>
+#include <QOpenGLShaderProgram>
 #include "Bitmap.h"
 #include "Gradient.h"
 
-class QOpenGLShaderProgram;
-
 class EscapeTimeVisualWidget;
-
 
 class ETVImage
 {
@@ -27,6 +25,29 @@ public:
               float tw = 1.0f, float th = 1.0f);
 };
 
+class RenderTextureProgram :
+    public QOpenGLShaderProgram
+{
+    int vertexLoc;
+    int texCoordsLoc;
+    int colorLocation;
+    int texLoc;
+    int gradLoc;
+    int gradientScalerLoc;
+    int maxIterationsLoc;
+public:
+    inline RenderTextureProgram(QObject* parent) :
+        QOpenGLShaderProgram{ parent } {}
+
+    virtual bool link(void) override;
+
+    inline int getVertexLoc(void) const         { return vertexLoc; }
+    inline int getTexCoordsLoc(void) const      { return texCoordsLoc; }
+    inline int getTexLoc(void) const            { return texLoc; }
+    inline int getGradLoc(void) const           { return gradLoc; }
+    inline int getGradientScalerLoc(void) const { return gradientScalerLoc; }
+    inline int getMaxIterationsLoc(void) const  { return maxIterationsLoc; }
+};
 
 class EscapeTimeVisualWidget :
     public QOpenGLWidget

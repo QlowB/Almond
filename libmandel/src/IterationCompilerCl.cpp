@@ -197,7 +197,7 @@ namespace mnd
             return "mul("s + a + ", " + b + ")";
         }
         static std::string div(const std::string& a, const std::string& b) {
-            return "div("s + a + ") / (" + b + ")";
+            return "div("s + a + ", " + b + ")";
         }
         static std::string atan2(const std::string& a, const std::string& b) {
             return "atan2("s + a + ", " + b + ")";
@@ -255,7 +255,7 @@ namespace mnd
             return "mul("s + a + ", " + b + ")";
         }
         static std::string div(const std::string& a, const std::string& b) {
-            return "div("s + a + ") / (" + b + ")";
+            return "div("s + a + ", " + b + ")";
         }
         static std::string atan2(const std::string& a, const std::string& b) {
             return "atan2("s + a + ", " + b + ")";

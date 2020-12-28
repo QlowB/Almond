@@ -160,6 +160,20 @@ void ETVImage::draw(float x, float y, float w, float h,
 }
 
 
+bool RenderTextureProgram::link(void)
+{
+    QOpenGLShaderProgram::link();
+    bool bound = this->bind();
+    vertexLoc = this->attributeLocation("vertex");
+    texCoordsLoc = this->attributeLocation("texCoord");
+    colorLocation = this->uniformLocation("color");
+    texLoc = this->uniformLocation("tex");
+    gradLoc = this->uniformLocation("gradient");
+    gradientScalerLoc = this->uniformLocation("gradientScaler");
+    maxIterationsLoc = this->uniformLocation("maxIterations");
+
+}
+
 EscapeTimeVisualWidget::EscapeTimeVisualWidget(QWidget* parent) :
     QOpenGLWidget{ parent },
     gradientTextureId{ 0 },

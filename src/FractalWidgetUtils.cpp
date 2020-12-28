@@ -115,8 +115,12 @@ void CalcJob::run(void)
 size_t IndexPairHash::operator()(const std::pair<GridIndex, GridIndex>& p) const
 {
     const auto& [a, b] = p;
-    size_t truncA = std::hash<GridIndex>{}(a);
-    size_t truncB = std::hash<GridIndex>{}(b);
+    const int64_t a_short = int64_t(a);
+    const int64_t b_short = int64_t(a);
+    //size_t truncA = std::hash<GridIndex>{}(a);
+    //size_t truncB = std::hash<GridIndex>{}(b);
+    size_t truncA = a_short;
+    size_t truncB = b_short;
     boost::hash_combine(truncA, truncB);
     return truncA;
 }

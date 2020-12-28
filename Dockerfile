@@ -30,6 +30,7 @@ RUN apt-get install -y \
 # install dependencies using package manager
 RUN apt-get install -y \
                     qt5-default \
+                    qttools5-dev \
                     libavcodec-dev \
                     libavdevice-dev \
                     libavfilter-dev \

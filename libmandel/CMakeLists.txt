@@ -26,6 +26,7 @@ find_package(Boost 1.65 REQUIRED)
 set(CMAKE_CXX_STANDARD 17)
 
 
+
 SET(MandelSources
     src/ClGenerators.cpp
     src/CpuGenerators.cpp
@@ -35,7 +36,6 @@ SET(MandelSources
     src/MandelUtil.cpp
     src/Types.cpp
     src/Real.cpp
-    src/OpenClCode.cpp
     src/IterationGenerator.cpp
     src/IterationFormula.cpp
     src/IterationCompiler.cpp
@@ -46,6 +46,8 @@ SET(MandelSources
     src/Benchmark.cpp
 )
 FILE(GLOB MandelHeaders include/*.h)
+
+FILE(GLOB MandelClSources src/opencl/*.cl src/opencl_template/*.cl)
 
 if (MANDEL_TARGET_ARCHITECTURE STREQUAL "x86_64" OR MANDEL_TARGET_ARCHITECTURE STREQUAL "x86")
     list(APPEND MandelSources src/CpuGeneratorsAVX.cpp src/CpuGeneratorsAVXFMA.cpp src/CpuGeneratorsSSE2.cpp)
@@ -68,12 +70,26 @@ if(MTUNE_NATIVE_SUPPORTED AND MANDEL_BUILD_NATIVE)
 endif()
 
 
-#    message(${MandelSources})
+add_executable(resourcec resourcec/resourcec.cpp)
+add_custom_target(OpenClCode.cpp
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/OpenClCode.h
+    COMMAND resourcec ARGS ${MandelClSources} -n mnd::cl_src -d ${CMAKE_CURRENT_BINARY_DIR}/OpenClCode.h -o OpenClCode.cpp
+    DEPENDS resourcec
+    SOURCES ${MandelClSources}
+    WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
+    COMMENT "Packaging Opencl Resources"
+)
 
-add_library(mandel STATIC ${MandelSources})
 
+
+if(OPENCL_FOUND AND MANDEL_OPENCL)
+    add_library(mandel STATIC ${MandelSources} OpenClCode.cpp)
+else()
+    add_library(mandel STATIC ${MandelSources})
+endif()
 
 target_include_directories(mandel PUBLIC "include")
+target_include_directories(mandel PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 if(MANDEL_ASMJIT)
     add_subdirectory(asmjit)
@@ -88,6 +104,9 @@ if(OPENCL_FOUND AND MANDEL_OPENCL)
     target_include_directories(mandel SYSTEM PUBLIC "include_cl")
     link_directories(${OpenCL_LIBRARY})
     target_link_libraries(mandel PUBLIC OpenCL::OpenCL)
+
+    #add_subdirectory(resourcec)
+
 else()
 endif()
 

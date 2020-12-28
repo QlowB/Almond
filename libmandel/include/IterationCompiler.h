@@ -38,6 +38,7 @@ namespace mnd
     std::unique_ptr<MandelGenerator> compileClFloat(const ir::Formula&, MandelDevice&);
     std::unique_ptr<MandelGenerator> compileClDouble(const ir::Formula&, MandelDevice&);
     std::unique_ptr<MandelGenerator> compileClDoubleDouble(const ir::Formula&, MandelDevice&);
+    std::unique_ptr<MandelGenerator> compileClQuadDouble(const ir::Formula&, MandelDevice&);
 #endif // WITH_OPENCL
 }
 //void squareTest();

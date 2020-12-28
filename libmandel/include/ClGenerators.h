@@ -71,7 +71,7 @@ class mnd::ClGeneratorFloat : public ClGenerator
 {
     bool useVec;
 public:
-    ClGeneratorFloat(MandelDevice& device, const std::string& code = getFloat_cl());
+    ClGeneratorFloat(MandelDevice& device, const std::string& code = mnd::cl_src::float_cl);
     virtual ~ClGeneratorFloat(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data) override;
@@ -107,7 +107,7 @@ protected:
 class mnd::ClGeneratorDouble : public ClGenerator
 {
 public:
-    ClGeneratorDouble(mnd::MandelDevice& device, const std::string& source = getDouble_cl());
+    ClGeneratorDouble(mnd::MandelDevice& device, const std::string& source = mnd::cl_src::double_cl);
     virtual ~ClGeneratorDouble(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data) override;
@@ -118,7 +118,7 @@ class mnd::ClGeneratorDoubleDouble : public ClGenerator
 {
     bool smooth;
 public:
-    ClGeneratorDoubleDouble(mnd::MandelDevice& device, const std::string& source = getDoubleDouble_cl());
+    ClGeneratorDoubleDouble(mnd::MandelDevice& device, const std::string& source = mnd::cl_src::doubledouble_cl);
     virtual ~ClGeneratorDoubleDouble(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data) override;
@@ -142,7 +142,7 @@ class mnd::ClGeneratorQuadDouble : public ClGenerator
 {
     bool smooth;
 public:
-    ClGeneratorQuadDouble(mnd::MandelDevice& device);
+    ClGeneratorQuadDouble(mnd::MandelDevice& device, const std::string& source = mnd::cl_src::quaddouble_cl);
     virtual ~ClGeneratorQuadDouble(void) = default;
 
     virtual void generate(const MandelInfo& info, float* data) override;

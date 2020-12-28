@@ -206,7 +206,7 @@ void CompiledGeneratorVec::generate(const mnd::MandelInfo& info, float* data)
             double x = mnd::convert<double>(info.view.x + info.view.width * j / info.bWidth);
             float result[8];
             IterFunc iterFunc = asmjit::ptr_as_func<IterFunc>(this->execData->iterationFunc);
-            int k = iterFunc(x, y, dx, info.maxIter-1, result);
+            int k = iterFunc(float(x),float(y), float(dx), info.maxIter-1, result);
 
             for (int k = 0; k < 8 && j + k < info.bWidth; k++)
                 data[i * info.bWidth + j + k] = result[k];

@@ -189,7 +189,7 @@
     <message>
         <location filename="../ui/choosegenerators.ui" line="74"/>
         <source>Run All Benchmarks</source>
-        <translation type="unfinished">Alle Leistungstests starten</translation>
+        <translation>Alle Leistungstests starten</translation>
     </message>
     <message>
         <location filename="../ui/choosegenerators.ui" line="123"/>
@@ -233,7 +233,7 @@
     <message>
         <location filename="../ui/customgenerator.ui" line="28"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Formula Editor&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Almond applies an escape-time algorithm to display fractals. A formula can be entered in this form, which will then be iteratively applied to complex numbers until its absolute value reaches a certain threshold. Depending on how many iterations were needed to reach the threshold, a different color is applied to the image.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Formeleditor&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;Almond verwendet sogenannte &quot;Escape-Time-Algorithmen&quot; um Fraktale zu zeichnen. Sie können hier die Formeln für eine Folge von komplexen Zahlen eingeben, welche danach berechnet wird, bis ein gewisser &quot;Fluchtradius&quot; erreicht ist. Je nachdem, wie viele Iterationen nötig waren um den Fluchtradius zu erreichen, erhält der Punkt eine andere Farbe.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <location filename="../ui/customgenerator.ui" line="57"/>

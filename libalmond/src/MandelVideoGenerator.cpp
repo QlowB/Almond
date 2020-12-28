@@ -20,8 +20,12 @@ void MandelVideoGenerator::addProgressCallback(ProgressCallback pc)
 
 void MandelVideoGenerator::generate(mnd::MandelGenerator& gen)
 {
-    const long width = evi.mi.bWidth;
-    const long height = evi.mi.bHeight;
+    long width = evi.mi.bWidth;
+    long height = evi.mi.bHeight;
+
+    if (width % 2) width++; // round up to multiple of 2
+    if (height % 2) height++; // round up to multiple of 2
+
     VideoStream vs(width, height, evi.path, evi.bitrate, evi.fps, evi.preset.c_str());
 
     mnd::Real x = evi.end.x + evi.end.width / 2;

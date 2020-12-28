@@ -48,7 +48,7 @@ int GridFlowLayout::count(void) const
 
 Qt::Orientations GridFlowLayout::expandingDirections(void) const
 {
-    return 0;
+    return Qt::Orientations();
 }
 
 

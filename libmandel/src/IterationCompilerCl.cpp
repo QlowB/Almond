@@ -165,7 +165,7 @@ namespace mnd
     struct DoubleDoubleTraits
     {
         static std::string getPrelude() {
-            return getDoubleDouble_prelude();
+            return cl_src::doubledouble_prelude_cl;
         }
 
         static std::string getEscapeCheck() {
@@ -173,14 +173,7 @@ namespace mnd
         }
 
         static std::string getPostlude() {
-            return
-                "   if (n >= max - 1) {\n"
-                "       A[index] = max;\n"
-                "   }\n"
-                "   else {\n"
-                "       A[index] = ((float) n);\n"
-                "   }\n"
-                "}\n";
+            return DoubleTraits::getPostlude();
         }
 
         static std::string getTypeName() {
@@ -192,7 +185,65 @@ namespace mnd
             return "(double2)(" + std::to_string(dd.x[0]) + ", " + std::to_string(dd.x[1]) + ")";
         }
         static std::string neg(const std::string& v) {
-            return "(-"s + v + ".s0, -" + v + ".s1)";
+            return "(double2)(-"s + v + ".s0, -" + v + ".s1)";
+        }
+        static std::string add(const std::string& a, const std::string& b) {
+            return "add("s + a + ", " + b + ")";
+        }
+        static std::string sub(const std::string& a, const std::string& b) {
+            return "add("s + a + ", " + neg(b) + ")";
+        }
+        static std::string mul(const std::string& a, const std::string& b) {
+            return "mul("s + a + ", " + b + ")";
+        }
+        static std::string div(const std::string& a, const std::string& b) {
+            return "div("s + a + ") / (" + b + ")";
+        }
+        static std::string atan2(const std::string& a, const std::string& b) {
+            return "atan2("s + a + ", " + b + ")";
+        }
+        static std::string pow(const std::string& a, const std::string& b) {
+            return "pow("s + a + ", " + b + ")";
+        }
+        static std::string cos(const std::string& x) {
+            return "cos("s + x + ")";
+        }
+        static std::string sin(const std::string& x) {
+            return "sin("s + x + ")";
+        }
+        static std::string exp(const std::string& x) {
+            return "exp("s + x + ")";
+        }
+        static std::string ln(const std::string& x) {
+            return "log("s + x + ")";
+        }
+    };
+
+    struct QuadDoubleTraits
+    {
+        static std::string getPrelude() {
+            return cl_src::quaddouble_prelude_cl;
+        }
+
+        static std::string getEscapeCheck() {
+            return DoubleDoubleTraits::getEscapeCheck();
+        }
+
+        static std::string getPostlude() {
+            return DoubleDoubleTraits::getPostlude();
+        }
+
+        static std::string getTypeName() {
+            return "double4";
+        }
+
+        static std::string constant(const mnd::Real& v) {
+            mnd::QuadDouble dd = mnd::convert<mnd::QuadDouble>(v);
+            return "(double4)(" + std::to_string(dd.x[0]) + ", " + std::to_string(dd.x[1]) +
+                           ", " + std::to_string(dd.x[2]) + ", " + std::to_string(dd.x[3]) + ")";
+        }
+        static std::string neg(const std::string& v) {
+            return "(double4)(-"s + v + ".s0, -" + v + ".s1, -" + v + ".s2, -" + v + ".s3)";
         }
         static std::string add(const std::string& a, const std::string& b) {
             return "add("s + a + ", " + b + ")";
@@ -348,8 +399,14 @@ namespace mnd
     {
         ClTranspiler<DoubleDoubleTraits> clt;
         std::string code = clt.compile(formula);
-        printf("doubledouble cl code: %s", code.c_str());
         return std::make_unique<CompiledClGeneratorDoubleDouble>(md, code);
+    }
+
+    std::unique_ptr<MandelGenerator> compileClQuadDouble(const ir::Formula& formula, MandelDevice& md)
+    {
+        ClTranspiler<QuadDoubleTraits> clt;
+        std::string code = clt.compile(formula);
+        return std::make_unique<CompiledClGeneratorQuadDouble>(md, code);
     }
 }
 

@@ -202,8 +202,8 @@ mnd::MandelInfo alm::deserialize<mnd::MandelInfo>(XMLElement* elem)
     XMLElement* bWidth = elem->FirstChildElement("width");
     XMLElement* bHeight = elem->FirstChildElement("height");
     if (bWidth != nullptr && bHeight != nullptr) {
-        mi.bWidth = bWidth->Int64Text(1920);
-        mi.bHeight = bHeight->Int64Text(1080);
+        mi.bWidth = long(bWidth->Int64Text(1920));
+        mi.bHeight = long(bHeight->Int64Text(1080));
     }
     else {
         mi.bWidth = 1920;

@@ -757,18 +757,6 @@ namespace mnd
         return code;
     }
 
-#ifdef WITH_OPENCL
-    std::unique_ptr<MandelGenerator> compileCl(const ir::Formula& formula, MandelDevice& md)
-    {
-        return std::make_unique<CompiledClGenerator>(md, compileToOpenCl(formula));
-    }
-
-    /*std::unique_ptr<MandelGenerator> compileClDouble(const ir::Formula& formula, MandelDevice& md)
-    {
-        return std::make_unique<CompiledClGeneratorDouble>(md, compileToOpenClDouble(formula));
-    }*/
-#endif
-
     std::vector<std::unique_ptr<mnd::MandelGenerator>> compileCpu(mnd::MandelContext& mndCtxt,
         const IterationFormula& z0,
         const IterationFormula& zi)
@@ -843,6 +831,14 @@ namespace mnd
             catch(const std::string& err) {
                 printf("cl error: %s", err.c_str());
             }
+            irf.clearNodeData();
+            try {
+                auto flqd = compileClQuadDouble(irf, dev);
+                vec.push_back(std::move(flqd));
+            }
+            catch(const std::string& err) {
+                printf("cl error: %s", err.c_str());
+            }
         }
 #endif // WITH_OPENCL
 
@@ -860,12 +856,18 @@ namespace mnd
         }
 
         cr.adaptiveGenerator = std::make_unique<mnd::AdaptiveGenerator>();
-        if (!cr.clGenerators.empty()) {
+        for (const auto& clGen : cr.clGenerators) {
+            cr.adaptiveGenerator->addGenerator(*clGen);
+        }
+        for (const auto& cpuGen : cr.cpuGenerators) {
+            cr.adaptiveGenerator->addGenerator(*cpuGen);
+        }
+        /*if (!cr.clGenerators.empty()) {
             cr.adaptiveGenerator->addGenerator(mnd::getPrecision<float>(), *cr.clGenerators[0]);
         }
         if (!cr.cpuGenerators.empty()) {
             cr.adaptiveGenerator->addGenerator(mnd::getPrecision<double>(), *cr.cpuGenerators[0]);
-        }
+        }*/
 
         return cr;
     }

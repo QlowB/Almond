@@ -192,7 +192,7 @@ void ClGeneratorFloat::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorFloat::getKernelCode(bool smooth) const
 {
-    return mnd::getFloat_cl();
+    return mnd::cl_src::float_cl;
 }
 
 
@@ -241,7 +241,7 @@ void ClGeneratorDoubleFloat::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorDoubleFloat::getKernelCode(bool smooth) const
 {
-    return getDoubleFloat_cl();
+    return cl_src::doublefloat_cl;
 }
 
 
@@ -296,7 +296,7 @@ void ClGeneratorTripleFloat::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorTripleFloat::getKernelCode(bool smooth) const
 {
-    return getTripleFloat_cl();
+    return cl_src::triplefloat_cl;
 }
 
 
@@ -382,7 +382,7 @@ void ClGeneratorDoubleDouble::generate(const mnd::MandelInfo& info, float* data)
 
 
 ClGeneratorTripleDouble::ClGeneratorTripleDouble(mnd::MandelDevice& device) :
-    ClGenerator{ device, getTripleDouble_cl(), mnd::Precision::TRIPLE_DOUBLE }
+    ClGenerator{ device, cl_src::tripledouble_cl, mnd::Precision::TRIPLE_DOUBLE }
 {
     kernel = Kernel(program, "iterate");
 }
@@ -434,12 +434,12 @@ void ClGeneratorTripleDouble::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorTripleDouble::getKernelCode(bool smooth) const
 {
-    return getTripleDouble_cl();
+    return cl_src::tripledouble_cl;
 }
 
 
-ClGeneratorQuadDouble::ClGeneratorQuadDouble(mnd::MandelDevice& device) :
-    ClGenerator{ device, getQuadDouble_cl(), mnd::Precision::QUAD_DOUBLE }
+ClGeneratorQuadDouble::ClGeneratorQuadDouble(mnd::MandelDevice& device, const std::string& source) :
+    ClGenerator{ device, source, mnd::Precision::QUAD_DOUBLE }
 {
     kernel = Kernel(program, "iterate");
 }
@@ -498,12 +498,12 @@ void ClGeneratorQuadDouble::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorQuadDouble::getKernelCode(bool smooth) const
 {
-    return getQuadDouble_cl();
+    return cl_src::quaddouble_cl;
 }
 
 
 ClGeneratorHexDouble::ClGeneratorHexDouble(mnd::MandelDevice& device) :
-    ClGenerator{ device, getHexDouble_cl(), mnd::Precision::HEX_DOUBLE }
+    ClGenerator{ device, cl_src::hexdouble_cl, mnd::Precision::HEX_DOUBLE }
 {
     kernel = Kernel(program, "iterate");
 }
@@ -552,12 +552,12 @@ void ClGeneratorHexDouble::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorHexDouble::getKernelCode(bool smooth) const
 {
-    return getHexDouble_cl();
+    return cl_src::hexdouble_cl;
 }
 
 
 ClGeneratorOctaDouble::ClGeneratorOctaDouble(mnd::MandelDevice& device) :
-    ClGenerator{ device, getOctaDouble_cl(), mnd::Precision::OCTA_DOUBLE }
+    ClGenerator{ device, cl_src::octadouble_cl, mnd::Precision::OCTA_DOUBLE }
 {
     kernel = Kernel(program, "iterate");
 }
@@ -606,11 +606,11 @@ void ClGeneratorOctaDouble::generate(const mnd::MandelInfo& info, float* data)
 
 std::string ClGeneratorOctaDouble::getKernelCode(bool smooth) const
 {
-    return getOctaDouble_cl();
+    return cl_src::octadouble_cl;
 }
 
 ClGenerator128::ClGenerator128(mnd::MandelDevice& device) :
-    ClGenerator{ device, getFixed512_cl(), mnd::Precision::FIXED128 }
+    ClGenerator{ device, cl_src::fixed512_cl, mnd::Precision::FIXED128 }
 {
     kernel = Kernel(program, "iterate");
 }
@@ -669,12 +669,12 @@ std::string ClGenerator128::getKernelCode(bool smooth) const
         std::istreambuf_iterator<char>());
     //fprintf(stderr, "%s\n", str);
     return str;*/
-    return getFixed128_cl();
+    return cl_src::fixed128_cl;
 }
 
 
 ClGenerator64::ClGenerator64(mnd::MandelDevice& device) :
-    ClGenerator{ device, getFixed64_cl(), mnd::Precision::FIXED64 }
+    ClGenerator{ device, cl_src::fixed64_cl, mnd::Precision::FIXED64 }
 {
     kernel = Kernel(program, "iterate");
 }
@@ -713,20 +713,12 @@ void ClGenerator64::generate(const mnd::MandelInfo& info, float* data)
 
     queue.enqueueNDRangeKernel(kernel, 0, NDRange(info.bWidth * info.bHeight));
     queue.enqueueReadBuffer(buffer_A, CL_TRUE, 0, bufferSize, data);
-    //CpuGenerator<Fixed64> fx;
-    //fx.generate(info, data);
 }
 
 
 std::string ClGenerator64::getKernelCode(bool smooth) const
 {
-    /*//fprintf(stderr, "starting file read\n");
-    std::ifstream t("mandel128.cl");
-    std::string str((std::istreambuf_iterator<char>(t)),
-    std::istreambuf_iterator<char>());
-    //fprintf(stderr, "%s\n", str);
-    return str;*/
-    return getFixed64_cl();
+    return cl_src::fixed64_cl;
 }
 
 #endif // WITH_OPENCL

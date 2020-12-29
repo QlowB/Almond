@@ -6,12 +6,12 @@
 
 namespace mnd
 {
-    template<typename T, mnd::CpuExtension ex = mnd::NONE, bool parallel = true>
+    template<typename T, mnd::HardwareFeature ex = mnd::NONE, bool parallel = true>
     class CpuGenerator;
 }
 
 
-template<typename T, mnd::CpuExtension ex, bool parallel>
+template<typename T, mnd::HardwareFeature ex, bool parallel>
 class mnd::CpuGenerator : public MandelGenerator
 {
 public:

@@ -34,7 +34,7 @@ namespace mnd
     };
 
 
-    enum CpuExtension : int
+    enum HardwareFeature : int
     {
         NONE,
         X86_SSE2,
@@ -45,7 +45,7 @@ namespace mnd
     };
 
     std::string toString(Precision);
-    std::string toString(CpuExtension);
+    std::string toString(HardwareFeature);
 
     Real getPrecision(Precision p);
 
@@ -64,24 +64,24 @@ class mnd::MandelGenerator
 protected:
     Real precision;
     Precision type;
-    CpuExtension extension;
+    HardwareFeature extension;
 public:
     MandelGenerator(void);
     inline MandelGenerator(Precision type) :
         precision{ mnd::getPrecision(type) },
         type{ type },
-        extension{ mnd::CpuExtension::NONE }
+        extension{ mnd::HardwareFeature::NONE }
     {
     }
 
-    inline MandelGenerator(Precision type, CpuExtension extension) :
+    inline MandelGenerator(Precision type, HardwareFeature extension) :
         precision{ mnd::getPrecision(type) },
         type{ type },
         extension{ extension }
     {
     }
 
-    inline MandelGenerator(Precision type, CpuExtension extension, const Real& precision) :
+    inline MandelGenerator(Precision type, HardwareFeature extension, const Real& precision) :
         precision{ precision },
         type{ type },
         extension{ extension }
@@ -103,7 +103,7 @@ public:
 
     virtual Real getPrecision(void) const;
     virtual Precision getType(void) const;
-    virtual CpuExtension getExtension(void) const;
+    virtual HardwareFeature getExtension(void) const;
 };
 
 

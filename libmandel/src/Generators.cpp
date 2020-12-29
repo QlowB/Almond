@@ -66,7 +66,7 @@ mnd::Precision MandelGenerator::getType(void) const
 }
 
 
-mnd::CpuExtension MandelGenerator::getExtension(void) const
+mnd::HardwareFeature MandelGenerator::getExtension(void) const
 {
     return extension;
 }
@@ -195,20 +195,20 @@ namespace mnd
     }
 
 
-    std::string toString(CpuExtension ce)
+    std::string toString(HardwareFeature ce)
     {
         switch (ce) {
-        case CpuExtension::NONE:
+        case HardwareFeature::NONE:
             return "";
-        case CpuExtension::X86_SSE2:
+        case HardwareFeature::X86_SSE2:
             return "SSE2";
-        case CpuExtension::X86_AVX:
+        case HardwareFeature::X86_AVX:
             return "AVX";
-        case CpuExtension::X86_AVX_FMA:
+        case HardwareFeature::X86_AVX_FMA:
             return "AVX2+FMA";
-        case CpuExtension::X86_AVX_512:
+        case HardwareFeature::X86_AVX_512:
             return "AVX512";
-        case CpuExtension::ARM_NEON:
+        case HardwareFeature::ARM_NEON:
             return "NEON";
         }
         return "";

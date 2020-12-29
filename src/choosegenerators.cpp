@@ -228,7 +228,7 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::GeneratorCo
 
     for (auto& gen : gc.cpuGenerators) {
         const mnd::Precision p = gen->getType();
-        const mnd::CpuExtension ce = gen->getExtension();
+        const mnd::HardwareFeature ce = gen->getExtension();
         std::string typeName = mnd::toString(p) + " " + mnd::toString(ce);
         generators.insert({ QString::fromStdString(typeName), gen.get() });
     }
@@ -236,7 +236,7 @@ ChooseGenerators::ChooseGenerators(mnd::MandelContext& mndCtxt, mnd::GeneratorCo
 
     for (auto& gen : gc.clGenerators) {
         const mnd::Precision p = gen->getType();
-        const mnd::CpuExtension ce = gen->getExtension();
+        const mnd::HardwareFeature ce = gen->getExtension();
         mnd::MandelDevice* dev = gen->getDevice();
         std::string devString = dev != nullptr ? dev->getName() : "";
         std::string typeName = mnd::toString(p) + " " + mnd::toString(ce) + " [" + devString + "]";
@@ -293,7 +293,7 @@ void ChooseGenerators::initializeTables(void)
         ui->generatorTable->setItem(rowCount, 1, new QTableWidgetItem);
         mnd::MandelGenerator& gene = *it->second;
         mnd::Precision p = gene.getType();
-        mnd::CpuExtension ex = gene.getExtension();
+        mnd::HardwareFeature ex = gene.getExtension();
         mnd::MandelDevice* dev = gene.getDevice();
 
         std::string desc = mnd::toString(p) + " " + mnd::toString(ex);

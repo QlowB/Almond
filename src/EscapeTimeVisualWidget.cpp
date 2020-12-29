@@ -171,7 +171,7 @@ bool RenderTextureProgram::link(void)
     gradLoc = this->uniformLocation("gradient");
     gradientScalerLoc = this->uniformLocation("gradientScaler");
     maxIterationsLoc = this->uniformLocation("maxIterations");
-
+    return bound;
 }
 
 EscapeTimeVisualWidget::EscapeTimeVisualWidget(QWidget* parent) :

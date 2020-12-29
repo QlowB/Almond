@@ -12,7 +12,7 @@ using mnd::IterationFormula;
 
 
 IterationGenerator::IterationGenerator(IterationFormula z0, IterationFormula zi,
-            mnd::Precision prec, mnd::CpuExtension ex) :
+            mnd::Precision prec, mnd::HardwareFeature ex) :
     mnd::MandelGenerator{ prec, ex },
     z0{ std::move(z0) },
     zi{ std::move(zi) }
@@ -21,7 +21,7 @@ IterationGenerator::IterationGenerator(IterationFormula z0, IterationFormula zi,
 
 
 NaiveGenerator::NaiveGenerator(IterationFormula z0, IterationFormula zi,
-            mnd::Precision prec, mnd::CpuExtension ex) :
+            mnd::Precision prec, mnd::HardwareFeature ex) :
     IterationGenerator{ std::move(z0), std::move(zi), prec, ex }
 {
     this->z0.optimize();
@@ -133,7 +133,7 @@ using mnd::CompiledGeneratorVec;
 
 
 CompiledGenerator::CompiledGenerator(std::unique_ptr<mnd::ExecData> execData,
-    mnd::Precision prec, mnd::CpuExtension ex) :
+    mnd::Precision prec, mnd::HardwareFeature ex) :
     MandelGenerator{ prec, ex },
     execData{ std::move(execData) }
 {
@@ -177,7 +177,7 @@ std::string CompiledGenerator::dump(void) const
 
 
 CompiledGeneratorVec::CompiledGeneratorVec(std::unique_ptr<mnd::ExecData> execData) :
-    CompiledGenerator{ std::move(execData), mnd::Precision::FLOAT, mnd::CpuExtension::X86_AVX }
+    CompiledGenerator{ std::move(execData), mnd::Precision::FLOAT, mnd::HardwareFeature::X86_AVX }
 {
 }
 

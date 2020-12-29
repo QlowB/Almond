@@ -74,7 +74,7 @@ MandelContext::MandelContext(void)
     if (cpuInfo.hasAvx512()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_AVX_512, true>>();
         //auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX_512, true>>();
-        cpuGenerators.insert({ std::pair{ Precision::FLOAT, CpuExtension::X86_AVX_512 }, std::move(fl) });
+        cpuGenerators.insert({ std::pair{ Precision::FLOAT, HardwareFeature::X86_AVX_512 }, std::move(fl) });
         //cpuGenerators.insert({ { Precision::DOUBLE, CpuExtension::X86_AVX_512 }, std::move(db) });
     }
 #   endif
@@ -83,10 +83,10 @@ MandelContext::MandelContext(void)
         auto db = std::make_unique<CpuGenerator<double, mnd::X86_AVX, true>>();
         auto ddb = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX, true>>();
         auto tdb = std::make_unique<CpuGenerator<TripleDouble, mnd::X86_AVX, true>>();
-        cpuGenerators.insert({ std::pair{ Precision::FLOAT, CpuExtension::X86_AVX }, std::move(fl) });
-        cpuGenerators.insert({ std::pair{ Precision::DOUBLE, CpuExtension::X86_AVX }, std::move(db) });
-        cpuGenerators.insert({ std::pair{ Precision::DOUBLE_DOUBLE, CpuExtension::X86_AVX }, std::move(ddb) });
-        cpuGenerators.insert({ std::pair{ Precision::TRIPLE_DOUBLE, CpuExtension::X86_AVX }, std::move(tdb) });
+        cpuGenerators.insert({ std::pair{ Precision::FLOAT, HardwareFeature::X86_AVX }, std::move(fl) });
+        cpuGenerators.insert({ std::pair{ Precision::DOUBLE, HardwareFeature::X86_AVX }, std::move(db) });
+        cpuGenerators.insert({ std::pair{ Precision::DOUBLE_DOUBLE, HardwareFeature::X86_AVX }, std::move(ddb) });
+        cpuGenerators.insert({ std::pair{ Precision::TRIPLE_DOUBLE, HardwareFeature::X86_AVX }, std::move(tdb) });
     }
     if (cpuInfo.hasAvx2() && cpuInfo.hasFma()) {
         auto favxfma = std::make_unique<CpuGenerator<float, mnd::X86_AVX_FMA, true>>();
@@ -94,17 +94,17 @@ MandelContext::MandelContext(void)
         auto ddavxfma = std::make_unique<CpuGenerator<DoubleDouble, mnd::X86_AVX_FMA, true>>();
         auto qdavxfma = std::make_unique<CpuGenerator<QuadDouble, mnd::X86_AVX_FMA, true>>();
         auto hdavxfma = std::make_unique<CpuGenerator<HexDouble, mnd::X86_AVX_FMA, true>>();
-        cpuGenerators.insert({ std::pair{ Precision::FLOAT, CpuExtension::X86_AVX_FMA }, std::move(favxfma) });
-        cpuGenerators.insert({ std::pair{ Precision::DOUBLE, CpuExtension::X86_AVX_FMA }, std::move(davxfma) });
-        cpuGenerators.insert({ std::pair{ Precision::DOUBLE_DOUBLE, CpuExtension::X86_AVX_FMA }, std::move(ddavxfma) });
-        cpuGenerators.insert({ std::pair{ Precision::QUAD_DOUBLE, CpuExtension::X86_AVX_FMA }, std::move(qdavxfma) });
-        cpuGenerators.insert({ std::pair{ Precision::HEX_DOUBLE, CpuExtension::X86_AVX_FMA }, std::move(hdavxfma) });
+        cpuGenerators.insert({ std::pair{ Precision::FLOAT, HardwareFeature::X86_AVX_FMA }, std::move(favxfma) });
+        cpuGenerators.insert({ std::pair{ Precision::DOUBLE, HardwareFeature::X86_AVX_FMA }, std::move(davxfma) });
+        cpuGenerators.insert({ std::pair{ Precision::DOUBLE_DOUBLE, HardwareFeature::X86_AVX_FMA }, std::move(ddavxfma) });
+        cpuGenerators.insert({ std::pair{ Precision::QUAD_DOUBLE, HardwareFeature::X86_AVX_FMA }, std::move(qdavxfma) });
+        cpuGenerators.insert({ std::pair{ Precision::HEX_DOUBLE, HardwareFeature::X86_AVX_FMA }, std::move(hdavxfma) });
     }
     if (cpuInfo.hasSse2()) {
         auto fl = std::make_unique<CpuGenerator<float, mnd::X86_SSE2, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::X86_SSE2, true>>();
-        cpuGenerators.insert({ std::pair{ Precision::FLOAT, CpuExtension::X86_SSE2 }, std::move(fl) });
-        cpuGenerators.insert({ std::pair{ Precision::DOUBLE, CpuExtension::X86_SSE2 }, std::move(db) });
+        cpuGenerators.insert({ std::pair{ Precision::FLOAT, HardwareFeature::X86_SSE2 }, std::move(fl) });
+        cpuGenerators.insert({ std::pair{ Precision::DOUBLE, HardwareFeature::X86_SSE2 }, std::move(db) });
     }
 #elif defined(__arm__) || defined(__aarch64__) || defined(_M_ARM) 
     if (cpuInfo.hasNeon()) {
@@ -119,22 +119,22 @@ MandelContext::MandelContext(void)
     {
         auto fl = std::make_unique<CpuGenerator<float, mnd::NONE, true>>();
         auto db = std::make_unique<CpuGenerator<double, mnd::NONE, true>>();
-        cpuGenerators.insert({ std::pair{ Precision::FLOAT, CpuExtension::NONE }, std::move(fl) });
-        cpuGenerators.insert({ std::pair{ Precision::DOUBLE, CpuExtension::NONE }, std::move(db) });
+        cpuGenerators.insert({ std::pair{ Precision::FLOAT, HardwareFeature::NONE }, std::move(fl) });
+        cpuGenerators.insert({ std::pair{ Precision::DOUBLE, HardwareFeature::NONE }, std::move(db) });
 
         auto fx64 = std::make_unique<CpuGenerator<Fixed64, mnd::NONE, true>>();
         auto fx128 = std::make_unique<CpuGenerator<Fixed128, mnd::NONE, true>>();
-        cpuGenerators.insert({ std::pair{ Precision::FIXED64, CpuExtension::NONE }, std::move(fx64) });
-        cpuGenerators.insert({ std::pair{ Precision::FIXED128, CpuExtension::NONE }, std::move(fx128) });
+        cpuGenerators.insert({ std::pair{ Precision::FIXED64, HardwareFeature::NONE }, std::move(fx64) });
+        cpuGenerators.insert({ std::pair{ Precision::FIXED128, HardwareFeature::NONE }, std::move(fx128) });
     }
 
 #ifdef WITH_BOOST
     auto quad = std::make_unique<CpuGenerator<Float128, mnd::NONE, true>>();
     auto oct = std::make_unique<CpuGenerator<Float256, mnd::NONE, true>>();
     auto f512 = std::make_unique<CpuGenerator<Float512, mnd::NONE, true>>();
-    cpuGenerators.insert({ std::pair{ Precision::FLOAT128, CpuExtension::NONE }, std::move(quad) });
-    cpuGenerators.insert({ std::pair{ Precision::FLOAT256, CpuExtension::NONE }, std::move(oct) });
-    cpuGenerators.insert({ std::pair{ Precision::FLOAT512, CpuExtension::NONE }, std::move(f512) });
+    cpuGenerators.insert({ std::pair{ Precision::FLOAT128, HardwareFeature::NONE }, std::move(quad) });
+    cpuGenerators.insert({ std::pair{ Precision::FLOAT256, HardwareFeature::NONE }, std::move(oct) });
+    cpuGenerators.insert({ std::pair{ Precision::FLOAT512, HardwareFeature::NONE }, std::move(f512) });
 #endif // WITH_BOOST
 
     auto dd = std::make_unique<CpuGenerator<DoubleDouble, mnd::NONE, true>>();
@@ -142,15 +142,15 @@ MandelContext::MandelContext(void)
     auto qd = std::make_unique<CpuGenerator<QuadDouble, mnd::NONE, true>>();
     auto hd = std::make_unique<CpuGenerator<HexDouble, mnd::NONE, true>>();
     auto od = std::make_unique<CpuGenerator<OctaDouble, mnd::NONE, true>>();
-    cpuGenerators.insert({ std::pair{ Precision::DOUBLE_DOUBLE, CpuExtension::NONE }, std::move(dd) });
-    cpuGenerators.insert({ std::pair{ Precision::TRIPLE_DOUBLE, CpuExtension::NONE }, std::move(td) });
-    cpuGenerators.insert({ std::pair{ Precision::QUAD_DOUBLE, CpuExtension::NONE }, std::move(qd) });
-    cpuGenerators.insert({ std::pair{ Precision::HEX_DOUBLE, CpuExtension::NONE }, std::move(hd) });
-    cpuGenerators.insert({ std::pair{ Precision::OCTA_DOUBLE, CpuExtension::NONE }, std::move(od) });
+    cpuGenerators.insert({ std::pair{ Precision::DOUBLE_DOUBLE, HardwareFeature::NONE }, std::move(dd) });
+    cpuGenerators.insert({ std::pair{ Precision::TRIPLE_DOUBLE, HardwareFeature::NONE }, std::move(td) });
+    cpuGenerators.insert({ std::pair{ Precision::QUAD_DOUBLE, HardwareFeature::NONE }, std::move(qd) });
+    cpuGenerators.insert({ std::pair{ Precision::HEX_DOUBLE, HardwareFeature::NONE }, std::move(hd) });
+    cpuGenerators.insert({ std::pair{ Precision::OCTA_DOUBLE, HardwareFeature::NONE }, std::move(od) });
 
 
     auto fix512 = std::make_unique<CpuGenerator<Fixed512, mnd::NONE, true>>();
-    cpuGenerators.insert({ std::pair{ Precision::FIXED512, CpuExtension::NONE }, std::move(fix512) });
+    cpuGenerators.insert({ std::pair{ Precision::FIXED512, HardwareFeature::NONE }, std::move(fix512) });
 
     devices = createDevices();
 
@@ -178,7 +178,7 @@ std::unique_ptr<mnd::AdaptiveGenerator> MandelContext::createAdaptiveGenerator(v
     for (auto type : types) {
         MandelGenerator* chosenGen = nullptr;
         auto generators = getCpuGenerators(type);
-        CpuExtension ex = CpuExtension::NONE;
+        HardwareFeature ex = HardwareFeature::NONE;
         for (auto* generator : generators) {
             if (generator->getExtension() >= ex) {
                 ex = generator->getExtension();
@@ -353,7 +353,7 @@ asmjit::JitRuntime& MandelContext::getJitRuntime(void)
 }
 
 
-MandelGenerator* MandelContext::getCpuGenerator(mnd::Precision type, mnd::CpuExtension ex)
+MandelGenerator* MandelContext::getCpuGenerator(mnd::Precision type, mnd::HardwareFeature ex)
 {
     auto it = cpuGenerators.find({ type, ex });
     if (it != cpuGenerators.end())

@@ -72,7 +72,7 @@ class mnd::MandelContext
 private:
     friend MandelContext mnd::initializeContext(void);
 
-    using GeneratorType = std::pair<Precision, CpuExtension>;
+    using GeneratorType = std::pair<Precision, HardwareFeature>;
 
     CpuInfo cpuInfo;
     std::unique_ptr<asmjit::JitRuntime> jitRuntime;
@@ -99,7 +99,7 @@ public:
 
     asmjit::JitRuntime& getJitRuntime(void);
 
-    MandelGenerator* getCpuGenerator(mnd::Precision type, mnd::CpuExtension ex);
+    MandelGenerator* getCpuGenerator(mnd::Precision type, mnd::HardwareFeature ex);
     std::vector<GeneratorType> getSupportedTypes(void) const;
     std::vector<MandelGenerator*> getCpuGenerators(mnd::Precision prec) const;
 

@@ -36,7 +36,7 @@ protected:
 public:
     IterationGenerator(IterationFormula z0, IterationFormula zi,
             mnd::Precision prec,
-            mnd::CpuExtension ex = mnd::CpuExtension::NONE);
+            mnd::HardwareFeature ex = mnd::HardwareFeature::NONE);
 };
 
 
@@ -45,7 +45,7 @@ class mnd::NaiveGenerator : public mnd::IterationGenerator
 public:
     NaiveGenerator(IterationFormula z0, IterationFormula zi,
             mnd::Precision prec,
-            mnd::CpuExtension ex = mnd::CpuExtension::NONE);
+            mnd::HardwareFeature ex = mnd::HardwareFeature::NONE);
 
     virtual void generate(const MandelInfo& info, float* data);
 private:
@@ -63,7 +63,7 @@ protected:
 public:
     CompiledGenerator(std::unique_ptr<ExecData> execData,
         mnd::Precision prec = mnd::Precision::DOUBLE,
-        mnd::CpuExtension ex = mnd::CpuExtension::NONE);
+        mnd::HardwareFeature ex = mnd::HardwareFeature::NONE);
     CompiledGenerator(const CompiledGenerator&) = delete;
     CompiledGenerator(CompiledGenerator&&);
     virtual ~CompiledGenerator(void);

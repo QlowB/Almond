@@ -74,12 +74,10 @@ add_executable(resourcec resourcec/resourcec.cpp)
 add_custom_command(
     OUTPUT OpenClCode.cpp
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/OpenClCode.h
-    COMMAND resourcec ARGS -n mnd::cl_src -d ${CMAKE_CURRENT_BINARY_DIR}/OpenClCode.h -o OpenClCode.cpp
-    SOURCES ${MandelClSources}
+    COMMAND resourcec ARGS -n mnd::cl_src -d ${CMAKE_CURRENT_BINARY_DIR}/OpenClCode.h -o OpenClCode.cpp ${MandelClSources}
     WORKING_DIRECTORY ${CMAKE_PROJECT_DIR}
     COMMENT "Packaging Opencl Resources"
 )
-
 
 
 if(OPENCL_FOUND AND MANDEL_OPENCL)
